@@ -2,7 +2,7 @@
 \part{Project Maker} \label{part:pm}
 
 \section{Introduction to the ProjectMaker module} \label{sec:pmintro}
-The \textit{ProjectMaker} module guides through the half-automated assessment of cost-relevant quantities and ecological project benefits. A ``restoration plan'' or project proposal for a restoration plan herein designates an isolated restoration measure in a river \emph{REACH} at a selected site. \emph{version}s of a restoration plan may refer to terraforming options or other planning \emph{condition}s (year). A project proposal is prepared for (preliminarily) definite \emph{version}s of a restoration plan including relevant soil bioengineering restoration features, i.e., vegetation plantings and stabilizing features including the placement of angular boulder and engineered log jams, and it evaluates cost-relevant quantities. A project cost table uses the cost-relevant quantities for a preliminary cost assessment. The habitat utility in terms of net gain in weighted usable habitat (WUA) for target fish species determines the project return in ``US~\$ per [yd$^2$ or m$^2$] of newly created WUA''.\\ 
+The \textit{ProjectMaker} module guides through the half-automated assessment of cost-relevant quantities and ecological project benefits. A ``restoration plan'' or project proposal for a restoration plan herein designates an isolated restoration measure in a river \emph{REACH} at a selected site. \emph{version}s of a restoration plan may refer to terraforming options or other planning \emph{condition}s (year). A project proposal is prepared for (preliminarily) definite \emph{version}s of a restoration plan including relevant soil bioengineering restoration features, i.e., vegetation plantings and stabilizing features including the placement of angular boulder and engineered log jams, and it evaluates cost-relevant quantities. A project cost table uses the cost-relevant quantities for a preliminary cost assessment. The habitat utility in terms of net gain in annually usable habitat area (AUA) for target fish species determines the project return in ``US~\$ per [yd$^2$ or m$^2$] of newly created AUA''.\\ 
 
 This chapter explains the module application in the following sections:\\
 \begin{tabular}{l L{0.9\textwidth}}
@@ -10,7 +10,7 @@ This chapter explains the module application in the following sections:\\
 Section~\ref{sec:pmquick}: & Application of the GUI with descriptions of input requirements.\\
 Section~\ref{sec:pmcq}:  & Generating a project plan and running a cost-quantity assessment with \textit{Project Maker}.\\
 Section~\ref{sec:pmmaps}:  & Mapping final designs of features and the construction site.\\
-Section~\ref{sec:pmwua}:  & Calculation of WUA and final results.\\
+Section~\ref{sec:pmaua}:  & Calculation of AUA and final results.\\
 \multicolumn{2}{l}{}\\
 \end{tabular}
 
@@ -193,12 +193,12 @@ The final project costs include site mobilization and demobilization as well as 
 Open \texttt{\ldots{}/Geodata/\emph{REACH}{\myUnderscore}\emph{SiteName}{\myUnderscore}\emph{vii.mxd}} and switch to \emph{Layout View} (\emph{ArcMap} $\rightarrow$~\emph{View} $\rightarrow$~ \emph{Layout View}). Double click on every layer in the \emph{Table of Contents} and define the correct source files (\emph{Source} tab) that result from the above described cost assessment. Relevant shapefile are stored in \texttt{\ldots{}/Geodata/Shapefiles/} and relevant rasters are stored in \texttt{\ldots{}/Geodata/Rasters/}. Export the map (\emph{ArcMap} $\rightarrow$~\emph{File} $\rightarrow$~\emph{Export Map\ldots{}} ) to the project folder and name it \emph{REACH{\myUnderscore}SiteName{\myUnderscore}vii{\myUnderscore}lyr2x.pdf} (proposition for consistent file naming).
 
 
-\section{Ecological benefit asessment (Calculate WUA)}\label{sec:pmwua}
+\section{Ecological benefit asessment (Calculate AUA)}\label{sec:pmaua}
 
-The project costs are vetted against the net gain in weighted usable habitat area for target fish species. The GUI's \emph{Calculate Net \textbf{W}eighted \textbf{U}sable habitat \textbf{A}rea} routine calculates usable habitat from rasters that indicate where the Composite Habitat Suitability Index (CHSI) is higher than a selected threshold value.
+The project costs are vetted against the net gain in annually usable habitat area for target fish species. The GUI's \emph{Calculate Net \textbf{A}nnually \textbf{U}sable habitat \textbf{A}rea} routine calculates usable habitat from rasters that indicate where the Composite Habitat Suitability Index (CHSI) is higher than a selected threshold value.
 
 \subsection{Additional input and requirements}
-Every CHSI raster refers to a steady discharge within a flow duration curve. The expected flow exceedance duration per discharge bin multiplied with the usable habitat area is summed up to the WUA. The comparison of the existing (pre-project) and the "with implementation" (post-project) habitat suitability requires the following:
+Every CHSI raster refers to a steady discharge within a flow duration curve. The expected flow exceedance duration per discharge bin multiplied with the usable habitat area is summed up to the AUA. The comparison of the existing (pre-project) and the "with implementation" (post-project) habitat suitability requires the following:
 
 \begin{itemize}
 \item
@@ -209,7 +209,7 @@ Every CHSI raster refers to a steady discharge within a flow duration curve. The
   \item
     A workbook template for flow duration curves is available in \texttt{RiverArchitect/HabitatEvalu ation/FlowDurationCurves/flow{\myUnderscore}duration{\myUnderscore}templates.xlsx}
   \item
-    The \texttt{Tools} -- folder contains the \emph{make{\myUnderscore}flow{\myUnderscore}duration.py} script that analyses discharge series (mean daily discharge) of any length for producing the required format for WUA calculation. An example file of mean daily discharges for creating a flow duration curve with \emph{make{\myUnderscore}flow{\myUnderscore}duration.py} is provided.
+    The \texttt{Tools} -- folder contains the \emph{make{\myUnderscore}flow{\myUnderscore}duration.py} script that analyses discharge series (mean daily discharge) of any length for producing the required format for AUA calculation. An example file of mean daily discharges for creating a flow duration curve with \emph{make{\myUnderscore}flow{\myUnderscore}duration.py} is provided.
   \end{itemize}
 \item
   The \emph{River Architect}'s \emph{HabitatEvaluation} module was executed for both situations (pre- and post-project) to obtain CHSI maps.
@@ -222,24 +222,24 @@ Every CHSI raster refers to a steady discharge within a flow duration curve. The
   \texttt{rea{\myUnderscore}lyr10}, respectively. The string \texttt{lyr10} refers to terraforming according to the code naming conventions.
   \item The \emph{River Architect}'s \emph{HabitatEvaluation} module applied to both situations with a CHSI threshold value of, e.g., 0.4. This threshold value means that all pixels with a CHSI value lower than 0.4 were considered as being non-habitat and the \emph{HabitatEvaluation} module excludes these pixels from the CHSI rasters. Thus, the \emph{HabitatEvaluation} module produced CHSI rasters that are stored in:
     \begin{itemize}
-    \item \texttt{RiverArchitect/HabitatEvaluation/WUA/Rasters/2008} (existing / pre-project)
-    \item \texttt{RiverArchitect/HabitatEvaluation/WUA/Rasters/2008{\myUnderscore}rea{\myUnderscore}lyr10} (with implementation / post-project)
+    \item \texttt{RiverArchitect/HabitatEvaluation/AUA/Rasters/2008} (existing / pre-project)
+    \item \texttt{RiverArchitect/HabitatEvaluation/AUA/Rasters/2008{\myUnderscore}rea{\myUnderscore}lyr10} (with implementation / post-project)
     \end{itemize}
   \item Te \emph{HabitatEvaluation} module associated (relative) discharge duration and usable habitat areas with the rasters. For example, if the target fish species was Chinook salmon, juvenile lifestage (naming convention chj), the \emph{HabitatEvaluation} module wrote the usable habitat area and discharge duration to the following workbooks:
     \begin{itemize}
-    \item \texttt{RiverArchitect/HabitatEvaluation/WUA/2008{\myUnderscore}chj.xlsx}
-    \item \texttt{RiverArchitect/HabitatEvaluation/WUA/2008{\myUnderscore}rea{\myUnderscore}lyr10{\myUnderscore}chj.xlsx}
+    \item \texttt{RiverArchitect/HabitatEvaluation/AUA/2008{\myUnderscore}chj.xlsx}
+    \item \texttt{RiverArchitect/HabitatEvaluation/AUA/2008{\myUnderscore}rea{\myUnderscore}lyr10{\myUnderscore}chj.xlsx}
     \end{itemize}
   \end{itemize}
 \end{itemize}
 
-\subsection{Run WUA calculation}
-When the above requirements are fulfilled, the \emph{Project Proposal} GUI can assess the difference in usable habitat area between both situations (pre- and post-project), i.e., the net gain in WUA. For starting the calculation, define the above-described input data and confirm the calculation:
+\subsection{Run AUA calculation}
+When the above requirements are fulfilled, the \emph{Project Proposal} GUI can assess the difference in usable habitat area between both situations (pre- and post-project), i.e., the net gain in AUA. For starting the calculation, define the above-described input data and confirm the calculation:
 \begin{itemize}
 \item Select a fish species corresponding to the one analyzed with the \emph{HabitatEvaluation} module, e.g., Chinook salmon, juvenile lifestage. The \emph{Select fish} button turns green after selecting a target fish species + lifestage.
 \item Select an initial condition (pre-project) and confirm the selection (button turns green after selection).
 \item Select a condition after terraforming (with implementation / post-project) and confirm the selection (button turns green after selection.
-\item Click on the \emph{Calculate Net gain in Weighted Usable habitat Area (WUA)} button to start the assessment.
+\item Click on the \emph{Calculate Net gain in Annually Usable habitat Area (AUA)} button to start the assessment.
 \end{itemize}
 
 The program will run in the background and prompts the calculation progress in the console window.
@@ -247,12 +247,12 @@ The program will run in the background and prompts the calculation progress in t
 \subsection{Output}
 After a successful run, a copy of the \textbf{cost master workbook} with the file name extension corresponding to the target fish automatically opens. For example, if the target fish was Chinook salmon -- juvenile, the copy of the workbook is \ldots{}\texttt{/REACH\emph{{\myUnderscore}}stn\emph{{\myUnderscore}assessment{\myUnderscore}v}ii\emph{{\myUnderscore}chj.xlsx}}.\\
 
-Moreover, the particular \textbf{usable areas associated with the available discharges were written} to \texttt{/Geodata/\emph{WUA{\myUnderscore}evaluation{\myUnderscore}chj.xlsx}}.\\
+Moreover, the particular \textbf{usable areas associated with the available discharges were written} to \texttt{/Geodata/\emph{AUA{\myUnderscore}evaluation{\myUnderscore}chj.xlsx}}.\\
 
-The discharge-related \textbf{shapefiles} with polygons of usable habitat area were saved as: \texttt{/Geodata/Rasters/\emph{con dition}/\emph{no}{\myUnderscore}cover/NUM\emph{wua{\myUnderscore}eval.shp}}. NUM is an automatically prefix added by the WUA evaluation routine. The association of the NUM shapefile with the corresponding discharge was logged to: \texttt{/Geodata/\emph{logfile{\myUnderscore}40.log}}.\\
+The discharge-related \textbf{shapefiles} with polygons of usable habitat area were saved as: \texttt{/Geodata/Rasters/\emph{con dition}/\emph{no}{\myUnderscore}cover/NUM\emph{aua{\myUnderscore}eval.shp}}. NUM is an automatically prefix added by the AUA evaluation routine. The association of the NUM shapefile with the corresponding discharge was logged to: \texttt{/Geodata/\emph{logfile{\myUnderscore}40.log}}.\\
 
 The cells \emph{G3} and \emph{I2/3} in \texttt{REACH\emph{{\myUnderscore}}stn\emph{{\myUnderscore}assessment{\myUnderscore}v}ii\emph{{\myUnderscore}fish.xlsx}}. state the
-net gain in WUA and the project return in units of US~\$ per square yard (or m$^2$ for any currency defined) net gain in WUA (comparison of pre- and post-project condition), respectively.
+net gain in AUA and the project return in units of US~\$ per square yard (or m$^2$ for any currency defined) net gain in AUA (comparison of pre- and post-project condition), respectively.
 
 
  

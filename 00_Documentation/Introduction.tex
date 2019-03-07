@@ -50,9 +50,9 @@ The procedure of project design following the flowchart involves the following s
 	\item Use the \textit{MaxLifespan} module to identify best performing (highest lifespan) vegetation plantings and bioengineering features.
 	\item If the soils are too coarse, apply the maintenance feature of "incorporate fine sediment in soils" to ensure that planned vegetation plantings can grow.
 	\item If gravel augmentation methods are applicable: Consecutively apply the \textit{LifespanDesign} and \textit{MaxLifespan} module to maintenance features to foster self-sustaining, artificially created morphological patterns within the terraforming process.\\
-	If gravel is added in-stream, re-run the numerical model for the assessment of gravel stability with the \textit{LifespanDesign} module and the combined habitat suitability with the \textit{HabitatEvaluation} module to compare the Weighted Usable Area (habitat) before and after stream restoration.
-	\item Use the \textit{HabitatEvaluation} to assess the "existing" (pre-project) and "with implementation" (post-project) habitat suitability in terms of weighted usable habitat area (WUA).
-	\item Use the \textit{ProjectMaker} to calculate costs, net gain in WUA, and their ratio as a metric defining the project trade-off.
+	If gravel is added in-stream, re-run the numerical model for the assessment of gravel stability with the \textit{LifespanDesign} module and the combined habitat suitability with the \textit{HabitatEvaluation} module to compare the Annually Usable habitat Area before and after stream restoration.
+	\item Use the \textit{HabitatEvaluation} to assess the "existing" (pre-project) and "with implementation" (post-project) habitat suitability in terms of annually usable habitat area (AUA).
+	\item Use the \textit{ProjectMaker} to calculate costs, net gain in AUA, and their ratio as a metric defining the project trade-off.
 \end{enumerate}
 
 The working principles of the \textit{LifespanDesign}, \textit{MaxLifespan}, \textit{ModifyTerrain}, \textit{HabitatEvaluation}, and \textit{ProjectMaker} modules are explained in chapters \ref{part:lf}, \ref{part:ap}, \ref{part:mt}, \ref{part:he}, and \ref{part:pm}, respectively. The differentiation between terraforming (framework), planting and other bioengineering, and maintenance features is described in Sec.~\ref{sec:featoverview}. The correct installation of the \textit{River Architect} package and setting the good code environment is explained in the following Sec.~\ref{sec:req}.
@@ -126,14 +126,14 @@ The main directory (\texttt{/RiverArchitect/}) contains the documentation file, 
 		\item \texttt{LAUNCH{\myUnderscore}Windows{\myUnderscore}x64.bat} is a batchfile that runs \texttt{modify{\myUnderscore}terrain{\myUnderscore}gui.py} on Windows x64.
 	\end{itemize}
 	\item \textbf{Module (folder): \texttt{\textit{NewRiver}/HabitatEvaluation}}\\
-	Creates Habitat Suitability Index Rasters / maps and quantifies weighted usable area for target fish species and a user-defined range of discharges (see Manual Chapter~\ref{part:he}).
+	Creates Habitat Suitability Index Rasters / maps and quantifies annually usable habitat area for target fish species and a user-defined range of discharges (see Manual Chapter~\ref{part:he}).
 	\begin{itemize}
 		\item \texttt{CHSI} contains subfolders with with composite habitat suitability index Rasters for pre- and post-project \texttt{conditions}.
 		\item \texttt{FlowDurationCurves} contains workbooks with flow duration curves (exceedance probabilities). Refer to the external \texttt{Tools} to generate appropriate \texttt{Spreadsheets}.
 		\item \texttt{HSI} contains subfolders with with habitat suitability index \texttt{Rasters} for pre- and post-project \texttt{conditions}.
-		\item \texttt{WUA} contains result workbooks with WUA values for examined \texttt{conditions}. The \texttt{Rasters} subfolder contains the associated composite habitat suitability Rasters.
+		\item \texttt{AUA} contains result workbooks with AUA values for examined \texttt{conditions}. The \texttt{Rasters} subfolder contains the associated composite habitat suitability Rasters.
 		\item \texttt{.cache} folder occurs temporarily when the module is executed.
-		\item \texttt{.templates} folder contains spreadsheet templates for the quantification of weighted usable area and the definition of fish species, lifestages and associated habitat suitability curves.
+		\item \texttt{.templates} folder contains spreadsheet templates for the quantification of annually usable habitat area and the definition of fish species, lifestages and associated habitat suitability curves.
 		\item \texttt{cFish.py} contains the \pythoninline{Fish} class that reads characteristic species and lifestage data from \texttt{.templates/Fish.xlsx}.
 		\item \texttt{cHabitatIO.py} uses the \pythoninline{openpyxl} package to read and write data from and to \texttt{xlsx} files, respectively.
 		\item \texttt{cHSI.py} contains the \pythoninline{CHSI}, \pythoninline{HHSI} and \pythoninline{FlowAssessment} classes to calculate composite habitat suitability Rasters, hydraulic habitat suitability Rasters and interpolating the annual flow duration of considered discharges.
@@ -147,12 +147,12 @@ The main directory (\texttt{/RiverArchitect/}) contains the documentation file, 
 		\item \texttt{.cache} folder occurs temporarily when the module is executed.
 		\item \texttt{.templates} folder contains a template folder tree and template workbooks with unit cost tables, as well as sample application data that illustrate potential results of the module.
 		\item \texttt{cIO.py} uses the \pythoninline{openpyxl} package to read and write data from and to \texttt{xlsx} files, respectively.
-		\item \texttt{cWUA.py} applies on \textit{HabitatEvaluation} results, in particular CHSI Rasters for calculating WUA in the project area.
+		\item \texttt{cWUA.py} applies on \textit{HabitatEvaluation} results, in particular CHSI Rasters for calculating AUA in the project area.
 		\item \texttt{fFunctions.py} contains module-specific functions.
 		\item \texttt{project{\myUnderscore}maker{\myUnderscore}gui.py} contains the \pythoninline{MainGui} class of this module.
 		\item \texttt{s20{\myUnderscore}plantings{\myUnderscore}delineation.py} applies on \textit{MaxLifespan} products for assessing most suitable vegetation plantings within the project area.
 		\item \texttt{s21{\myUnderscore}plantings{\myUnderscore}stabilization.py} applies on \textit{MaxLifespan} products and user-defined input parameters for mapping bioengineering futures required in order stabilize vulnerable vegetation plantings.
-		\item \texttt{s40{\myUnderscore}compare{\myUnderscore}wua.py} applies on \textit{HabitatEvaluation} CHSI rasters used in \texttt{cWUA.py} for assessing the weighted usable habitat for a target fish species and lifestage within the project area.
+		\item \texttt{s40{\myUnderscore}compare{\myUnderscore}wua.py} applies on \textit{HabitatEvaluation} CHSI rasters used in \texttt{cWUA.py} for assessing the annually usable habitat area for a target fish species and lifestage within the project area.
 		\item \texttt{LAUNCH{\myUnderscore}Windows{\myUnderscore}x64.bat} is a batchfile that runs \texttt{habitat{\myUnderscore}gui.py} on Windows x64.
 	\end{itemize}
 	\item \textbf{Folder: \texttt{Tools}}\\
@@ -171,7 +171,7 @@ The main directory (\texttt{/RiverArchitect/}) contains the documentation file, 
 		\item \texttt{make{\myUnderscore}annual{\myUnderscore}peak.py} prepares required input data for statistic flow analyses and with the U.S. Army Corps of Engineers' \texttt{HEC-SPP} software.
 		\item \texttt{make{\myUnderscore}d2w.py} calculates depth to groundwater Rasters (uses \texttt{cDepth2Groundwater.py}).
 		\item \texttt{make{\myUnderscore}det.py} calculates detrended DEM Rasters (uses \texttt{cDetrendedDEM.py}).
-		\item \texttt{make{\myUnderscore}flow{\myUnderscore}duration.py} creates flow duration curves (annual averages) for the assessment of WUA.
+		\item \texttt{make{\myUnderscore}flow{\myUnderscore}duration.py} creates flow duration curves (annual averages) for the assessment of AUA.
 		\item \texttt{make{\myUnderscore}mu.py} calculates instream morphological unit Rasters (uses \texttt{cMorphUnit.py}).
 		\item \texttt{morphology{\myUnderscore}designer.py} creates design tables for self-sustaining pool-riffle channels (uses \texttt{cHydr aulic.py} and \texttt{cPoolRiffle.py}).
 		\item \texttt{run{\myUnderscore}make{\myUnderscore}\ldots{}.bat} are a batchfiles that run \texttt{make{\myUnderscore}\ldots{}.py} on Windows x64.

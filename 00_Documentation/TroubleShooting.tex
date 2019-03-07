@@ -9,7 +9,7 @@ Most errors occur when the wrong python interpreter is used or when rasters or l
 	\item[$\triangleright$] \textbf{\texttt{ERROR 000641: Too few records for analysis.}}\\		
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] This \texttt{arcpy} error message occurs here when \pythoninline{arcpy.CalculateAreas_stats} tries to compute the area of an empty shapefile.
-		\item[\textit{Remedy}] If this error occurs within the calculation of WUA (weighted usable area) calculations, it may be ignored because some discharges do not provide any usable habitat area for a target fish species within a defined project area.\\
+		\item[\textit{Remedy}] If this error occurs within the calculation of AUA (annually usable habitat area) calculations, it may be ignored because some discharges do not provide any usable habitat area for a target fish species within a defined project area.\\
 		Otherwise, trace back files and check the shapefile consistency.\\
 	\end{itemize}
 	
@@ -48,9 +48,9 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Area calculation failed.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{calculate_wua(self)} of \textit{HabitatEvaluation}'s \pythoninline{CHSI()} class in \texttt{HabitatEvaluation/cHSI.py} when it could not calculate the usable habitat area (see Sec.~\ref{sec:hewuamethods}).
-		\item[\textit{Remedy}] -- Ensure that the WUA threshold has a meaningful value between 0.0 and 1.0 (Sec.~\ref{sec:heintro}).\\
-							 -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEvalu ation/WUA/} or their contents are in use by other program.\\
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{calculate_wua(self)} of \textit{HabitatEvaluation}'s \pythoninline{CHSI()} class in \texttt{HabitatEvaluation/cHSI.py} when it could not calculate the usable habitat area (see Sec.~\ref{sec:heauamethods}).
+		\item[\textit{Remedy}] -- Ensure that the AUA threshold has a meaningful value between 0.0 and 1.0 (Sec.~\ref{sec:heintro}).\\
+							 -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEvalu ation/AUA/} or their contents are in use by other program.\\
 							 -- Review the input settings according to Sec.~\ref{sec:hequick}.\\
 							 -- Follow up earlier error messages.\\
 	\end{itemize}
@@ -123,8 +123,8 @@ This is an operating system error and it can indicate different error conditions
 	
 		\item[$\triangleright$]\textbf{\texttt{ERROR: Could not access Fish.xlsx (...).}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{get_hsi_curve(self, species, lifestage, par)} function of the \pythoninline{Fish()} class (\texttt{HabitatEvaluatio}\\\texttt{n/cFish.py}) or the \pythoninline{main()} function in \texttt{s40{\myUnderscore}compare{\myUnderscore}wua.py} raise this error message when it cannot access \texttt{Fish.xlsx} or copy read values from the \texttt{/HabitatEvaluation/WUA/\textit{condition}} directory.
-		\item[\textit{Remedy}] Ensure that neither \texttt{HabitatEvaluation/.templates/Fish.xlsx} nor any file in \texttt{/HabitatEva luation/WUA/\textit{condition}} is used by another program.\\
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{get_hsi_curve(self, species, lifestage, par)} function of the \pythoninline{Fish()} class (\texttt{HabitatEvaluatio}\\\texttt{n/cFish.py}) or the \pythoninline{main()} function in \texttt{s40{\myUnderscore}compare{\myUnderscore}wua.py} raise this error message when it cannot access \texttt{Fish.xlsx} or copy read values from the \texttt{/HabitatEvaluation/AUA/\textit{condition}} directory.
+		\item[\textit{Remedy}] Ensure that neither \texttt{HabitatEvaluation/.templates/Fish.xlsx} nor any file in \texttt{/HabitatEva luation/AUA/\textit{condition}} is used by another program.\\
 	\end{itemize}
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not add cover HSI.}}
@@ -156,7 +156,7 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not create Raster of the project area.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{set_project_area(self)} of \textit{ProjectMakers}'s \pythoninline{CWUA()} class in \texttt{ProjectMaker/cWUA.py} when it failed to convert the project area shapefile to a raster, which it needs for limiting spatial calculations to the project extent.
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{set_project_area(self)} of \textit{ProjectMakers}'s \pythoninline{CAUA()} class in \texttt{ProjectMaker/cWUA.py} when it failed to convert the project area shapefile to a raster, which it needs for limiting spatial calculations to the project extent.
 		\item[\textit{Remedy}] Ensure that the project was correctly delineated (Sec.~\ref{sec:pminp2}).\\
 	\end{itemize}
 	
@@ -218,7 +218,7 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not load newly created Raster of the project area.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{set_project_area(self)} of \textit{ProjectMakers}'s \pythoninline{CWUA()} class in \texttt{ProjectMaker/cWUA.py} when the converted the project area shapefile is corrupted.
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{set_project_area(self)} of \textit{ProjectMakers}'s \pythoninline{CAUA()} class in \texttt{ProjectMaker/cWUA.py} when the converted the project area shapefile is corrupted.
 		\item[\textit{Remedy}] Ensure that the project was correctly delineated (Sec.~\ref{sec:pminp2}).\\
 	\end{itemize}
 	
@@ -230,7 +230,7 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not process information from [...].}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not calculate the weighted usable habitat area for condition or (set of) discharge(s).
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not calculate the annually usable habitat area for condition or (set of) discharge(s).
 		\item[\textit{Remedy}] Ensure that the variable (parameters) are properly defined according to Sec.~\ref{sec:pmquick} and that the \textit{HabitatEvaluation} module contains the required information.\\
 	\end{itemize}
 		
@@ -248,9 +248,9 @@ This is an operating system error and it can indicate different error conditions
 								-- If the \textit{ModifyTerrain} module is externally loaded, ensure the correct definition of features and feature shortnames (see Sec.~\ref{sec:mtaltrun}).\\
 	\end{itemize}
 	
-	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not run WUA analysis.}}
+	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not run AUA analysis.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not calculate WUA.
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not calculate AUA.
 		\item[\textit{Remedy}] Trace back warning and other error messages. Ensure the correct definition of parameters, creation of required geodata, and file naming (Part~\ref{part:pm})\\
 	\end{itemize}
 	
@@ -264,7 +264,7 @@ This is an operating system error and it can indicate different error conditions
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not save CSI raster associated with ...}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{make_chsi_hydraulic(self, fish)} of \textit{HabitatEvaluation}'s \pythoninline{CHSI()} class in \texttt{HabitatEvalua tion/cHSI.py} when the calculated cHSI raster is empty or corrupted.
-		\item[\textit{Remedy}] -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEval uation/WUA/} or their contents are used by another program.\\
+		\item[\textit{Remedy}] -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEval uation/AUA/} or their contents are used by another program.\\
 							 -- Review the input settings according to Sec.~\ref{sec:hequick}.\\
 	\end{itemize}
 	
@@ -277,46 +277,46 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not save WORKBOOK.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not save \texttt{WUA{\myUnderscore}evaluation\textit{{\myUnderscore}unit}.xlsx}.
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not save \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}unit}.xlsx}.
 		\item[\textit{Remedy}] Ensure that the workbook exists, has valid contents, and is not opened by another program.\\
 	\end{itemize}
 		
-	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not save WUA-CHSI raster.}}
+	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not save AUA-CHSI raster.}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{calculate_wua(self)} of \textit{HabitatEvaluation}'s \pythoninline{CHSI()} class in \texttt{HabitatEvaluation/cHSI.py} when the calculated cHSI raster is empty or corrupted.
-		\item[\textit{Remedy}] -- Ensure that the WUA threshold has a meaningful value between 0.0 and 1.0 (Sec.~\ref{sec:heintro}).\\
-							 -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEval uation/WUA/} or their contents are in use by other programs.\\
+		\item[\textit{Remedy}] -- Ensure that the AUA threshold has a meaningful value between 0.0 and 1.0 (Sec.~\ref{sec:heintro}).\\
+							 -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEval uation/AUA/} or their contents are in use by other programs.\\
 							 -- Review the input settings according to Sec.~\ref{sec:hequick}.\\
 	\end{itemize}
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not load existing Raster of the project area.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{set_project_area(self)} of \textit{ProjectMakers}'s \pythoninline{CWUA()} class in \texttt{ProjectMaker/cWUA.py} when it found a raster that delineates the project area, but this raster is corrupted. The function requires the shapefile to raster conversion to limit applicable rasters to the project extent range, which is done with raster calculator operations.
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{set_project_area(self)} of \textit{ProjectMakers}'s \pythoninline{CAUA()} class in \texttt{ProjectMaker/cWUA.py} when it found a raster that delineates the project area, but this raster is corrupted. The function requires the shapefile to raster conversion to limit applicable rasters to the project extent range, which is done with raster calculator operations.
 		\item[\textit{Remedy}] -- Ensure that the project was correctly delineated (Sec.~\ref{sec:pminp2}).\\
 							 -- Manually inspect the project delineation raster.\\
 	\end{itemize}
 	
-	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not transfer net WUA gain.}}
+	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not transfer net AUA gain.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not copy the calculated WUA from \texttt{WUA{\myUnderscore}evaluatio\\\textit{{\myUnderscore}unit}.xlsx} to \texttt{\emph{REACH{\myUnderscore}stn{\myUnderscore}costs{\myUnderscore}vii.xlsx}}.
-		\item[\textit{Remedy}] Open \texttt{WUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}unit}.xlsx} and verify the calculated values. Trace back potential error sources in the CHSI rasters \texttt{/HabitatEvaluation/} folder and other error messages.\\
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not copy the calculated AUA from \texttt{AUA{\myUnderscore}evaluatio\\\textit{{\myUnderscore}unit}.xlsx} to \texttt{\emph{REACH{\myUnderscore}stn{\myUnderscore}costs{\myUnderscore}vii.xlsx}}.
+		\item[\textit{Remedy}] Open \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}unit}.xlsx} and verify the calculated values. Trace back potential error sources in the CHSI rasters \texttt{/HabitatEvaluation/} folder and other error messages.\\
 	\end{itemize}	
 	
-	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not transfer WUA data for [FISH].}}
+	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not transfer AUA data for [FISH].}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not retrieve WUA data from the \texttt{/HabitatEvaluation/WUA/} module to  \texttt{WUA{\myUnderscore}evaluation\textit{{\myUnderscore}unit}.xlsx}.
-		\item[\textit{Remedy}] Open \texttt{WUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}unit}.xlsx} and verify the calculated values. Trace back potential error sources in the CHSI rasters \texttt{/HabitatEvaluation/} folder and other error messages.\\
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not retrieve AUA data from the \texttt{/HabitatEvaluation/AUA/} module to  \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}unit}.xlsx}.
+		\item[\textit{Remedy}] Open \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}unit}.xlsx} and verify the calculated values. Trace back potential error sources in the CHSI rasters \texttt{/HabitatEvaluation/} folder and other error messages.\\
 	\end{itemize}	
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not write value to CELL [...]}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{write_data_cekk(self, column, row, value)} function of the \pythoninline{Write()} class in \texttt{Habi tatEvaluation/cHabitatIO.py}) when it cannot write a value to \texttt{RiverArchitect/Habit atEvaluation/WUA/\textit{condition{\myUnderscore}fill}.xlsx}.
-		\item[\textit{Remedy}] Close all applications that may use \texttt{RiverArchitect/HabitatEvaluation/WUA/\textit{condit ion}{\myUnderscore}\textit{fill}.xlsx}. Detailed information on \textit{HabitatEvaluation} workbook outputs are available in Sec.~\ref{sec:hemakehsi}.\\
+		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{write_data_cekk(self, column, row, value)} function of the \pythoninline{Write()} class in \texttt{Habi tatEvaluation/cHabitatIO.py}) when it cannot write a value to \texttt{RiverArchitect/Habit atEvaluation/AUA/\textit{condition{\myUnderscore}fill}.xlsx}.
+		\item[\textit{Remedy}] Close all applications that may use \texttt{RiverArchitect/HabitatEvaluation/AUA/\textit{condit ion}{\myUnderscore}\textit{fill}.xlsx}. Detailed information on \textit{HabitatEvaluation} workbook outputs are available in Sec.~\ref{sec:hemakehsi}.\\
 	\end{itemize}
 	
-	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not write WUA data for [FISH].}}
+	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not write AUA data for [FISH].}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not write the calculated WUA to when it cannot write a value to \texttt{WUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}}\\\texttt{unit}.xlsx}.
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not write the calculated AUA to when it cannot write a value to \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}}\\\texttt{unit}.xlsx}.
 		\item[\textit{Remedy}] Ensure that the workbook is not opened by another program and / or visually verify that the concerned \texttt{CHSI} rasters contain valid values.\\
 	\end{itemize}
 	
@@ -403,7 +403,7 @@ This is an operating system error and it can indicate different error conditions
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Failed to save WORKBOOK.}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{calculate_wua(self)} of \textit{HabitatEvaluation}'s \pythoninline{CHSI()} class in \texttt{HabitatEvaluation/cHSI.py} when it could not save \texttt{\textit{condition}{\myUnderscore}\textit{fill}.xlsx}.
-		\item[\textit{Remedy}] Ensure that no other software uses \texttt{HabitatEvaluation/WUA/\texttt{\textit{condition}{\myUnderscore}\textit{fill}.xlsx}}.\\
+		\item[\textit{Remedy}] Ensure that no other software uses \texttt{HabitatEvaluation/AUA/\texttt{\textit{condition}{\myUnderscore}\textit{fill}.xlsx}}.\\
 	\end{itemize}
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Failed to set reach extents -- output is corrupted.}}
@@ -456,8 +456,8 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Invalid cell assignment for discharge / rasters.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{make_condition_xlsx(self, fish_sn)} function of the \pythoninline{Write()} class in \texttt{HabitatEval uation/cHabitatIO.py}) when it cannot write discharge values to \texttt{RiverArchitect/Habit atEvaluation/WUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx}.
-		\item[\textit{Remedy}] Ensure that the flow duration curve is well defined (see Sec.~\ref{sec:hemakehsi}) and that \texttt{RiverArchitect/HabitatEvaluation/WUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx} is not used by any other application.\\
+		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{make_condition_xlsx(self, fish_sn)} function of the \pythoninline{Write()} class in \texttt{HabitatEval uation/cHabitatIO.py}) when it cannot write discharge values to \texttt{RiverArchitect/Habit atEvaluation/AUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx}.
+		\item[\textit{Remedy}] Ensure that the flow duration curve is well defined (see Sec.~\ref{sec:hemakehsi}) and that \texttt{RiverArchitect/HabitatEvaluation/AUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx} is not used by any other application.\\
 	\end{itemize}	
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Invalid feature names for column headers.}}
@@ -475,7 +475,7 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Invalid file name or data.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{save_close_wb(self, *args)} function of the \pythoninline{Write()} class in \texttt{HabitatEvaluation/cHabitatIO.py}) or \texttt{ProjectMaker/cIO.py}) when it cannot save \texttt{RiverArchitect/Habi tatEvaluation/WUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx} or a copy of the cost master workbook.
+		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{save_close_wb(self, *args)} function of the \pythoninline{Write()} class in \texttt{HabitatEvaluation/cHabitatIO.py}) or \texttt{ProjectMaker/cIO.py}) when it cannot save \texttt{RiverArchitect/Habi tatEvaluation/AUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx} or a copy of the cost master workbook.
 		\item[\textit{Remedy}] -- \textit{HabitatEvaluation}: Close all applications that may use \texttt{\textit{condition}{\myUnderscore}\textit{fill}.xlsx} and ensure that its template exists. Detailed information on \textit{HabitatEvaluation} workbook outputs are available in Sec.~\ref{sec:hemakehsi}.\\
 		-- \textit{ProjectMaker}:  Close all applications that may use the cost master workbook (\texttt{\emph{REACH}{\myUnderscore}\emph{stn}{\myUnderscore}\emph{costs}{\myUnderscore}\emph{ver}\\\emph{sion}.xlsx}) and ensure that it exists. Detailed information are available in Sec.~\ref{sec:pmcq}.\\
 	\end{itemize}
@@ -625,8 +625,8 @@ This is an operating system error and it can indicate different error conditions
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Shapefile conversion failed.}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{calculate_wua(self)} of \textit{HabitatEvaluation}'s \pythoninline{CHSI()} class in \texttt{HabitatEvaluation/cHSI.py} when it could not convert the CHSI raster to a shapefile.
-		\item[\textit{Remedy}] -- Ensure that the WUA threshold has a meaningful value between 0.0 and 1.0 (Sec.~\ref{sec:heintro}).\\
-							 -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEval uation/WUA/} or their contents are in use by other programs.\\
+		\item[\textit{Remedy}] -- Ensure that the AUA threshold has a meaningful value between 0.0 and 1.0 (Sec.~\ref{sec:heintro}).\\
+							 -- Ensure that neither the directory \texttt{HabitatEvaluation/.cache/} nor the directory \texttt{HabitatEval uation/AUA/} or their contents are in use by other programs.\\
 							 -- Review the input settings according to Sec.~\ref{sec:hequick}.\\
 							 -- Follow up earlier error messages.\\
 	\end{itemize}
@@ -813,13 +813,13 @@ zero_ras.save(zero_ras_str)
 	
 	\item[$\triangleright$]\textbf{\texttt{WARNING: Could not read project area extents.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{CWUA().get_extents(self, ...)} in \texttt{/ProjectMaker/cWUA.py} when the function failed to read the project area extents from the \texttt{ProjectArea.shp} shapefile.
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{CAUA().get_extents(self, ...)} in \texttt{/ProjectMaker/cWUA.py} when the function failed to read the project area extents from the \texttt{ProjectArea.shp} shapefile.
 		\item[\textit{Remedy}] Ensure that the texttt{ProjectArea.shp} shapefile is correctly created (in particular the \textit{Attributes Table}), according to Sec.~\ref{sec:pminp2}.\\		
 	\end{itemize}
 	
 	\item[$\triangleright$]\textbf{\texttt{WARNING: Could not set project area extents ().}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{CWUA().set_env(self)} in \texttt{/ProjectMaker/cWUA.py} when the function failed to set project area extents.
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{CAUA().set_env(self)} in \texttt{/ProjectMaker/cWUA.py} when the function failed to set project area extents.
 		\item[\textit{Remedy}] Occurs when the CHSI Raster associated with a certain discharge is empty. Ignore this Warning if the CHSI Raster was correctly identified as being empty, otherwise, revise CHSI Raser creation with the \textit{HabitatEvaluation} module (part~\ref{part:he}).\\		
 	\end{itemize}
 	
