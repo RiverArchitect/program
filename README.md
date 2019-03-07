@@ -13,4 +13,4 @@ GUI modules.
 
 For download and installation instructions, please refer to the code [documentation][1].
 
-[3]: https://github.com/sschwindt/RiverArchitect_development/blob/master/00_Documentation/RiverArchitect_Manual_v01.pdf
+[1]: https://github.com/sschwindt/RiverArchitect_development/blob/master/00_Documentation/RiverArchitect_Manual_v01.pdf
