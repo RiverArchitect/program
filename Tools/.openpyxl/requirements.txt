@@ -1,0 +1,7 @@
+pip>=6.0
+lxml>=3.5.0
+pytest
+pytest-cov
+pillow
+tox
+pandas

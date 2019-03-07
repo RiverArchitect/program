@@ -1,0 +1,16 @@
+<FrameworkConfig TagName="FrameworkConfig" Name="FrameworkConfig" AliasName="FrameworkConfig">
+  <DefaultConfig>
+    <TemplateView TagName="TemplateView">
+      <ApLayers TagName="ApLayers" />
+    </TemplateView>
+    <ProgParams>
+      <RasterLocation />
+      <VectorLocation />
+      <SchemaDatabaseLocation />
+      <DllPath>C:\Windows\assembly\GAC_MSIL\ESRI.APWR.ApFramework\1.0.0.0__0e46c6306d55f57a\</DllPath>
+      <HelpFileName />
+      <Debug>31</Debug>
+      <LoadedDateTime>4/11/2018 9:24:32 AM</LoadedDateTime>
+    </ProgParams>
+  </DefaultConfig>
+</FrameworkConfig>

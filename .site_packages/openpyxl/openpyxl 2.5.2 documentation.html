@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class=" js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients no-cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths" style="" lang="en"><!--<![endif]--><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files — openpyxl 2.5.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+
+  
+    <link rel="stylesheet" href="openpyxl%202.5.2%20documentation_files/sphinx_rtd_theme.css" type="text/css">
+  
+
+  
+        <link rel="index" title="Index" href="https://openpyxl.readthedocs.io/en/stable/genindex.html">
+        <link rel="search" title="Search" href="https://openpyxl.readthedocs.io/en/stable/search.html">
+    <link rel="top" title="openpyxl 2.5.2 documentation" href="#">
+        <link rel="next" title="Manipulating a workbook in memory" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html"> 
+
+  
+  <script async="" src="openpyxl%202.5.2%20documentation_files/analytics.js"></script><script src="openpyxl%202.5.2%20documentation_files/modernizr.js"></script>
+
+
+<!-- RTD Extra Head -->
+
+<!-- 
+Always link to the latest version, as canonical.
+http://docs.readthedocs.org/en/latest/canonical.html
+-->
+<link rel="canonical" href="http://openpyxl.readthedocs.io/en/stable/">
+
+<link rel="stylesheet" href="openpyxl%202.5.2%20documentation_files/readthedocs-doc-embed.css" type="text/css">
+
+<script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/readthedocs-data.js"></script>
+
+<!-- Add page-specific data, which must exist in the page js, not global -->
+<script type="text/javascript">
+READTHEDOCS_DATA['page'] = 'index' 		
+READTHEDOCS_DATA['source_suffix'] = '.rst'
+</script>
+
+<script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/readthedocs-dynamic-include.js"></script>
+
+<!-- end RTD <extrahead> -->
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> openpyxl
+          
+
+          
+            
+            <img src="openpyxl%202.5.2%20documentation_files/logo.png" class="logo">
+          
+          </a>
+
+          
+            
+            
+            
+              <div class="version">
+                stable
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input name="q" placeholder="Search docs" type="text">
+    <input name="check_keywords" value="yes" type="hidden">
+    <input name="area" value="default" type="hidden">
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html">Manipulating a workbook in memory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#saving-to-a-file">Saving to a file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#loading-from-a-file">Loading from a file</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html">Simple usage</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/pandas.html">Working with Pandas and NumPy</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html">Charts</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/comments.html">Comments</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/optimized.html">Read-only mode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode">Write-only mode</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html">Working with styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_properties.html">Additional Worksheet Properties</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html">Conditional Formatting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/print_settings.html">Print Settings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/filters.html">Using filters and sorts</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_tables.html">Worksheet Tables</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/validation.html">Validating cells</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/defined_names.html">Defined Names</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formula.html">Parsing Formulas</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/protection.html">Protection</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html">Testing on Windows</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/api/openpyxl.html">openpyxl package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html">2.5.2 (2018-04-06)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id8">2.5.1 (2018-03-12)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id18">2.5.0 (2018-01-24)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b2-2018-01-19">2.5.0-b2 (2018-01-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2017-10-19">2.5.0-b1 (2017-10-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a3-2017-08-14">2.5.0-a3 (2017-08-14)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a2-2017-06-25">2.5.0-a2 (2017-06-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a1-2017-05-30">2.5.0-a1 (2017-05-30)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id57">2.4.11 (2018-01-24)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id58">2.4.10 (2018-01-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id61">2.4.9 (2017-10-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id78">2.4.8 (2017-05-30)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id86">2.4.7 (2017-04-24)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id89">2.4.6 (2017-04-14)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id97">2.4.5 (2017-03-07)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id105">2.4.4 (2017-02-23)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#unreleased">2.4.3 (unreleased)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id117">2.4.2 (2017-01-31)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id129">2.4.1 (2016-11-23)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id149">2.4.0 (2016-09-15)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2016-06-08">2.4.0-b1 (2016-06-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a1-2016-04-11">2.4.0-a1 (2016-04-11)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id179">2.3.5 (2016-04-11)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id182">2.3.4 (2016-03-16)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id188">2.3.3 (2016-01-18)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id196">2.3.2 (2015-12-07)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id204">2.3.1 (2015-11-20)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id216">2.3.0 (2015-10-20)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b2-2015-09-04">2.3.0-b2 (2015-09-04)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2015-06-29">2.3.0-b1 (2015-06-29)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id243">2.2.6 (unreleased)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id249">2.2.5 (2015-06-29)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id254">2.2.4 (2015-06-17)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id263">2.2.3 (2015-05-26)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id270">2.2.2 (2015-04-28)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id274">2.2.1 (2015-03-31)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id286">2.2.0 (2015-03-11)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2015-02-18">2.2.0-b1 (2015-02-18)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id302">2.1.5 (2015-02-18)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id309">2.1.4 (2014-12-16)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id317">2.1.3 (2014-12-09)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id322">2.1.2 (2014-10-23)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id331">2.1.1 (2014-10-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id340">2.1.0 (2014-09-21)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id352">2.0.5 (2014-08-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id356">2.0.4 (2014-06-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id360">2.0.3 (2014-05-22)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id364">2.0.2 (2014-05-13)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#brown-bag">2.0.1 (2014-05-13)  brown bag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id365">2.0.0 (2014-05-13)  brown bag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id389">1.8.6 (2014-05-05)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id393">1.8.5 (2014-03-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id395">1.8.4 (2014-02-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id400">1.8.3 (2014-02-09)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id406">1.8.2 (2014-01-17)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id410">1.8.1 (2014-01-14)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id412">1.8.0 (2014-01-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id416">1.7.0 (2013-10-31)</a></li>
+</ul>
+
+            
+          
+        </div>
+      <div id="rtd-w3css5ma" class="ethical-rtd"></div></div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">openpyxl</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> »</li>
+        
+      <li><code class="docutils literal"><span class="pre">openpyxl</span></code> - A Python library to read/write Excel 2010 xlsx/xlsm files</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://bitbucket.org/openpyxl/openpyxl/src/3ddffe18fe15/doc/index.rst" class="fa fa-bitbucket"> Edit on Bitbucket</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-openpyxl">
+<span id="openpyxl-a-python-library-to-read-write-excel-2010-xlsx-xlsm-files"></span><h1><a class="reference internal" href="#module-openpyxl" title="openpyxl"><code class="xref py py-mod docutils literal"><span class="pre">openpyxl</span></code></a> - A Python library to read/write Excel 2010 xlsx/xlsm files<a class="headerlink" href="#module-openpyxl" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<colgroup><col class="field-name">
+<col class="field-body">
+</colgroup><tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Eric Gazoni, Charlie Clark</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Source code:</th><td class="field-body"><a class="reference external" href="http://bitbucket.org/openpyxl/openpyxl/src">http://bitbucket.org/openpyxl/openpyxl/src</a></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Issues:</th><td class="field-body"><a class="reference external" href="http://bitbucket.org/openpyxl/openpyxl/issues">http://bitbucket.org/openpyxl/openpyxl/issues</a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Generated:</th><td class="field-body">Apr 11, 2018</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">License:</th><td class="field-body">MIT/Expat</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Version:</th><td class="field-body">2.5.2</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Openpyxl is a Python library for reading and writing Excel 2010
+xlsx/xlsm/xltx/xltm files.</p>
+<p>It was born from lack of existing library to read/write natively from Python
+the Office Open XML format.</p>
+<p>All kudos to the PHPExcel team as openpyxl was initially based on <a class="reference external" href="http://www.phpexcel.net/">PHPExcel</a>.</p>
+<div class="section" id="support">
+<h3>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h3>
+<p>This is an open source project, maintained by volunteers in their spare time.
+This may well mean that particular features or functions that you would like
+are missing. But things don’t have to stay that way. You can contribute the
+project <a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html"><span class="doc">Development</span></a> yourself or contract a developer for particular
+features.</p>
+<p>Professional support for openpyxl is available from
+<a class="reference external" href="http://www.clark-consulting.eu/">Clark Consulting &amp; Research</a> and
+<a class="reference external" href="http://www.adimian.com/">Adimian</a>. Donations to the project to support further
+development and maintenance are welcome.</p>
+<p>Bug reports and feature requests should be submitted using the <a class="reference external" href="https://bitbucket.org/openpyxl/openpyxl/issues">issue tracker</a>. Please provide a full
+traceback of any error you see and if possible a sample file. If for reasons
+of confidentiality you are unable to make a file publicly available then
+contact of one the developers.</p>
+</div>
+<div class="section" id="sample-code">
+<h3>Sample code:<a class="headerlink" href="#sample-code" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">openpyxl</span> <span class="k">import</span> <span class="n">Workbook</span>
+<span class="n">wb</span> <span class="o">=</span> <span class="n">Workbook</span><span class="p">()</span>
+
+<span class="c1"># grab the active worksheet</span>
+<span class="n">ws</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">active</span>
+
+<span class="c1"># Data can be assigned directly to cells</span>
+<span class="n">ws</span><span class="p">[</span><span class="s1">'A1'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
+
+<span class="c1"># Rows can also be appended</span>
+<span class="n">ws</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c1"># Python types will automatically be converted</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="n">ws</span><span class="p">[</span><span class="s1">'A2'</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+<span class="c1"># Save the file</span>
+<span class="n">wb</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"sample.xlsx"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="user-list">
+<h2>User List<a class="headerlink" href="#user-list" title="Permalink to this headline">¶</a></h2>
+<p>Official user list can be found on <a class="reference external" href="http://groups.google.com/group/openpyxl-users">http://groups.google.com/group/openpyxl-users</a></p>
+</div>
+<div class="section" id="how-to-contribute-code">
+<h2>How to Contribute Code<a class="headerlink" href="#how-to-contribute-code" title="Permalink to this headline">¶</a></h2>
+<p>Any help will be greatly appreciated, just follow those steps:</p>
+<blockquote>
+<div><p>1.
+Please start a new fork (<a class="reference external" href="https://bitbucket.org/openpyxl/openpyxl/fork">https://bitbucket.org/openpyxl/openpyxl/fork</a>)
+for each independent feature, don’t try to fix all problems at the same
+time, it’s easier for those who will review and merge your changes ;-)</p>
+<p>2.
+Hack hack hack</p>
+<p>3.
+Don’t forget to add unit tests for your changes! (YES, even if it’s a
+one-liner, changes without tests will <strong>not</strong> be accepted.) There are plenty
+of examples in the source if you lack know-how or inspiration.</p>
+<p>4.
+If you added a whole new feature, or just improved something, you can
+be proud of it, so add yourself to the AUTHORS file :-)</p>
+<p>5.
+Let people know about the shiny thing you just implemented, update the
+docs!</p>
+<p>6.
+When it’s done, just issue a pull request (click on the large “pull
+request” button on <em>your</em> repository) and wait for your code to be
+reviewed, and, if you followed all theses steps, merged into the main
+repository.</p>
+</div></blockquote>
+<p>For further information see <a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html"><span class="doc">Development</span></a></p>
+</div>
+<div class="section" id="other-ways-to-help">
+<h2>Other ways to help<a class="headerlink" href="#other-ways-to-help" title="Permalink to this headline">¶</a></h2>
+<p>There are several ways to contribute, even if you can’t code (or can’t code well):</p>
+<blockquote>
+<div><ul class="simple">
+<li>triaging bugs on the bug tracker: closing bugs that have already been
+closed, are not relevant, cannot be reproduced, …</li>
+<li>updating documentation in virtually every area: many large features have
+been added (mainly about charts and images at the moment) but without any
+documentation, it’s pretty hard to do anything with it</li>
+<li>proposing compatibility fixes for different versions of Python: we support
+2.7 to 3.5, so if it does not work on your environment, let us know :-)</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Install openpyxl using pip. It is advisable to do this in a Python virtualenv
+without system packages:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install openpyxl
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">There is support for the popular <a class="reference external" href="http://lxml.de/">lxml</a> library which will be used if it
+is installed. This is particular useful when creating large files.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>To be able to include images (jpeg, png, bmp,…) into an openpyxl file,
+you will also need the “pillow” library that can be installed with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install pillow
+</pre></div>
+</div>
+<p class="last">or browse <a class="reference external" href="https://pypi.python.org/pypi/Pillow/">https://pypi.python.org/pypi/Pillow/</a>, pick the latest version
+and head to the bottom of the page for Windows binaries.</p>
+</div>
+</div>
+<div class="section" id="working-with-a-checkout">
+<h2>Working with a checkout<a class="headerlink" href="#working-with-a-checkout" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you might want to work with the checkout of a particular version.
+This may be the case if bugs have been fixed but a release has not yet been
+made.</p>
+<pre class="literal-block">$ pip install -e hg+https://bitbucket.org/openpyxl/openpyxl@2.5#egg=openpyxl
+</pre>
+</div>
+<div class="section" id="usage-examples">
+<h2>Usage examples<a class="headerlink" href="#usage-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tutorial">
+<h3>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html">Manipulating a workbook in memory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#create-a-workbook">Create a workbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#playing-with-data">Playing with data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#accessing-one-cell">Accessing one cell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#accessing-many-cells">Accessing many cells</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#data-storage">Data storage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#saving-to-a-file">Saving to a file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/tutorial.html#loading-from-a-file">Loading from a file</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="cookbook">
+<h3>Cookbook<a class="headerlink" href="#cookbook" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html">Simple usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#write-a-workbook">Write a workbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#read-an-existing-workbook">Read an existing workbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#using-number-formats">Using number formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#using-formulae">Using formulae</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#merge-unmerge-cells">Merge / Unmerge cells</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#inserting-an-image">Inserting an image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/usage.html#fold-columns-outline">Fold columns (outline)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="pandas-and-numpy">
+<h3>Pandas and NumPy<a class="headerlink" href="#pandas-and-numpy" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/pandas.html">Working with Pandas and NumPy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/pandas.html#numpy-support">NumPy Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/pandas.html#working-with-pandas-dataframes">Working with Pandas Dataframes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/pandas.html#converting-a-worksheet-to-a-dataframe">Converting a worksheet to a Dataframe</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="charts">
+<h3>Charts<a class="headerlink" href="#charts" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html">Charts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#chart-types">Chart types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/area.html">Area Charts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/area.html#d-area-charts">2D Area Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/area.html#id1">3D Area Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/bar.html">Bar and Column Charts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/bar.html#vertical-horizontal-and-stacked-bar-charts">Vertical, Horizontal and Stacked Bar Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/bar.html#d-bar-charts">3D Bar Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/bubble.html">Bubble Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/line.html">Line Charts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/line.html#id1">Line Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/line.html#d-line-charts">3D Line Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/scatter.html">Scatter Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/pie.html">Pie Charts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/pie.html#id1">Pie Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/pie.html#projected-pie-charts">Projected Pie Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/pie.html#d-pie-charts">3D Pie Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/doughnut.html">Doughnut Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/radar.html">Radar Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/stock.html">Stock Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/surface.html">Surface charts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#creating-a-chart">Creating a chart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#working-with-axes">Working with axes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/limits_and_scaling.html">Axis Limits and Scale</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/limits_and_scaling.html#minima-and-maxima">Minima and Maxima</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/limits_and_scaling.html#logarithmic-scaling">Logarithmic Scaling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/limits_and_scaling.html#axis-orientation">Axis Orientation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/secondary.html">Adding a second axis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#change-the-chart-layout">Change the chart layout</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chart_layout.html">Changing the layout of plot area and legend</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chart_layout.html#chart-layout">Chart layout</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chart_layout.html#size-and-position">Size and position</a></li>
+<li class="toctree-l5"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chart_layout.html#mode">Mode</a></li>
+<li class="toctree-l5"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chart_layout.html#target">Target</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chart_layout.html#legend-layout">Legend layout</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#styling-charts">Styling charts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/pattern.html">Adding Patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#advanced-charts">Advanced charts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/gauge.html">Gauge Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html#using-chartsheets">Using chartsheets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/charts/chartsheet.html">Chartsheets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="comments">
+<h3>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/comments.html">Comments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/comments.html#adding-a-comment-to-a-cell">Adding a comment to a cell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/comments.html#loading-and-saving-comments">Loading and saving comments</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="read-write-large-files">
+<h3>Read/write large files<a class="headerlink" href="#read-write-large-files" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/optimized.html">Read-only mode</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/optimized.html#worksheet-dimensions">Worksheet dimensions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode">Write-only mode</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="working-with-styles">
+<h3>Working with styles<a class="headerlink" href="#working-with-styles" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html">Working with styles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#cell-styles-and-named-styles">Cell Styles and Named Styles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#cell-styles">Cell Styles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#copying-styles">Copying styles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#basic-font-colors">Basic Font Colors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#applying-styles">Applying Styles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#styling-merged-cells">Styling Merged Cells</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#edit-page-setup">Edit Page Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#named-styles">Named Styles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#creating-a-named-style">Creating a Named Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#using-builtin-styles">Using builtin styles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#number-formats">Number formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#informative">Informative</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#text-styles">Text styles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#comparisons">Comparisons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/styles.html#highlights">Highlights</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_properties.html">Additional Worksheet Properties</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_properties.html#available-properties-for-worksheets">Available properties for worksheets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_properties.html#available-fields-for-page-setup-properties">Available fields for page setup properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_properties.html#available-fields-for-outlines">Available fields for outlines</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="conditional-formatting">
+<h3>Conditional Formatting<a class="headerlink" href="#conditional-formatting" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html">Conditional Formatting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html#builtin-formats">Builtin formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html#colorscale">ColorScale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html#iconset">IconSet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html#databar">DataBar</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formatting.html#standard-conditional-formats">Standard conditional formats</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="print-settings">
+<h3>Print Settings<a class="headerlink" href="#print-settings" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/print_settings.html">Print Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/print_settings.html#edit-print-options">Edit Print Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/print_settings.html#headers-and-footers">Headers and Footers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/print_settings.html#add-print-titles">Add Print Titles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/print_settings.html#add-a-print-area">Add a Print Area</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="filtering-and-sorting">
+<h3>Filtering and Sorting<a class="headerlink" href="#filtering-and-sorting" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/filters.html">Using filters and sorts</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="worksheet-tables">
+<h3>Worksheet Tables<a class="headerlink" href="#worksheet-tables" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_tables.html">Worksheet Tables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_tables.html#creating-a-table">Creating a table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/worksheet_tables.html#important-notes">Important notes</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="data-validation">
+<h3>Data Validation<a class="headerlink" href="#data-validation" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/validation.html">Validating cells</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/validation.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/validation.html#other-validation-examples">Other validation examples</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="defined-names-ranges">
+<h3>Defined Names &amp; Ranges<a class="headerlink" href="#defined-names-ranges" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/defined_names.html">Defined Names</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/defined_names.html#sample-use-for-ranges">Sample use for ranges</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="parsing-formulas">
+<h3>Parsing Formulas<a class="headerlink" href="#parsing-formulas" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/formula.html">Parsing Formulas</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="protection">
+<h3>Protection<a class="headerlink" href="#protection" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/protection.html">Protection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/protection.html#workbook-protection">Workbook Protection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/protection.html#worksheet-protection">Worksheet Protection</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="information-for-developers">
+<h2>Information for Developers<a class="headerlink" href="#information-for-developers" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html">Development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#what-is-suppoprted">What is suppoprted</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#supporting-different-python-versions">Supporting different Python versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#coding-style">Coding style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#getting-the-source">Getting the source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#specification">Specification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#testing">Testing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#coverage">Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#organisation">Organisation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#checking-xml">Checking XML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#schema-validation">Schema validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#microsoft-tools">Microsoft Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#contributing">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#branch-naming-convention">Branch naming convention</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#pull-requests">Pull Requests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#documentation">Documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#benchmarking">Benchmarking</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#memory-use">Memory Use</a></li>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/development.html#pympler">Pympler</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html">Testing on Windows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html#setting-up-a-development-environment">Setting up a development environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html#creating-a-virtual-environment">Creating a virtual environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html#lxml">lxml</a></li>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/windows-development.html#tox">tox</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="api-documentation">
+<h2>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="key-classes">
+<h3>Key Classes<a class="headerlink" href="#key-classes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/api/openpyxl.workbook.workbook.html#openpyxl.workbook.workbook.Workbook" title="openpyxl.workbook.workbook.Workbook"><code class="xref py py-class docutils literal"><span class="pre">openpyxl.workbook.workbook.Workbook</span></code></a></li>
+<li><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/api/openpyxl.worksheet.worksheet.html#openpyxl.worksheet.worksheet.Worksheet" title="openpyxl.worksheet.worksheet.Worksheet"><code class="xref py py-class docutils literal"><span class="pre">openpyxl.worksheet.worksheet.Worksheet</span></code></a></li>
+<li><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/api/openpyxl.cell.cell.html#openpyxl.cell.cell.Cell" title="openpyxl.cell.cell.Cell"><code class="xref py py-class docutils literal"><span class="pre">openpyxl.cell.cell.Cell</span></code></a></li>
+</ul>
+</div>
+<div class="section" id="full-api">
+<h3>Full API<a class="headerlink" href="#full-api" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/api/openpyxl.html">openpyxl package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/api/openpyxl.html#subpackages">Subpackages</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+<div class="section" id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html">2.5.2 (2018-04-06)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id8">2.5.1 (2018-03-12)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id18">2.5.0 (2018-01-24)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b2-2018-01-19">2.5.0-b2 (2018-01-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2017-10-19">2.5.0-b1 (2017-10-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a3-2017-08-14">2.5.0-a3 (2017-08-14)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a2-2017-06-25">2.5.0-a2 (2017-06-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a1-2017-05-30">2.5.0-a1 (2017-05-30)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id57">2.4.11 (2018-01-24)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id58">2.4.10 (2018-01-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id61">2.4.9 (2017-10-19)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id78">2.4.8 (2017-05-30)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id86">2.4.7 (2017-04-24)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id89">2.4.6 (2017-04-14)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id97">2.4.5 (2017-03-07)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id105">2.4.4 (2017-02-23)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#unreleased">2.4.3 (unreleased)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id117">2.4.2 (2017-01-31)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id129">2.4.1 (2016-11-23)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id149">2.4.0 (2016-09-15)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2016-06-08">2.4.0-b1 (2016-06-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#a1-2016-04-11">2.4.0-a1 (2016-04-11)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id179">2.3.5 (2016-04-11)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id182">2.3.4 (2016-03-16)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id188">2.3.3 (2016-01-18)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id196">2.3.2 (2015-12-07)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id204">2.3.1 (2015-11-20)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id216">2.3.0 (2015-10-20)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b2-2015-09-04">2.3.0-b2 (2015-09-04)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2015-06-29">2.3.0-b1 (2015-06-29)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id243">2.2.6 (unreleased)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id249">2.2.5 (2015-06-29)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id254">2.2.4 (2015-06-17)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id263">2.2.3 (2015-05-26)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id270">2.2.2 (2015-04-28)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id274">2.2.1 (2015-03-31)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id286">2.2.0 (2015-03-11)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#b1-2015-02-18">2.2.0-b1 (2015-02-18)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id302">2.1.5 (2015-02-18)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id309">2.1.4 (2014-12-16)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id317">2.1.3 (2014-12-09)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id322">2.1.2 (2014-10-23)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id331">2.1.1 (2014-10-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id340">2.1.0 (2014-09-21)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id352">2.0.5 (2014-08-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id356">2.0.4 (2014-06-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id360">2.0.3 (2014-05-22)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id364">2.0.2 (2014-05-13)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#brown-bag">2.0.1 (2014-05-13)  brown bag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id365">2.0.0 (2014-05-13)  brown bag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id389">1.8.6 (2014-05-05)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id393">1.8.5 (2014-03-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id395">1.8.4 (2014-02-25)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id400">1.8.3 (2014-02-09)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id406">1.8.2 (2014-01-17)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id410">1.8.1 (2014-01-14)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id412">1.8.0 (2014-01-08)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="https://openpyxl.readthedocs.io/en/stable/changes.html#id416">1.7.0 (2013-10-31)</a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="https://openpyxl.readthedocs.io/en/stable/tutorial.html" class="btn btn-neutral float-right" title="Manipulating a workbook in memory" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr><div><div id="rtd-wa4we5ym" class="ethical-rtd"></div></div>
+
+  <div role="contentinfo">
+    <p>
+        © Copyright 2010 - 2018, See AUTHORS.
+      
+        <span class="commit">
+          Revision <code>3ddffe18fe15</code>.
+        </span>
+      
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org/">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: stable
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions"><!-- Inserted RTD Footer -->
+<div class="injected">
+
+  
+
+      
+      
+      
+      <dl>
+        <dt>Versions</dt>
+        
+        
+        <dd><a href="http://openpyxl.readthedocs.io/en/latest/">latest</a></dd>
+        
+        
+         <strong> 
+        <dd><a href="http://openpyxl.readthedocs.io/en/stable/">stable</a></dd>
+         </strong> 
+        
+        
+        <dd><a href="http://openpyxl.readthedocs.io/en/2.5/">2.5</a></dd>
+        
+        
+        
+        <dd><a href="http://openpyxl.readthedocs.io/en/2.6-------------------------7312-a6d95afe8d75/">2.6-------------------------7312-a6d95afe8d75</a></dd>
+        
+        
+      </dl>
+      
+      
+
+      
+      
+      <dl>
+        <dt>Downloads</dt>
+        
+        <dd><a href="https://readthedocs.org/projects/openpyxl/downloads/htmlzip/stable/">HTML</a></dd>
+        
+      </dl>
+      
+      
+
+      
+      <dl>
+        <!-- These are kept as relative links for internal installs that are http -->
+        <dt>On Read the Docs</dt>
+        <dd>
+          <a href="https://readthedocs.org/projects/openpyxl/">Project Home</a>
+        </dd>
+        <dd>
+          <a href="https://readthedocs.org/projects/openpyxl/builds/">Builds</a>
+        </dd>
+        <dd>
+          <a href="https://readthedocs.org/projects/openpyxl/downloads/">Downloads</a>
+        </dd>
+      </dl>
+      
+
+      
+
+      
+      <dl>
+        <dt>On Bitbucket</dt>
+        <dd>
+          <a href="https://bitbucket.org/openpyxl/openpyxl/src/3ddffe18fe15/doc/index.rst">Edit</a>
+        </dd>
+      </dl>
+      
+      
+
+      
+      <dl>
+        <dt>Search</dt>
+        <dd>
+          <div style="padding: 6px;">
+            <form id="flyout-search-form" class="wy-form" target="_blank" action="//readthedocs.org/projects/openpyxl/search/" method="get">
+              <input name="q" placeholder="Search docs" type="text">
+              </form>
+          </div>
+        </dd>
+      </dl>
+      
+
+
+
+      <hr>
+      
+      Free document hosting provided by <a href="https://readthedocs.org/">Read the Docs</a>.
+      
+
+      
+
+</div>
+</div>
+  </div>
+
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.5.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/jquery-2.js"></script>
+      <script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/jquery-migrate-1.js"></script>
+      <script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/underscore.js"></script>
+      <script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/doctools.js"></script>
+      <script type="text/javascript" src="openpyxl%202.5.2%20documentation_files/readthedocs-doc-embed.js"></script>
+
+  
+
+  
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+
+</body></html>

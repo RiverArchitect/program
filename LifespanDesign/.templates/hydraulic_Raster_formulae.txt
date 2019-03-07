@@ -1,0 +1,3 @@
+Use this equation from arcpy.sa to overwrite noData pixels of hydraulics-raster:
+
+Con((IsNull("h001k") == 1), (IsNull("h001k") * 0), "h001k")

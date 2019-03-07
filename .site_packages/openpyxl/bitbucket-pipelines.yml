@@ -1,0 +1,9 @@
+image: openpyxl/openpyxl-ci
+
+pipelines:
+  default:
+  - step:
+      caches:
+        - pip
+      script:
+        - /tools/clean-launch.sh tox --skip-missing-interpreters -- -qrf

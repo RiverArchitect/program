@@ -1,0 +1,20 @@
+#RASTER.INP - ONLY MODIFY VALUES BETWEEN "= " AND " #"
+#GENERAL
+#---------------------------------------------------------------------------------------
+Return periods = 1.0, 1.2, 2.5, 4.7, 12.7, 20.0 #[Comma separated LIST] defines lifespans
+#
+#RASTER NAMES
+#---------------------------------------------------------------------------------------
+composite Habitat Suitability Index (CHSI) = max_chn #[STRING] for habitat matching
+DEM of differences = dodscour, dodfill #[Comma separated LIST]
+Detrended DEM = dem_detrend #[STRING]
+Flow velocity (u) = u001k, u005k, u021k, u042k, u084k, u110k #[Comma separated LIST]
+Flow depth (h) = h001k, h005k, h021k, h042k, h084k, h110k #[Comma separated LIST]
+Grain sizes (D mean) = dmean_ft #[STRING]
+Morphological units (mu) = mu #[STRING]
+Depth to table (d2w) = d2w #[STRING]
+DEM = dem #[STRING] currently not needed
+Side channel = sidech #[STRING] side channel delineation raster
+Wildcard raster = wild #[STRING] any raster for spatial analysis confinement
+
+

@@ -1,0 +1,92 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{article}
+%\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr} % for custom headers
+\usepackage{extramarks} %  headers and footers
+\usepackage[usenames,dvipsnames]{color} % for custom colors
+\usepackage{graphicx} %  images
+\usepackage{epstopdf}
+%\usepackage{courier} %   courier font
+\usepackage{times} %   times font
+\usepackage{eso-pic} % include PDF tables in the appendix
+\usepackage{colortbl}
+\definecolor{lightGray}{gray}{0.57}
+\definecolor{Black}{gray}{0.0}
+
+\include{mypreamble}
+
+%----------------------------------------------------------------------------------------
+%	NAME AND CLASS SECTION
+%----------------------------------------------------------------------------------------
+\newcommand{\headTitle}{Manual and Guide of the \textit{River Architect} Tool Kit\\} % Book title
+\newcommand{\makeTitle}{Stream Assessment, Analysis and Design}% subtitle
+\newcommand{\makeDate}{January\ 2019} %  date
+\newcommand{\Institution}{University of California, Davis\ $\left|\right.$}
+
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+\author{\small{\color{lightGray}written by Sebastian Schwindt}}
+\title{
+\vspace{2in}
+\textmd{\textbf{\color{Black}\headTitle\ \color{lightGray}\makeTitle}}\\
+\normalsize\vspace{0.1in} {\large{\color{lightGray}{\Institution } {\makeDate}}\\
+\vspace{0.1in}
+\resizebox*{0.63\textwidth}{!}{\includegraphics{title.png}}
+}}
+
+
+%\author{\textbf{\AuthorName}}
+\date{} 
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+\pagenumbering{gobble}
+\thispagestyle{empty}
+\maketitle
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS
+%----------------------------------------------------------------------------------------
+
+%\setcounter{tocdepth}{1} % uncomment for no subsections listed in the ToC
+
+\newpage
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+%----------------------------------------------------------------------------------------
+%	MAIN TEXT
+%----------------------------------------------------------------------------------------
+
+\include{Introduction}
+
+\include{LifespanDesign}
+
+\include{MaxLifespan}
+
+\include{ModifyTerrain}
+
+\include{HabitatEvaluation}
+
+\include{ProjectMaker}
+
+\include{FAQ}
+
+\include{TroubleShooting}
+
+\clearpage
+%\section*{References}
+% FIRST: PDFLATEX (F6) (creates.aux file with literature sources) || SECOND: TOOLS --> BibTex (F11 -- generates .bbl file) || THIRD: PDFLATEX (F6)
+\bibliographystyle{elsarticle-harv}
+\bibliography{sscBib}
+
+
+%\newpage
+\end{document}

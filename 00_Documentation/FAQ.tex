@@ -1,0 +1,30 @@
+\newpage
+\part{Frequently Asked Questions (FAQ)} \label{part:faq}
+%\section{FAQ}
+
+\begin{itemize}	
+	\item[$\triangleright$] \textbf{How can I change map styles?}\\
+	Map styles are controlled by settings made in \texttt{.mxd} layout files. Template layout files are stored in different locations for each module and pointers to rasters or shapefiles should be modified in these templates before mapping functions are executed.
+	\begin{itemize}
+		\item \texttt{LifespanDesign}:\\
+		-- Map layout templates are stored in \texttt{/RiverArchitect/LifespanDesign/Output/Mapping/.ReferenceLayouts/}.\\
+		-- Mapping functions use the file \texttt{legend.ServerStyle}, which is located in the \texttt{.ReferenceLay outs} folder. Contrary to \texttt{.style} files, the \texttt{.ServerStyle} file is required because \texttt{arcpy}-Python uses \textit{ArcGIS Engine}, rather than \textit{ArcGIS Desktop}. Own \texttt{.style} files can be created using \textit{ArcMap}'s \texttt{Customize > Style Manager}. From the \texttt{Style Manager}, load the \texttt{LifespanDesign} \texttt{legend.style} file from the \texttt{.ReferenceLayouts} folder. Go to \textit{LegendItems} and double-click on \textit{LYR{\myUnderscore}lf{\myUnderscore}style}. The LifespanDesign module's mapping function accounts for font (size) changes made in the \textit{Label Symbol} or \textit{Description Symbol}. For more guidance on creating styles, \href{http://desktop.arcgis.com/en/arcmap/latest/map/styles-and-symbols/creating-new-styles.htm}{click here}. Next, save (or export) the \texttt{.style} file and convert it to a \texttt{.ServerStyle} file using \texttt{MakeServerStyleSet.exe}, which is typically located in \texttt{C:/Program Files (x86)/ArcGIS/Desktop10.x/bin/}. Note that \texttt{MakeServerStyle Set.exe} and the \texttt{.style} should to be located in the same folder. Finally, rename the new file to \texttt{legend.ServerStyle} and paste it in \texttt{/RiverArchitect/LifespanDesign/Output/Mapping/ .ReferenceLayouts/}.\\
+		-- More descriptions in Sec.~\ref{sec:lfrun}.\\
+		\item \texttt{MaxLifespan}: see Sec.~\ref{sec:actoutmaps}.
+		\item \texttt{ModifyTerrain}: see Sec.~\ref{sec:mtlyt}.
+		\item \texttt{HabitatEvaluation}: No mapping function implemented. For mapping \textit{CHSI} rasters, create own \texttt{.mxd} layout files.
+		\item \texttt{ProjectMaker}: see Sec.~\ref{sec:pmmaps}.
+	\end{itemize}
+	
+	\item[$\triangleright$] \textbf{What is a \textit{condition}?}\\
+	A \textit{condition} refers to a planning state that is typically characterized by a 4-digits year indicator, followed by a layer specifier. \textit{Condition}al Rasters are stored in \texttt{RiverArchitect /01{\myUnderscore}Conditions/}. For more information, refer to Sec.~\ref{sec:input}.
+
+	
+%	\item[$\triangleright$] \textbf{Question}\\
+%	Description
+%	\begin{itemize}
+%		\item .
+%		\item .\\
+%	\end{itemize}
+
+\end{itemize}
