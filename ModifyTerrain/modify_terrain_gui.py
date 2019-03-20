@@ -32,6 +32,7 @@ class MainGui(tk.Frame):
         self.in_vol = os.path.dirname(os.path.abspath(__file__)) + "\\Input\\DEM\\"
         self.logfile_name = ""
         self.mapping = False
+        self.mod_dir = None
         self.prevent_popup = False
         self.reader = cio.Read()
         self.reaches = cdef.Reaches()
@@ -219,6 +220,16 @@ class MainGui(tk.Frame):
             self.reachmenu.entryconfig(13, label=self.reaches.name_dict["reach_07"])
 
     def change_in_feat(self):
+        msg0 = "Make sure there is ONE raster in the directory that contains the string of a feature ID. "
+        msg1 = "Valid feature IDs are:\n"
+        msglist = []
+        try:
+            feat_dict = dict(zip(self.features.name_list, self.features.id_list))
+            for feat in feat_dict.items():
+                msglist.append(": ".join(feat))
+            showinfo("SET DIRECTORY", msg0 + msg1 + ", ".join(msglist))
+        except:
+            pass
         self.in_feat = askdirectory(initialdir=".") + "/"
         if str(self.in_feat).__len__() > 1:
             self.l_inpath_feat.config(fg="dark slate gray", text=str(self.in_feat))
@@ -227,6 +238,8 @@ class MainGui(tk.Frame):
         self.mod_dir = True
 
     def change_in_topo(self):
+        msg0 = "Make sure there is ONE raster in the directory is named \'dem\'.\n"
+        showinfo("SET DIRECTORY", msg0)
         self.in_topo = askdirectory(initialdir=".") + "/"
         if str(self.in_topo).__len__() > 1:
             self.l_inpath_topo.config(fg="dark slate gray", text=str(self.in_topo))
@@ -446,7 +459,7 @@ class MainGui(tk.Frame):
         feat_dict = dict(zip(self.features.name_list, self.features.id_list))
         for feat in feat_dict.items():
             msglist.append(": ".join(feat))
-        showinfo("SET DIRECTORY", msg0 + msg1 + "\n".join(msglist))
+        showinfo("SET DIRECTORY", msg0 + msg1 + ", ".join(msglist))
         self.in_vol = askdirectory(initialdir=".")
         self.in_vol = self.in_vol + "/"
         if str(self.in_vol).__len__() > 1:
