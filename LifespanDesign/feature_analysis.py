@@ -74,7 +74,7 @@ def analysis_call(*args):
         logger.info("ERROR: Function analysis_call received bad arguments.")
 
 
-def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system, wildcard):
+def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system, wildcard, manning_n):
     pot_err_msg = "logger initiation"  # a message that is printed in the case of a program crash
     try:
         logger = logging.getLogger("lifespan_design")
@@ -87,7 +87,7 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
 
         # instantiate GIS Analysis Object
         pot_err_msg = "ArcPyAnalysis"
-        feature_analysis = ca.ArcPyAnalysis(condition, reach_extents, habitat, output_dir, unit_system)  # arcpy class
+        feature_analysis = ca.ArcPyAnalysis(condition, reach_extents, habitat, output_dir, unit_system, manning_n)  # arcpy class
 
         # assign analysis specific parameters if applies
         try:
@@ -95,7 +95,7 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
             logger.info("   >> Inverse tcd analysis")
         except:
             inverse_tcd = False
-        pot_err_msg = "inver threshold verification"
+        pot_err_msg = "inverse threshold verification"
         feature_analysis.verify_inverse_tcd(inverse_tcd)
         try:
             freq = feature.threshold_freq
@@ -227,6 +227,7 @@ def raster_maker(condition, reach_ids, *args):
     # args[2] = habitat analysis (True/False)
     # args[3] = unit system ("us" or "si")
     # args[4] = wildcard raster application
+    # args[5] = FLOAT manning n in s/m^(1/3)
     features = cdef.Features(False)
     if not args:
         # use general feature list and default settings if no arguments are provided
@@ -263,8 +264,12 @@ def raster_maker(condition, reach_ids, *args):
             wildcard = args[4]
         except:
             wildcard = False
+        try:
+            manning_n = float(args[5])
+        except:
+            manning_n = 0.0473934
 
-    # start logging
+            # start logging
     logger = fg.initialize_logger(os.path.dirname(os.path.abspath(__file__)), "lifespan_design")
     logger.info("lifespan_design.raster_maker initiated with feature list = " + str(feature_list) + "\nUnit system: " +
                 str(unit_system))
@@ -297,10 +302,10 @@ def raster_maker(condition, reach_ids, *args):
             feature = cf.RestorationFeature(f)  # instantiate object containing all restoration feature attributes
 
             if not feature.sub:
-                analysis(feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard)
+                analysis(feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard, manning_n)
             else:
                 sub_feature = cf.RestorationFeature(f, feature.sub)
-                analysis(sub_feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard)
+                analysis(sub_feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard, manning_n)
         if reach_extents == "MAXOF":
             break
 

@@ -4,6 +4,7 @@ try:
     from tkMessageBox import askokcancel, showinfo
     from tkFileDialog import *
     import webbrowser
+    from functools import partial
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
 
@@ -15,6 +16,31 @@ try:
     import cTerrainIO as cmio
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py, RP/cDefinitions.py, RP/cTerrainIO).")
+
+
+class PopUpWindow(object):
+    def __init__(self, master):
+        top = self.top = tk.Toplevel(master)
+        msg0 = "Manning\'s n is used in the calculation of grain mobility for shear velocity.\n"
+        msg1 = "Please refer to the manual (Lifespan mapping section about angular boulders and grain mobility) for more details.\n"
+        msg3 = "If you are using US costumary units, River Architect will use an internal conversion factor for the here entered metric value.\n"
+        self.l_0 = tk.Label(top, text=msg0)
+        self.l_0.pack(padx=5, pady=5)
+        self.l_1 = tk.Label(top, text=msg1)
+        self.l_1.pack(padx=5, pady=5)
+        self.l_2 = tk.Label(top, text="Enter new SI-metric value for Manning\'s n in [s/m^(1/3)]:")
+        self.l_2.pack(padx=5, pady=5)
+        self.e = tk.Entry(top, width=10)
+        self.e.pack(padx=5, pady=5)
+        self.b = tk.Button(top, text='OK', command=self.cleanup)
+        self.b.pack(padx=5, pady=5)
+        self.l_3 = tk.Label(top, text=msg3)
+        self.l_3.pack(padx=5, pady=5)
+        self.top.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+
+    def cleanup(self):
+        self.value = self.e.get()
+        self.top.destroy()
 
 
 class RunGui:
@@ -32,9 +58,9 @@ class RunGui:
         wy = (self.master.winfo_screenheight() - wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))
 
-    def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild):
+    def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n):
         import feature_analysis as fa
-        out_dir = fa.raster_maker(condition, reach_ids_applied, feature_list, mapping, habitat, units, wild)
+        out_dir = fa.raster_maker(condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n)
         self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
         return out_dir
 
@@ -74,6 +100,7 @@ class FaGui(tk.Frame):
         self.feature_list = []
         self.features = cdef.Features(False)
         self.habitat = False
+        self.manning_n = 0.0473934
         self.mapping = False
         self.mt_template_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..')) + "\\ModifyTerrain\\.templates\\"
@@ -96,7 +123,7 @@ class FaGui(tk.Frame):
         # ARRANGE GEOMETRY
         # width and height of the window.
         ww = 700
-        wh = 400
+        wh = 440
         self.xd = 5  # distance holder in x-direction (pixel)
         self.yd = 5  # distance holder in y-direction (pixel)
         # height and location
@@ -123,6 +150,8 @@ class FaGui(tk.Frame):
         self.l_condition.grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
         self.l_v_condition = tk.Label(self, fg="red", text="Verify (Run menu)")
         self.l_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
+        self.l_n = tk.Label(self, text="Roughness (Manning\'s n): %.3f " % self.manning_n)
+        self.l_n.grid(sticky=tk.W, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
         # DROP DOWN ENTRIES (SCROLL BARS)
         self.sb_condition = tk.Scrollbar(self, orient=tk.VERTICAL)
@@ -146,6 +175,8 @@ class FaGui(tk.Frame):
         self.b_mod_rea = tk.Button(self, width=25, bg="white", text="Modify river/reach extents", command=lambda:
                                    self.open_inp_file("computation_extents.xlsx", "MT"))
         self.b_mod_rea.grid(sticky=tk.EW, row=6, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_n = tk.Button(self, width=25, bg="white", text="Change / Info", command=lambda: self.set_n())
+        self.b_n.grid(sticky=tk.W, row=10, column=2, columnspan=5, padx=self.xd, pady=self.yd)
 
         # DROP DOWN MENU
         # menu does not need packing - see tkinter manual page 44ff
@@ -236,7 +267,7 @@ class FaGui(tk.Frame):
 
         for feat in self.features.name_list:
             menu_name = "Add: " + str(feat)
-            self.featmenu.add_command(label=menu_name, command=lambda: self.define_feature(str(feat)))
+            self.featmenu.add_command(label=menu_name, command=partial(self.define_feature, feat))
         self.featmenu.add_command(label="_____________________________")
         self.featmenu.add_command(label="Group layer: Terraforming", command=lambda: self.define_feature("framework"))
         self.featmenu.add_command(label="Group layer: Plantings", command=lambda: self.define_feature("plants"))
@@ -287,7 +318,7 @@ class FaGui(tk.Frame):
                             if not (feature_name == "plants"):
                                 if not(feature_name in self.feature_list):
                                     # append single feature to analysis list
-                                    self.feature_list.append(feature_name)
+                                    self.feature_list.append(str(feature_name))
                             else:
                                 # append plant features
                                 self.feature_list = self.features.name_list_plants
@@ -305,7 +336,7 @@ class FaGui(tk.Frame):
                 # clear
                 self.feature_list = []
                 self.l_features.config(fg="red",
-                                           text="Choose from \'Add Features\' Menu (required for Raster Maker only)")
+                                       text="Choose from \'Add Features\' Menu (required for Raster Maker only)")
 
     def define_reaches(self):
         try:
@@ -374,7 +405,7 @@ class FaGui(tk.Frame):
         if self.verified:
             run = RunGui(self)
             out_dir = run.gui_raster_maker(self.condition, self.reach_ids_applied, self.feature_list,
-                                           self.mapping, self.habitat, self.unit, self.wild)
+                                           self.mapping, self.habitat, self.unit, self.wild, self.manning_n)
             if self.mapping:
                 self.out_lyt_dir = out_dir
             else:
@@ -449,6 +480,16 @@ class FaGui(tk.Frame):
                                                 pady=self.yd)
             tk.Button(self, bg="pale green", width=25, text="IMPORTANT\n Read logfile(s) from Map Maker", command=lambda:
                       self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+
+    def set_n(self):
+        sub_frame = PopUpWindow(self.master)
+        self.b_n["state"] = "disabled"
+        self.master.wait_window(sub_frame.top)
+        self.b_n["state"] = "normal"
+        self.manning_n = float(sub_frame.value)
+        self.l_n.config(text="Roughness (Manning\'s n): %.3f " % self.manning_n)
+        if float(self.manning_n) > 0.2:
+            showinfo("WARNING", "That seems to be an incredibly rough channel. Consider revising the new value for Manning\'s n")
 
     def show_credits(self):
         msg = "Version info: 0.1 (July 2018)\nAuthor: Sebastian Schwindt\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
