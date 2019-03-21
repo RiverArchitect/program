@@ -240,7 +240,6 @@ class Wood:
         print("Class Info: <type> = Feature: Wood")
 
 
-# ---- Main Class ----
 class RestorationFeature:
     # This class builds up on above feature classes.
     # Instantiate an object by: features = RestorationFeatures()
