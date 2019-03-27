@@ -157,7 +157,14 @@ def layout_maker(*args):
 
     layout_dirs = []
     for rd in raster_dirs:
-        condition_new = rd.split("\\")[-2]
+        try:
+            if "\\" in str(rd):
+                condition_new = rd.split("\\")[-2]
+            else:
+                condition_new = rd.split("/")[-2]
+            print(" Identified condition = " + str(condition_new))
+        except:
+            print("WARNING: Invalid raster directory: " + str(rd))
         mapper = cm.Mapper(condition_new, rd)
         layout_dirs.append(mapper.output_mxd_dir)
         mapper.prepare_layout()
