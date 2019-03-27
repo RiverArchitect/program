@@ -484,18 +484,22 @@ class ArcPyAnalysis:
                     except:
                         self.logger.info("        -- bad method assignment.")
 
-            if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
-                # make temp_ras without noData pixels for both ras_mu and ras_dict
-                temp_ras_mu = Con((IsNull(self.ras_mu) == 1), (IsNull(self.ras_mu) * 0), self.ras_mu)
-                temp_ras_di = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                               (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                self.raster_dict_lf[self.raster_info_lf])
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                ras_mu_new = Con(((temp_ras_mu == 1.0) & (temp_ras_di > 0)), temp_ras_di)
-                self.ras_mu = ras_mu_new
-            self.raster_info_lf = "ras_mu"
-            self.raster_dict_lf.update({"ras_mu": self.ras_mu})
+            if not (method < 0):
+                # if no MU delineation applies: method == -1
+                if self.verify_raster_info():
+                    self.logger.info("            based on raster: " + self.raster_info_lf)
+                    # make temp_ras without noData pixels for both ras_mu and ras_dict
+                    temp_ras_mu = Con((IsNull(self.ras_mu) == 1), (IsNull(self.ras_mu) * 0), self.ras_mu)
+                    temp_ras_di = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                   (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                    self.raster_dict_lf[self.raster_info_lf])
+                    # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                    ras_mu_new = Con(((temp_ras_mu == 1.0) & (temp_ras_di > 0)), temp_ras_di)
+                    self.ras_mu = ras_mu_new
+                self.raster_info_lf = "ras_mu"
+                self.raster_dict_lf.update({"ras_mu": self.ras_mu})
+            else:
+                self.logger.info("          --> skipped (threshold workbook has no valid entries for mu)")
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -635,7 +639,7 @@ class ArcPyAnalysis:
                     temp_scour = Con((IsNull(dod.raster_scour) == 1), (IsNull(dod.raster_scour) * 0), dod.raster_scour)
                     dod.raster_scour = temp_scour
 
-                if not(self.inverse_tcd):
+                if not self.inverse_tcd:
                     self.ras_tcd = Con(((dod.raster_fill >= threshold_fill) | (dod.raster_scour >= threshold_scour)), 1.0, 0)
                 else:
                     self.ras_tcd = Con(((dod.raster_fill < threshold_fill) | (dod.raster_scour < threshold_scour)), 1.0, 0)
