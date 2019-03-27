@@ -20,9 +20,23 @@ class GravelInStream:
         self.id = feat_id
 
         thresh = ThresholdDirector(feat_id)
-        self.mu_bad = thresh.get_thresh_value("mu_bad")
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_freq = thresh.get_thresh_value("freq")
         self.threshold_taux = thresh.get_thresh_value("taux")
         thresh.close_wb()
@@ -40,9 +54,23 @@ class GravelOutStream:
         self.id = feat_id
 
         thresh = ThresholdDirector(feat_id)
-        self.mu_bad = thresh.get_thresh_value("mu_bad")
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_freq = thresh.get_thresh_value("freq")
         self.threshold_taux = thresh.get_thresh_value("taux")
         self.threshold_scour = thresh.get_thresh_value("scour")
