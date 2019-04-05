@@ -136,7 +136,7 @@ class ArcPyAnalysis:
             self.ras_d2w = Con(((d2w.raster >= threshold_low) & (d2w.raster <= threshold_up)), 1.0)
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                     (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
                                     self.raster_dict_lf[self.raster_info_lf])
@@ -180,7 +180,7 @@ class ArcPyAnalysis:
             self.ras_det = Con(((det.raster >= threshold_low) & (det.raster <= threshold_up)), 1)
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 # make temp_ras without noData pixels --> det is inclusive!
                 temp_ras = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
@@ -229,9 +229,8 @@ class ArcPyAnalysis:
                     self.ras_tcd = Con((dod.raster_fill < threshold_fill), 1.0)
 
                 if self.verify_raster_info():
-                    self.logger.info("            based on raster: " + self.raster_info_lf)
+                    self.logger.info("           * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
-
                     try:
                         max_lf = float(max(self.lifespans))
                         self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -241,7 +240,6 @@ class ArcPyAnalysis:
                             "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
                     if not self.inverse_tcd:
                         temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), self.ras_tcd)
-
                         # compare temp_ras with raster_dict but use self.ras_... values if condition is True
                         ras_tcd_new = Con((temp_ras == 1.0), self.ras_tcd, self.raster_dict_lf[self.raster_info_lf])
                     else:
@@ -296,7 +294,7 @@ class ArcPyAnalysis:
             self.ras_Dcf = self.compare_raster_set(Dcr_raster_list, D85_fines)
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 try:
                     max_lf = float(max(self.lifespans))
                     self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -355,7 +353,7 @@ class ArcPyAnalysis:
             self.ras_Fr = self.compare_raster_set(Fr_raster_list, threshold_Fr)
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 try:
                     max_lf = float(max(self.lifespans))
                     self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -365,12 +363,12 @@ class ArcPyAnalysis:
                         "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                     (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
-                temp_ras_Fr = Con((IsNull(self.ras_Fr) == 1), (IsNull(self.ras_Fr) * max_lf), self.ras_Fr)
-                ras_Fr_new = Con((temp_ras_Fr < temp_ras_base), temp_ras_Fr, self.raster_dict_lf[self.raster_info_lf])
+                                    Float(self.raster_dict_lf[self.raster_info_lf]))
+                temp_ras_Fr = Con((IsNull(self.ras_Fr) == 1), (IsNull(self.ras_Fr) * max_lf), Float(self.ras_Fr))
+                ras_Fr_new = Con((temp_ras_Fr < temp_ras_base), temp_ras_Fr, Float(self.raster_dict_lf[self.raster_info_lf]))
                 self.ras_Fr = ras_Fr_new
 
-            # update lf dictionnary
+            # update lf dictionary
             self.raster_info_lf = "ras_Fr"
             self.raster_dict_lf.update({self.raster_info_lf: self.ras_Fr})
             arcpy.CheckInExtension('Spatial')
@@ -401,6 +399,15 @@ class ArcPyAnalysis:
 
             h = FlowDepth(self.condition)
             self.ras_dth = self.compare_raster_set(h.rasters, threshold_h)
+
+            try:
+                max_lf = float(max(self.lifespans))
+                self.logger.info("          * max. lifespan: " + str(max_lf))
+            except:
+                max_lf = 20.0
+            ras_h_new = Con((IsNull(self.ras_dth) == 1), (IsNull(self.ras_dth) * max_lf), Float(self.ras_dth))
+
+            self.ras_dth = ras_h_new
 
             self.raster_info_lf = "ras_dth"
             self.raster_dict_lf.update({self.raster_info_lf: self.ras_dth})
@@ -446,13 +453,13 @@ class ArcPyAnalysis:
                 self.ras_Dcr = temp_ras
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 temp_ras_Dcr = Con((IsNull(self.ras_Dcr) == 1), (IsNull(self.ras_Dcr) * 0), self.ras_Dcr)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                  (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                  self.raster_dict_lf[self.raster_info_lf])
+                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                    self.raster_dict_lf[self.raster_info_lf])
                 ras_Dcr_new = Con(((temp_ras_Dcr < temp_ras_base) & (temp_ras_Dcr > 0)),
-                                   self.ras_Dcr, self.raster_dict_lf[self.raster_info_lf])
+                                  self.ras_Dcr, self.raster_dict_lf[self.raster_info_lf])
                 self.ras_Dcr = ras_Dcr_new
 
             self.raster_info_lf = "ras_Dcr"
@@ -492,9 +499,9 @@ class ArcPyAnalysis:
                     self.ras_mu = CellStatistics(temp_dict.values(), "SUM", "DATA")
                     temp_ras = Con((self.ras_mu >= 1), 0, 1.0)
                     self.ras_mu = temp_ras
-
                 except:
                     self.logger.info("ERROR: Could not assign MU raster.")
+
             if method == 1:
                 self.logger.info("          MU: using inclusive method.")
                 try:
@@ -518,12 +525,12 @@ class ArcPyAnalysis:
             if not (method < 0):
                 # if no MU delineation applies: method == -1
                 if self.verify_raster_info():
-                    self.logger.info("            based on raster: " + self.raster_info_lf)
+                    self.logger.info("           * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels for both ras_mu and ras_dict
                     temp_ras_mu = Con((IsNull(self.ras_mu) == 1), (IsNull(self.ras_mu) * 0), self.ras_mu)
                     temp_ras_di = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                   (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
+                                      (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                      self.raster_dict_lf[self.raster_info_lf])
                     # compare temp_ras with raster_dict but use self.ras_... values if condition is True
                     ras_mu_new = Con(((temp_ras_mu == 1.0) & (temp_ras_di > 0)), temp_ras_di)
                     self.ras_mu = ras_mu_new
@@ -571,20 +578,18 @@ class ArcPyAnalysis:
                     self.ras_tcd = Con((dod.raster_scour < threshold_scour), 1.0)
 
                 if self.verify_raster_info():
-                    self.logger.info("            based on raster: " + self.raster_info_lf)
+                    self.logger.info("           * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
                     if not self.inverse_tcd:
                         try:
-                            min_lf = float(max(self.lifespans))
                             max_lf = float(max(self.lifespans))
                             self.logger.info("          * max. lifespan: " + str(max_lf))
                         except:
-                            min_lf = 1.0
                             max_lf = 20.0
                             self.logger.info(
                                 "          * using default max. lifespan (error in input.inp definitions): " + str(
                                     max_lf))
-                        temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), self.ras_tcd)
+                        temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), Float(self.ras_tcd))
                         # compare temp_ras with raster_dict but use self.ras_... values if condition is True
                         ras_tcd_new = Con((temp_ras == 1.0), self.ras_tcd, self.raster_dict_lf[self.raster_info_lf])
                     else:
@@ -634,7 +639,7 @@ class ArcPyAnalysis:
             self.ras_taux = self.compare_raster_set(tx_raster_list, threshold_taux)
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 try:
                     max_lf = float(max(self.lifespans))
                     self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -645,11 +650,11 @@ class ArcPyAnalysis:
                 # make temp_ras without noData pixels
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                     (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
-                temp_ras_tx = Con((IsNull(self.ras_taux) == 1), (IsNull(self.ras_taux) * max_lf), self.ras_taux)
+                                    Float(self.raster_dict_lf[self.raster_info_lf]))
+                temp_ras_tx = Con((IsNull(self.ras_taux) == 1), (IsNull(self.ras_taux) * max_lf), Float(self.ras_taux))
                 # compare temp_ras with raster_dict but use self.ras_... values if condition is True
                 ras_taux_new = Con((temp_ras_tx < temp_ras_base),
-                                   self.ras_taux, self.raster_dict_lf[self.raster_info_lf])
+                                   self.ras_taux, Float(self.raster_dict_lf[self.raster_info_lf]))
                 self.ras_taux = ras_taux_new
 
             self.raster_info_lf = "ras_taux"
@@ -688,12 +693,12 @@ class ArcPyAnalysis:
                     dod.raster_scour = temp_scour
 
                 if not self.inverse_tcd:
-                    self.ras_tcd = Con(((dod.raster_fill >= threshold_fill) | (dod.raster_scour >= threshold_scour)), 1.0, 0)
+                    self.ras_tcd = Con(((dod.raster_fill >= threshold_fill) | (dod.raster_scour >= threshold_scour)), Float(1.0), Float(0.0))
                 else:
-                    self.ras_tcd = Con(((dod.raster_fill < threshold_fill) | (dod.raster_scour < threshold_scour)), 1.0, 0)
+                    self.ras_tcd = Con(((dod.raster_fill < threshold_fill) | (dod.raster_scour < threshold_scour)), Float(1.0), Float(0.0))
 
                 if self.verify_raster_info():
-                    self.logger.info("            based on raster: " + self.raster_info_lf)
+                    self.logger.info("           * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
                     try:
                         max_lf = float(max(self.lifespans))
@@ -702,9 +707,9 @@ class ArcPyAnalysis:
                         max_lf = 20.0
                         self.logger.info(
                             "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
-                    temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), self.ras_tcd)
+                    temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), Float(self.ras_tcd))
                     # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                    ras_tcd_new = Con((temp_ras == 1.0), self.ras_tcd, self.raster_dict_lf[self.raster_info_lf])
+                    ras_tcd_new = Con((temp_ras == 1.0), self.ras_tcd, Float(self.raster_dict_lf[self.raster_info_lf]))
                     self.ras_tcd = ras_tcd_new
 
                 self.raster_info_lf = "ras_tcd"
@@ -740,15 +745,15 @@ class ArcPyAnalysis:
             self.ras_vel = self.compare_raster_set(u.rasters, threshold_u)
 
             if self.verify_raster_info():
-                self.logger.info("            based on raster: " + self.raster_info_lf)
+                self.logger.info("           * based on raster: " + self.raster_info_lf)
                 # make temp_ras without noData pixels
                 temp_ras_u = Con((IsNull(self.ras_vel) == 1), (IsNull(self.ras_vel) * 0), self.ras_vel)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                     (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
                                     self.raster_dict_lf[self.raster_info_lf])
                 # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                ras_vel_new = Con(((temp_ras_u < temp_ras_base) & (temp_ras_u > 0)), self.ras_vel,
-                                  self.raster_dict_lf[self.raster_info_lf])
+                ras_vel_new = Con(((temp_ras_u < temp_ras_base) & (temp_ras_u > 0)), Float(self.ras_vel),
+                                  Float(self.raster_dict_lf[self.raster_info_lf]))
                 self.ras_vel = ras_vel_new
 
             self.raster_info_lf = "ras_vel"
@@ -886,7 +891,7 @@ class ArcPyAnalysis:
                 reclass = Reclassify(self.ras_sch, "VALUE", remap, "DATA")
 
                 if self.verify_raster_info():
-                    self.logger.info("            based on raster: " + self.raster_info_lf)
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
                     # apply delineation to existing rasters and make low-relevance areas (6) to lf smaller one (div 7)
                     ras_sch_new = Con((self.ras_sch > 0), Con((self.ras_sch == 6), (reclass / 10.0),
                                                               Con(~(IsNull(self.raster_dict_lf[self.raster_info_lf])),
