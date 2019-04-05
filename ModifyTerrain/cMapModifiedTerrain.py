@@ -21,7 +21,7 @@ class Mapper:
     def __init__(self, condition, feature_id):
         # initiate logger
         self.condition = condition
-        self.start_logging("mapping")
+        self.start_logging("logfile")
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
         self.logger.info("PDF - MAPPING")
         self.logger.info("Map format: ANSI E landscape (w = 44in, h = 34in)")
@@ -281,28 +281,6 @@ class Mapper:
 
     def start_logging(self, log_file_name):
         self.logger = logging.getLogger(log_file_name + ".log")
-        self.logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(asctime)s - %(message)s")
-        logfilenames = ["error.log", "mapping.log"]
-        for fn in logfilenames:
-            if os.path.isfile(fn):
-                print("Overwriting old logfiles.")
-        # create console handler and set level to info
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
-        self.logger.addHandler(console_handler)
-        # create error file handler and set level to error
-        err_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[0]), "w", encoding=None, delay="true")
-        err_handler.setLevel(logging.ERROR)
-        err_handler.setFormatter(formatter)
-        self.logger.addHandler(err_handler)
-        # create debug file handler and set level to debug
-        debug_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[1]), "w")
-        debug_handler.setLevel(logging.DEBUG)
-        debug_handler.setFormatter(formatter)
-        self.logger.addHandler(debug_handler)
-        self.logger.info("modify_terrain.Mapper() initiated.")
 
     def stop_logging(self, *args):
         # takes optional arguments args[0] that activates instruction print for layout handling

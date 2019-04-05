@@ -24,9 +24,23 @@ class Backwater:
         self.id = feat_id
 
         thresh = ThresholdDirector(feat_id)
-        self.mu_bad = thresh.get_thresh_value("mu_bad")         # []
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_fill = thresh.get_thresh_value("fill")   # 0.1*6 * ft2m  # (ft * m/ft)
         self.threshold_freq = thresh.get_thresh_value("freq")   # 4.7           # (years)
         self.threshold_scour = thresh.get_thresh_value("scour")
@@ -90,9 +104,23 @@ class Grading:
         self.id = feat_id
 
         thresh = ThresholdDirector(feat_id)
-        self.mu_bad = thresh.get_thresh_value("mu_bad")
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_d2w_low = thresh.get_thresh_value("d2w_low")
         self.threshold_d2w_up = thresh.get_thresh_value("d2w_up")
         self.threshold_scour = thresh.get_thresh_value("scour")
@@ -168,9 +196,23 @@ class Sidecavity:
 
         thresh = ThresholdDirector(feat_id)
         self.inverse_tcd = thresh.get_thresh_value("inverse_tcd")
-        self.mu_bad = thresh.get_thresh_value("mu_bad")
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_fill = thresh.get_thresh_value("fill")
         thresh.close_wb()
 
@@ -207,9 +249,23 @@ class Widen:
         self.id = feat_id
 
         thresh = ThresholdDirector(feat_id)
-        self.mu_bad = thresh.get_thresh_value("mu_bad")
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_det_low = thresh.get_thresh_value("det_low")
         self.threshold_det_up = thresh.get_thresh_value("det_up")
         thresh.close_wb()
@@ -228,9 +284,23 @@ class Wood:
         self.id = feat_id
 
         thresh = ThresholdDirector(feat_id)
-        self.mu_bad = thresh.get_thresh_value("mu_bad")
-        self.mu_good = thresh.get_thresh_value("mu_good")
-        self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        try:
+            self.mu_bad = thresh.get_thresh_value("mu_bad")
+        except:
+            self.mu_bad = []
+        try:
+            self.mu_good = thresh.get_thresh_value("mu_good")
+        except:
+            self.mu_good = []
+        try:
+            self.mu_method = int(thresh.get_thresh_value("mu_method"))
+        except:
+            self.mu_method = -1
+        try:
+            if (self.mu_bad.__len__() == 0) and (self.mu_good.__len__() == 0):
+                self.mu_method = -1
+        except:
+            pass
         self.threshold_Fr = thresh.get_thresh_value("Fr")
         self.threshold_freq = thresh.get_thresh_value("freq")
         self.threshold_h = thresh.get_thresh_value("h")
@@ -240,7 +310,6 @@ class Wood:
         print("Class Info: <type> = Feature: Wood")
 
 
-# ---- Main Class ----
 class RestorationFeature:
     # This class builds up on above feature classes.
     # Instantiate an object by: features = RestorationFeatures()

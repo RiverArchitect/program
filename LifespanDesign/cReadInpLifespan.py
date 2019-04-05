@@ -82,7 +82,6 @@ class Info(object):
 
     def get_map_scale(self):
         if os.path.isfile(self.inp_coord):
-
             line_no = 2
             file = open(self.inp_coord)
             lines = file.readlines()
@@ -119,7 +118,6 @@ class Info(object):
             file.close()
         else:
             self.logger.info("ERROR: Bad mapping input file.")
-
         return points
 
     def lifespan_read(self):
@@ -134,7 +132,6 @@ class Info(object):
                 __lifespan__ = entry.strip()
                 self.logger.info("ERROR: Wrong format of lifespan list (.inp)")
             lifespans.append(__lifespan__)
-
         return lifespans
 
     def raster_read(self):

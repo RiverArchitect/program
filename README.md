@@ -18,5 +18,7 @@ GUI modules.
 # Usage
 Quick guide: Right-click on [Start_River_Architect.bat][1] and open this batchfile in a text editor. Ensure that the file points to the correct python interpreter (ArcMap's python.exe -- typically stored in C:\Python27\ArcGISx6410.6\). Save edits, close the batchfile and double-click on it to launch River Architect. For detailed installation and usage instructions, please refer to the code [documentation][2].
 
+Please note that the 64-bit version of ArcGIS' python.exe is needed and that running the sample dataset requires ArcMap version 10.6 (10.5 will not work).
+
 [1]: https://github.com/sschwindt/RiverArchitect_development/blob/master/Start_River_Architect.bat
 [2]: https://github.com/sschwindt/RiverArchitect_development/blob/master/00_Documentation/CodeDocumentation.pdf

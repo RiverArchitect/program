@@ -11,38 +11,50 @@ except:
 
 
 class IOlogger:
-    def __init__(self, logfile_name):
-        self.logger = self.logging_start(logfile_name)
+    def __init__(self, logfile_name, *args):
+        # args[0] = BOOL that states if an existing logfile should be deleted or not. Default is TRUE
+        try:
+            self.logger = self.logging_start(logfile_name, args[0])
+        except:
+            self.logger = self.logging_start(logfile_name)
 
-    def logging_start(self, logfile_name):
-        logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
-        for fn in logfilenames:
-            fn_full = os.path.join(os.getcwd(), fn)
-            if os.path.isfile(fn_full):
-                try:
-                    os.remove(fn_full)
-                except:
-                    pass
-        # start logging
-        logger = logging.getLogger(logfile_name)
-        logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(asctime)s - %(message)s")
+    def logging_start(self, logfile_name, *args):
+        # args[0] = BOOL that states if an existing logfile should be deleted or not. Default is TRUE
+        try:
+            delete_old_logfile = args[0]
+        except:
+            delete_old_logfile = True
+        if delete_old_logfile:
+            logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
+            for fn in logfilenames:
+                fn_full = os.path.join(os.getcwd(), fn)
+                if os.path.isfile(fn_full):
+                    try:
+                        os.remove(fn_full)
+                    except:
+                        pass
+            # start logging
+            logger = logging.getLogger(logfile_name)
+            logger.setLevel(logging.DEBUG)
+            formatter = logging.Formatter("%(asctime)s - %(message)s")
 
-        # create console handler and set level to info
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-        # create error file handler and set level to error
-        err_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[0]), "w", encoding=None, delay="true")
-        err_handler.setLevel(logging.ERROR)
-        err_handler.setFormatter(formatter)
-        logger.addHandler(err_handler)
-        # create debug file handler and set level to debug
-        debug_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[1]), "w")
-        debug_handler.setLevel(logging.DEBUG)
-        debug_handler.setFormatter(formatter)
-        logger.addHandler(debug_handler)
+            # create console handler and set level to info
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.INFO)
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+            # create error file handler and set level to error
+            err_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[0]), "w", encoding=None, delay="true")
+            err_handler.setLevel(logging.ERROR)
+            err_handler.setFormatter(formatter)
+            logger.addHandler(err_handler)
+            # create debug file handler and set level to debug
+            debug_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[1]), "w")
+            debug_handler.setLevel(logging.DEBUG)
+            debug_handler.setFormatter(formatter)
+            logger.addHandler(debug_handler)
+        else:
+            logger = logging.getLogger(logfile_name + ".log")
         return logger
 
     def logging_stop(self):
@@ -52,7 +64,7 @@ class IOlogger:
             self.logger.removeHandler(handler)
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = IOlogger (Module: ModifyTerrain)")
+        print("Class Info: <type> = IOlogger (./riverpy)")
 
 
 class Read:
@@ -73,7 +85,7 @@ class Read:
         self.row_start = 6
 
     def get_reach_coordinates(self, internal_reach_id):
-        logger = IOlogger("IO_logger")
+        logger = IOlogger("logfile", False)
         logger.logger.info(" ->> Reading Reach coordinates from computation_extents.xlsx ...")
 
         try:
@@ -103,7 +115,7 @@ class Read:
     def get_reach_info(self, type):
         # type = full_name sets column read to "B"
         # type = id sets column read to "C"
-        logger = IOlogger("IO_logger")
+        logger = IOlogger("logfile", False)
         allowed_types = ["full_name", "id"]
         if type in allowed_types:
             if type == "full_name":
@@ -146,7 +158,7 @@ class Write:
     def __init__(self):
         self.path2mt = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\"
         self.xlsx_output_dir = self.path2mt + "Output\\Workbooks\\"
-        self.logger = logging.getLogger("IO_info")
+        self.logger = logging.getLogger("logfile")
 
         # define columns
         self.col_reach = "B"
@@ -165,7 +177,7 @@ class Write:
         # type(volumes) ==  list of list of floats (nested)
         # type(unit) ==  string (either cy or m3)
         # type(vol_signature) == INT: -1 --> negative volumes (ecav), +1 --> positive volume (fill)
-        logger = IOlogger("IO_logger")
+        logger = IOlogger("logfile", False)
         wb_name = str(condition) + "_volumes.xlsx"
         try:
             if os.path.isfile(self.xlsx_output_dir + str(wb_name)):

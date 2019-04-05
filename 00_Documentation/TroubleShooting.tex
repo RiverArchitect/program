@@ -136,7 +136,7 @@ This is an operating system error and it can indicate different error conditions
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not append PDF page XX to map assembly.}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{make_pdf_maps(self, *args)} or \pythoninline{map_custom(self, input_ras_dir, *args)}, \pythoninline{map_reach(self,}\\
-	\pythoninline{ reach_id, feature_id, *args)} functions of the \pythoninline{Mapper} class in \texttt{MaxLifespan/cMapper.py} or \texttt{ModifyTerrain/cMapModifiedTerrain.py} raise this error when they failed to map the current page (extent).
+	\pythoninline{ reach_id, feature_id, *args)} functions of the \pythoninline{Mapper} class in \texttt{MaxLifespan/cMapper.py} or\\ \texttt{ModifyTerrain/cMapModifiedTerrain.py} raise this error when they failed to map the current page (extent).
 		\item[\textit{Remedy}] -- \textit{MaxLifespan}: Ensure that the definitions of \texttt{MaxLifespan/.templates/mapping.inp} are correct, analog to the descriptions of the \textit{LifespanDesign} module in Sec.~\ref{sec:inpmaps}.\\
 								 -- \textit{ModifyTerrain}: Also refer to error message \texttt{ERROR: Could not create PDF}.\\
 								 -- General: Ensure that no other program accesses the \texttt{MaxLifespan/.cache/}, \texttt{ModifyTerrain/.cache/} or \texttt{MaxLifespan/Output/}, \texttt{ModifyTerrain/Output/} directories or its contents.\\
@@ -176,7 +176,7 @@ This is an operating system error and it can indicate different error conditions
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{main()} function in \texttt{ProjectMaker/s20{\myUnderscore}plantings{\myUnderscore}delineation.py}) when the defined directory of max. lifespan rasters contains invalid or corrupted raster data.
 		\item[\textit{Remedy}] -- Ensure the correct usage of variables and input definitions (Sec.~\ref{sec:pmquick}).\\
-		-- Ensure that max. lifespan Rasters were generated without errors; if necessary, visually control the consistency of max. lifespan rasters in \texttt{\ldots{}/MaxLifespan/Products/Rasters/\emph{condition}{\myUnderscore}\emph{reach}{\myUnderscore}lyr20{\myUnderscore}\\plants/} and \texttt{\ldots{}/MaxLifespan/Products/}\texttt{Rasters/\emph{condition}{\myUnderscore}\emph{reach}{\myUnderscore}lyr20{\myUnderscore}plants/} or \ldots{}\texttt{bioengineering}(cf. Sec.~\ref{sec:pmactm}).\\
+		-- Ensure that max. lifespan Rasters were generated without errors; if necessary, visually control the consistency of max. lifespan rasters in \texttt{\ldots{}/MaxLifespan/Products/Rasters/\emph{condition}{\myUnderscore}\emph{reach}{\myUnderscore}l\\yr20{\myUnderscore}plants/} and \texttt{\ldots{}/MaxLifespan/Products/}\texttt{Rasters/\emph{condition}{\myUnderscore}\emph{reach}{\myUnderscore}lyr20{\myUnderscore}plants/} or \ldots{}\texttt{bioengineering}(cf. Sec.~\ref{sec:pmactm}).\\
 	\end{itemize}
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not find any worksheet.}}
@@ -304,14 +304,14 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not transfer AUA data for [FISH].}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not retrieve AUA data from the \texttt{/HabitatEvaluation/AUA/} module to  \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}unit}.xlsx}.
+		\item[\textit{Cause}\hspace{0.27cm}] The \pythoninline{main()} function in \texttt{ProjectMaker/s40{\myUnderscore}compare{\myUnderscore}wua.py} raises this error message when it could not retrieve AUA data from the \texttt{/HabitatEvaluation/AUA/} module to  \texttt{AUA{\myUnderscore}evaluation\\\textit{{\myUnderscore}unit}.xlsx}.
 		\item[\textit{Remedy}] Open \texttt{AUA{\myUnderscore}evaluation\textit{{\myUnderscore}template{\myUnderscore}unit}.xlsx} and verify the calculated values. Trace back potential error sources in the CHSI rasters \texttt{/HabitatEvaluation/} folder and other error messages.\\
 	\end{itemize}	
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not write value to CELL [...]}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{write_data_cekk(self, column, row, value)} function of the \pythoninline{Write()} class in \texttt{Habi tatEvaluation/cHabitatIO.py}) when it cannot write a value to \texttt{RiverArchitect/Habit atEvaluation/AUA/\textit{condition{\myUnderscore}fill}.xlsx}.
-		\item[\textit{Remedy}] Close all applications that may use \texttt{RiverArchitect/HabitatEvaluation/AUA/\textit{condit ion}{\myUnderscore}\textit{fill}.xlsx}. Detailed information on \textit{HabitatEvaluation} workbook outputs are available in Sec.~\ref{sec:hemakehsi}.\\
+		\item[\textit{Remedy}] Close all applications that may use \texttt{RiverArchitect/HabitatEvaluation/AUA/\textit{condition}{\myUnderscore}\\\textit{fill}.xlsx}. Detailed information on \textit{HabitatEvaluation} workbook outputs are available in Sec.~\ref{sec:hemakehsi}.\\
 	\end{itemize}
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Could not write AUA data for [FISH].}}
@@ -434,8 +434,9 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Incoherent data in RAS (raster comparison).}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{compare_raster_set(self, ...)} function of the \pythoninline{ArcPyAnalysis()} class in \texttt{LifespanDesign/cLifespanDesignAnalysis.py} when the provided the input \texttt{RAS} raster (hydraulic or scour fill or morphological units) are invalid.
-		\item[\textit{Remedy}] Manually open the concerned \texttt{RAS} raster and ensure that it complies with the requirements for input rasters stated in Sec.~\ref{sec:input}.\\
+		\item[\textit{Cause}\hspace{0.27cm}] Raised by \pythoninline{compare_raster_set(self, ...)} function of the \pythoninline{ArcPyAnalysis()} class in \texttt{LifespanDesign/cLifespanDesignAnalysis.py} when the provided input raster \texttt{RAS} (hydraulic or scour fill or morphological units) are invalid.
+		\item[\textit{Remedy}] --  Manually open the concerned \texttt{RAS} raster and ensure that it complies with the requirements for input rasters stated in Sec.~\ref{sec:input}.\\
+						 --  Verify that the Rasters defined in \texttt{LifespanDesign/.templates/input{\myUnderscore}definitions.inp} (lines 8 to 18) correspond to the GRID raster names in the select conditions folder in \texttt{01{\myUnderscore}Conditions/}.\\
 	\end{itemize}	
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Input file not available.}}
@@ -457,7 +458,7 @@ This is an operating system error and it can indicate different error conditions
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Invalid cell assignment for discharge / rasters.}}
 	\begin{itemize}
 		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{make_condition_xlsx(self, fish_sn)} function of the \pythoninline{Write()} class in \texttt{HabitatEval uation/cHabitatIO.py}) when it cannot write discharge values to \texttt{RiverArchitect/Habit atEvaluation/AUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx}.
-		\item[\textit{Remedy}] Ensure that the flow duration curve is well defined (see Sec.~\ref{sec:hemakehsi}) and that \texttt{RiverArchitect/HabitatEvaluation/AUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx} is not used by any other application.\\
+		\item[\textit{Remedy}] Ensure that the flow duration curve is well defined (see Sec.~\ref{sec:hemakehsi}) and that \texttt{RiverArchitect/Habitat Evaluation/AUA/\textit{condition}{\myUnderscore}\textit{fill}.xlsx} is not used by any other application.\\
 	\end{itemize}	
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Invalid feature names for column headers.}}
@@ -538,7 +539,7 @@ This is an operating system error and it can indicate different error conditions
 	
 	\item[$\triangleright$]\textbf{\texttt{ERROR: Mapping could not assign xy-values. Undefined zoom.}}
 	\begin{itemize}
-		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{zoom2map(self, xy)} functions of the \pythoninline{Mapper()} classes (\texttt{LifespanDesign/cMapLi fespanDesign.py}, \texttt{MaxLifespan/cMapActions.py} or \texttt{ModifyTerrain/cMapModifi edTerrain.py}) when it receives a bad format of $x$-$y$ values.
+		\item[\textit{Cause}\hspace{0.27cm}] Error raised by the \pythoninline{zoom2map(self, xy)} functions of the \pythoninline{Mapper()} classes (\texttt{LifespanDesign/cMapLi fespanDesign.py}, \texttt{MaxLifespan/cMapActions.py} or \texttt{ModifyTerrain/cMapModified\\Terrain.py}) when it receives a bad format of $x$-$y$ values.
 		\item[\textit{Remedy}] -- Ensure the correct format of \texttt{mapping.inp} (LifespanDesign or \textit{MaxLifespan} module) corresponding to the definitions in Sec.~\ref{sec:inpmaps}.\\
 													 -- Ensure correct setup of \texttt{ModifyTerrain/.templates/computation{\myUnderscore}extents.xlsx}\\(Sec.~\ref{sec:mtsetreaches}).\\
 	\end{itemize}

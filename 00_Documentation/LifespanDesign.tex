@@ -28,7 +28,7 @@ Figure~\ref{fig:gui_start_lf} shows the modules GUI at start-up, which may take 
 \begin{figure}[hbt]
 	\begin{center}
 	\includegraphics[width=1.0\columnwidth]{gui_start_lf.PNG} % Example image
-	\caption{GUI start up window. \label{fig:gui_start_lf}}
+	\caption{The Lifespan Design GUI. \label{fig:gui_start_lf}}
 	\end{center}
 \end{figure}
 
@@ -45,7 +45,7 @@ The unit system (U.S. customary or SI metric) in the threshold values spreadshee
 
 \begin{figure}[hbt]
 	\begin{center}
-	\includegraphics[width=0.78\columnwidth]{threshold_values_illu.pdf} % Example image
+	\includegraphics[width=1.0\columnwidth]{threshold_values_illu.png} % Example image
 	\caption{Spreadsheet with threshold values and survival identifiers. \label{fig:threshold_values_illu}}
 	\end{center}
 \end{figure}
@@ -57,7 +57,9 @@ More on information on threshold values is provided in Sec.~\ref{sec:feat}, whic
 The checkbox ``Include layout creation in raster analysis'' provides the optional automated preparation of \texttt{.mxd} files for mapping the results (see explanations in Sec.~\ref{sec:outmaps}).\\
 The checkbox ``Apply wildcard raster to spatially confine analysis'' can be checked to use the \texttt{wild} raster for spatial limitation of the results. This application makes sense, e.g., if the wildcard raster contains particular land parcels, where the owner wants to foster habitat enhancement.\\
 The checkbox ``Apply habitat matching'' provides the option of habitat matching to regions where the habitat suitability index is low ($<$0.4, see explanations in part \ref{part:he}).\\
-Switching between unit systems (U.S. customary or SI -- metric) is possible via the drop-down menu ``Units''; please note that the unit system needs to be consistent with all input raster files.
+Switching between unit systems (U.S. customary or SI -- metric) is possible via the drop-down menu ``Units''; please note that the unit system needs to be consistent with all input raster files.\\
+
+Manning's~$n$ (in s/m$^{1/3}$) is used in the grain mobility analysis (see formulae in Sec.~\ref{sec:rocks}) to determine shear velocity that acts on grains. The default value is 0.0473934~s/m$^{1/3}$ (the GUI only shows the first three decimal places), which corresponds to a global optimum in the sample case (gravel-cobble bed river). Even if the unit system is set to U.S. customary, Manning's~$n$ is defined in the GUI in SI -- metric units (an internal conversion factor of $k$~=~1.49, i.e., $n$~/~$k$ is automatically applied for U.S. customary unit settings). The logfiles (produced during the program execution) will state the applied Manning's~$n$ value if used.
 
 \subsection{Run}
 
@@ -304,14 +306,14 @@ The \textit{River Architect} package applies the following hypothesis to habitat
 The creation of artificial backwaters and swales, or more generally calm water zones, makes sense where the stream power is low and the observed topographic changes are small. The following parameters identify relevant areas for backwater creation:
 \begin{itemize}
 	\item \texttt{u} with a threshold of 0.1~fps (0.03~m/s).
-	\item \texttt{mobile{\myUnderscore}grains} with frequency threshold of 4.7~years and $\tau_{*,cr}$ threshold of 0.047.
-	\item \texttt{tcd} with scour and fill thresholds of $\geq$~0.1~ft$\cdot$6~years.
+	\item \texttt{mobile{\myUnderscore}grains} with frequency threshold of 4.7~years (in the sample case) and $\tau_{*,cr}$ threshold of 0.047.
+	\item \texttt{tcd} with scour and fill thresholds of $\geq$~0.1~ft$\cdot$6~years (in the sample case).
 	\item \texttt{mu} using the inclusive method with \pythoninline{mu_good = ["agriplain", "backswamp", "mining pit", "pond", "pool", "slackwater", "swale"]}.
 \end{itemize}
 
 \subsection{Bioengineering}\label{sec:bioeng}
 
-Areas with a 1.0-year lifespan require bioengineering features that are independent of the depth to the groundwater table because plantings likely will not have sufficient water to survive. Such features typically imply the placement of angular boulders.
+Areas with a 1.0-year lifespan require bioengineering features that are independent of the depth to the groundwater table because plantings likely will not have sufficient water to survive. Such features typically imply the placement of angular boulders (see Sec.~\ref{sec:rocks}).
 
 In the context of river engineering, soil-bioengineering applies living materials (plants) to stabilize terrain and enhance habitat. Alas, dry conditions in arid and semi-arid (Mediterranean) climate zones limits the possibilities of application. The LifespanDesign module maps potential bioengineering areas, as a function of
 \begin{itemize}
@@ -340,11 +342,11 @@ Berms are artificial lateral confinements that are represented by human-made bar
 \end{itemize}
 %The \pythoninline{mobile{\myUnderscore}grains} and the \pythoninline{tcd} analyses indicate bars or dikes that cannot be removed by floods. Therefore, the setback of berms makes sense where even high floods cannot erode the lateral confinements.\\
 
-The complete detrended DEM range of the morphological unit \pythoninline{lateral bar} covers values between -1.24~ft (0.38~m) to 29.5~ft (9.0~m) and the morphological unit \pythoninline{spur dike} covers \texttt{det}-values between 1.9~ft (0.58~m) to 25.9~ft (7.89~m). The other morphological units are in similar ranges. However, the detrended DEM limits the application of berm setback and widening to economically reasonable extents. The \texttt{det} limits in the code refer to empiric values corresponding to berm setback features according to \citep{ycwa16}.
+The complete detrended DEM range of the morphological unit \pythoninline{lateral bar} covers values between -1.24~ft (0.38~m) to 29.5~ft (9.0~m) and the morphological unit \pythoninline{spur dike} covers \texttt{det}-values between 1.9~ft (0.58~m) to 25.9~ft (7.89~m) in the sample case. The other morphological units are in similar ranges. However, the detrended DEM limits the application of berm setback and widening to economically reasonable extents. The \texttt{det} limits in the code refer to empiric values corresponding to berm setback features according to \citep{ycwa16}.
 
 
-\subsection{Engineered Log Jams / Instream wood}\label{sec:ejl}
-Lifespan maps and design maps are created for engineered log jams (ELJs), where the following parameters apply:
+\subsection{Streamwood and Engineered Log Jams}\label{sec:ejl}
+Lifespan maps and design maps are created for streamwood placement and engineered log jams (ELJs), where the following parameters apply:
 
 \begin{itemize}
 	\item[] Lifespan maps
@@ -355,8 +357,8 @@ Lifespan maps and design maps are created for engineered log jams (ELJs), where 
 	\item \texttt{h} is used to computed the minimum required log diameter to avoid motion for a 20-years flood.
 \end{itemize}
 
-Regarding morphological units, riffle-pool and plane bed morphologies are favorable for ELJ placement, where side channel and tributary systems are not convenient for wood placement. ELJs inclusive list is defined as \pythoninline{mu_good = ["riffle", "riffle transition", "pool", "floodplain", "island floodplain", "lateral bar", "medial bar",}\\
-\pythoninline{" run"]} and the exclusive list is defined as \pythoninline{mu_bad = ["tributary channel", "tributary delta"]}. For ELJs, the exclusive approach based on \pythoninline{mu_bad} applies (see details in the parameter descriptions in Sec.~\ref{sec:par}).\\
+Regarding morphological units, riffle-pool and plane bed morphologies are favorable for streamwood placement, where side channel and tributary systems are not convenient for wood placement. Streamwood inclusive list is defined as \pythoninline{mu_good = ["riffle", "riffle transition", "pool", "floodplain", "island floodplain", "lateral bar", "medial bar",}\\
+\pythoninline{" run"]} and the exclusive list is defined as \pythoninline{mu_bad = ["tributary channel", "tributary delta"]}. For streamwood, the exclusive approach based on \pythoninline{mu_bad} applies (see details in the parameter descriptions in Sec.~\ref{sec:par}).\\
 
 The design maps for the minimum required log diameter~$D_w$ result from \citep{ruiz16b}'s interpolation curve as a function of the flow depth. The module applies on the single-thread formula because it returns larger values for the log diameter than the multi-thread formula when the probability of motion is set to zero: \texttt{Dw}~=~0.32~/~0.18~$*$~\texttt{h}. The output map limits to regions where \texttt{Dw} is smaller than 300~in (7.6~m).
 
@@ -366,8 +368,8 @@ Artificially introduced fine sediment facilitates root growth of new plantings b
 \begin{itemize}
 	\item[] Lifespan maps
 	\item \texttt{taux} with a threshold of $\tau_{*,cr}$~=~0.030.
-	\item \texttt{Dcf} is the maximum admissible size of fine sediment including the ($D_{max, fine}~<$~0.08~in [2~mm]).
-	\item \texttt{tcd} with the scour threshold of White Alder (largest for plantings) of 1~ft (0.308~m) multiplied with 6~years and the fill threshold of Cottonwood (highest for plantings) of 0.8$\cdot$0.2$\cdot$7~ft [2.13~m]$\cdot$6~years
+	\item \texttt{Dcf} is the maximum admissible size of fine sediment including the ($D_{max, fine}~<$~0.08~in [2~mm]) that results from grain mobility (see Sec.~\ref{sec:rocks}).
+	\item \texttt{tcd} with the scour threshold of White Alder (largest for plantings) of 1~ft (0.308~m) multiplied with 6~years (sample case) and the fill threshold of Cottonwood (highest for plantings) of 0.8$\cdot$0.2$\cdot$7~ft [2.13~m]$\cdot$6~years (in the sample case)
 	\item \texttt{d2w} with a lower limit of 1~ft and an upper limit of 10~ft corresponding to plantings limits.
 	\item[] Design maps
 	\item \texttt{filter} criteria resulting in a design map according to \citep{usace00}:\\
@@ -379,20 +381,20 @@ Artificially introduced fine sediment facilitates root growth of new plantings b
 The topographic change and depth to water table thresholds correspond to the largest values that any plantings type (cf. Sec.~\ref{sec:plants}) supports because only these areas are of interest for the incorporation of fine sediment in soils.
 
 \subsection{Grading}\label{sec:grading}
-Grading aims at the reconnection of high floodplains and isolated islands by means of floodplain terracing and bar lowering. Its application is from an interest in areas where potential plantings cannot reach the groundwater table or where even high discharges cannot rework the channel. Low dimensionless shear stress, infrequent grain mobilization or low scour rates indicate relevant sites. The following parameter rasters and hypothesis apply to lifespan maps for grading measures (no design maps).
+Grading aims at the reconnection of high floodplains and isolated islands by means of floodplain terracing and bar lowering. Its application is from an interest in areas where potential plantings cannot reach the groundwater table or where even high discharges cannot rework the channel. Low dimensionless shear stress, infrequent grain mobilization or low scour rates indicate relevant sites. The following parameter Rasters and hypothesis apply to lifespan maps for grading measures (no design maps).
 \begin{itemize}
-	\item \texttt{mobile{\myUnderscore}grains} with frequency threshold of 12.7~years and $\tau_{*,cr}$ threshold of 0.047.
+	\item \texttt{mobile{\myUnderscore}grains} with frequency threshold of 12.7~years (in the sample case) and $\tau_{*,cr}$ threshold of 0.047.
 	\item \texttt{taux} with mobility threshold of $\tau_{*,cr}$ equal to 0.047.
-	\item \texttt{scour} with a threshold value of 0.1~ft multiplied with 6 years and the inverse argument, i.e., areas of interest correspond to regions where the scour threshold is not exceeded.
-	\item \texttt{d2w} with a lower limit of 7~ft (2.13~m) and an upper limit of 10~ft (3.05~m).
+	\item \texttt{scour} with a threshold value of 0.1~ft multiplied with 6 years (in the sample case) and the inverse argument, i.e., areas of interest correspond to regions where the scour threshold is not exceeded.
+	\item \texttt{d2w} with a lower limit of 7~ft (2.13~m) and an upper limit of 10~ft (3.05~m) according to the sample case.
 \end{itemize}
 
 Further aspects may be considered in addition to the implemented parameters:
 \begin{itemize}
 	\item Depth to groundwater\\
-	The YRERFS report \citep{ycwa16} proposes grading where the depth to groundwater is between 7 (2.13~m) and 10~ft (3.05~m). A visual control of the maps indicates that the upper limit should be increased to 12~ft which corresponds to the tip of several islands.
+	\citet{ycwa16} proposes grading to enable plant survival in Mediterranean climates to achieve depths to groundwater between 7 (2.13~m) and 10~ft (3.05~m).
 	\item Morphological Units\\
-	Currently not applied because every analysis would require the expensive manual assessment of morphological units. This is not necessary for assessing potential grading zones that are primarily determined by the depth to groundwater.
+	Currently not applied in the sample case, but can be optionally enabled.
 \end{itemize}
 
 \subsection{Plantings}\label{sec:plants}
@@ -403,21 +405,21 @@ The survival analysis of plantings assumes a general cutting length of min. 7 ft
 	The maximum submergence duration supported by Box Elder cuttings is 85 days per year. The discharge duration curve from Marysville gaging station (1967--2015) indicate a cumulative annual submergence of 85 days per year for a discharge of 569~cfs, where the Hallwood-study indicates successive 21-submergence when the discharge exceeds 2'000~cfs. The code uses the 1'000-cfs-discharge situation as tradeoff for the 85-days submergence criterion.
 	\item Cottonwood\\
 	Parameters \citep[extracted from][]{stromberg93, polzin06, wilcox13, bywater15, kui16a}: \texttt{hyd} ($h~\geq$~1.5$\cdot$0.2$\cdot$7~ft [2.13~m] and $u~\geq$~3.0~fps), \texttt{tcd} (scour$\geq$ 0.1$\cdot$0.8$\cdot$7~ft [2.13~m] $\cdot$6 years and fill $\geq$~0.8$\cdot$0.2$\cdot$7~ft$\cdot$6 years) and \texttt{d2w} (lower threshold is 5~ft and upper threshold is 10~ft);\\
-	Uses thresholds for combined hydraulics analysis (velocity and depth), scour and fill (tcd) and depth to water table. Given the minimum cutting length of 7~ft (2.13~m), cottonwood plantings have a \pythoninline{threshold_scour} of 0.1$\cdot$0.8$\cdot$7~ft$\cdot$6 years (2008 to 2014) and a \pythoninline{threshold_fill} of 0.8$\cdot$0.2$\cdot$7~ft$\cdot$6~years.
+	Uses thresholds for combined hydraulics analysis (velocity and depth), scour and fill (tcd) and depth to water table. Given the minimum cutting length of 7~ft (2.13~m), cottonwood plantings have a \pythoninline{threshold_scour} of 0.1$\cdot$0.8$\cdot$7~ft$\cdot$6 years (2008 to 2014) and a \pythoninline{threshold_fill} of 0.8$\cdot$0.2$\cdot$7~ft$\cdot$6~years (in the sample case).
 	\item White Alder\\
-	Parameters: \texttt{taux} (threshold of 0.047), \texttt{scour} \citep[$\geq$~1~ft$\cdot$6~years, cf.][]{jablkowski17} and \texttt{d2w} (lower threshold is 1~ft and upper threshold is 5~ft);\\
-	In addition to the scour maps, potential scour resulting from a grain mobility frequency analysis provide information on the lifespans of White Alder plantings. \pythoninline{threshold_scour} is 1~ft$\cdot$6~years.
+	Parameters: \texttt{taux} (threshold of 0.047), \texttt{scour} \citep[$\geq$~1~ft$\cdot$6~years in the sample case, cf.][]{jablkowski17} and \texttt{d2w} (lower threshold is 1~ft and upper threshold is 5~ft);\\
+	In addition to the scour maps, potential scour resulting from a grain mobility frequency analysis provide information on the lifespans of White Alder plantings. \pythoninline{threshold_scour} is 1~ft$\cdot$6~years (in the sample case).
 	\item Willow\\
 	Parameters \citep[extracted from][]{stromberg93, pasquale11, pasquale12, pasquale14}: \texttt{h} ($h~\geq $~0.7~ft~+~0.2$\cdot$7~ft), \texttt{taux} (threshold of 0.1), \texttt{scour} ($\geq$~0.1$\cdot$0.8$\cdot$7~ft$\cdot$6~years) and \texttt{d2w} (lower threshold is 3~ft and upper threshold is 5~ft);\\
-	Willow cuttings have a maximum submergence survival that defines the \pythoninline{threshold_h} as 0.7~ft~+~0.2$\cdot$7~ft and maximum scour survival of 0.1$\cdot$0.8$\cdot$7~ft$\cdot$6~years.
+	Willow cuttings have a maximum submergence survival that defines the \pythoninline{threshold_h} as 0.7~ft~+~0.2$\cdot$7~ft and maximum scour survival of 0.1$\cdot$0.8$\cdot$7~ft$\cdot$6~years (in the sample case).
 \end{itemize}
 
-\subsection{Angular boulders (rocks)}\label{sec:rocks}
-The punctual placing of boulders and comprehensive rock cover is referred to as ``angular boulders (rocks)'' for stabilizing banks or erosion-prone surfaces \citep[e.g.,][]{maynord08}. The mobility of the present terrain indicates the necessity of boulder placement on the basis of lifespan maps. Moreover, the required minimum diameter for boulders results from the spatial evaluation of $D_{cr}$ on angular boulders (rocks) design maps. The following parameters apply to the generation of angular boulders (rocks) maps:
+\subsection{Angular boulders (rocks) and grain mobility}\label{sec:rocks}
+The punctual placing of boulders and comprehensive rock cover is referred to as ``angular boulders'' for stabilizing banks or erosion-prone surfaces \citep[e.g.,][]{maynord08}. The mobility of the present terrain refers to the present grain size and indicates the necessity of boulder placement on the basis of lifespan maps. The required minimum diameter for boulders or mobile grains results from the spatial evaluation of $D_{cr}$ on mobile grain design maps, where the following parameters apply:
 \begin{itemize}
 	\item[] Lifespan maps
 	\item \texttt{taux} with mobility threshold of $\tau_{*,cr}$ equal to 0.047.
-	\item \texttt{scour} with a threshold value of 1~ft multiplied with 6 years.
+	\item \texttt{scour} with a threshold value of 1~ft multiplied with 6 years (in the sample case).
 	\item[] Design maps
 	\item \texttt{stable{\myUnderscore}grains} for design maps (see below formulae), with a frequency threshold of 20.0~years and $\tau_{*,cr}$ threshold of 0.047.
 \end{itemize}
@@ -433,17 +435,17 @@ where:
 \begin{itemize}
 	\item[$D_{cr}$] is the minimum required angular boulders (rocks) size (in INCHES);
 	\item[$h$] is the flow depth (pixel-wise, in ft);
-	\item[$n$] is Manning's n (in s/ft$^{1/3}$ -- an internal conversion factor of k = 1.49 applies);
+	\item[$n$] is Manning's n (in s/ft$^{1/3}$ or s/m$^{1/3}$ -- an internal conversion factor of k = 1.49 applies in the case of the US customary system) that can be changed in the GUI;
 	\item[$s$] is the dimensionless relative grain density (ratio of sediment and water density, equal to 2.68);
 	\item[$S_e$] is the energy slope (derived from \pythoninline{arcpy}'s ``Slope'' function, dimensionless);
 	\item[\textit{SF}] is a safety factor equal to 1.3 (dimensionless);
-	\item[$u$] is the flow velocity (pixel-wise, in fps);
+	\item[$u$] is the flow velocity (pixel-wise, in fps or m/s);
 	\item[$\tau_{*,cr}$] is the threshold value of dimensionless bed shear stress for incipient grain motion, equal to 0.047.
 \end{itemize}
-The energy slope maps result from computing the theoretic energy height maps as \pythoninline{ras_energy} = \pythoninline{dem} + \pythoninline{h.raster_110k} + \pythoninline{u.raster_110k}$^2$/(2~$g$), where $g$ denotes gravitational acceleration.
+The energy slope maps result from computing the theoretic energy height maps as \pythoninline{ras_energy} = \pythoninline{dem} + \pythoninline{h.raster} + \pythoninline{u.rasterk}$^2$/(2~$g$), where $g$ denotes gravitational acceleration and the hydraulic rasters correspond to the highest modeled discharge.
 
 \subsection{Sediment replenishment / gravel augmentation}\label{sec:gravel}
-Large dams tend to retain the nearby-totality of the catchment sediment supply. The missing sediment causes channel incision and the morphological depletion of lower Yuba River in the long term. Regular artificial gravel injections can antagonize this artificial sediment scarcity \citep[e.g.,][]{pasternack10a}. Other authors (\citep{gaeuman08} and \citep{ock13}) distinguish replenishment techniques inside and outside of the main channel. According to this, two types of gravel augmentation are considered:
+Large dams tend to retain the nearby-totality of the catchment sediment supply. The missing sediment causes channel incision and the morphological depletion of rivers in the long term. Regular artificial gravel injections can antagonize this artificial sediment scarcity \citep[e.g.,][]{pasternack10a}. Other authors (\citep{gaeuman08} and \citep{ock13}) distinguish replenishment techniques inside and outside of the main channel. According to this, two types of gravel augmentation are considered:
 \begin{enumerate}
 	\item Gravel stockpiles on the floodplain and river banks; and
 	\item Gravel injections or stockpiles directly in the main channel.
@@ -453,30 +455,30 @@ Gravel deposits on floodplains should be erodible by frequent floods, i.e., stoc
 	\item In-channel gravel injections
 	\begin{itemize}
 	\item[] Lifespan maps
-	\item \texttt{mobile{\myUnderscore}grains} analysis with a minimum frequency of 1.0~years and $\tau_{*,cr}$ threshold of 0.047.
+	\item \texttt{mobile{\myUnderscore}grains} analysis with a minimum frequency of 1.0~year and $\tau_{*,cr}$ threshold of 0.047 (see grain mobility formulae in Sec.~\ref{sec:rocks}).
 	\item \texttt{mu} uses the inclusive method with \pythoninline{mu_good = ["chute", "fast glide", "flood runner", "bedrock", "lateral bar", "medial bar", "pool", "riffle", "riffle transition", "run", "slackwater", }\\
 	\pythoninline{"slow glide", "swale", "tailings"]}
 	\item[] Design maps
-	\item \texttt{stable{\myUnderscore}grains} for design maps (see angular boulders (rocks) formulae), with \pythoninline{threshold_freq} of 1.0~years and $\tau_{*,cr}$--threshold of 0.047.
+	\item \texttt{stable{\myUnderscore}grains} for design maps (see grain mobility formulae in Sec.~\ref{sec:rocks}), with \pythoninline{threshold_freq} of 1.0~years and $\tau_{*,cr}$--threshold of 0.047.
 	\end{itemize}
 	\item Floodplain / overbank gravel stockpiles
 	\begin{itemize}
 	\item[] Lifespan maps
-	\item \texttt{mobile{\myUnderscore}grains} analysis with a minimum frequency of 1.0~years and $\tau_{*,cr}$ threshold of 0.047.
-	\item \texttt{scour} with a threshold value of 1~ft per year.
+	\item \texttt{mobile{\myUnderscore}grains} analysis with a minimum frequency of 1.0~year and $\tau_{*,cr}$ threshold of 0.047 (see grain mobility formulae in Sec.~\ref{sec:rocks}).
+	\item \texttt{scour} with a threshold value of 1~ft (0.3~m) per year.
 	\item \texttt{mu} uses the inclusive method with \pythoninline{mu_good = ["agriplain", "backswamp", "bank", "cutbank", "flood runner", "floodplain", "high floodplain", "hillside", "island high floodplain", "island-"}\\
 	\pythoninline{"floodplain", "lateral bar", "levee", "medial bar", "mining pit", "point bar", "pond", "spur"}\\
 	\pythoninline{"dike", "tailings", "terrace"]}
 	\item[] Design maps
-	\item \texttt{stable{\myUnderscore}grains} for design maps (see angular boulders (rocks) formulae), with \pythoninline{threshold_freq} of 1.0~years and $\tau_{*,cr}$--threshold of 0.047.
+	\item \texttt{stable{\myUnderscore}grains} for design maps (see grain mobility formulae in Sec.~\ref{sec:rocks}), with \pythoninline{threshold_freq} of 1.0~years and $\tau_{*,cr}$--threshold of 0.047.
 	\end{itemize}
 \end{itemize}
 
 \subsection{Side cavities}\label{sec:sidecav}
-From a parametric point of view, side cavities make sense at lateral channel confinements that represent either preservable habitat or require protection to prevent bank collapses. In the latter case, groin cavities are an adequate protection measure that can additionally improve habitat conditions. The code analyses relevant sites based on the morphological units and important scour rates at banks. It excludes fill zones where artificial side cavities are prone to sedimentation making the measure ecologically inefficient.
+From a parametric point of view, side cavities make sense at channel banks to create preservable habitat and/or endorse protection to prevent bank collapses. In the latter case, groin cavities are an adequate protection measure that can additionally improve habitat conditions. The code analyses relevant sites based on the morphological units and important scour rates at banks. It excludes fill zones where artificial side cavities are prone to sedimentation making the measure ecologically inefficient.
 
 \begin{itemize}
-	\item \texttt{tcd} with a fill threshold value of 1~ft multiplied with 6 years and a scour threshold of 100~ft leads to the exclusion of fill-prone sites.
+	\item \texttt{tcd} with a fill threshold value of 1~ft multiplied with 6 years (in the sample case) and a scour threshold of 100~ft (30.5~m) leads to the exclusion of fill-prone sites.
 	\item \texttt{mu} using the inclusive method with \pythoninline{mu_good = ["bank", "cutbank", "lateral bar", "spur dike", "tailings"]}.
 \end{itemize}
 
@@ -517,7 +519,7 @@ Unless this problem is not solved, the package indicates the adequacy of side ch
 	\begin{itemize}
 		\item Side channel intakes are situated at the outer bank, downstream of outer bends or at the inner bank, inside mild inner bends;
 		\item A side channel should be longer than the main channel to avoid cutting off the main channel;
-		\item Structures should be placed in the side channel to control the flow repartitioning and to avoid flow separation in the main channel.
+		\item Structures should be placed in the side channel to control the flow re-partitioning and to avoid flow separation in the main channel.
 	\end{itemize}
 \end{itemize}
 Moreover
@@ -526,7 +528,7 @@ Moreover
 \section{Input definition files}\label{sec:inp}
 \subsection{Raster data}\label{sec:inpfile}
 
-The file \texttt{input{\myUnderscore}definitions.inp} is stored on the directory \texttt{/.templates/} and can be accessed using the link \texttt{InputDefinitions.lnk} directly in the code directory. \texttt{input{\myUnderscore}definitions.inp} contains information about lifespan duration and raster names, which link to rasters containing spatial information as described in Sec.~\ref{sec:par}. The order of definitions and lines must not be changed to ensure the proper functioning of the module. Enter or change information in the corresponding lines, only between the ``='' and the ``$\#$'' signs (the input routines uses these signs as start and end identifiers for relevant information). The following definitions apply line by line:\\
+The file \texttt{input{\myUnderscore}definitions.inp} is stored on the directory \texttt{/.templates/} and can be accessed using the link \texttt{InputDefinitions.lnk} directly in the code directory. \texttt{input{\myUnderscore}definitions.inp} contains information about lifespan duration and raster names, which link to Rasters containing spatial information as described in Sec.~\ref{sec:par}. The order of definitions and lines must not be changed to ensure the proper functioning of the module. Enter or change information in the corresponding lines, only between the ``='' and the ``$\#$'' signs (the input routines uses these signs as start and end identifiers for relevant information). The following definitions apply line by line:\\
 
 \begin{tabular}{l p{0.2\textwidth} L{0.65\textwidth}}
 \multicolumn{3}{l}{}\\
@@ -566,7 +568,7 @@ The program uses the reference coordinate system and projection defined in the l
 The code can be extended with new parameters, e.g., direct shear stress output from the numerical model, new analyses, e.g., a new shear stress law, and features, e.g., another plant species block ramps.
 
 \subsection{Conventions}
-The rasters creation results from \pythoninline{analysis_} and \pythoninline{design_} functions that are stored in \texttt{cLifespanDesignAnalysis}. \pythoninline{analysis_} functions create rasters with lifespan data (0 to 20 years) and \pythoninline{design_} functions create rasters with design parameters such as the required stables grain size of angular boulders (rocks).\\
+The rasters creation results from \pythoninline{analysis_} and \pythoninline{design_} functions that are stored in \texttt{cLifespanDesignAnalysis}. \pythoninline{analysis_} functions create rasters with lifespan data (0 to 20 years in the sample case) and \pythoninline{design_} functions create rasters with design parameters such as the required stables grain size of angular boulders (rocks).\\
 Class names start with an upper case letter and do not contain any special characters, also excluding dash or underscore signs. Instantiations of classes are all lower case letters. Features, Parameters and Analysis classes are stored in separate files called \texttt{cFeatureLifespan.py}, \texttt{cParameters.py} and \texttt{cLifespanDesignAnalysis.py}, respectively. In addition, Feature classes may inherit subfeature classes from files names \texttt{cSubfeature.py}, for example \texttt{cPlants.py}.\\
 Function names consist of lower case letters only and the underscore sign ``{\myUnderscore}'' separates words.\\
 All class names, variable names and function names are in alphabetic order (a = up, z = down), except the \pythoninline{parameter_list}s, which determine the run hierarchy (see Sec.~\ref{sec:order}).
@@ -760,7 +762,7 @@ The currently implemented features are listed in Sec.~\ref{sec:featoverview}. Ne
 		\item Append shortname to \pythoninline{self.id_list = ["backwt", "widen", "grade", "sideca", "sidech", "elj",}\\
 	\pythoninline{"fines", "box", "cot", "whi", "wil", "rocks", "gravin", "gravou", "cust"]}
 		\item Append full feature name to \pythoninline{self.name_list = ["Backwater", "Bermsetback (Widen)", "Grading",}\\
-	\pythoninline{"Sidecavity", "Sidechannel", "ELJ", "Finesediment", "Plantings: Box Elder", "Plantings: Cot-"}\\
+	\pythoninline{"Sidecavity", "Sidechannel", "Streamwood", "Finesediment", "Plantings: Box Elder", "Plantings: Cot-"}\\
 	\pythoninline{"tonwood", "Plantings: White Alder", "Plantings: Willows", "Boulders/rocks", "Gravel replenishment", "Gravel stockpile", "Custom DEM"]}
 		\item Append feature threshold column (\texttt{threshold{\myUnderscore}values.xlsx}) name in \pythoninline{self.threshold_cols = ["E", "Q", "G", "O", "P", "R", "F", "J", "K", "L", "M", "N", "H", "I", "S"]}
 	\end{itemize}

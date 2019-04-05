@@ -393,20 +393,7 @@ class ModifyTerrain:
         except:
             volume_calculation_only = False
 
-        try:
-            import datetime as dt
-            now = dt.datetime.now()
-            day = '%02d' % (now.day,)
-            mon = '%02d' % (now.month,)
-            year = '%04d' % (now.year,)
-        except:
-            print('Missing package: Install datetime (using dummy-date in file_name.xlsx).')
-            day = 'DD'
-            mon = 'MM'
-            year = '20XX'
-        date = year + mon + day
-        logfile_name = "logfile_" + date
-        self.logging_start(logfile_name)
+        self.logging_start("logfile")
 
         for rn in self.reach_ids_applied:
             self.current_reach_id = rn
@@ -453,7 +440,7 @@ class ModifyTerrain:
 
         # copy logfile (contains important information!)
         from shutil import copyfile
-        logfile_dir = os.path.dirname(__file__) + "\\Output\\Logfiles\\" + logfile_name + ".log"
+        logfile_dir = os.path.dirname(__file__) + "\\Output\\Logfiles\\logfile.log"
         try:
             copyfile(os.path.dirname(__file__) + "\\" + logfile_name + ".log", logfile_dir)
         except:

@@ -231,6 +231,7 @@ class ArcPyAnalysis:
                 if self.verify_raster_info():
                     self.logger.info("            based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
+
                     try:
                         max_lf = float(max(self.lifespans))
                         self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -240,6 +241,7 @@ class ArcPyAnalysis:
                             "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
                     if not self.inverse_tcd:
                         temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), self.ras_tcd)
+
                         # compare temp_ras with raster_dict but use self.ras_... values if condition is True
                         ras_tcd_new = Con((temp_ras == 1.0), self.ras_tcd, self.raster_dict_lf[self.raster_info_lf])
                     else:
