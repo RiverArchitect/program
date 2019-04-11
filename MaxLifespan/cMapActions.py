@@ -69,7 +69,6 @@ class Mapper:
             length = args[0].__len__()
             if length > 3:
                 self.output_mxd_dir = args[0]
-                # fg.chk_dir(self.input_ras_dir)
         except:
             pass
 
@@ -97,14 +96,14 @@ class Mapper:
                     fig_name = "fig_"+ str(layout) + "_" + "%02d" % (__count__,)
                     __PDFpath__ = self.output_map_dir + fig_name + "_temp.pdf"
                     try:
-                        arcpy.mapping.ExportToPDF(self.mxd, __PDFpath__, image_compression = "ADAPTIVE", resolution = 96)
+                        arcpy.mapping.ExportToPDF(self.mxd, __PDFpath__, image_compression="ADAPTIVE", resolution=96)
                     except:
                         self.error = True
                         self.logger.info("ERROR: Could not export PDF page no. " + str(__count__))
-                    # arcpy.mapping.ExportToJPEG(self.mxd, __PDFpath__)
+                    # ALTERNATIVE FOR JPEG: arcpy.mapping.ExportToJPEG(self.mxd, __PDFpath__)
                     try:
                         __outputPDF__.appendPages(str(__PDFpath__))
-                        __tempPDFs__.append(__PDFpath__) # remember temp names to remove later on
+                        __tempPDFs__.append(__PDFpath__)
                     except:
                         self.error = True
                         self.logger.info("ERROR: Could not append PDF page no." + str(__count__) + " to map assembly.")

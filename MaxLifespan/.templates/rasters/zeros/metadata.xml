@@ -1,2 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<metadata xml:lang="en"><Esri><CreaDate>20180404</CreaDate><CreaTime>17483000</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><lineage><Process ToolSource="c:\program files (x86)\arcgis\desktop10.5\ArcToolbox\Toolboxes\Spatial Analyst Tools.tbx\RasterCalculator" Date="20180404" Time="174830">RasterCalculator Con(IsNull("lyr_zeros"),IsNull("lyr_zeros") * 0,"lyr_zeros") D:\temp\lyr_zeros</Process></lineage></DataProperties></Esri></metadata>

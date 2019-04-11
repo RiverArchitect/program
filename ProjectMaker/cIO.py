@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Filename: IO.py
 try:
     import os, sys, logging
 except:

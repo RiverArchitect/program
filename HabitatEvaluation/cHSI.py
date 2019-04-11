@@ -38,7 +38,7 @@ class CHSI:
         else:
             p_ext = "no_cover"
         self.path_csi = os.path.dirname(os.path.abspath(__file__)) + "\\CHSI\\" + str(self.condition) + "\\" + p_ext + "\\"
-        self.path_wua_ras = os.path.dirname(os.path.abspath(__file__)) + "\\WUA\\Rasters\\" + str(self.condition) + "\\" + p_ext + "\\"
+        self.path_wua_ras = os.path.dirname(os.path.abspath(__file__)) + "\\AUA\\Rasters\\" + str(self.condition) + "\\" + p_ext + "\\"
         fg.chk_dir(self.cache)
         fg.chk_dir(self.path_csi)
         fg.chk_dir(self.path_wua_ras)
@@ -56,7 +56,7 @@ class CHSI:
         self.xlsx_out = ""
 
     def calculate_wua(self, wua_threshold, fish):
-        # wua_threshold =  FLOAT -- value between 0.0 and 1.0
+        # aua_threshold =  FLOAT -- value between 0.0 and 1.0
         # fish = DICT -- fish.keys()==species_names; fish.values()==lifestages
         arcpy.CheckOutExtension('Spatial')
         arcpy.env.overwriteOutput = True
@@ -74,12 +74,12 @@ class CHSI:
                 else:
                     xsn = self.condition + "_" + fish_shortname + ".xlsx"
 
-                xlsx_name = os.path.dirname(os.path.abspath(__file__)) + "\\WUA\\" + xsn
+                xlsx_name = os.path.dirname(os.path.abspath(__file__)) + "\\AUA\\" + xsn
                 xlsx = chio.Write()
                 xlsx.open_wb(xlsx_name, 0)
 
                 Q = xlsx.read_column("B", 4)
-                self.logger.info(" >> Reducing CHSI rasters to WUA threshold (" + str(wua_threshold) + ") ...")
+                self.logger.info(" >> Reducing CHSI rasters to AUA threshold (" + str(wua_threshold) + ") ...")
                 for csi in csi_list:
                     self.logger.info("    -- CHSI raster: " + str(csi))
                     if fish_shortname in str(csi):
@@ -89,17 +89,17 @@ class CHSI:
                     dsc = arcpy.Describe(ras_csi)
                     coord_sys = dsc.SpatialReference
                     rel_ras = Con(Float(ras_csi) >= float(wua_threshold), Float(ras_csi))
-                    self.logger.info("       * saving WUA-CHSI raster ...")
+                    self.logger.info("       * saving AUA-CHSI raster ...")
                     try:
                         rel_ras.save(self.path_wua_ras + str(csi))
                     except:
-                        self.logger.info("ERROR: Could not save WUA-CHSI raster.")
+                        self.logger.info("ERROR: Could not save AUA-CHSI raster.")
 
                     ras4shp = Con(~IsNull(rel_ras), 1)
 
-                    self.logger.info("       * converting WUA-CHSI raster to shapefile ...")
+                    self.logger.info("       * converting AUA-CHSI raster to shapefile ...")
                     try:
-                        shp_name = self.cache + str(cc) + "wua.shp"
+                        shp_name = self.cache + str(cc) + "aua.shp"
                         arcpy.RasterToPolygon_conversion(ras4shp, shp_name, "NO_SIMPLIFY")
                         arcpy.DefineProjection_management(shp_name, coord_sys)
                     except arcpy.ExecuteError:
@@ -116,9 +116,9 @@ class CHSI:
                     self.logger.info("       * calculating area ...")
                     area = 0.0
                     try:
-                        arcpy.CalculateAreas_stats(shp_name, self.cache + str(cc) + "wua_eval.shp")
+                        arcpy.CalculateAreas_stats(shp_name, self.cache + str(cc) + "aua_eval.shp")
                         self.logger.info("         summing up area ...")
-                        with arcpy.da.UpdateCursor(self.cache + str(cc) + "wua_eval.shp", "F_AREA") as cursor:
+                        with arcpy.da.UpdateCursor(self.cache + str(cc) + "aua_eval.shp", "F_AREA") as cursor:
                             for row in cursor:
                                 try:
                                     area += float(row[0])
@@ -137,7 +137,11 @@ class CHSI:
 
                     self.logger.info("       * writing Usable Area to workbook:")
                     for q in Q.keys():
-                        if str(int(q)) == str(csi).split(fish_shortname)[1]:
+                        try:
+                            q_str = str(csi).split(fish_shortname)[1].split('.tif')[0]
+                        except:
+                            q_str = str(csi).split(fish_shortname)[1]
+                        if str(int(q)) == q_str:
                             self.logger.info(
                                 "         Discharge: " + str(q) + self.u_discharge + " and Usable Area: " + str(
                                     area) + " square " + self.u_length)
@@ -195,11 +199,11 @@ class CHSI:
         return self.make_chsi(fish, boundary_shp)
 
     def make_boundary_ras(self, shapef):
-        if not arcpy.Exists(self.path_hsi + "boundras"):
+        if not arcpy.Exists(self.path_hsi + "boundras.tif"):
             self.logger.info("    * Converting to raster ...")
             try:
                 arcpy.PolygonToRaster_conversion(in_features=shapef, value_field="Id",
-                                                 out_rasterdataset=self.path_hsi + "boundras",
+                                                 out_rasterdataset=self.path_hsi + "boundras.tif",
                                                  cell_assignment="CELL_CENTER", cellsize=1.0)
             except:
                 self.logger.info(
@@ -207,7 +211,7 @@ class CHSI:
                 self.logger.info(Exception.args[0])
                 self.logger.info(arcpy.GetMessages())
         try:
-            return arcpy.Raster(self.path_hsi + "boundras")
+            return arcpy.Raster(self.path_hsi + "boundras.tif")
         except:
             return -1
 
@@ -252,16 +256,19 @@ class CHSI:
                     cc += 1
                     # find dsi-rasters and match according velocity rasters
                     if str(ras)[0:3] == "dsi":
-                        q = int(str(ras).split(fish_shortname)[-1])
+                        try:
+                            q = int(str(ras).split(fish_shortname)[-1])
+                        except:
+                            q = int(str(ras).split(fish_shortname)[-1].split('.tif')[0])
                         self.logger.info("    --- combining rasters for Q = " + str(q) + " (" + self.combine_method + ") ...")
 
                         # load inundation area Raster (wetted area)
                         try:
                             self.logger.info("        * loading innundated area raster ...")
                             if q >= 1000:
-                                h_ras_name = "h%003dk" % int(q/1000)
+                                h_ras_name = "h%003dk.tif" % int(q/1000)
                             else:
-                                h_ras_name = "h%003d" % q
+                                h_ras_name = "h%003d.tif" % q
                             if boundary_shp.__len__() > 0:
                                 self.logger.info("        * clipping to boundary ...")
                                 inundation_ras = Con(~IsNull(boundary_ras), arcpy.Raster(self.path_condition + h_ras_name))
@@ -282,6 +289,9 @@ class CHSI:
                                     if arcpy.Exists(self.path_hsi + covt + "_hsi"):
                                         self.logger.info("        * adding cover: " + covt + "_hsi")
                                         relevant_cov.append(Float(arcpy.Raster(self.path_hsi + covt + "_hsi")))
+                                    if arcpy.Exists(self.path_hsi + covt + "_hsi.tif"):
+                                        self.logger.info("        * adding cover: " + covt + "_hsi.tif")
+                                        relevant_cov.append(Float(arcpy.Raster(self.path_hsi + covt + "_hsi.tif")))
                                 self.logger.info("        * calculating cell statistics (maximum HSI values) ...")
                                 cov_hsi = Float(CellStatistics(relevant_cov, "MAXIMUM", "DATA"))
                             except:
@@ -289,8 +299,14 @@ class CHSI:
                                 return -1
                         try:
                             self.logger.info("        * reading hydraulic HSI rasters ...")
-                            dsi = Float(arcpy.Raster(self.path_hsi + str(ras)))
-                            vsi = Float(arcpy.Raster(self.path_hsi + "vsi" + str(ras).strip("dsi")))
+                            try:
+                                dsi = Float(arcpy.Raster(self.path_hsi + str(ras)))
+                            except:
+                                dsi = Float(arcpy.Raster(self.path_hsi + str(ras) + ".tif"))
+                            try:
+                                vsi = Float(arcpy.Raster(self.path_hsi + "vsi" + str(ras).strip("dsi")))
+                            except:
+                                vsi = Float(arcpy.Raster(self.path_hsi + "vsi" + str(ras).strip("dsi") + ".tif"))
                             if self.cover_applies:
                                 if self.combine_method == "geometric_mean":
                                     self.logger.info("        * combining hydraulic and cover HSI rasters (geometric mean)...")
@@ -306,7 +322,7 @@ class CHSI:
                                     self.logger.info("        * combining hydraulic HSI rasters (product)...")
                                     chsi = Con(~IsNull(inundation_ras), Con(Float(inundation_ras) > 0.0, Float(dsi * vsi)))
                             self.logger.info("        * saving as ...")
-                            chsi.save(self.path_csi + "csi" + str(ras).strip("dsi"))
+                            chsi.save(self.path_csi + "csi" + str(ras).strip("dsi") + ".tif")
                             self.logger.info("        * clearing cache buffer ...")
                             del chsi, dsi, vsi
                             self.clear_cache(False)
@@ -386,11 +402,11 @@ class HHSI:
             self.logger.info("WARNING: .cache folder will be removed by package controls.")
 
     def make_boundary_ras(self, shapef):
-        if not arcpy.Exists(self.path_hsi + "boundras"):
+        if not arcpy.Exists(self.path_hsi + "boundras.tif"):
             self.logger.info("    * Converting to raster ...")
             try:
                 arcpy.PolygonToRaster_conversion(in_features=shapef, value_field="Id",
-                                                 out_rasterdataset=self.path_hsi + "boundras",
+                                                 out_rasterdataset=self.path_hsi + "boundras.tif",
                                                  cell_assignment="CELL_CENTER", cellsize=1.0)
             except:
                 self.logger.info(
@@ -398,7 +414,7 @@ class HHSI:
                 self.logger.info(Exception.args[0])
                 self.logger.info(arcpy.GetMessages())
         try:
-            return arcpy.Raster(self.path_hsi + "boundras")
+            return arcpy.Raster(self.path_hsi + "boundras.tif")
         except:
             return -1
 
@@ -434,13 +450,14 @@ class HHSI:
                 for rh in self.ras_h:
                     self.logger.info("   -> DISCHARGE: " + str(self.flow_dict_h[str(rh)]))
                     rh_ras = arcpy.Raster(self.dir_in_geo + rh)
+
                     self.logger.info("    > Raster calculation: Depth HSI ...")
                     if boundary_shp.__len__() > 0:
                         __temp_h_ras__ = Con(~IsNull(boundary_ras), Float(rh_ras))
                         rh_ras = __temp_h_ras__
                     ras_out = self.nested_con_raster_calc(rh_ras, curve_data)
                     self.logger.info("      - OK")
-                    ras_name = "dsi_" + str(species[0:2]).lower() + str(ls)[0] + str(self.flow_dict_h[str(rh)])
+                    ras_name = "dsi_" + str(species[0:2]).lower() + str(ls)[0] + str(self.flow_dict_h[str(rh)]) + ".tif"
                     self.logger.info("    > Saving: " + self.path_hsi + ras_name + " ...")
                     try:
                         ras_out.save(self.path_hsi + ras_name)
@@ -461,7 +478,7 @@ class HHSI:
                         rh_ras = __temp_h_ras__
                     ras_out = self.nested_con_raster_calc(rh_ras, curve_data)
                     self.logger.info("      - OK")
-                    ras_name = "vsi_" + str(species[0:2]).lower() + str(ls)[0] + str(self.flow_dict_u[str(ru)])
+                    ras_name = "vsi_" + str(species[0:2]).lower() + str(ls)[0] + str(self.flow_dict_u[str(ru)]) + ".tif"
                     self.logger.info(
                         "    > Saving: " + self.path_hsi + ras_name + " ...")
                     try:
@@ -507,7 +524,7 @@ class HHSI:
         for rn in all_rasters:
             if (rn[0] == "h") or (rn[0] == "u"):
                 try:
-                    if str(rn).endswith("k"):
+                    if str(rn).endswith("k") or str(rn).endswith("k.tif"):
                         # multiply "k"-raster name discharges with 1000
                         thousand = 1000.0
                     else:
@@ -543,10 +560,10 @@ class CovHSI(HHSI):
         self.cover_type = str(geofile_name).split(".")[0]
         self.cell_size = float()  # initialization for points to raster export variable
         if self.units == "us":
-            self.geofile_dict = {"substrate": "dmean_ft", "boulders": "boulders.shp", "cobbles": "dmean_ft",
+            self.geofile_dict = {"substrate": "dmean_ft.tif", "boulders": "boulders.shp", "cobbles": "dmean_ft.tif",
                                  "wood": "wood.shp", "plants": "plants.shp"}
         else:
-            self.geofile_dict = {"substrate": "dmean", "boulders": "boulders.shp", "cobbles": "dmean",
+            self.geofile_dict = {"substrate": "dmean.tif", "boulders": "boulders.shp", "cobbles": "dmean.tif",
                                  "wood": "wood.shp", "plants": "plants.shp"}
 
         if not (self.geofile_dict[self.cover_type][-4:-1] == ".sh"):
@@ -568,8 +585,8 @@ class CovHSI(HHSI):
             return self.substrate_size_analysis(self.input_raster, curve_data)
 
     def convert_shp2raster(self, shapefile):
-        cov_raster = "cov_ras"  # name of the temporarily used cover raster
-        arcpy.PolygonToRaster_conversion(shapefile, "cover", self.cache + cov_raster,
+        cov_raster = "cov_ras.tif"  # name of the temporarily used cover raster
+        arcpy.PolygonToRaster_conversion(shapefile, "cover.tif", self.cache + cov_raster,
                                          cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
         return arcpy.Raster(self.cache + cov_raster)
 
@@ -640,7 +657,7 @@ class CovHSI(HHSI):
                     self.error = True
 
                 self.logger.info("      - OK")
-                ras_name = self.cover_type + "_hsi"
+                ras_name = self.cover_type + "_hsi.tif"
                 self.logger.info(
                     "   -> Saving: " + self.path_hsi + ras_name + " ...")
                 try:
@@ -686,7 +703,7 @@ class CovHSI(HHSI):
             arcpy.PointToRaster_conversion(in_features=out_points, value_field="grid_code",
                                            out_rasterdataset=self.cache + "cov_points",
                                            cell_assignment="MEAN", cellsize=self.cell_size)
-            __temp_ras__ = arcpy.Raster(self.cache + "cov_points")
+            __temp_ras__ = arcpy.Raster(self.cache + "cov_points.tif")
             self.logger.info("   -> Assigning spatial HSI value (" + str(curve_data[1][0]) + ") where applies (raster calculator) ...")
             __ras__ = Con(__temp_ras__ > 0, curve_data[1][0])  # assign HSI value
         except:

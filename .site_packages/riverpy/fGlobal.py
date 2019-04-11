@@ -148,7 +148,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
             for i in range(0, 9):
                 test_folder = str(condition)[0:4] + reach_name + "_lyr" + str(feat_lyr_type) + str(i)
                 test_dir = dir2LD + "Output\\Rasters\\" + test_folder + "\\"
-                if not (os.path.exists(test_dir)):
+                if not os.path.exists(test_dir):
                     os.makedirs(test_dir)
                     output_dir = test_dir
                     break
@@ -185,7 +185,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     if not("output_dir" in locals()):
         print("No reach or feature layer or habitat_analysis information.")
         print("--> Output folder name corresponds to input condition.")
-        output_dir =dir2LD + "Output\\Rasters\\" + str(condition) + "\\"
+        output_dir = dir2LD + "Output\\Rasters\\" + str(condition) + "\\"
 
     chk_dir(output_dir)
 
@@ -201,7 +201,7 @@ def open_file(full_file_path):
         except:
             msg = "Cannot open " + str(_f) + ". Ensure that your OS has a defined standard application for relevant file types (e.g., .inp or .xlsx)."
     else:
-        msg = "The file \'\n" + str(_f) + "\'\n does not exist. Check action planner directory."
+        msg = "The file \'\n" + str(_f) + "\'\n does not exist. Check MaxLifespan directory."
     return msg
 
 

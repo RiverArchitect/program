@@ -210,7 +210,7 @@ class MainGui(tk.Frame):
         self.b_select_c_p = tk.Button(self, width=14, background="white", text="Confirm Selection",
                                       command=lambda: self.select_condition("chsi_project"))
         self.b_select_c_p.grid(sticky=tk.E, row=28, column=2, padx=self.xd, pady=self.yd)
-        self.b_s40 = tk.Button(self, text="Calculate Net gain in Weighted Usable habitat Area (WUA)", command=lambda: self.start_app("s40"))
+        self.b_s40 = tk.Button(self, text="Calculate Net gain in Annually Usable habitat Area (AUA)", command=lambda: self.start_app("s40"))
         self.b_s40.grid(sticky=tk.EW, row=30, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_s40["state"] = "disabled"
         self.b_s40_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s40"))
@@ -421,7 +421,7 @@ class MainGui(tk.Frame):
                 if self.cover_app_pre.get() or self.cover_app_post.get():
                     msg1 = "Make sure that cover cHSI rasters are available in HabitatEvaluation/cHSI/"
                     msg2 = str(self.condition_init) + " AND / OR " + str(self.condition_proj) + "/cover/.\n\n"
-                    msg3 = "Press OK to launch WUA calculation with cover."
+                    msg3 = "Press OK to launch AUA calculation with cover."
                     showinfo("Info", msg1 + msg2 + msg3)
                 if (self.condition_init.__len__() < 1) or (str(self.condition_init) == "Validate Variables"):
                     showinfo("ERROR", "Select initial condition.")
@@ -431,7 +431,7 @@ class MainGui(tk.Frame):
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.dir2SR, self.fish_applied, self.reach, self.stn, self.unit, self.version)
-                self.b_s40.config(text="Net gain in WUA calculation OK", fg="forest green")
+                self.b_s40.config(text="Net gain in AUA calculation OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
@@ -545,6 +545,7 @@ class MainGui(tk.Frame):
 
     def __call__(self):
         self.mainloop()
+
 
 # enable script to run stand-alone
 if __name__ == "__main__":

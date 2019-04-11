@@ -39,9 +39,12 @@ class DEM:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""
 
 
 class DEMdet:
@@ -56,9 +59,12 @@ class DEMdet:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""
 
 
 class DoD:
@@ -74,13 +80,19 @@ class DoD:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster_scour = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster_scour = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster_scour = ""
+            try:
+                self.raster_scour = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster_scour = ""
         try:
-            self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[1])
+            self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster_fill = ""
+            try:
+                self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster_fill = ""
 
 
 class FlowDepth:
@@ -98,7 +110,10 @@ class FlowDepth:
         for ras_name in self.raster_names:
             ras_act = self.raster_path + self.condition + "\\" + ras_name
             if arcpy.Exists(ras_act) or os.path.isfile(ras_act + '.tif'):
-                self.rasters.append(arcpy.Raster(ras_act))
+                try:
+                    self.rasters.append(arcpy.Raster(ras_act + '.tif'))
+                except:
+                    self.rasters.append(arcpy.Raster(ras_act))
             else:
                 self.rasters.append("")
 
@@ -116,7 +131,10 @@ class FlowVelocity:
         for ras_name in self.raster_names:
             ras_act = self.raster_path + self.condition + "\\" + ras_name
             if arcpy.Exists(ras_act) or os.path.isfile(ras_act + '.tif'):
-                self.rasters.append(arcpy.Raster(ras_act))
+                try:
+                    self.rasters.append(arcpy.Raster(ras_act + '.tif'))
+                except:
+                    self.rasters.append(arcpy.Raster(ras_act))
             else:
                 self.rasters.append("")
 
@@ -131,9 +149,12 @@ class GrainSizes:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""
 
 
 class MU:
@@ -153,9 +174,12 @@ class MU:
                         "in-channel bar": 35}
         self.raster_names = ["mu"]
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""
 
 
 class SideChannelDelineation:
@@ -169,9 +193,12 @@ class SideChannelDelineation:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""
 
 
 class WaterTable:
@@ -186,9 +213,12 @@ class WaterTable:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""
 
 
 class Wildcard:
@@ -203,6 +233,9 @@ class Wildcard:
         self.raster_names = input_info.raster_read()
         self.flood_dependent = False
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
         except:
-            self.raster = ""
+            try:
+                self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            except:
+                self.raster = ""

@@ -34,7 +34,7 @@ class Director:
                 if feat in ras_name:
                     if ras_name[0:2] == "ds":
                         ras_act = self.raster_input_path + ras_name
-                        if os.path.isfile(ras_act + '.aux.xml'):
+                        if os.path.isfile(ras_act + '.aux.xml') or os.path.isfile(ras_act) or os.path.isfile(ras_act + '.tif'):
                             raster_list.append(arcpy.Raster(ras_act))
                         else:
                             raster_list.append("")
@@ -47,7 +47,7 @@ class Director:
                 if feat in ras_name:
                     if ras_name[0:2] == "lf":
                         ras_act = self.raster_input_path + ras_name
-                        if os.path.isfile(ras_act + '.aux.xml'):
+                        if os.path.isfile(ras_act + '.aux.xml') or os.path.isfile(ras_act) or os.path.isfile(ras_act + '.tif'):
                             raster_list.append(arcpy.Raster(ras_act))
                         else:
                             raster_list.append("")

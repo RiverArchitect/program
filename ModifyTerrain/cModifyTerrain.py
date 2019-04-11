@@ -31,6 +31,7 @@ class ModifyTerrain:
         self.features = cdef.Features()
         self.condition = condition
         self.current_reach_id = ""
+        self.logfile_name = ""
         self.output_ras_dir = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Rasters\\" + str(condition) + "\\"
         fg.chk_dir(self.output_ras_dir)
         fg.clean_dir(self.output_ras_dir)
@@ -44,10 +45,10 @@ class ModifyTerrain:
         self.volume_pos_dict = {}
         self.writer = cio.Write()
         try:
-            self.zero_ras = arcpy.Raster(os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..')) + "\\MaxLifespan\\.templates\\rasters\\zeros")
+            self.make_zero_ras()
+            self.zero_ras = arcpy.Raster(self.cache + "zeros.tif")
         except:
-            print("ExceptionERROR: Could not retrieve zero raster from MaxLifespan.")
+            print("ExceptionERROR: Could not create zero raster (base reference).")
 
         # set relevant reaches
         try:
@@ -101,14 +102,20 @@ class ModifyTerrain:
             self.input_dir_fa = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + str(condition) + "\\"
         try:
-            self.ras_dem = arcpy.Raster(self.input_dir_fa + "dem")
+            self.ras_dem = arcpy.Raster(self.input_dir_fa + "dem.tif")
         except:
-            self.ras_dem = 0
+            try:
+                self.ras_dem = arcpy.Raster(self.input_dir_fa + "dem")
+            except:
+                self.ras_dem = 0
 
         try:
-            self.ras_d2w = arcpy.Raster(self.input_dir_fa + "d2w")
+            self.ras_dem = arcpy.Raster(self.input_dir_fa + "d2w.tif")
         except:
-            self.ras_d2w = 0
+            try:
+                self.ras_dem = arcpy.Raster(self.input_dir_fa + "d2w")
+            except:
+                self.ras_dem = 0
 
         # get inputs and RASTERS from MaxLifespan
         try:
@@ -138,7 +145,6 @@ class ModifyTerrain:
     def get_cad_rasters_for_volume(self, feat_id):
         # instruction: rasters must contain feat_ids in names
         arcpy.env.workspace = self.alt_dir_volDEM
-        # arcpy.env.extent = "MAXOF"
         arcpy.CheckOutExtension('Spatial')  # check out license
         all_rasters = arcpy.ListRasters()
         raster_identified = False
@@ -159,6 +165,7 @@ class ModifyTerrain:
         arcpy.CheckInExtension('Spatial')  # release license
 
     def logging_start(self, logfile_name):
+        self.logfile_name = logfile_name
         logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
         for fn in logfilenames:
             fn_full = os.path.join(os.getcwd(), fn)
@@ -243,7 +250,7 @@ class ModifyTerrain:
             self.logger.info("     ... based on modified " + str(self.raster_info) + " DEM  ... ")
             dem = Float(self.raster_dict[self.raster_info])
             # det = self.dem_det - (self.ras_dem - self.raster_dict[self.raster_info])
-            d2w = Float(self.ras_d2w) - (Float(self.ras_dem) -Float(self.raster_dict[self.raster_info]))
+            d2w = Float(self.ras_d2w) - (Float(self.ras_dem) - Float(self.raster_dict[self.raster_info]))
         else:
             dem = Float(self.ras_dem)
             # det = self.dem_det
@@ -258,6 +265,30 @@ class ModifyTerrain:
         self.raster_dict.update({self.raster_info: feat_dem})
 
         arcpy.CheckInExtension('Spatial')  # release license
+
+    def make_zero_ras(self):
+        arcpy.CheckOutExtension('Spatial')  # check out license
+        zero_ras_str = self.cache + "zeros.tif"
+        if os.path.isfile(zero_ras_str):
+            fg.rm_file(zero_ras_str)
+        try:
+            try:
+                base_dem = arcpy.Raster(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                                     '..')) + "\\01_Conditions\\" + self.condition + "\\dem.tif")
+            except:
+                base_dem = arcpy.Raster(os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\dem")
+
+            print("Preparing zero raster based on DEM extents ...")
+            arcpy.env.extent = base_dem.extent
+            arcpy.env.workspace = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
+            zero_ras = Con(IsNull(base_dem), 0, 0)
+            zero_ras.save(zero_ras_str)
+            arcpy.env.workspace = self.cache
+        except:
+            print("ExceptionERROR: Unable to create ZERO Raster.")
+        arcpy.CheckInExtension('Spatial')  # check in license
 
     def modification_manager(self, feat_id):
         if not self.reach_delineation:
@@ -291,18 +322,18 @@ class ModifyTerrain:
                     try:
                         if "diff" in str(ras):
                             if "pos" in str(ras):
-                                suffix = "_pos"
+                                suffix = "_pos.tif"
                             if "neg" in str(ras):
-                                suffix = "_neg"
+                                suffix = "_neg.tif"
                         else:
-                            suffix = ""
+                            suffix = ".tif"
 
                         self.logger.info("  >> Saving raster: " + ras_name + " ... ")
                         self.logger.info("     *** takes time ***")
-                        self.raster_dict[ras].save(self.cache + ras)
+                        self.raster_dict[ras].save(self.cache + ras + ".tif")
                         self.logger.info(
-                            "    -- Casting to " + self.output_ras_dir + ras_name + suffix + " ...")
-                        arcpy.CopyRaster_management(self.cache + ras, self.output_ras_dir + ras_name + suffix)
+                            "    -- Casting to " + self.output_ras_dir + ras_name + suffix + ".tif ...")
+                        arcpy.CopyRaster_management(self.cache + ras + ".tif", self.output_ras_dir + ras_name + suffix)
 
                         if "diff" in str(ras):
                             if "pos" in str(ras):
@@ -431,7 +462,10 @@ class ModifyTerrain:
         try:
             self.logger.info("  >> Clearing .cache (arcpy.Delete_management - temp.designs - please wait) ...")
             for ras in self.raster_dict:
-                arcpy.Delete_management(self.raster_dict[ras])
+                try:
+                    arcpy.Delete_management(self.raster_dict[ras])
+                except:
+                    self.logger.info("WARNING: Could not delete " + str(ras) + " from .cache folder.")
             self.logger.info("  >> Done.")
             fg.rm_dir(self.cache)  # dump cache after feature analysis
         except:
@@ -442,7 +476,7 @@ class ModifyTerrain:
         from shutil import copyfile
         logfile_dir = os.path.dirname(__file__) + "\\Output\\Logfiles\\logfile.log"
         try:
-            copyfile(os.path.dirname(__file__) + "\\" + logfile_name + ".log", logfile_dir)
+            copyfile(os.path.dirname(__file__) + "\\" + self.logfile_name + ".log", logfile_dir)
         except:
             pass
         self.logging_stop()

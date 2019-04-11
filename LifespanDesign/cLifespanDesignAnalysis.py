@@ -1089,6 +1089,7 @@ class ArcPyAnalysis:
 
     def save_manager(self, ds, lf, name):
         self.set_extent()
+        name = name + '.tif'
         if lf:
             self.save_lifespan(name)
         if ds and lf:
@@ -1108,7 +1109,7 @@ class ArcPyAnalysis:
         if name.__len__() > 6:
             # shorten name if required
             self.logger.info("   >> Hint: Feature ID too long - applying instead: " + str(name[:6]))
-            name = name[:6]
+            name = name[:6] + '.tif'
 
         try:
             arcpy.gp.overwriteOutput = True
@@ -1116,20 +1117,20 @@ class ArcPyAnalysis:
             for ras in reversed(self.raster_dict_ds.keys()):
                 self.logger.info("   >> Saving design map " + ras + " (takes time) ... ")
                 try:
-                    self.raster_dict_ds[ras].save(self.cache + ras)
+                    self.raster_dict_ds[ras].save(self.cache + ras + '.tif')
                 except:
                     self.logger.info("WARNING: Empty design raster (ds_" + name + ")")
                 if ras[4:].__len__() > 3:
                     par_name = ras[4:]
                 else:
                     par_name = ras[4:7]
-                __full_name__ = "ds_" + name + "_" + par_name
-                if __full_name__.__len__() > 13:
-                    __full_name__ = __full_name__[0:13]
+                __full_name__ = "ds_" + name.split('.tif') + "_" + par_name + '.tif'
+                if __full_name__.__len__() > 17:
+                    __full_name__ = __full_name__[0:13] + '.tif'
                     self.logger.info("      Preparing Cast: Modified ds raster name.")
                 self.logger.info("   >> Casting to " + self.output + __full_name__ +
                                  " (may take time) ...")
-                if os.path.isfile(self.output + __full_name__ + '.aux.xml'):
+                if os.path.isfile(self.output + __full_name__ + '.tif'):
                     self.logger.info("      >>> Overwriting existing raster.")
                     file_locked = fg.rm_raster(self.output + __full_name__)
                     if file_locked:
@@ -1176,17 +1177,17 @@ class ArcPyAnalysis:
         # Copy last lf Raster Dataset from .cache to Output/Rasters folder as Esri Grid file
         # name = feature ID (str, max. 10 char.)
 
-        if name.__len__() > 10:
+        if name.__len__() > 13:
             # shorten name if required
-            name = name[:10]
+            name = name[:10] + '.tif'
 
         try:
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
             self.logger.info("   >> Saving lifespan raster (takes time) ... ")
             try:
-                if self.raster_info_lf.__len__() > 13:
-                    self.raster_info_lf = self.raster_info_lf[0:13]
+                if self.raster_info_lf.__len__() > 17:
+                    self.raster_info_lf = self.raster_info_lf[0:13] + '.tif'
                     self.logger.info("      .cache: Modified lf raster name.")
             except:
                 pass
@@ -1196,12 +1197,12 @@ class ArcPyAnalysis:
                 self.logger.info("WARNING: Empty lifespan raster (lf_" + name + ")")
 
             __full_name__ = "lf_" + name
-            if __full_name__.__len__() > 13:
-                __full_name__ = __full_name__[0:13]
+            if __full_name__.__len__() > 17:
+                __full_name__ = __full_name__[0:13] + '.tif'
                 self.logger.info("      Preparing Cast: Modified lf raster name.")
             self.logger.info(
                 "   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
-            if os.path.isfile(self.output + __full_name__ + '.aux.xml'):
+            if os.path.isfile(self.output + __full_name__ + '.tif'):
                 self.logger.info("      >>> Overwriting existing raster.")
                 file_locked = fg.rm_raster(self.output + __full_name__)
                 if file_locked:

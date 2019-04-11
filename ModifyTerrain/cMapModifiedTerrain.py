@@ -140,7 +140,7 @@ class Mapper:
         self.logger.info(" >> Preparing map: " + map_name + " (takes a while) ...")
         try:
             # __outputPDF__ = arcpy.mapping.PDFDocumentCreate(self.output_map_dir + map_name)
-            # Instantiate mxd and df -- both need to be global variables here!!
+            # Instantiate mxd and df -- both need to be global variables !!
             self.mxd = arcpy.mapping.MapDocument(mxd_file)
             self.df = arcpy.mapping.ListDataFrames(self.mxd)[0]
 

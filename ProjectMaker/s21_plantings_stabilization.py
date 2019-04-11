@@ -1,6 +1,6 @@
 from __future__ import division
 # !/usr/bin/python
-import arcpy, os, logging
+import arcpy
 import webbrowser
 from fFunctions import *
 logger = logging_start("logfile_21")
@@ -43,23 +43,29 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     # LOOK UP INPUT RASTERS
     try:
         logger.info("Looking up maximum lifespan rasters ...")
-        max_lf_plants = arcpy.Raster(ras_dir + "max_lf_pl_c")
+        max_lf_plants = arcpy.Raster(ras_dir + "max_lf_pl_c.tif")
         logger.info(" >> Vegetation plantings OK.")
-        logger.info(" >> Toolbox OK.")
+        logger.info(" >> Bioenineering OK.")
         logger.info(" -- OK (MaxLifespan raster read)\n")
     except:
         logger.info("ERROR: Could not find MaxLifespan Rasters.")
         error = True
     try:
         logger.info("Looking up specific toolbox lifespan rasters ...")
-        logger.info(act_tbx_dir + "lf_wood")
-        lf_wood = arcpy.Raster(act_tbx_dir + "lf_wood")
+        logger.info(act_tbx_dir + "lf_wood/tif")
+        try:
+            lf_wood = arcpy.Raster(act_tbx_dir + "lf_wood.tif")
+        except:
+            lf_wood = arcpy.Raster(act_tbx_dir + "lf_wood")
         logger.info(" >> Large wood / ELJs OK.")
-        lf_bio = arcpy.Raster(act_tbx_dir + "lf_bio")
+        try:
+            lf_bio = arcpy.Raster(act_tbx_dir + "lf_bio.tif")
+        except:
+            lf_bio = arcpy.Raster(act_tbx_dir + "lf_bio")
         logger.info(" >> Bioengineering OK.")
-        logger.info(" -- OK (Toolbox raster read)\n")
+        logger.info(" -- OK (Bioengineering raster read)\n")
     except:
-        logger.info("ERROR: Could not find Toolbox Rasters.")
+        logger.info("ERROR: Could not find Bioengineering (other) Rasters.")
         error = True
 
     # EVALUATE BEST STABILIZATION FEATURES
@@ -80,7 +86,7 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     # SAVE RASTERS
     try:
         logger.info("Saving results raster ...")
-        best_stab.save(ras_dir + "plant_stab")
+        best_stab.save(ras_dir + "plant_stab.tif")
         logger.info(" -- OK (Raster saved.)\n")
     except:
         logger.info("ERROR: Result geofile saving failed.")

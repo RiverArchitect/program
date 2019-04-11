@@ -144,7 +144,7 @@ class Write:
         self.dict_Q_h_ras = {}
         self.dict_Q_u_ras = {}
         self.dir_in_ras = r""
-        self.dir_xlsx_out = os.path.dirname(os.path.abspath(__file__)) + "\\WUA\\"
+        self.dir_xlsx_out = os.path.dirname(os.path.abspath(__file__)) + "\\AUA\\"
 
         fg.chk_dir(self.dir_xlsx_out)
 
@@ -186,13 +186,16 @@ class Write:
         # fish_sn == STR -- 3 digits indicating fish species and lifestage
 
         ras_name_list = [rn for rn in os.listdir(self.dir_in_ras) if os.path.isdir(os.path.join(self.dir_in_ras, rn))]
+        if ras_name_list.__len__() < 1:
+            # look for geoTIFFs if ras_name_list is empty
+            ras_name_list = [i for i in os.listdir(self.dir_in_ras) if i.endswith('.tif')]
 
         self.logger.info("   * Analyzing relevant discharges and matching rasters ...")
         for rn in ras_name_list:
             if rn[0] == "h":
                 self.logger.info("     -- Found flow depth raster: " + str(rn))
                 try:
-                    if str(rn).endswith("k"):
+                    if str(rn).endswith("k") or str(rn).endswith("k.tif"):
                         # multiply "k"-raster name discharges with 1000
                         thousand = 1000.0
                     else:
