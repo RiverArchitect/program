@@ -13,7 +13,7 @@ GUI modules.
  * ESRI ArcMap and licenses for SpatialAnalyst (coming soon: update for ArcPro and Python 3). 
  * Batchfile launches are designed for working on any Windows platform.
  
- Note: Running the River Archtiect with the sample data requires at least ArcMap 10.6.
+ Note: Running River Architect with sample data requires at least ArcMap 10.6.
 
 # Usage
 Quick guide: Right-click on [Start_River_Architect.bat][1] and open this batchfile in a text editor. Ensure that the file points to the correct python interpreter (ArcMap's python.exe -- typically stored in C:\Python27\ArcGISx6410.6\). Save edits, close the batchfile and double-click on it to launch River Architect. For detailed installation and usage instructions, please refer to the code [documentation][2].
