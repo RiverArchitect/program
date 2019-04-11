@@ -225,6 +225,8 @@ class Mapper:
         arcpy.env.overwriteOutput = True
 
         rasterlist = arcpy.ListRasters("*", "GRID")  # gets all rasters in arcpy.env. workspace
+        if rasterlist.__len__() < 1:
+            rasterlist = arcpy.ListRasters("*", "tif")
 
         for raster in rasterlist:
             self.logger.info(" >> Preparing map layout: " + self.output_dir + str(raster) + ".mxd")
@@ -248,7 +250,7 @@ class Mapper:
                 arcpy.mapping.UpdateLayer(df, __lyr_file__, lf_sourceLayer)  # Update symbology with example lyr-file
                 arcpy.RefreshActiveView()
                 arcpy.RefreshTOC()
-                mxd.title = str(raster) # necessary for later identification of make_maps
+                mxd.title = str(raster)  # necessary for later identification of make_maps
                 if os.path.isfile(os.path.join(self.output_mxd_dir, str(raster) + ".mxd")):
                     self.logger.info("WARNING: Overwriting existing version of " + str(raster) + ".mxd")
                 mxd.saveACopy(self.output_mxd_dir + str(raster) + ".mxd")
@@ -295,7 +297,7 @@ class Mapper:
         self.logger.info("LifespanDesign.Mapper() initiated.")
 
     def stop_logging(self, *args):
-        # takes optinal arguments args[0] that activates instruction print for layout handling
+        # takes optional arguments args[0] that activates instruction print for layout handling
         try:
             if args[0]:
                 layout = True
@@ -304,7 +306,7 @@ class Mapper:
         except:
             layout = False
 
-        if layout and not(self.error):
+        if layout and not self.error:
             self.logger.info("   ")
             self.logger.info(" >> Layouts (.mxd files) prepared in:")
             self.logger.info("      " + self.output_mxd_dir)

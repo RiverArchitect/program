@@ -281,7 +281,6 @@ class CovHSIgui(object):
             self.l_inflow_curr.config(fg="forest green", text="Current: All terrain")
             self.h_ras_path = ""
 
-
     def update_flows(self):
         try:
             self.lb_flow.delete(0, tk.END)  # try to empty listbox if currently filled
@@ -291,14 +290,12 @@ class CovHSIgui(object):
         # update depth raster file list from condition folder contents (raster has .aux.xml?)
         self.h_list = ["all terrain"]
         folder_names = fg.get_subdir_names(self.dir_input_ras)
+        if folder_names.__len__() < 1:
+            folder_names = [i for i in os.listdir(self.dir_input_ras) if i.endswith('.tif')]
         for fn in folder_names:
             if fn[0] == "h":
-                if os.path.isdir(self.dir_input_ras + fn):
+                if os.path.isdir(self.dir_input_ras + fn) or os.path.isfile(self.dir_input_ras + fn):
                     self.h_list.append(fn)
-                else:
-                    fns = fn.split(".tif")[0]
-                    if os.path.isfile(self.dir_input_ras + fns + ".tif"):
-                        self.h_list.append(fns + ".tif")
 
         for e in self.h_list:
             self.lb_flow.insert(tk.END, e)

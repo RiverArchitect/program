@@ -37,9 +37,9 @@ class ArcPyContainer:
             # one zero-raster that is updated, another wont be updated
             self.make_zero_ras()
             self.best_lf_ras = arcpy.Raster(
-                os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros")
+                os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros.tif")
             self.null_ras = arcpy.Raster(
-                os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros")
+                os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros.tif")
         except:
             print("ExceptionERROR: Could not find base raster for assigning lifespans.")
         self.shp_dict = {}
@@ -183,7 +183,7 @@ class ArcPyContainer:
                     __temp_ras__ = Con((Float(feat_ras) == Float(self.best_lf_ras)), 1)
 
                     self.logger.info("       > Saving raster " + str(sn) + " *** takes time *** ")
-                    __temp_ras__.save(self.output_ras + str(sn))
+                    __temp_ras__.save(self.output_ras + str(sn) + ".tif")
                 except:
                     self.errors = True
                     self.logger.info("WARNING: Identification failed (" + str(sn) + ").")
@@ -210,15 +210,15 @@ class ArcPyContainer:
                 self.best_lf_ras = update_ras_1
 
                 self.logger.info("   >> Saving maximum lifespan rasters (all features) ...")
-                self.best_lf_ras.save(self.cache + "max_lf")
+                self.best_lf_ras.save(self.cache + "max_lf.tif")
                 try:
                     if not(self.feature_info.id_list_plants[0] in " ".join(self.raster_dict.keys())):
-                        arcpy.CopyRaster_management(self.cache + "max_lf", self.output_ras + "max_lf")
+                        arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf.tif")
                     else:
-                        arcpy.CopyRaster_management(self.cache + "max_lf", self.output_ras + "max_lf_plants")
+                        arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf_plants.tif")
                 except:
                     self.logger.info("      ** id note: cannot access plant shortnames")
-                    arcpy.CopyRaster_management(self.cache + "max_lf", self.output_ras + "max_lf")
+                    arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf.tif")
             except:
                 self.errors = True
                 self.logger.info("ERROR: Could not save best lifespan raster.")
@@ -245,20 +245,26 @@ class ArcPyContainer:
 
     def make_zero_ras(self):
         arcpy.CheckOutExtension('Spatial')  # check out license
-        zero_ras_str = os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros"
-        if not(os.path.isfile(zero_ras_str + ".aux.xml")):
+        zero_ras_str = os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros.tif"
+        if os.path.isfile(zero_ras_str):
+            fg.rm_file(zero_ras_str)
+        try:
             try:
                 base_dem = arcpy.Raster(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                                '..')) + "\\01_Conditions\\" + self.condition + "\\dem")
-                print("Preparing zero raster based on DEM extents ...")
-                arcpy.env.extent = base_dem.extent
-                arcpy.env.workspace = os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
-                zero_ras = Con(IsNull(base_dem), 0, 0)
-                zero_ras.save(zero_ras_str)
-                arcpy.env.workspace = self.cache
+                                                                     '..')) + "\\01_Conditions\\" + self.condition + "\\dem.tif")
             except:
-                print("ExceptionERROR: Unable to create ZERO Raster. Manual intervention required: Check Package documentation (Troubleshooting).")
+                base_dem = arcpy.Raster(os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\dem")
+
+            print("Preparing zero raster based on DEM extents ...")
+            arcpy.env.extent = base_dem.extent
+            arcpy.env.workspace = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
+            zero_ras = Con(IsNull(base_dem), 0, 0)
+            zero_ras.save(zero_ras_str)
+            arcpy.env.workspace = self.cache
+        except:
+            print("ExceptionERROR: Unable to create ZERO Raster. Manual intervention required: Check Package documentation (Troubleshooting).")
         arcpy.CheckInExtension('Spatial')  # check in license
 
     def __call__(self):

@@ -33,7 +33,6 @@ class Fish:
 
     def assign_fish_names(self):
         # reads fish names and lifestages from .templates/Fish.xlsx
-
         # check if Fish.xlsx is accessible
         try:
             self.open_fish_wb()

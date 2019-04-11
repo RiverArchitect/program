@@ -1,6 +1,6 @@
 from __future__ import division
 # !/usr/bin/python
-import arcpy, os, logging
+import arcpy
 import webbrowser
 from fFunctions import *
 logger = logging_start("logfile_20")
@@ -67,11 +67,11 @@ def main(action_dir, reach, stn, unit, version):
     try:
         logger.info("Converting Project Shapefile to Raster ...")
         arcpy.env.workspace = shp_dir
-        arcpy.PolygonToRaster_conversion("ProjectArea.shp", "AreaCode", ras_dir + "ProjectArea",
+        arcpy.PolygonToRaster_conversion("ProjectArea.shp", "AreaCode", ras_dir + "ProjectArea.tif",
                                          cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
         logger.info(" -- OK. Loading Project raster ...")
         arcpy.env.workspace = path2PP + "Geodata\\"
-        prj_area = arcpy.Raster(ras_dir + "ProjectArea")
+        prj_area = arcpy.Raster(ras_dir + "ProjectArea.tif")
         logger.info(" -- OK (Shapefile2Raster conversion)\n")
     except arcpy.ExecuteError:
         logger.info("ExecuteERROR: (arcpy).")
@@ -94,25 +94,31 @@ def main(action_dir, reach, stn, unit, version):
         logger.info(" >> Cropping maximum lifespans (action) raster ... ")
         max_lf_crop = Con((~IsNull(prj_area) & ~IsNull(max_lf_plants)), Float(max_lf_plants))
         logger.info(" >> Saving crop ... ")
-        max_lf_crop.save(ras_dir + "max_lf_pl_c")
+        max_lf_crop.save(ras_dir + "max_lf_pl_c.tif")
         logger.info(" -- OK ")
         for aras in action_ras.keys():
             plant_ras = action_ras[aras]
+            if not('.tif' in str(aras)):
+                aras_tif = str(aras) + '.tif'
+                aras_no_end = aras
+            else:
+                aras_tif = aras
+                aras_no_end = aras.split('.tif')[0]
             logger.info(" >> Plant action raster: " + str(plant_ras))
             __temp_ras__ = Con((~IsNull(prj_area) & ~IsNull(plant_ras)), Con((Float(max_lf_plants) >= 2.5), (max_lf_plants * plant_ras)))
             logger.info(" >> Saving raster ... ")
-            __temp_ras__.save(ras_dir + aras)
+            __temp_ras__.save(ras_dir + aras_tif)
             logger.info(" >> Converting to shapefile (polygon for area statistics) ... ")
             try:
                 shp_ras = Con(~IsNull(__temp_ras__), 1, 0)
-                arcpy.RasterToPolygon_conversion(shp_ras, shp_dir + aras + "_del.shp", "NO_SIMPLIFY")
+                arcpy.RasterToPolygon_conversion(shp_ras, shp_dir + aras_no_end + "_del.shp", "NO_SIMPLIFY")
             except:
-                logger.info("     !! " + aras + " is not suitable for this project.")
+                logger.info("     !! " + aras_tif + " is not suitable for this project.")
             arcpy.env.workspace = action_dir
             logger.info(" >> Calculating area statistics ... ")
             try:
-                arcpy.CalculateAreas_stats(shp_dir + aras + "_del.shp", shp_dir + aras + ".shp")
-                shp_4_stats.update({aras: shp_dir + aras + ".shp"})
+                arcpy.CalculateAreas_stats(shp_dir + aras_no_end + "_del.shp", shp_dir + aras_no_end + ".shp")
+                shp_4_stats.update({aras: shp_dir + aras_no_end + ".shp"})
             except:
                 logger.info("     !! Omitting (not applicable) ...")
                 error = True
