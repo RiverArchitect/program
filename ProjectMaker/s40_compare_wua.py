@@ -88,7 +88,9 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                         raster_list = glob.glob(dir2ras_chsi[xc_count] + "*.tif")
                         logger.info("    -> Matching CHSI rasters with discharge information ...")
                         for q in discharges:
+                            print(dir2ras_chsi[xc_count] + "csi_" + fish_sn + str(int(q)) + ".tif")
                             test_ras = dir2ras_chsi[xc_count] + "csi_" + fish_sn + str(int(q)) + ".tif"
+                            print(str(raster_list))
                             ras = [r for r in raster_list if (r == test_ras)][0]
                             logger.info("    ---> Usable habitat area assessment for Q = " + str(q) + u_mass_flux)
                             result_matrix.append([q, discharge_dict[q], aua.get_usable_area(ras.split(".tif")[0], dir2ras_tar[xc_count])])

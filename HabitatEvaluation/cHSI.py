@@ -89,7 +89,7 @@ class CHSI:
                     dsc = arcpy.Describe(ras_csi)
                     coord_sys = dsc.SpatialReference
                     rel_ras = Con(Float(ras_csi) >= float(wua_threshold), Float(ras_csi))
-                    self.logger.info("       * saving AUA-CHSI raster ...")
+                    self.logger.info("       * saving AUA-CHSI raster: " + self.path_wua_ras + str(csi))
                     try:
                         rel_ras.save(self.path_wua_ras + str(csi))
                     except:
@@ -276,7 +276,11 @@ class CHSI:
                                 inundation_ras = arcpy.Raster(self.path_condition + h_ras_name)
                         except:
                             self.logger.info("ERROR: Cannot find flow depth raster for Q = " + str(q))
-                            return -1
+                            try:
+                                self.logger.info("       -raster name: " + str(self.path_condition) + str(h_ras_name))
+                            except:
+                                pass
+                            continue
 
                         if self.cover_applies:
                             try:
@@ -296,7 +300,7 @@ class CHSI:
                                 cov_hsi = Float(CellStatistics(relevant_cov, "MAXIMUM", "DATA"))
                             except:
                                 self.logger.info("ERROR: Could not add cover HSI.")
-                                return -1
+                                continue
                         try:
                             self.logger.info("        * reading hydraulic HSI rasters ...")
                             try:
@@ -321,15 +325,21 @@ class CHSI:
                                 if self.combine_method == "product":
                                     self.logger.info("        * combining hydraulic HSI rasters (product)...")
                                     chsi = Con(~IsNull(inundation_ras), Con(Float(inundation_ras) > 0.0, Float(dsi * vsi)))
-                            self.logger.info("        * saving as ...")
-                            chsi.save(self.path_csi + "csi" + str(ras).strip("dsi") + ".tif")
+
+                            if not ('.tif' in str(ras)):
+                                self.logger.info("        * saving as: " + str(ras).strip("dsi") + ".tif")
+                                chsi.save(self.path_csi + "csi" + str(ras).strip("dsi") + ".tif")
+                            else:
+                                self.logger.info("        * saving as: " + str(ras).strip("dsi"))
+                                chsi.save(self.path_csi + "csi" + str(ras).strip("dsi"))
+
                             self.logger.info("        * clearing cache buffer ...")
                             del chsi, dsi, vsi
                             self.clear_cache(False)
                             self.logger.info("        * ok ...")
                         except:
                             self.logger.info("ERROR: Could not save CSI raster associated with " + str(ras) + ".")
-                            return -1
+                            continue
                 self.logger.info(" >> OK")
                 arcpy.CheckOutExtension('Spatial')
         if cc > 0:
@@ -531,12 +541,12 @@ class HHSI:
                         thousand = 1.0
                     if rn[0] == "h":
                         self.logger.info("     -- Adding flow depth raster: " + str(rn))
-                        _Q_ = float(str(rn).split("h")[1].split("k")[0]) * thousand
+                        _Q_ = float(str(rn).split("h")[1].split(".tif")[0].split("k")[0]) * thousand
                         self.flow_dict_h.update({str(rn): int(_Q_)})
                         self.ras_h.append(str(rn))
                     if rn[0] == "u":
                         self.logger.info("     -- Adding flow velocity raster: " + str(rn))
-                        _Q_ = float(str(rn).split("u")[1].split("k")[0]) * thousand
+                        _Q_ = float(str(rn).split("u")[1].split(".tif")[0].split("k")[0]) * thousand
                         self.flow_dict_u.update({str(rn): int(_Q_)})
                         self.ras_u.append(str(rn))
                 except:

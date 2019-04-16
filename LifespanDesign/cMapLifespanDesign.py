@@ -229,7 +229,7 @@ class Mapper:
             rasterlist = arcpy.ListRasters("*", "tif")
 
         for raster in rasterlist:
-            self.logger.info(" >> Preparing map layout: " + self.output_dir + str(raster) + ".mxd")
+            self.logger.info(" >> Preparing map layout: " + self.output_dir + str(raster).split(".tif")[0] + ".mxd")
 
             # choose layout
             ref_layout_name = self.choose_ref_layout(str(raster))
@@ -251,9 +251,9 @@ class Mapper:
                 arcpy.RefreshActiveView()
                 arcpy.RefreshTOC()
                 mxd.title = str(raster)  # necessary for later identification of make_maps
-                if os.path.isfile(os.path.join(self.output_mxd_dir, str(raster) + ".mxd")):
-                    self.logger.info("WARNING: Overwriting existing version of " + str(raster) + ".mxd")
-                mxd.saveACopy(self.output_mxd_dir + str(raster) + ".mxd")
+                if os.path.isfile(os.path.join(self.output_mxd_dir, str(raster).split(".tif")[0] + ".mxd")):
+                    self.logger.info("WARNING: Overwriting existing version of " + str(raster).split(".tif")[0] + ".mxd")
+                mxd.saveACopy(self.output_mxd_dir + str(raster).split(".tif")[0] + ".mxd")
                 del mxd, df,  __lyr_file__, __ras_lyr__
 
             except arcpy.ExecuteError:
