@@ -44,11 +44,6 @@ class ModifyTerrain:
         self.volume_neg_dict = {}
         self.volume_pos_dict = {}
         self.writer = cio.Write()
-        try:
-            self.make_zero_ras()
-            self.zero_ras = arcpy.Raster(self.cache + "zeros.tif")
-        except:
-            print("ExceptionERROR: Could not create zero raster (base reference).")
 
         # set relevant reaches
         try:
@@ -101,6 +96,7 @@ class ModifyTerrain:
         except:
             self.input_dir_fa = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + str(condition) + "\\"
+
         try:
             self.ras_dem = arcpy.Raster(self.input_dir_fa + "dem.tif")
         except:
@@ -110,12 +106,12 @@ class ModifyTerrain:
                 self.ras_dem = 0
 
         try:
-            self.ras_dem = arcpy.Raster(self.input_dir_fa + "d2w.tif")
+            self.ras_d2w = arcpy.Raster(self.input_dir_fa + "d2w.tif")
         except:
             try:
-                self.ras_dem = arcpy.Raster(self.input_dir_fa + "d2w")
+                self.ras_d2w = arcpy.Raster(self.input_dir_fa + "d2w")
             except:
-                self.ras_dem = 0
+                self.ras_d2w = 0
 
         # get inputs and RASTERS from MaxLifespan
         try:
@@ -124,6 +120,12 @@ class ModifyTerrain:
             self.input_dir_ap = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), '..')) + "\\MaxLifespan\\Output\\Rasters\\" + str(
                 condition) + "\\"
+
+        try:
+            self.make_zero_ras()
+            self.zero_ras = arcpy.Raster(self.cache + "zeros.tif")
+        except:
+            print("ExceptionERROR: Could not create zero raster (base reference).")
 
     def get_action_raster(self, feature_name):
         arcpy.env.workspace = self.input_dir_ap
@@ -273,11 +275,9 @@ class ModifyTerrain:
             fg.rm_file(zero_ras_str)
         try:
             try:
-                base_dem = arcpy.Raster(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                                     '..')) + "\\01_Conditions\\" + self.condition + "\\dem.tif")
+                base_dem = arcpy.Raster(self.input_dir_fa + "dem.tif")
             except:
-                base_dem = arcpy.Raster(os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\dem")
+                base_dem = arcpy.Raster(self.input_dir_fa + "dem")
 
             print("Preparing zero raster based on DEM extents ...")
             arcpy.env.extent = base_dem.extent
@@ -347,7 +347,7 @@ class ModifyTerrain:
                     if "diff" in str(ras):
                         self.rasters_for_pos_vol.append(self.zero_ras)
                         self.rasters_for_neg_vol.append(self.zero_ras)
-                    self.logger.info("    -- " + str(ras) + " is empty (not applicable on reach): Export cancelled.")
+                    self.logger.info("    -- " + str(ras) + " is empty (not applicable on reach): Export canceled.")
 
         except arcpy.ExecuteError:
             self.logger.info(arcpy.GetMessages(2))

@@ -200,7 +200,7 @@ class Write:
                         thousand = 1000.0
                     else:
                         thousand = 1.0
-                    _Q_ = float(str(rn).split("h")[1].split("k")[0]) * thousand
+                    _Q_ = float(str(rn).split("h")[1].split(".tif")[0].split("k")[0]) * thousand
                 except:
                     _Q_ = 0.0
                 self.discharges.append(_Q_)
