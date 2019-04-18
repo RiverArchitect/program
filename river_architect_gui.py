@@ -6,6 +6,26 @@ try:
     import webbrowser
 except:
     print("ERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+try:
+    import ProjectMaker
+except:
+    print("ERROR: Could not import ProjectMaker.")
+try:
+    import LifespanDesign
+except:
+    print("ERROR: Could not import LifespanDesign.")
+try:
+    import MaxLifespan
+except:
+    print("ERROR: Could not import MaxLifespan.")
+try:
+    import ModifyTerrain
+except:
+    print("ERROR: Could not import ModifyTerrain.")
+try:
+    import HabitatEvaluation
+except:
+    print("ERROR: Could not import HabitatEvaluation.")
 
 
 class FaGui(tk.Frame):
@@ -59,41 +79,34 @@ class FaGui(tk.Frame):
     def myquit(self):
         tk.Frame.quit(self)
 
-    def start_lf(self):
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\LifespanDesign\\")
-        import lifespan_design_gui
+    def start_lf(self):        
         self.master.destroy()
-        run = lifespan_design_gui.FaGui()
-        run()        
+        os.chdir(os.path.dirname(os.path.abspath(__file__)) + "\\LifespanDesign\\")    
+        LifespanDesign.lifespan_design_gui.FaGui()
 
     def start_ap(self):
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\MaxLifespan\\")
-        import action_gui
         self.master.destroy()
-        run = action_gui.ActionGui()
-        run()
+        os.chdir(os.path.dirname(os.path.abspath(__file__)) + "\\MaxLifespan\\")   
+        MaxLifespan.action_gui.ActionGui()
+
 
     def start_mt(self):
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\ModifyTerrain\\")
-        import modify_terrain_gui
         self.master.destroy()
-        run = modify_terrain_gui.MainGui()
-        run()
+        os.chdir(os.path.dirname(os.path.abspath(__file__)) + "\\ModifyTerrain\\")
+        ModifyTerrain.modify_terrain_gui.MainGui()
+
 
     def start_he(self):
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\HabitatEvaluation\\")
-        import habitat_gui
         self.master.destroy()
-        run = habitat_gui.MainGui()
-        run()
+        os.chdir(os.path.dirname(os.path.abspath(__file__)) + "\\HabitatEvaluation\\")
+        HabitatEvaluation.habitat_gui.MainGui()
 
     def start_pm(self):
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\ProjectMaker\\")
-        import project_maker_gui
         self.master.destroy()
-        run = project_maker_gui.MainGui()
-        run()
+        os.chdir(os.path.dirname(os.path.abspath(__file__)) + "\\ProjectMaker\\")
+        ProjectMaker.project_maker_gui.MainGui()
 
-# enalbe script to run stand-alone.
+
+# enable script to run stand-alone.
 if __name__ == "__main__":
     FaGui().mainloop()
