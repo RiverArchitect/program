@@ -29,7 +29,7 @@ except:
     print("ERROR: Could not import HabitatEvaluation.")
 
 
-class RA_GUI(tk.Frame):
+class RaGui(tk.Frame):
     # master GUI for all RiverArchitect modules
     def __init__(self, master=None):
         tk.Frame.__init__(self, master)
@@ -77,5 +77,6 @@ class RA_GUI(tk.Frame):
         selected_tab.set_geometry()
         selected_tab.make_menu()
 
+
 if __name__ == '__main__':
-    RA_GUI().mainloop()
+    RaGui().mainloop()
