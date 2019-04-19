@@ -36,7 +36,7 @@ class RA_GUI(tk.Frame):
         self.pack()
 
         self.master.title("River Architect")
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\MaxLifespan\\.templates\\code_icon.ico")
+        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.site_packages\\templates\\code_icon.ico")
 
         self.tab_container = ttk.Notebook(master)
 
