@@ -106,21 +106,15 @@ class MainGui(tk.Frame):
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
+        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
+        if __name__ != '__main__':
+            self.master = self.master.master
+
         self.apply_boundary = tk.BooleanVar()
         self.cover_applies_wua = tk.BooleanVar()
         self.pack(expand=True, fill=tk.BOTH)
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__))+"\\.templates\\code_icon.ico")
 
-        # ARRANGE GEOMETRY
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # width and height of the window
-        ww = 550
-        wh = 445
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))  # set height and location
-        self.master.title("Habitat Enhancement Evaluation")  # window title
+        self.set_geometry()
 
         # LABELS
         self.l_combine = tk.Label(self, text="3) Select HSI combination method: ")
@@ -194,14 +188,30 @@ class MainGui(tk.Frame):
         self.b_wua_th.grid(sticky=tk.EW, row=13, rowspan=4, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_wua_th["state"] = "disabled"
 
+        self.make_menu()
+
+    def set_geometry(self):
+        # ARRANGE GEOMETRY
+        self.xd = 5  # distance holder in x-direction (pixel)
+        self.yd = 5  # distance holder in y-direction (pixel)
+        # width and height of the window
+        self.ww = 550
+        self.wh = 495
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
+        if __name__ == '__main__':
+            self.master.title("Habitat Enhancement Evaluation")  # window title
+            self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+
+    def make_menu(self):
         # DROP DOWN MENU
         self.mbar = tk.Menu(self)  # create new menubar
         self.master.config(menu=self.mbar)  # attach it to the root window
 
         # MAKE FISH SPECIES DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="1) Set fish",
-                              menu=self.fishmenu)  # attach it to the menubar
+        self.mbar.add_cascade(label="1) Set fish", menu=self.fishmenu)  # attach it to the menubar
         self.fishmenu.add_command(label="DEFINE FISH SPECIES", command=lambda: self.fish.edit_xlsx())
         self.fishmenu.add_command(label="RE-BUILD MENU", command=lambda: self.make_fish_menu(rebuild=True))
         self.fishmenu.add_command(label="_____________________________")
@@ -212,7 +222,8 @@ class MainGui(tk.Frame):
 
         # MAKE HSI DROP DOWN
         self.hsimenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="2) Make HSI rasters (habitat conditions)", menu=self.hsimenu)  # attach it to the menubar
+        self.mbar.add_cascade(label="2) Make HSI rasters (habitat conditions)",
+                              menu=self.hsimenu)  # attach it to the menubar
         self.hsimenu.add_command(label="HYDRAULIC", foreground="gray60")  # POTENTIAL ERROR SOURCE: "foreground"
         self.hsimenu.add_command(label="> Flow depth - flow velocity HSIs", command=lambda: self.start_app("hhsi_gui"))
         self.hsimenu.add_command(label="OTHER (COVER)", foreground="gray60")  # POTENTIAL ERROR SOURCE: "foreground"

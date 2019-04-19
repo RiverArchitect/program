@@ -52,11 +52,11 @@ class RunGui:
         self.msg = ""
 
         # ARRANGE GEOMETRY
-        ww = 400
-        wh = 100
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))
+        self.ww = 400
+        self.wh = 100
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
 
     def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n):
         import feature_analysis as fa
@@ -91,6 +91,7 @@ class RunGui:
 
 class FaGui(tk.Frame):
     def __init__(self, master=None):
+
         self.path = r"" + os.path.dirname(os.path.abspath(__file__))
         self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -117,20 +118,12 @@ class FaGui(tk.Frame):
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
+        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
+        if __name__ != '__main__':
+            self.master = self.master.master
         self.pack(expand=True, fill=tk.BOTH)
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__))+"\\.templates\\code_icon.ico")
 
-        # ARRANGE GEOMETRY
-        # width and height of the window.
-        ww = 700
-        wh = 440
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # height and location
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))
-        self.master.title("Lifespan Design")  # window title
+        self.set_geometry()
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -178,9 +171,47 @@ class FaGui(tk.Frame):
         self.b_n = tk.Button(self, width=25, bg="white", text="Change / Info", command=lambda: self.set_n())
         self.b_n.grid(sticky=tk.W, row=10, column=2, columnspan=5, padx=self.xd, pady=self.yd)
 
+        self.make_menu()
+
+        # CHECK BOXES(CHECKBUTTONS)
+        self.cb_lyt = tk.Checkbutton(self, text="Create layouts after running raster maker", command=lambda:
+                                     self.mod_mapping())
+        self.cb_lyt.grid(sticky=tk.W, row=7, column=0, columnspan=4, padx=self.xd, pady=self.yd)
+        self.cb_wild = tk.Checkbutton(self, text="Apply wildcard raster to spatially confine analysis", command=lambda:
+                                      self.mod_wild())
+        self.cb_wild.grid(sticky=tk.W, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+
+        self.cb_habitat = tk.Checkbutton(self, text="Apply habitat matching",
+                                         command=lambda: self.mod_habitat())
+        self.cb_habitat.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+
+        # MAKE PLACEHOLDER FILL
+        logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\title_042.GIF")
+        logo = logo.subsample(7, 6)
+        self.l_img = tk.Label(self, image=logo)
+        self.l_img.image = logo
+        self.l_img.grid(sticky=tk.E, row=3, column=6, rowspan=7, columnspan=2)
+
+    def set_geometry(self):
+        # ARRANGE GEOMETRY
+        # width and height of the window.
+        self.ww = 700
+        self.wh = 490
+        self.xd = 5  # distance holder in x-direction (pixel)
+        self.yd = 5  # distance holder in y-direction (pixel)
+        # height and location
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
+        if __name__ == '__main__':
+            self.master.title("Lifespan Design")  # window title
+            self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+
+    def make_menu(self):
+
         # DROP DOWN MENU
         # menu does not need packing - see tkinter manual page 44ff
-        self.mbar = tk.Menu(self)  # create new menubar
+        self.mbar = tk.Menu(self.master)  # create new menubar
         self.master.config(menu=self.mbar)  # attach it to the root window
 
         # FEATURE DROP DOWN
@@ -190,7 +221,7 @@ class FaGui(tk.Frame):
         self.build_feat_menu()
 
         # REACH  DROP DOWN
-        self.reachmenu_list = []
+        self.reach_lookup_needed = False
         self.reachmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Reaches", menu=self.reachmenu)  # attach it to the menubar
         self.build_reach_menu()
@@ -213,26 +244,7 @@ class FaGui(tk.Frame):
         self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
         self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit programm", command=lambda: self.myquit())
-
-        # CHECK BOXES(CHECKBUTTONS)
-        self.cb_lyt = tk.Checkbutton(self, text="Create layouts after running raster maker", command=lambda:
-                                     self.mod_mapping())
-        self.cb_lyt.grid(sticky=tk.W, row=7, column=0, columnspan=4, padx=self.xd, pady=self.yd)
-        self.cb_wild = tk.Checkbutton(self, text="Apply wildcard raster to spatially confine analysis", command=lambda:
-                                      self.mod_wild())
-        self.cb_wild.grid(sticky=tk.W, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-
-        self.cb_habitat = tk.Checkbutton(self, text="Apply habitat matching",
-                                         command=lambda: self.mod_habitat())
-        self.cb_habitat.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-
-        # MAKE PLACEHOLDER FILL
-        logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\title_042.GIF")
-        logo = logo.subsample(7, 6)
-        self.l_img = tk.Label(self, image=logo)
-        self.l_img.image = logo
-        self.l_img.grid(sticky=tk.E, row=3, column=6, rowspan=7, columnspan=2)
+        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def add_reach(self, reach):
         self.l_reaches.destroy()

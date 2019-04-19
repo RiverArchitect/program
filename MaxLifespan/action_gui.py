@@ -28,11 +28,11 @@ class RunGui:
         self.msg = ""
 
         # ARRANGE GEOMETRY
-        ww = 400
-        wh = 150
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))
+        self.ww = 400
+        self.wh = 150
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
         self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
 
     def gui_geo_maker(self, condition, feature_type, mapping, units, inpath):
@@ -82,19 +82,12 @@ class ActionGui(tk.Frame):
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
+        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
+        if __name__ != '__main__':
+            self.master = self.master.master
         self.pack(expand=True, fill=tk.BOTH)
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__))+"\\.templates\\code_icon.ico")
 
-        # ARRANGE GEOMETRY
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # width and height of the window
-        ww = 500
-        wh = 230
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))  # set height and location
-        self.master.title("Max Lifespan")  # window title
+        self.set_geometry()
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -137,6 +130,29 @@ class ActionGui(tk.Frame):
         self.l_dummy = tk.Label(self, text="                          ")
         self.l_dummy.grid(sticky=tk.W, row=2, column=4, padx=self.xd, pady=self.yd)
 
+        self.make_menu()
+
+        # CHECK BOXES (CHECKBUTTONS)
+        self.cb_lyt = tk.Checkbutton(self, fg="SteelBlue", text="Create maps and layouts after making geofiles",
+                                     command=lambda: self.mod_mapping())
+        self.cb_lyt.grid(sticky=tk.W, row=7, column=0, columnspan=4, padx=self.xd, pady=self.yd)
+        self.cb_lyt.select()  # select by default
+
+    def set_geometry(self):
+        # ARRANGE GEOMETRY
+        self.xd = 5  # distance holder in x-direction (pixel)
+        self.yd = 5  # distance holder in y-direction (pixel)
+        # width and height of the window
+        self.ww = 520
+        self.wh = 300
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
+        if __name__ == '__main__':
+            self.master.title("Max Lifespan")  # window title
+            self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+
+    def make_menu(self):
         # DROP DOWN MENU
         # menu does not need packing - see slide 44ff
         self.mbar = tk.Menu(self)  # create new menubar
@@ -170,13 +186,7 @@ class ActionGui(tk.Frame):
         self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
         self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit programm", command=lambda: self.myquit())
-
-        # CHECK BOXES (CHECKBUTTONS)
-        self.cb_lyt = tk.Checkbutton(self, fg="SteelBlue", text="Create maps and layouts after making geofiles",
-                                     command=lambda: self.mod_mapping())
-        self.cb_lyt.grid(sticky=tk.W, row=7, column=0, columnspan=4, padx=self.xd, pady=self.yd)
-        self.cb_lyt.select()  # select by default
+        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def condition_info(self):
         msg = "The condition list refers to available rasters in\n" + self.path2fa_rasters + \

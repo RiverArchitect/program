@@ -43,46 +43,16 @@ class MainGui(tk.Frame):
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
+        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
+        if __name__ != '__main__':
+            self.master = self.master.master
         self.pack(expand=True, fill=tk.BOTH)
-        self.master.iconbitmap(self.dir + "\\.templates\\code_icon.ico")
         self.cover_app_pre = tk.BooleanVar()
         self.cover_app_post = tk.BooleanVar()
 
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # ARRANGE GEOMETRY
-        # Width and height of the window
-        ww = 740
-        wh = 950
-        # Upper-left corner of the window
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        w_e = 14   # width of entries
-        w_lb = 20  # width of listboxes
-        # Set the height and location
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))
-        # Give the window a title
-        self.master.title("Project Maker")
+        self.set_geometry()
 
-        # DROP DOWN MENUS
-        self.mbar = tk.Menu(self)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
-        # FISH SPECIES-LIFESTAGE DROP DOWN
-        self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Set fish",
-                              menu=self.fishmenu)  # attach it to the menubar
-        self.fishmenu.add_command(label="VARIABLES REQUIRED", foreground="gray50", command=lambda: self.help_info("fish"))
-        self.rebuild_fish_menu = False
-        # UNIT SYSTEM DROP DOWN
-        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
-        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit programm", command=lambda: self.myquit())
+        self.make_menu()
 
         # Create LABELS, ENTRIES and BUTTONS from LEFT to RIGHT and TOP-DOWN
         msg0 = "Welcome to the project maker GUI."
@@ -94,35 +64,35 @@ class MainGui(tk.Frame):
 
         self.l_version = tk.Label(self, text="Project version: ")
         self.l_version.grid(sticky=tk.W, row=3, column=0, padx=self.xd, pady=self.yd)
-        self.e_version = tk.Entry(self, width=w_e, textvariable=self.version)
+        self.e_version = tk.Entry(self, width=self.w_e, textvariable=self.version)
         self.e_version.grid(sticky=tk.EW, row=3, column=1, padx=self.xd, pady=self.yd)
         self.l_version_help = tk.Label(self, fg="gray26", text="(3-digits: v+INT+INT, example: v10)")
         self.l_version_help.grid(sticky=tk.W, row=3, column=2, padx=self.xd, pady=self.yd)
 
         self.l_reach = tk.Label(self, text="Reach: ")
         self.l_reach.grid(sticky=tk.W, row=4, column=0, padx=self.xd, pady=self.yd)
-        self.e_reach = tk.Entry(self, width=w_e, textvariable=self.version)
+        self.e_reach = tk.Entry(self, width=self.w_e, textvariable=self.version)
         self.e_reach.grid(sticky=tk.EW, row=4, column=1, padx=self.xd, pady=self.yd)
         self.l_reach_help = tk.Label(self, fg="gray26", text="(3-characters: RRR, example: TBR)")
         self.l_reach_help.grid(sticky=tk.W, row=4, column=2, padx=self.xd, pady=self.yd)
 
         self.l_site_name = tk.Label(self, text="Site name: ")
         self.l_site_name.grid(sticky=tk.W, row=5, column=0, padx=self.xd, pady=self.yd)
-        self.e_site_name = tk.Entry(self, width=w_e, textvariable=self.version)
+        self.e_site_name = tk.Entry(self, width=self.w_e, textvariable=self.version)
         self.e_site_name.grid(sticky=tk.EW, row=5, column=1, padx=self.xd, pady=self.yd)
         self.l_site_name_help = tk.Label(self, fg="gray26", text="(CamelCase string, no spaces, example: MySite)")
         self.l_site_name_help.grid(sticky=tk.W, row=5, column=2, padx=self.xd, pady=self.yd)
 
         self.l_stn = tk.Label(self, text="Site short name: ")
         self.l_stn.grid(sticky=tk.W, row=6, column=0, padx=self.xd, pady=self.yd)
-        self.e_stn = tk.Entry(self, width=w_e, textvariable=self.version)
+        self.e_stn = tk.Entry(self, width=self.w_e, textvariable=self.version)
         self.e_stn.grid(sticky=tk.EW, row=6, column=1, padx=self.xd, pady=self.yd)
         self.l_stn_help = tk.Label(self, fg="gray26", text="(3-characters: stn, example: sit)")
         self.l_stn_help.grid(sticky=tk.W, row=6, column=2, padx=self.xd, pady=self.yd)
 
         self.l_vege_cr = tk.Label(self, text="Critical plantings lifespan:\n(for plant stabilization)")
         self.l_vege_cr.grid(sticky=tk.W, row=7, column=0, padx=self.xd, pady=self.yd)
-        self.e_vege_cr = tk.Entry(self, width=w_e, textvariable=self.version)
+        self.e_vege_cr = tk.Entry(self, width=self.w_e, textvariable=self.version)
         self.e_vege_cr.grid(sticky=tk.EW, row=7, column=1, padx=self.xd, pady=self.yd)
         self.l_vege_cr_help = tk.Label(self, fg="gray26", text=" years (float number, example: 2.5)")
         self.l_vege_cr_help.grid(sticky=tk.W, row=7, column=2, padx=self.xd, pady=self.yd)
@@ -142,7 +112,7 @@ class MainGui(tk.Frame):
         self.l_condition_pl.grid(sticky=tk.W, row=13, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_pl = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_pl.grid(sticky=tk.W, row=13, column=2, padx=0, pady=self.yd)
-        self.lb_condition_pl = tk.Listbox(self, height=3, width=w_lb, yscrollcommand=self.sb_condition_pl.set)
+        self.lb_condition_pl = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_pl.set)
         self.lb_condition_pl.grid(sticky=tk.EW, row=13, column=1, padx=self.xd, pady=self.yd)
         self.lb_condition_pl.insert(tk.END, "Validate Variables")
         self.sb_condition_pl.config(command=self.lb_condition_pl.yview)
@@ -162,7 +132,7 @@ class MainGui(tk.Frame):
         self.l_condition_tbx.grid(sticky=tk.W, row=18, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_tbx = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_tbx.grid(sticky=tk.W, row=18, column=2, padx=0, pady=self.yd)
-        self.lb_condition_tbx = tk.Listbox(self, height=3, width=w_lb, yscrollcommand=self.sb_condition_tbx.set)
+        self.lb_condition_tbx = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_tbx.set)
         self.lb_condition_tbx.grid(sticky=tk.EW, row=18, column=1, padx=self.xd, pady=self.yd)
         self.lb_condition_tbx.insert(tk.END, "Validate Variables")
         self.sb_condition_tbx.config(command=self.lb_condition_tbx.yview)
@@ -192,7 +162,7 @@ class MainGui(tk.Frame):
         self.l_condition_i.grid(sticky=tk.W, row=25, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_i = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_i.grid(sticky=tk.W, row=25, column=2, padx=0, pady=self.yd)
-        self.lb_condition_i = tk.Listbox(self, height=3, width=w_lb, yscrollcommand=self.sb_condition_i.set)
+        self.lb_condition_i = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_i.set)
         self.lb_condition_i.grid(sticky=tk.EW, row=25, column=1, padx=self.xd, pady=self.yd)
         self.lb_condition_i.insert(tk.END, "Validate Variables")
         self.sb_condition_i.config(command=self.lb_condition_i.yview)
@@ -203,7 +173,7 @@ class MainGui(tk.Frame):
         self.l_condition_p.grid(sticky=tk.W, row=28, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_p = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_p.grid(sticky=tk.W, row=28, column=2, padx=0, pady=self.yd)
-        self.lb_condition_p = tk.Listbox(self, height=3, width=w_lb, yscrollcommand=self.sb_condition_p.set)
+        self.lb_condition_p = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_p.set)
         self.lb_condition_p.grid(sticky=tk.EW, row=28, column=1, padx=self.xd, pady=self.yd)
         self.lb_condition_p.insert(tk.END, "Validate Variables")
         self.sb_condition_p.config(command=self.lb_condition_i.yview)
@@ -215,6 +185,47 @@ class MainGui(tk.Frame):
         self.b_s40["state"] = "disabled"
         self.b_s40_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s40"))
         self.b_s40_help.grid(sticky=tk.E, row=30, column=2, padx=self.xd, pady=self.yd)
+
+    def set_geometry(self):
+        # ARRANGE GEOMETRY
+        self.xd = 5  # distance holder in x-direction (pixel)
+        self.yd = 5  # distance holder in y-direction (pixel)
+        # Width and height of the window
+        self.ww = 740
+        self.wh = 990
+        # Upper-left corner of the window
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        self.w_e = 14  # width of entries
+        self.w_lb = 20  # width of listboxes
+        # Set the height and location
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
+        # Give the window a title
+        if __name__ == '__main__':
+            self.master.title("Project Maker")
+            self.master.iconbitmap(self.dir + "\\.templates\\code_icon.ico")
+
+    def make_menu(self):
+        # DROP DOWN MENUS
+        self.mbar = tk.Menu(self)  # create new menubar
+        self.master.config(menu=self.mbar)  # attach it to the root window
+        # FISH SPECIES-LIFESTAGE DROP DOWN
+        self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
+        self.mbar.add_cascade(label="Set fish",
+                              menu=self.fishmenu)  # attach it to the menubar
+        self.fishmenu.add_command(label="VARIABLES REQUIRED", foreground="gray50",
+                                  command=lambda: self.help_info("fish"))
+        self.rebuild_fish_menu = False
+        # UNIT SYSTEM DROP DOWN
+        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
+        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
+        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
+        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
+        # CLOSE DROP DOWN
+        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
+        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
+        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
+        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def get_condition_lists(self):
         self.condition_i_list = []  # reset pre-project condition list

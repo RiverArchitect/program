@@ -47,21 +47,12 @@ class MainGui(tk.Frame):
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
+        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
+        if __name__ != '__main__':
+            self.master = self.master.master
         self.pack(expand=True, fill=tk.BOTH)
-        self.master.iconbitmap(self.template_dir + "code_icon.ico")
 
-        # ARRANGE GEOMETRY
-        ww = 550  # window width
-        wh = 600  # window height
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # Upper-left corner of the window.
-        wx = (self.master.winfo_screenwidth() - ww) / 2
-        wy = (self.master.winfo_screenheight() - wh) / 2
-        # Set the height and location.
-        self.master.geometry("%dx%d+%d+%d" % (ww, wh, wx, wy))
-        # Give the window a title.
-        self.master.title("Modify Terrain")
+        self.set_geometry()
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -110,6 +101,40 @@ class MainGui(tk.Frame):
                                    command=lambda: showinfo("INFO", "Check volume calculation box first."))
         self.b_set_vol_ras.grid(sticky=tk.EW, row=12, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
+        self.make_menu()
+
+        # CHECK BOXES
+        self.cb_mterrain = tk.Checkbutton(self, fg="dark slate gray",
+                                          text="Enable max. lifespan raster-based terrain modification (Graden and Widen only)",
+                                          command=lambda: self.enable_mterrain())
+        self.cb_mterrain.grid(sticky=tk.W, row=7, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.cb_volumes = tk.Checkbutton(self, fg="dark slate gray",
+                                         text="Enable volume difference calculator",
+                                         command=lambda: self.enable_volumes())
+        self.cb_volumes.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.cb_mapping = tk.Checkbutton(self, fg="dark slate gray", text="Automatically run mapping after DEM / volume calculation.",
+                                         command=lambda: self.enable_mapping())
+        self.cb_mapping.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd*2)
+
+        print("Done.")
+
+    def set_geometry(self):
+        # ARRANGE GEOMETRY
+        self.ww = 580  # window width
+        self.wh = 650  # window height
+        self.xd = 5  # distance holder in x-direction (pixel)
+        self.yd = 5  # distance holder in y-direction (pixel)
+        # Upper-left corner of the window.
+        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
+        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
+        # Set the height and location.
+        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
+        # Give the window a title.
+        if __name__ == '__main__':
+            self.master.title("Modify Terrain")
+            self.master.iconbitmap(self.template_dir + "code_icon.ico")
+
+    def make_menu(self):
         # DROP DOWN MENU
         # the menu does not need packing - see page 44ff
         self.mbar = tk.Menu(self)  # create new menubar
@@ -125,7 +150,7 @@ class MainGui(tk.Frame):
         self.featmenu.add_command(label="CLEAR ALL", command=lambda: self.define_feature("clear"))
 
         # REACH  DROP DOWN
-        self.reachmenu_list = []
+        self.reach_lookup_needed = False
         self.reachmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Reaches", menu=self.reachmenu)  # attach it to the menubar
         self.build_reach_menu()
@@ -148,22 +173,7 @@ class MainGui(tk.Frame):
         self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
         self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit programm", command=lambda: self.myquit())
-
-        # CHECK BOXES
-        self.cb_mterrain = tk.Checkbutton(self, fg="dark slate gray",
-                                          text="Enable max. lifespan raster-based terrain modification (Graden and Widen only)",
-                                          command=lambda: self.enable_mterrain())
-        self.cb_mterrain.grid(sticky=tk.W, row=7, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.cb_volumes = tk.Checkbutton(self, fg="dark slate gray",
-                                         text="Enable volume difference calculator",
-                                         command=lambda: self.enable_volumes())
-        self.cb_volumes.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.cb_mapping = tk.Checkbutton(self, fg="dark slate gray", text="Automatically run mapping after DEM / volume calculation.",
-                                         command=lambda: self.enable_mapping())
-        self.cb_mapping.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd*2)
-
-        print("Done.")
+        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def add_reach(self, reach):
         if str(reach).__len__() < 1:
