@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Filename: cReadActionInput.py
 try:
     import os, sys, logging
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # add this folder to the system path

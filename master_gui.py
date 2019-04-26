@@ -1,12 +1,12 @@
 try:
     import os, sys
-    import Tkinter as tk
+    import tkinter as tk
     from tkinter import ttk
-    from tkFileDialog import *  # in python3 use tkinter.filedialog instead
-    from tkMessageBox import askokcancel, showinfo
+    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.filedialog import *
     import webbrowser
 except:
-    print("ERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 try:
     import ProjectMaker
 except:
@@ -27,6 +27,10 @@ try:
     import HabitatEvaluation
 except:
     print("ERROR: Could not import HabitatEvaluation.")
+try:
+    import EcoMorphology
+except:
+    print("ERROR: Could not import EcoMorphology.")
 
 
 class RaGui(tk.Frame):
@@ -44,6 +48,7 @@ class RaGui(tk.Frame):
                           'Max Lifespan',
                           'Modify Terrain',
                           'Habitat Evaluation',
+                          'Eco Morphology',
                           'Project Maker']
 
         # working directory suffixes for each module
@@ -51,6 +56,7 @@ class RaGui(tk.Frame):
                               '\\MaxLifespan\\',
                               '\\ModifyTerrain\\',
                               '\\HabitatEvaluation\\',
+                              '\\EcoMorphology\\',
                               '\\ProjectMaker\\']
 
         # Frames initialized by module, with parent being tab container
@@ -58,6 +64,7 @@ class RaGui(tk.Frame):
                          MaxLifespan.action_gui.ActionGui(self.tab_container),
                          ModifyTerrain.modify_terrain_gui.MainGui(self.tab_container),
                          HabitatEvaluation.habitat_gui.MainGui(self.tab_container),
+                         EcoMorphology.ecomy_gui.MainGui(self.tab_container),
                          ProjectMaker.project_maker_gui.MainGui(self.tab_container)
                          ]
 

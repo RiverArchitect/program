@@ -1,3 +1,6 @@
-start "River Architect" "C:\Python27\ArcGISx6410.6\python.exe" "%cd%\master_gui.py"
-exit
+@echo RIVER ARCHITECT
+@echo Loading (please wait) ...
 
+call "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\propy" "%cd%\master_gui.py"
+
+exit

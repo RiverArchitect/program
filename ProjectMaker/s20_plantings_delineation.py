@@ -1,4 +1,3 @@
-from __future__ import division
 # !/usr/bin/python
 import arcpy
 import webbrowser
@@ -27,9 +26,11 @@ def main(action_dir, reach, stn, unit, version):
     features = cdef.Features(False)  # read feature IDs (required to identify plants)
 
     if unit == "us":
+        area_units = "SQUARE_FEET_US"
         ft2_to_acres = float(1 / (3 * 3 * 4840))  # 3*3 is ft2 to yd2 and 4840 yd2 to ac
     else:
-        ft2_to_acres = 1
+        area_units = "SQUARE_METERS"
+        ft2_to_acres = 1.0
     arcpy.CheckOutExtension('Spatial')
     arcpy.gp.overwriteOutput = True
 
@@ -111,13 +112,16 @@ def main(action_dir, reach, stn, unit, version):
             logger.info(" >> Converting to shapefile (polygon for area statistics) ... ")
             try:
                 shp_ras = Con(~IsNull(__temp_ras__), 1, 0)
-                arcpy.RasterToPolygon_conversion(shp_ras, shp_dir + aras_no_end + "_del.shp", "NO_SIMPLIFY")
+                arcpy.RasterToPolygon_conversion(shp_ras, shp_dir + aras_no_end + ".shp", "NO_SIMPLIFY")
             except:
                 logger.info("     !! " + aras_tif + " is not suitable for this project.")
             arcpy.env.workspace = action_dir
             logger.info(" >> Calculating area statistics ... ")
             try:
-                arcpy.CalculateAreas_stats(shp_dir + aras_no_end + "_del.shp", shp_dir + aras_no_end + ".shp")
+                arcpy.AddField_management(shp_dir + aras_no_end + ".shp", "F_AREA", "FLOAT", 9)
+                arcpy.CalculateGeometryAttributes_management(shp_dir + aras_no_end + ".shp",
+                                                             geometry_property=[["F_AREA", "AREA"]],
+                                                             area_unit=area_units)
                 shp_4_stats.update({aras: shp_dir + aras_no_end + ".shp"})
             except:
                 logger.info("     !! Omitting (not applicable) ...")
@@ -125,8 +129,11 @@ def main(action_dir, reach, stn, unit, version):
             arcpy.env.workspace = path2PP + "Geodata\\"
         logger.info(" -- OK (Shapefile and raster analyses)\n")
         logger.info("Calculating area statistics of plants to be cleared for construction ...")
-        arcpy.CalculateAreas_stats(shp_dir + "PlantDelineation.shp", shp_dir + "PlantClearing_stat.shp")
-        shp_4_stats.update({"clearing": shp_dir + "PlantClearing_stat.shp"})
+        arcpy.AddField_management(shp_dir + "PlantDelineation.shp", "F_AREA", "FLOAT", 9)
+        arcpy.CalculateGeometryAttributes_management(shp_dir + "PlantDelineation.shp",
+                                                     geometry_property=[["F_AREA", "AREA"]],
+                                                     area_unit=area_units)
+        shp_4_stats.update({"clearing": shp_dir + "PlantDelineation.shp"})
         logger.info(" -- OK (Statistic calculation)\n")
     except arcpy.ExecuteError:
         logger.info("ExecuteERROR: (arcpy).")

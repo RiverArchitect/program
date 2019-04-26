@@ -7,7 +7,7 @@ except:
 try:
     import arcpy
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: arcpy")
+    print("ExceptionERROR: arcpy is not available (check license connection?).")
 
 
 class CHSI:

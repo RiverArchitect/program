@@ -1,8 +1,8 @@
 try:
     import os, sys
-    import Tkinter as tk
-    from tkFileDialog import *  # in python3 use tkinter.filedialog instead
-    from tkMessageBox import askokcancel, showinfo
+    import tkinter as tk
+    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.filedialog import *
     import webbrowser
     import logging
 except:
@@ -19,7 +19,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fg
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
+    print("ExceptionERROR: Cannot find package files (riverpy/fGlobal.py).")
 
 
 class HabitatLogger:
@@ -69,6 +69,7 @@ class HabitatLogger:
 
 class PopUpWindow(object):
     def __init__(self, master):
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
         self.l = tk.Label(top, text="Enter value:")
         self.l.pack()
@@ -76,7 +77,7 @@ class PopUpWindow(object):
         self.e.pack()
         self.b = tk.Button(top, text='OK', command=self.cleanup)
         self.b.pack()
-        self.top.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def cleanup(self):
         self.value = self.e.get()
@@ -87,6 +88,7 @@ class MainGui(tk.Frame):
     def __init__(self, master=None):
         self.log = HabitatLogger()
         self.logger = self.log.logging_start("habitat_evaluation")
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
 
         self.bound_shp = ""  # full path of a boundary shapefile
         self.combine_method = "geometric_mean"
@@ -202,7 +204,7 @@ class MainGui(tk.Frame):
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
         if __name__ == '__main__':
             self.master.title("Habitat Enhancement Evaluation")  # window title
-            self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def make_menu(self):
         # DROP DOWN MENU

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Filename: cHabitatIO.py
 try:
     import os, sys, logging, shutil
     # load routines from LifespanDesign

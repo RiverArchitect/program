@@ -3,7 +3,6 @@ try:
     import sys, os
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys).")
-
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\")
     from cThresholdDirector import *

@@ -7,7 +7,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
     import openpyxl as oxl  # modified package
 except:
-    print("ERROR: Could not load OPENPYXL. Modify module import references in cIO.py (sys.append path in line 8).")
+    print("ERROR: Could not load openpyxl. Modify module import references in cIO.py (sys.append path in line 8).")
 
 
 class Read:

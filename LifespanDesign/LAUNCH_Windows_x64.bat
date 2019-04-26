@@ -1,3 +1,7 @@
-start "Lifespan Design module" "C:\Python27\ArcGISx6410.6\python.exe" "%cd%\lifespan_design_gui.py"
+@echo Lifespan Design
+@echo Loading module (please wait) ...
+
+call "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\propy" "%cd%\lifespan_design_gui.py"
+
 exit
 

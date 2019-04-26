@@ -1,0 +1,229 @@
+<ImportMXDLog>	<Messages>
+		<FileName>D:\Python\RiverArchitect\ProjectMaker\RIV_sit_v10\Geodata\RIV_SiteName_v10.mxd</FileName>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>nan</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>Streamwood (Cover habitat)</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>Clearing of shrubs</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>Plants_stab</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_box</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_cot</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_whi</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_wil</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r02_cus_d_neg</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r02_cus_d_pos</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>modXX_vii</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>max_lf_plants</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>max_lf_pl_c</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_wil</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_whi</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_cot</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_box</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>max_lf_tbx</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_wood</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_rocks</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>lf_bio</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>ds_wood</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>ds_rocks</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Warning</MessageType>
+			<Severity>Medium</Severity>
+			<Description>Legends imported into ArcGIS Pro may appear differently due to improvements in the fitting strategy and changes made to legend patch shapes. Modifications to the default appearance may be required.</Description>
+			<Code>20038</Code>
+			<ComponentName>RIV_SiteName_v10</ComponentName>
+			<ComponentType>Layout</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Warning</MessageType>
+			<Severity>Medium</Severity>
+			<Description>Scales for maps on the layout may not have imported correctly.</Description>
+			<Code>20037</Code>
+			<ComponentName>RIV_SiteName_v10</ComponentName>
+			<ComponentType>Layout</ComponentType>
+</Message>
+</Messages>
+</ImportMXDLog>

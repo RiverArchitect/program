@@ -1,4 +1,3 @@
-from __future__ import division
 # !/usr/bin/python
 import arcpy
 import webbrowser
@@ -18,8 +17,10 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     # version = "v10"             # type() =  3-char str: vII
     error = False
     if unit == "us":
+        area_units = "SQUARE_FEET_US"
         ft2_to_acres = float(1 / (3 * 3 * 4840))  # 3*3 is ft2 to yd2 and 4840 yd2 to ac
     else:
+        area_units = "SQUARE_METERS"
         ft2_to_acres = 1.0
 
     arcpy.CheckOutExtension('Spatial')
@@ -96,10 +97,12 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     try:
         logger.info("Extracting quantities from geodata ...")
         logger.info(" >> Converting results raster to polygon shapefile ...")
-        arcpy.RasterToPolygon_conversion(best_stab, shp_dir + "plant_stab_del.shp", "NO_SIMPLIFY")
-        logger.info(" >> Calculating area statistics ... ")
         p_stab_shp = shp_dir + "Plant_stab.shp"
-        arcpy.CalculateAreas_stats(shp_dir + "plant_stab_del.shp", p_stab_shp)
+        arcpy.RasterToPolygon_conversion(best_stab, p_stab_shp, "NO_SIMPLIFY")
+        logger.info(" >> Calculating area statistics ... ")
+        arcpy.AddField_management(p_stab_shp, "F_AREA", "FLOAT", 9)
+        arcpy.CalculateGeometryAttributes_management(p_stab_shp, geometry_property=[["F_AREA", "AREA"]],
+                                                     area_unit=area_units)
         logger.info(" >> Adding field (stabilizing feature) ... ")
         arcpy.AddField_management(p_stab_shp, "Stab_feat", "TEXT")
         logger.info(" >> Evaluating field (stabilizing feature) ... ")

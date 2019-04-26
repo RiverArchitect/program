@@ -1,15 +1,13 @@
-from __future__ import division
+
 # !/usr/bin/python
 try:
     import sys, os, arcpy, logging
     from arcpy.sa import *
-
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import cTerrainIO as cio
     import cDefinitions as cdef
     import fGlobal as fg
     import cPlants as cp
-
 except:
     print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
 
@@ -311,7 +309,7 @@ class ModifyTerrain:
         try:
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            for ras in (self.raster_dict.keys()):
+            for ras in self.raster_dict.keys():
                 if self.raster_dict[ras].maximum > 0:
                     if str(ras).__len__() > 5:
                         ras_name = reach_name + "_" + str(ras)[0:5]
@@ -370,12 +368,12 @@ class ModifyTerrain:
         for vol_ras in self.rasters_for_pos_vol:
             try:
                 if "zero" in str(vol_ras):
-                    self.logger.info("     Dummy calculation (place holder to keep order in output files).")
+                    self.logger.info("     Dummy calculation (placeholder to keep order in output files).")
                 else:
                     self.logger.info("     Deriving fill volume of " + str(vol_ras))
                     self.logger.info("     *** takes time ***")
                 feat_vol = arcpy.SurfaceVolume_3d(vol_ras, "", "ABOVE", 0.0, 1.0)
-                voltxt = feat_vol.getMessage(2).split("Volume=")[1]
+                voltxt = feat_vol.getMessage(1).split("Volume=")[1]
                 self.logger.info("     RESULT: " + str(float(voltxt)*self.convert_volume_to_cy) + self.unit_info + ".")
                 for feat_id in self.applied_feat_ids:
                     # parse applied feature id to find the accurate key in volume_pos_dict
@@ -394,7 +392,7 @@ class ModifyTerrain:
                     self.logger.info("     Deriving excavation volume of " + str(vol_ras))
                     self.logger.info("     *** takes time ***")
                 feat_vol = arcpy.SurfaceVolume_3d(vol_ras, "", "ABOVE", 0.0, 1.0)
-                voltxt = feat_vol.getMessage(2).split("Volume=")[1]
+                voltxt = feat_vol.getMessage(1).split("Volume=")[1]
                 self.logger.info("     RESULT: " + str(float(voltxt)*self.convert_volume_to_cy) + self.unit_info + ".")
                 for feat_id in self.applied_feat_ids:
                     # parse applied feature id to find the accurate key in volume_pos_dict
@@ -450,14 +448,13 @@ class ModifyTerrain:
 
         # write excavation volumes to excel
         self.writer.write_volumes(self.condition, self.applied_feat_names, self.reaches.names_xlsx,
-                                  self.volume_neg_dict.values(), self.unit_info.strip(), -1)
+                                  fg.dict_values2list(self.volume_neg_dict.values()), self.unit_info.strip(), -1)
         # write fill volumes to excel
         self.writer.write_volumes(self.condition, self.applied_feat_names, self.reaches.names_xlsx,
-                                  self.volume_pos_dict.values(), self.unit_info.strip(), 1)
-
+                                  fg.dict_values2list(self.volume_pos_dict.values()), self.unit_info.strip(), 1)
         import time
         self.logger.info("  >> Waiting for processes to terminate ...")
-        time.sleep(5)
+        time.sleep(3)
 
         try:
             self.logger.info("  >> Clearing .cache (arcpy.Delete_management - temp.designs - please wait) ...")

@@ -1,28 +1,29 @@
 # !/usr/bin/python
-# Desc.: Provides classes
 try:
-    import sys, os
+    import sys, os, logging
     # add folder containing package routines to the system path
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import cActionAssessment as ca
-    import cMapActions as cm
     import cFeatureActions as cf
 
-    # load relevant files from lifespan_design
+    # load classes files from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import cMapper as cm
     import fGlobal as fg
-    import logging
-
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
     print(
-        "       PACKAGE requirement: cMapActions, cFeatureActions, cActionAssessment, /.site_packages/riverpy/fGlobal.")
+        "       PACKAGE requirement: cFeatureActions, cActionAssessment, /.site_packages/riverpy/fGlobal+cMapper.")
 
 
 def logging_start(logfile_name):
+    try:
+        logging_stop(logfile_name)
+    except:
+        pass
     logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
     for fn in logfilenames:
-        fn_full = os.path.join(os.getcwd(), fn)
+        fn_full = os.path.dirname(os.path.abspath(__file__)) + "\\" + fn
         if os.path.isfile(fn_full):
             try:
                 os.remove(fn_full)
@@ -50,7 +51,7 @@ def logging_start(logfile_name):
     debug_handler.setFormatter(formatter)
     logger.addHandler(debug_handler)
     logger.info(logfile_name + ".max_lifespan initiated")
-    return(logger)
+    return logger
 
 
 def logging_stop(logger):
@@ -60,71 +61,37 @@ def logging_stop(logger):
         logger.removeHandler(handler)
 
 
-def layout_maker(condition, feature_type):
-    # prepares layout of all available rasters in OutputRasters/condition folder
-    fn_full = os.path.join(os.getcwd(), "mxd_logfile.log")
-    if os.path.isfile(fn_full):
-        try:
-            os.remove(fn_full)
-            print("Overwriting old mxd_logfile.log")
-        except:
-            print("WARNING: Old logfiles is locked (mxd).")
-
-    mapper = cm.Mapper(condition)
-    mapper.prepare_layout(feature_type)
-    mapper.stop_logging("layout")
-
-
-def map_maker(condition, *args):
-    # maps all available layouts (.mxd files) in OutputMaps/condition/Layouts folder
-    # *args[0] = optional: alternative path for input layouts
-    fn_full = os.path.join(os.getcwd(), "map_logfile.log")
-    if os.path.isfile(fn_full):
-        try:
-            os.remove(fn_full)
-            print("Overwriting old map_logfile.log")
-        except:
-            print("WARNING: Old logfile is locked (mapping).")
-    mapper = cm.Mapper(condition)
+def map_maker(condition, feature_groups, *args):
+    # condition = STR for identifying feature input dir
+    # feature_group = LIST of feature groups
+    # args[0] = alternative input dir
     try:
-        mapper.make_pdf_maps(args[0])
-        print("Alternative layout input directory provided:")
-        print(args[0])
+        mapper = cm.Mapper(condition, "mlf", args[0])
     except:
-        mapper.make_pdf_maps()
+        mapper = cm.Mapper(condition, "mlf")
+    mapper.prepare_layout(True, map_items=feature_groups)
 
-    mapper.stop_logging()
     if not mapper.error:
-        fg.open_folder(mapper.output_map_dir)
+        fg.open_folder(mapper.output_dir)
 
 
-def geo_file_maker(condition, feature_type, *args):
-    # type is either "terraforming", "plantings", "bioengineering" or "maintenance"
+def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
+    # feature_type = STR - either "terraforming", "plantings", "bioengineering" or "maintenance"
+    # kwargs: unit_system ("us" or "si"), alternate_inpath (STR)
+
     allowed_feature_types = ["terraforming", "plantings", "bioengineering", "maintenance"]
+    unit_system = "us"
+    alternate_inpath = None
     try:
-        arguments = True
+        for k in kwargs.items():
+            if "unit_system" in k[0].lower():
+                unit_system = str(k[1]).lower()
+            if "alternate_inpath" in k[0].lower():
+                alternate_inpath = k[1]
     except:
-        arguments = False
+        pass
 
-    if not arguments:
-        mapping = False
-        unit_system = "us"
-    else:
-        try:
-            mapping = args[0]
-            if mapping:
-                print("Integrated mapping (layout creation) activated.")
-            else:
-                print("Integrated mapping deactivated.")
-        except:
-            mapping = False
-            print("Integrated mapping deactivated.")
-        try:
-            unit_system = args[1]
-        except:
-            unit_system = "us"
-
-    logger = logging_start("max_lifespan")
+    logger = logging_start("logfile")
     logger.info("*** unit system: " + str(unit_system))
     logger.info("*** condition: " + str(condition))
     if not(feature_type in allowed_feature_types):
@@ -138,16 +105,8 @@ def geo_file_maker(condition, feature_type, *args):
         logger.info("Found and deleted old .cache folder.")
     fg.chk_dir(temp_path)
 
-    try:
-        alternate_inpath = args[2]
-        feature_assessment = ca.ArcPyContainer(condition, feature_type, unit_system, alternate_inpath)
-    except:
-        feature_assessment = ca.ArcPyContainer(condition, feature_type, unit_system)
+    feature_assessment = ca.ArcPyContainer(condition, feature_type, dir_base_ras, unit_system, alternate_inpath)
     feature_assessment()  # call data processing
-
-    if mapping:
-        layout_maker(condition, feature_type)
-        map_maker(condition)
 
     try:
         # erase traces
@@ -155,8 +114,6 @@ def geo_file_maker(condition, feature_type, *args):
         fg.rm_dir(temp_path)  # dump cache after feature analysis
     except:
         logger.info("WARNING: Could not remove .cache.")
-
-    logging_stop(logger)
 
 
 # enable script to run stand-alone
@@ -172,4 +129,3 @@ if __name__ == "__main__":
     except:
         print("Bad input. Using default condition (2008) and feature_type (terraforming).")
         geo_file_maker(condition="2008", feature_type="terraforming")
-

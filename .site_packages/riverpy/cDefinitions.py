@@ -2,11 +2,10 @@
 import sys, os
 try:
     import cTerrainIO as cio
-
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
     import openpyxl as oxl
 except:
-    print("ExceptionERROR: Cannot find package files (cTerrainIO.py / openpyxl/openpyxl).")
+    print("ExceptionERROR: Cannot find package files (cTerrainIO.py/openpyxl/openpyxl).")
 
 
 class FeatureReader:

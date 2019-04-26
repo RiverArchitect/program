@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RasterFunctionTemplate xsi:type="typens:RasterFunctionTemplate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/2.3.0">
+  <Name>Lifespan Raster Symbology</Name>
+  <Description>Partially logarithmic lifespan classification </Description>
+  <Function xsi:type="typens:RenderedRasterFunction" id="ID1">
+    <Name>Rendered Raster</Name>
+    <Description>Creates a rendered raster by applying a colorizer.</Description>
+    <PixelType>UNKNOWN</PixelType>
+  </Function>
+  <Arguments xsi:type="typens:RenderedRasterFunctionArguments" id="ID2">
+    <Names xsi:type="typens:ArrayOfString" id="ID3">
+      <String>Raster</String>
+      <String>Renderer</String>
+    </Names>
+    <Values xsi:type="typens:ArrayOfAnyType" id="ID4">
+      <AnyType xsi:type="typens:RasterFunctionVariable" id="ID5">
+        <Name>Raster</Name>
+        <Description></Description>
+        <Value></Value>
+        <IsDataset>true</IsDataset>
+      </AnyType>
+      <AnyType xsi:type="typens:RasterFunctionVariable" id="ID6">
+        <Name>Renderer</Name>
+        <Description></Description>
+        <Value xsi:type="typens:CIMRasterClassifyColorizer" id="ID7">
+          <ConstantZ>0</ConstantZ>
+          <ZFactor>0</ZFactor>
+          <ZOffset>0</ZOffset>
+          <Geoid>false</Geoid>
+          <ResamplingType>NearestNeighbor</ResamplingType>
+          <Contrast>0</Contrast>
+          <Brightness>0</Brightness>
+          <NoDataColor xsi:type="typens:CIMRGBColor" id="ID8">
+            <Values xsi:type="typens:ArrayOfDouble" id="ID9">
+              <Double>255</Double>
+              <Double>255</Double>
+              <Double>255</Double>
+              <Double>0</Double>
+            </Values>
+          </NoDataColor>
+          <NormalizationField>&lt;None&gt;</NormalizationField>
+          <NormalizationTotal>0</NormalizationTotal>
+          <NormalizationType>Nothing</NormalizationType>
+          <ClassBreaks xsi:type="typens:ArrayOfCIMRasterClassBreak" id="ID10">
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID11">
+              <UpperBound>1</UpperBound>
+              <Label>&lt;   1 year</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMRGBColor" id="ID12">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID13">
+                  <Double>168</Double>
+                  <Double>0</Double>
+                  <Double>0</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID14">
+              <UpperBound>2</UpperBound>
+              <Label>&lt;   2 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMRGBColor" id="ID15">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID16">
+                  <Double>255</Double>
+                  <Double>0</Double>
+                  <Double>0</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID17">
+              <UpperBound>5</UpperBound>
+              <Label>&lt;   5 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMHSVColor" id="ID18">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID19">
+                  <Double>33</Double>
+                  <Double>100</Double>
+                  <Double>99</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID20">
+              <UpperBound>10</UpperBound>
+              <Label>&lt; 10 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMHSVColor" id="ID21">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID22">
+                  <Double>46</Double>
+                  <Double>100</Double>
+                  <Double>99</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID23">
+              <UpperBound>15</UpperBound>
+              <Label>&lt; 15 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMHSVColor" id="ID24">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID25">
+                  <Double>60</Double>
+                  <Double>100</Double>
+                  <Double>96</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID26">
+              <UpperBound>20</UpperBound>
+              <Label>&lt; 20 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMHSVColor" id="ID27">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID28">
+                  <Double>72</Double>
+                  <Double>100</Double>
+                  <Double>97</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID29">
+              <UpperBound>30</UpperBound>
+              <Label>&lt; 30 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMHSVColor" id="ID30">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID31">
+                  <Double>84</Double>
+                  <Double>100</Double>
+                  <Double>97</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID32">
+              <UpperBound>40</UpperBound>
+              <Label>&lt; 40 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMRGBColor" id="ID33">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID34">
+                  <Double>76</Double>
+                  <Double>230</Double>
+                  <Double>0</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+            <CIMRasterClassBreak xsi:type="typens:CIMRasterClassBreak" id="ID35">
+              <UpperBound>50</UpperBound>
+              <Label>&lt; 50 years</Label>
+              <Description></Description>
+              <Color xsi:type="typens:CIMRGBColor" id="ID36">
+                <Values xsi:type="typens:ArrayOfDouble" id="ID37">
+                  <Double>56</Double>
+                  <Double>168</Double>
+                  <Double>0</Double>
+                  <Double>100</Double>
+                </Values>
+              </Color>
+            </CIMRasterClassBreak>
+          </ClassBreaks>
+          <ClassificationMethod>Manual</ClassificationMethod>
+          <ColorRamp xsi:type="typens:CIMMultipartColorRamp" id="ID38">
+            <ColorRamps xsi:type="typens:ArrayOfCIMColorRamp" id="ID39">
+              <CIMColorRamp xsi:type="typens:CIMLinearContinuousColorRamp" id="ID40">
+                <ColorSpace xsi:type="typens:CIMICCColorSpace" id="ID41">
+                  <URL>CIELAB</URL>
+                </ColorSpace>
+                <FromColor xsi:type="typens:CIMLABColor" id="ID42">
+                  <Values xsi:type="typens:ArrayOfDouble" id="ID43">
+                    <Double>54.791693741604178</Double>
+                    <Double>75.038799969293805</Double>
+                    <Double>66.45563564267735</Double>
+                    <Double>100</Double>
+                  </Values>
+                </FromColor>
+                <ToColor xsi:type="typens:CIMLABColor" id="ID44">
+                  <Values xsi:type="typens:ArrayOfDouble" id="ID45">
+                    <Double>93.957160618718859</Double>
+                    <Double>-19.925115445367069</Double>
+                    <Double>85.254003210592359</Double>
+                    <Double>100</Double>
+                  </Values>
+                </ToColor>
+                <PrimitiveName></PrimitiveName>
+              </CIMColorRamp>
+              <CIMColorRamp xsi:type="typens:CIMLinearContinuousColorRamp" id="ID46">
+                <ColorSpace xsi:type="typens:CIMICCColorSpace" id="ID47">
+                  <URL>CIELAB</URL>
+                </ColorSpace>
+                <FromColor xsi:type="typens:CIMLABColor" id="ID48">
+                  <Values xsi:type="typens:ArrayOfDouble" id="ID49">
+                    <Double>93.957160618718859</Double>
+                    <Double>-19.925115445367069</Double>
+                    <Double>85.254003210592359</Double>
+                    <Double>100</Double>
+                  </Values>
+                </FromColor>
+                <ToColor xsi:type="typens:CIMLABColor" id="ID50">
+                  <Values xsi:type="typens:ArrayOfDouble" id="ID51">
+                    <Double>83.148622744745296</Double>
+                    <Double>-89.272623019177487</Double>
+                    <Double>72.172637457266433</Double>
+                    <Double>100</Double>
+                  </Values>
+                </ToColor>
+                <PrimitiveName></PrimitiveName>
+              </CIMColorRamp>
+            </ColorRamps>
+            <Weights xsi:type="typens:ArrayOfDouble" id="ID52">
+              <Double>1</Double>
+              <Double>1</Double>
+            </Weights>
+          </ColorRamp>
+          <ExclusionColor xsi:type="typens:CIMRGBColor" id="ID53">
+            <Values xsi:type="typens:ArrayOfDouble" id="ID54">
+              <Double>0</Double>
+              <Double>0</Double>
+              <Double>0</Double>
+              <Double>0</Double>
+            </Values>
+          </ExclusionColor>
+          <ExclusionDescription></ExclusionDescription>
+          <ExclusionLabel></ExclusionLabel>
+          <ExclusionRanges xsi:type="typens:ArrayOfDouble" id="ID55"></ExclusionRanges>
+          <ExclusionValues xsi:type="typens:ArrayOfDouble" id="ID56"></ExclusionValues>
+          <Field>&lt;VALUE&gt;</Field>
+          <HillshadeZFactor>1</HillshadeZFactor>
+          <MinimumBreak>1</MinimumBreak>
+          <ShowClassGaps>false</ShowClassGaps>
+          <ShowInAscendingOrder>true</ShowInAscendingOrder>
+          <UseExclusionColor>false</UseExclusionColor>
+          <UseHillshade>false</UseHillshade>
+          <NumberFormat xsi:type="typens:CIMNumericFormat" id="ID57">
+            <AlignmentOption>esriAlignLeft</AlignmentOption>
+            <AlignmentWidth>12</AlignmentWidth>
+            <RoundingOption>esriRoundNumberOfSignificantDigits</RoundingOption>
+            <RoundingValue>10</RoundingValue>
+            <ShowPlusSign>false</ShowPlusSign>
+            <UseSeparator>true</UseSeparator>
+            <ZeroPad>false</ZeroPad>
+          </NumberFormat>
+          <Heading>&lt;VALUE&gt;</Heading>
+        </Value>
+        <IsDataset>false</IsDataset>
+      </AnyType>
+    </Values>
+  </Arguments>
+  <Help></Help>
+  <Type>1</Type>
+  <Thumbnail xsi:type="xs:string"></Thumbnail>
+  <Definition></Definition>
+  <Group></Group>
+  <Tag></Tag>
+  <ThumbnailEx></ThumbnailEx>
+</RasterFunctionTemplate>
