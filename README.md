@@ -1,4 +1,4 @@
-# River Architect ![logo](https://github.com/sschwindt/RiverArchitect/raw/master/images/logo_small.ico)
+# River Architect ![logo](https://raw.githubusercontent.com/sschwindt/RiverArchitect/master/images/logo_small.ico)
 River Architect is a Python3-based open-source package that supports stream designers with a set of 
 GUI modules (the last stable Python2 version can be downloaded [here][8] with sample data). The current core functionalities are:
 
