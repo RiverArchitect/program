@@ -1,5 +1,3 @@
-from __future__ import division
-# Filename: fGlobal.py
 try:
     import os, logging, sys, glob, webbrowser, time
 except:
@@ -26,8 +24,8 @@ def chk_is_empty(variable):
 
 
 def chk_dir(directory):
-    if not(os.path.exists(directory)):
-            os.makedirs(directory)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 
 def clean_dir(directory):
@@ -46,11 +44,19 @@ def cool_down(seconds):
     # Pauses script execution for the input argument number of seconds
     # seconds = INT
     sys.stdout.write('Cooling down (waiting for processes to end) ... ')
-    for i in xrange(seconds, 0, -1):
+    for i in range(seconds, 0, -1):
         sys.stdout.write(str(i) + ' ')
         sys.stdout.flush()
         time.sleep(1)
     sys.stdout.write('\n')
+
+
+def dict_values2list(dv):
+    # converts a 'dict_values' object into a 'list'
+    # also works for 'dict_keys' to 'list' conversion
+    out_list = []
+    [out_list.append(item) for item in dv]
+    return out_list
 
 
 def get_newest_output_folder(directory):
@@ -259,20 +265,24 @@ def rm_raster(full_path):
     # full_path = "D:\\example_folder\\example_raster_name"
     locked = False
     try:
-        os.remove(full_path + ".aux.xml")
+        os.remove(full_path)
     except:
         locked = True
-
     try:
-        os.remove(full_path + ".ovr")
+        if not locked:
+            os.remove(full_path + ".aux.xml")
     except:
         locked = True
-
     try:
-        rm_dir(full_path + "\\")
+        if not locked:
+            os.remove(full_path + ".ovr")
     except:
         locked = True
-
+    try:
+        if not locked:
+            rm_dir(full_path + "\\")
+    except:
+        locked = True
     return locked
 
 
@@ -300,6 +310,12 @@ def str2tuple(arg):
     tup = (int(arg[0]), int(arg[1]))
     return tup
 
+
+def stop_logging(logger):
+    # stop logging and release logfile
+    for handler in logger.handlers:
+        handler.close()
+        logger.removeHandler(handler)
 
 def tuple2num(arg):
     # function converts float number with ',' separator for digits to '.' separator

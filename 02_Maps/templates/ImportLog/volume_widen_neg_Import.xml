@@ -1,0 +1,94 @@
+<ImportMXDLog>	<Messages>
+		<FileName>D:\Python\RiverArchitect\02_Maps\templates\layouts\volume_widen_neg.mxd</FileName>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r00_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r01_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r02_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r03_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r04_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r05_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r06_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>r07_widen_d</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Error</MessageType>
+			<Severity>High</Severity>
+			<Description>Layer&apos;s data source is inaccessible</Description>
+			<Code>00003</Code>
+			<ComponentName>background</ComponentName>
+			<ComponentType>Layer</ComponentType>
+</Message>
+		<Message>
+			<Name></Name>
+			<MessageType>Warning</MessageType>
+			<Severity>Medium</Severity>
+			<Description>Legends imported into ArcGIS Pro may appear differently due to improvements in the fitting strategy and changes made to legend patch shapes. Modifications to the default appearance may be required.</Description>
+			<Code>20038</Code>
+			<ComponentName>volume_widen_neg</ComponentName>
+			<ComponentType>Layout</ComponentType>
+</Message>
+</Messages>
+</ImportMXDLog>

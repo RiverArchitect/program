@@ -1,8 +1,8 @@
 try:
     import os, sys
-    import Tkinter as tk
-    from tkFileDialog import *  # in python3 use tkinter.filedialog instead
-    from tkMessageBox import askokcancel, showinfo
+    import tkinter as tk
+    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.filedialog import *
     import webbrowser, shutil, random
 except:
     print("ERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
@@ -27,8 +27,8 @@ class MainGui(tk.Frame):
 
         self.dir2prj = ""  #os.path.dirname(os.path.abspath(__file__)) + "\\Geodata\\"
         self.dir = os.path.dirname(os.path.abspath(__file__)) + "\\"
-        self.dir2SR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
-        self.dir2AP = self.dir2SR + "MaxLifespan\\Products\\Rasters\\"
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
+        self.dir2AP = self.dir2ra + "MaxLifespan\\Products\\Rasters\\"
         self.fish = {}
         self.fish_applied = {}
         self.reach = ""
@@ -100,7 +100,7 @@ class MainGui(tk.Frame):
         self.b_dir2SR = tk.Button(self, text="Change path to RiverArchitect package (skip this if current is ok)",
                                   command=lambda: self.set_dir2SR())
         self.b_dir2SR.grid(sticky=tk.EW, row=8, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.l_dir2SR = tk.Label(self, fg="gray26", text="Current: " + str(self.dir2SR))
+        self.l_dir2SR = tk.Label(self, fg="gray26", text="Current: " + str(self.dir2ra))
         self.l_dir2SR.grid(sticky=tk.W, row=9, column=0, columnspan=3, padx=self.xd, pady=self.yd - 3)
 
         self.b_val_var = tk.Button(self, text="VALIDATE VARIABLES", command=lambda: self.verify_variables())
@@ -203,7 +203,7 @@ class MainGui(tk.Frame):
         # Give the window a title
         if __name__ == '__main__':
             self.master.title("Project Maker")
-            self.master.iconbitmap(self.dir + "\\.templates\\code_icon.ico")
+            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def make_menu(self):
         # DROP DOWN MENUS
@@ -233,13 +233,13 @@ class MainGui(tk.Frame):
         self.condition_pl_list = []  # reset plant condition list
         self.condition_tbx_list = []  # reset tbx condition list
 
-        dir2HE = self.dir2SR + "HabitatEvaluation\\CHSI\\"
+        dir2HE = self.dir2ra + "HabitatEvaluation\\CHSI\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
         for f in full_list:
             self.condition_i_list.append(str(f))  # pre-project propositions
             self.condition_p_list.append(str(f))  # post-project propositions
 
-        dir2AP = self.dir2SR + "MaxLifespan\\Products\\Rasters\\"
+        dir2AP = self.dir2ra + "MaxLifespan\\Products\\Rasters\\"
         ap_list = [d for d in os.listdir(dir2AP) if os.path.isdir(os.path.join(dir2AP, d))]
         for f in ap_list:
             if ("plant" in str(f).lower()) or ("lyr20" in str(f).lower()):
@@ -296,7 +296,7 @@ class MainGui(tk.Frame):
         # rebuild = True -> rebuilt menu mode
         if not self.rebuild_fish_menu:
             # initial menu construction
-            sys.path.append(self.dir2SR + "HabitatEvaluation\\")
+            sys.path.append(self.dir2ra + "HabitatEvaluation\\")
             try:
                 import cFish as cf
                 self.fish = cf.Fish()
@@ -361,8 +361,8 @@ class MainGui(tk.Frame):
             self.b_select_c_p.config(fg="forest green", text="Selection OK")
 
     def set_dir2SR(self):
-        self.dir2SR = askdirectory(initialdir=".") + "/"
-        self.l_dir2SR.config(text="Current: " + str(self.dir2SR))
+        self.dir2ra = askdirectory(initialdir=".") + "/"
+        self.l_dir2SR.config(text="Current: " + str(self.dir2ra))
 
     def set_fish(self, species, *lifestage):
         try:
@@ -403,7 +403,7 @@ class MainGui(tk.Frame):
                 if (condition_pl.__len__() < 1) or (str(condition_pl) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_pl = self.dir2SR + "MaxLifespan\\Products\\Rasters\\" + condition_pl + "\\"
+                dir2AP_pl = self.dir2ra + "MaxLifespan\\Products\\Rasters\\" + condition_pl + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s20.main(dir2AP_pl, self.reach, self.stn, self.unit, self.version)
                 self.b_s20.config(text="Delineate plantings OK", fg="forest green")
@@ -417,7 +417,7 @@ class MainGui(tk.Frame):
                 if (condition_tbx.__len__() < 1) or (str(condition_tbx) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_tbx = self.dir2SR + "MaxLifespan\\Products\\Rasters\\" + condition_tbx + "\\"
+                dir2AP_tbx = self.dir2ra + "MaxLifespan\\Products\\Rasters\\" + condition_tbx + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s21.main(dir2AP_tbx, self.vege_cr, self.reach, self.stn, self.unit, self.version)
                 self.b_s21.config(text="Stabilize plantings OK", fg="forest green")
@@ -441,7 +441,7 @@ class MainGui(tk.Frame):
                     showinfo("ERROR", "Select condition after terraforming.")
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.dir2SR, self.fish_applied, self.reach, self.stn, self.unit, self.version)
+                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.dir2ra, self.fish_applied, self.reach, self.stn, self.unit, self.version)
                 self.b_s40.config(text="Net gain in AUA calculation OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
@@ -461,7 +461,7 @@ class MainGui(tk.Frame):
             error_msges.append("Site short name must consist of three small letters (letter1 + letter2 + letter3).")
         if self.vege_cr == 0.01:
             error_msges.append("Minimum survival threshold for plants must be a float number in years.")
-        if not os.path.isdir(self.dir2SR + "MaxLifespan\\Products\\"):
+        if not os.path.isdir(self.dir2ra + "MaxLifespan\\Products\\"):
             error_msges.append("Check path to RiverArchitect package and its subdirectory MaxLifespan/Products.")
 
         if error_msges.__len__() > 0:
@@ -481,14 +481,14 @@ class MainGui(tk.Frame):
             self.b_s21["state"] = "normal"
             self.b_s40["state"] = "normal"
             msg_next0 = "\n\n A workbook and a layout file will automatically open after clicking on OK."
-            msg_next1 = "\n\n >> Create relevant shapefiles and safe the layout as \n" + self.dir2prj + "Geodata\\" + self.reach + "_" + self.site_name + "_" + self.version + ".mxd\n \n"
+            msg_next1 = "\n\n >> Create relevant shapefiles and safe the layout as \n" + self.dir2prj + "ProjectMaps.aprx\n \n"
             msg_next2 = "\n\n >> Verify the assessment workbook, transfer terraforming volumes (tab: terraforming volumes), and safe-close the workbook."
             showinfo("INFO", msg + msg_next0 + msg_next1 + msg_next2)
 
             try:
                 webbrowser.open(self.dir2prj + self.xlsx_file_name)
                 try:
-                    webbrowser.open(self.dir2prj + "Geodata\\" + self.reach + "_" + self.site_name + "_" + self.version + ".mxd")
+                    webbrowser.open(self.dir2prj + "ProjectMaps.aprx")
                 except:
                     pass
             except:

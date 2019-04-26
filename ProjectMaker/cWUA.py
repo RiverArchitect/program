@@ -1,4 +1,3 @@
-from __future__ import division  # required to enforce correct division
 # logs to logfile_40.log
 try:
     import sys, os, logging
@@ -28,8 +27,10 @@ class CAUA:
         self.ras_project = ""
         self.unit = unit
         if self.unit == "us":
+            self.area_unit = "SQUARE_FEET_US"
             self.ft2ac = 1 / 43560
         else:
+            self.area_unit = "SQUARE_METERS"
             self.ft2ac = 1
 
         self.xlsx_out = ""
@@ -115,21 +116,23 @@ class CAUA:
         area = 0.0
         try:
             self.logger.info("     saving project CHSI shapefile of raster " + str(csi_raster) + ".tif to:")
-            self.logger.info("     " + target_dir + str(self.cache_count) + "aua_eval.shp")
-            arcpy.CalculateAreas_stats(shp_name, target_dir + str(self.cache_count) + "aua_eval.shp")
+            self.logger.info("     " + target_dir + str(shp_name))
+            arcpy.AddField_management(shp_name, "F_AREA", "FLOAT", 9)
+            arcpy.CalculateGeometryAttributes_management(shp_name, geometry_property=[["F_AREA", "AREA"]],
+                                                         area_unit=self.area_unit)
             self.logger.info("   * summing area ...")
-            with arcpy.da.UpdateCursor(target_dir + str(self.cache_count) + "aua_eval.shp", "F_AREA") as cursor:
+            with arcpy.da.UpdateCursor(shp_name, "F_AREA") as cursor:
                 for row in cursor:
                     try:
                         area += float(row[0])
                     except:
                         self.logger.info("       WARNING: Bad value (" + str(row) + ")")
         except arcpy.ExecuteError:
-            self.logger.info("ExecuteERROR: (arcpy) in CalculateAreas_stats.")
+            self.logger.info("ExecuteERROR: (arcpy) in CalculateGeometryAttributes_management.")
             self.logger.info(arcpy.GetMessages(2))
             arcpy.AddError(arcpy.GetMessages(2))
         except Exception as e:
-            self.logger.info("ExceptionERROR: (arcpy) in CalculateAreas_stats.")
+            self.logger.info("ExceptionERROR: (arcpy) in CalculateGeometryAttributes_management.")
             self.logger.info(e.args[0])
             arcpy.AddError(e.args[0])
         except:

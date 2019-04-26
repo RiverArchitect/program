@@ -1,2 +1,5 @@
-start "Make Morphological Units raster" "C:\Python27\ArcGISx6410.6\python.exe" "%cd%\make_mu.py"
+@echo Make Morphological Units raster
+
+call "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\propy" "%cd%\master_gui.py" "%cd%\make_mu.py"
 exit
+

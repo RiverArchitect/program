@@ -1,11 +1,10 @@
 try:
     import os, sys
-    import Tkinter as tk
-    from tkFileDialog import *  # in python3 use tkinter.filedialog instead
-    from tkMessageBox import askokcancel, showinfo
+    import tkinter as tk
+    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.filedialog import *
     import webbrowser
     import cModifyTerrain as cmt
-    import cMapModifiedTerrain as cmat
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
 
@@ -14,12 +13,15 @@ try:
     import fGlobal as fg
     import cTerrainIO as cio
     import cDefinitions as cdef
+    import cMapper as cmp
 except:
-    print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py).")
+    print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/*.py).")
 
 
 class MainGui(tk.Frame):
     def __init__(self, master=None):
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
+        self.dir_ras_vol = ""
         self.path = r"" + os.path.dirname(os.path.abspath(__file__))
         self.condition = ""
         self.errors = False
@@ -57,6 +59,7 @@ class MainGui(tk.Frame):
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
         self.gui_interpreter = tk.StringVar()
+        self.mapping = tk.BooleanVar()
 
         # LABELS
         self.l_reach_label = tk.Label(self, fg="dark slate gray", text="Reaches:")
@@ -68,7 +71,7 @@ class MainGui(tk.Frame):
         self.l_s_feat = tk.Label(self, fg="dark slate gray", text="Selected features: ")
         self.l_s_feat.grid(sticky=tk.W, row=1, column=0, padx=self.xd, pady=self.yd * 2)
         self.l_features = tk.Label(self, fg="red",
-                                   text="Choose from \"Features\" Menu (requires maximum lifespan rasters or CAD-modified rasters)")
+                                   text="Choose from \"Features\" Menu\n(requires maximum lifespan rasters or CAD-modified rasters)")
         self.l_features.grid(sticky=tk.W, row=1, column=1, columnspan=7, padx=self.xd, pady=self.yd)
         self.l_inp = tk.Label(self, fg="dark slate gray", text="Current topo raster input directory:")
         self.l_inp.grid(sticky=tk.W, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
@@ -98,25 +101,25 @@ class MainGui(tk.Frame):
                                    command=lambda: showinfo("INFO", "Check max. lifespan raster box first."))
         self.b_in_feat.grid(sticky=tk.EW, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.b_set_vol_ras = tk.Button(self, fg="snow3", width=25, bg="gray90", text="Set directory of CAD-modified DEM rasters",
-                                   command=lambda: showinfo("INFO", "Check volume calculation box first."))
+                                       command=lambda: showinfo("INFO", "Check volume calculation box first."))
         self.b_set_vol_ras.grid(sticky=tk.EW, row=12, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
         self.make_menu()
 
         # CHECK BOXES
         self.cb_mterrain = tk.Checkbutton(self, fg="dark slate gray",
-                                          text="Enable max. lifespan raster-based terrain modification (Graden and Widen only)",
+                                          text="Enable max. lifespan-based terrain modification (Graden and Widen only)",
                                           command=lambda: self.enable_mterrain())
         self.cb_mterrain.grid(sticky=tk.W, row=7, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.cb_volumes = tk.Checkbutton(self, fg="dark slate gray",
                                          text="Enable volume difference calculator",
                                          command=lambda: self.enable_volumes())
         self.cb_volumes.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.cb_mapping = tk.Checkbutton(self, fg="dark slate gray", text="Automatically run mapping after DEM / volume calculation.",
-                                         command=lambda: self.enable_mapping())
+        self.cb_mapping = tk.Checkbutton(self, fg="dark slate gray",
+                                         text="Automatically run mapping after DEM / volume calculation.",
+                                         variable=self.mapping, onvalue=True, offvalue=False)
         self.cb_mapping.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd*2)
-
-        print("Done.")
+        self.cb_mapping.deselect()  # select by default
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
@@ -132,7 +135,7 @@ class MainGui(tk.Frame):
         # Give the window a title.
         if __name__ == '__main__':
             self.master.title("Modify Terrain")
-            self.master.iconbitmap(self.template_dir + "code_icon.ico")
+            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def make_menu(self):
         # DROP DOWN MENU
@@ -177,8 +180,8 @@ class MainGui(tk.Frame):
 
     def add_reach(self, reach):
         if str(reach).__len__() < 1:
-            self.reach_names_applied = self.reaches.name_dict.values()
-            self.reach_ids_applied = self.reaches.id_dict.values()
+            self.reach_names_applied = fg.dict_values2list(self.reaches.name_dict.values())
+            self.reach_ids_applied = fg.dict_values2list(self.reaches.id_dict.values())
             if self.reach_names_applied.__len__() > 5:
                 label_text = "Many / All"
             else:
@@ -295,28 +298,20 @@ class MainGui(tk.Frame):
         except:
             showinfo("ERROR", "Cannot open the file\n" + self.template_dir + "computation_extents.xlsx")
 
-    def enable_mapping(self):
-        if not self.mapping:
-            self.mapping = True
-
     def enable_mterrain(self):
         self.b_in_feat.config(fg="dark slate gray", width=25, bg="white",
                               text="Change feature max. lifespan raster directory (optional for widen / grading)",
                               command=lambda: self.change_in_feat())
-
         self.cb_volumes.select()
-
         self.l_inp_feat.config(fg="dark slate gray", text="Current max. lifespan raster directory:")
         self.l_inpath_feat.config(fg="dark slate gray", text=str(self.in_feat))
         self.runmenu.entryconfig(1, label="Run: DEM Modification", foreground="dark slate gray",
                                  command=lambda: self.run_modification())
-
         self.vol_only = False
 
     def enable_volumes(self):
         self.runmenu.entryconfig(2, label="Run: Volume calculator", foreground="dark slate gray",
                                  command=lambda: self.run_volume_calculator())
-
         self.l_inp_vol.config(fg="dark slate gray", text="Input directory of modified DEMs for volume computation:")
         self.l_inpath_vol.config(fg="dark slate gray", text=str(self.in_vol))
         self.b_set_vol_ras.config(fg="dark slate gray", width=25, bg="white",
@@ -391,35 +386,29 @@ class MainGui(tk.Frame):
         if not self.verified:
             self.verify()
         if self.verified:
-            for fID in self.feature_id_list:
-                if fID in self.features.fill_ids:
-                    self.volume_types.append(1)
-                    print("Appended fill ...")
-                if fID in self.features.excavate_ids:
-                    self.volume_types.append(-1)
-                    print("Appended excavation ...")
-                for v in self.volume_types:
-                    mapper = cmat.Mapper(condition=self.condition, feature_id=fID)
-                    if not("cus" in fID):
-                        # map widen and grading
-                        re_order_list = []
-                        for rID_int in self.reaches.internal_id:
-                            if self.reaches.id_dict[rID_int] in self.reach_ids_applied:
-                                re_order_list.append(self.reaches.id_dict[rID_int])
-                        for rID in re_order_list:
-                            mapper.map_reach(rID, fID, v)
-                    else:
-                        # map custom
-                        mapper.map_custom(self.in_vol, v)
-                    mapper.finalize_map()
-                self.volume_types = []  # reset for next feature
+            mapper = cmp.Mapper(self.condition, "mt", self.dir_ras_vol)
+            map_list = []
+            for fid in self.feature_id_list:
+                add_str = ""
+                if "grad" in fid:
+                    add_str = "grade"
+                if "wide" in fid:
+                    add_str = "widen"
+                if "cus" in fid:
+                    add_str = "cust"
+                    map_list.append("volume_%s_pos" % add_str)  # pos not meaningful for widen or grade
+                map_list.append("volume_%s_neg" % add_str)
+
+            for map_name in map_list:
+                mapper.prepare_layout(True, map_items=[map_name])
+
             self.master.bell()
             tk.Button(self, width=25, bg="pale green", text="Mapping finished. Click to quit.",
                       command=lambda: self.logfile_quit()).grid(sticky=tk.EW, row=12, column=0, columnspan=5,
                                                                 padx=self.xd, pady=self.yd)
             try:
                 if not mapper.error:
-                    fg.open_folder(mapper.output_map_dir)
+                    fg.open_folder(mapper.output_dir)
             except:
                 pass
 
@@ -433,9 +422,10 @@ class MainGui(tk.Frame):
                                              feature_ids=self.feature_id_list, topo_in_dir=self.in_topo,
                                              feat_in_dir=self.in_feat, reach_ids=self.reach_ids_applied)
             self.logfile = modification()
+            self.dir_ras_vol = modification.output_ras_dir
             self.prevent_popup = True
 
-            if self.mapping:
+            if self.mapping.get():
                 self.run_map_maker()
             self.master.bell()
             tk.Button(self, width=25, bg="pale green", text="Terrain modification finished. Click to quit.",
@@ -453,9 +443,12 @@ class MainGui(tk.Frame):
                                              feat_in_dir=self.in_feat, reach_ids=self.reach_ids_applied)
 
             self.logfile = modification(self.vol_only, self.in_vol)
+            self.dir_ras_vol = modification.output_ras_dir
             self.prevent_popup = True
+            del modification
+            fg.rm_dir(self.path + "\\.cache\\")
 
-            if self.mapping:
+            if self.mapping.get():
                 self.run_map_maker()
             self.master.bell()
             tk.Button(self, width=25, bg="pale green", text="Volume calculator finished. Click to quit.",
@@ -478,7 +471,7 @@ class MainGui(tk.Frame):
             self.l_inpath_vol.config(fg="red", text="Invalid directory")
 
     def show_credits(self):
-        msg = "Version info: 0.1 (Arpil 2019)\nAuthor: Sebastian Schwindt\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
+        msg = "Version info: 0.3 (May 2019)\nAuthor: Sebastian Schwindt\n     Kenny Larrieu\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
         showinfo("Credits", msg)
 
     def unit_change(self):
@@ -515,8 +508,9 @@ class MainGui(tk.Frame):
                 self.verified = False
                 self.errors = True
             try:
-                if not ((sys.version_info.major == 2) and (sys.version_info.minor == 7)):
-                    error_msg.append("Wrong Python interpreter (Required: Python v.2.7 or higher but not v.3.x).")
+                import arcpy
+                if not (sys.version_info.major == 3):
+                    error_msg.append("Wrong Python interpreter (Required: Python3 and arcpy).")
                     self.errors = True
                     self.verified = False
             except:

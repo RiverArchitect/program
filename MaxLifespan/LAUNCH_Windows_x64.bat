@@ -1,3 +1,7 @@
-start "Maximum Lifespan Maps" "C:\Python27\ArcGISx6410.6\python.exe" "%cd%\action_gui.py"
+@echo Max Lifespan
+@echo Loading module (please wait) ...
+
+call "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\propy" "%cd%\action_gui.py"
+
 exit
 

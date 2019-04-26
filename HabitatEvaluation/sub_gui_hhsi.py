@@ -1,8 +1,8 @@
 try:
     import os, sys
-    import Tkinter as tk
-    from tkFileDialog import *  # in python3 use tkinter.filedialog instead
-    from tkMessageBox import askokcancel, showinfo
+    import tkinter as tk
+    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.filedialog import *
     import webbrowser
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
@@ -22,6 +22,7 @@ except:
 
 class HHSIgui(object):
     def __init__(self, master, unit, fish_applied, *args):
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
         self.path = os.path.dirname(os.path.abspath(__file__))
         self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -36,7 +37,7 @@ class HHSIgui(object):
         self.unit = unit
         self.fish_applied = fish_applied
 
-        self.top.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
         try:
             # test if a boundary shapefile was provided

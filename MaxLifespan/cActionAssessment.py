@@ -18,7 +18,8 @@ except:
 
 
 class ArcPyContainer:
-    def __init__(self, condition, feature_type, *args):
+    def __init__(self, condition, feature_type, dir_base_ras, *args):
+        self.logger = logging.getLogger("logfile")
         self.raster_info_lf = ""
         self.condition = str(condition)
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
@@ -29,13 +30,14 @@ class ArcPyContainer:
         fg.chk_dir(self.output_shp)
         try:
             # if optional input raster directory is provided ...
-            self.features = cf.Manager(condition, feature_type, args[1])  # feature class object from classes_features
+            if args[1]:
+                self.features = cf.Manager(condition, feature_type, args[1])  # feature class object
         except:
-            self.features = cf.Manager(condition, feature_type)  # feature class object from classes_features
+            self.features = cf.Manager(condition, feature_type)  # feature class object
         self.raster_dict = {}
         try:
             # one zero-raster that is updated, another wont be updated
-            self.make_zero_ras()
+            self.make_zero_ras(dir_base_ras)
             self.best_lf_ras = arcpy.Raster(
                 os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros.tif")
             self.null_ras = arcpy.Raster(
@@ -62,8 +64,6 @@ class ArcPyContainer:
         self.g = 9.81 / self.ft2m   # (ft/s2) gravity acceleration
         self.s = 2.68               # (--) relative grain density (ratio of rho_s and rho_w)
 
-        self.logger = logging.getLogger("max_lifespan")
-
     def get_design_data(self):
         # requires that get_best_lifespan is first executed!
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
@@ -72,7 +72,6 @@ class ArcPyContainer:
         try:
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            arcpy.env.extent = "MAXOF"
             arcpy.CheckOutExtension('Spatial')  # check out license
             for i in range(0, self.features.ds_rasters.__len__()):
                 sn = self.get_feat_shortname(str(self.features.ds_rasters[i]))
@@ -106,8 +105,6 @@ class ArcPyContainer:
         self.logger.info("   LOOK UP LIFESPAN MAP DATA")
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
         try:
-            arcpy.gp.overwriteOutput = True
-            arcpy.env.extent = "MAXOF"
             arcpy.env.workspace = self.cache
             arcpy.CheckOutExtension('Spatial')  # check out license
 
@@ -124,7 +121,6 @@ class ArcPyContainer:
                     self.logger.info("ERROR: " + shortname + " contains non-valid data or is empty.")
 
             self.logger.info("   >> Finished lifespan map look-up.")
-
             arcpy.CheckInExtension('Spatial')  # check in license
         except arcpy.ExecuteError:
             self.logger.info("ERROR: Lifespan/Design data fetch failed.")
@@ -168,7 +164,7 @@ class ArcPyContainer:
             try:
                 self.logger.info("   >> Calculating cell statistics ...")
                 self.raster_dict.update({"temp": self.null_ras})  # temporal raster extension
-                self.best_lf_ras = CellStatistics(self.raster_dict.values(), "MAXIMUM", "DATA")
+                self.best_lf_ras = CellStatistics(fg.dict_values2list(self.raster_dict.values()), "MAXIMUM", "DATA")
                 del self.raster_dict["temp"]  # remove temp entry
                 self.logger.info("      -> Extending raster ...")
             except:
@@ -176,6 +172,10 @@ class ArcPyContainer:
 
             for sn in self.raster_dict.keys():
                 feat_ras = self.raster_dict[sn]
+                try:
+                    arcpy.env.extent = feat_ras.extent
+                except:
+                    pass
 
                 try:
                     self.logger.info(
@@ -212,7 +212,7 @@ class ArcPyContainer:
                 self.logger.info("   >> Saving maximum lifespan rasters (all features) ...")
                 self.best_lf_ras.save(self.cache + "max_lf.tif")
                 try:
-                    if not(self.feature_info.id_list_plants[0] in " ".join(self.raster_dict.keys())):
+                    if not(self.feature_info.id_list_plants[0] in " ".join(fg.dict_values2list(self.raster_dict.keys()))):
                         arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf.tif")
                     else:
                         arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf_plants.tif")
@@ -243,28 +243,20 @@ class ArcPyContainer:
             self.logger.info("ERROR: (arcpy).")
             self.logger.info(arcpy.GetMessages())
 
-    def make_zero_ras(self):
+    def make_zero_ras(self, dir_base_ras):
         arcpy.CheckOutExtension('Spatial')  # check out license
         zero_ras_str = os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros.tif"
         if os.path.isfile(zero_ras_str):
             fg.rm_file(zero_ras_str)
         try:
-            try:
-                base_dem = arcpy.Raster(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                                     '..')) + "\\01_Conditions\\" + self.condition + "\\dem.tif")
-            except:
-                base_dem = arcpy.Raster(os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\dem")
-
-            print("Preparing zero raster based on DEM extents ...")
+            base_dem = arcpy.Raster(dir_base_ras)
+            self.logger.info(" >> Preparing zero raster based on \n    " + dir_base_ras)
             arcpy.env.extent = base_dem.extent
-            arcpy.env.workspace = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
+            arcpy.env.workspace = self.cache
             zero_ras = Con(IsNull(base_dem), 0, 0)
             zero_ras.save(zero_ras_str)
-            arcpy.env.workspace = self.cache
         except:
-            print("ExceptionERROR: Unable to create ZERO Raster. Manual intervention required: Check Package documentation (Troubleshooting).")
+            self.logger.info("ExceptionERROR: Unable to create ZERO Raster. Manual intervention required: Check Package documentation (Troubleshooting).")
         arcpy.CheckInExtension('Spatial')  # check in license
 
     def __call__(self):

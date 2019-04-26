@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="en"><Esri><CreaDate>20190415</CreaDate><CreaTime>16350600</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><lineage><Process ToolSource="c:\program files (x86)\arcgis\desktop10.6\ArcToolbox\Toolboxes\Spatial Analyst Tools.tbx\RasterCalculator" Date="20190415" Time="163506">RasterCalculator Con(~IsNull("background"),Int("exist_veget")) D:\Python\RiverArchitect\ProjectMaker\PBR_ugb_v10\Geodata\Rasters\existing_veg.tif</Process></lineage></DataProperties></Esri></metadata>

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # Filename: cLifespanDesignAnalysis.py
+import os, logging
 try:
     from cParameters import *
     from cReadInpLifespan import *
@@ -10,10 +11,12 @@ except:
 
 try:
     import arcpy
-    import os, logging
-    from arcpy.sa import *  # good for raster processing
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, logging")
+    print("ExceptionERROR: arcpy is not available (check license connection?)")
+try:
+    from arcpy.sa import *
+except:
+    print("ExceptionERROR: Spatial Analyst (arcpy.sa) is not available (check license?)")
 
 
 class ArcPyAnalysis:
@@ -28,6 +31,7 @@ class ArcPyAnalysis:
         self.raster_info_lf = ""
         self.condition = str(condition)
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
+        self.extent_type = "standard"
 
         self.raster_dict_ds = {}
         self.raster_info_lf = "init"
@@ -136,7 +140,7 @@ class ArcPyAnalysis:
             self.ras_d2w = Con(((d2w.raster >= threshold_low) & (d2w.raster <= threshold_up)), 1.0)
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                     (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
                                     self.raster_dict_lf[self.raster_info_lf])
@@ -180,7 +184,7 @@ class ArcPyAnalysis:
             self.ras_det = Con(((det.raster >= threshold_low) & (det.raster <= threshold_up)), 1)
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 # make temp_ras without noData pixels --> det is inclusive!
                 temp_ras = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
@@ -229,7 +233,7 @@ class ArcPyAnalysis:
                     self.ras_tcd = Con((dod.raster_fill < threshold_fill), 1.0)
 
                 if self.verify_raster_info():
-                    self.logger.info("           * based on raster: " + self.raster_info_lf)
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
                     try:
                         max_lf = float(max(self.lifespans))
@@ -294,7 +298,7 @@ class ArcPyAnalysis:
             self.ras_Dcf = self.compare_raster_set(Dcr_raster_list, D85_fines)
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 try:
                     max_lf = float(max(self.lifespans))
                     self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -353,7 +357,7 @@ class ArcPyAnalysis:
             self.ras_Fr = self.compare_raster_set(Fr_raster_list, threshold_Fr)
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 try:
                     max_lf = float(max(self.lifespans))
                     self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -453,7 +457,7 @@ class ArcPyAnalysis:
                 self.ras_Dcr = temp_ras
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 temp_ras_Dcr = Con((IsNull(self.ras_Dcr) == 1), (IsNull(self.ras_Dcr) * 0), self.ras_Dcr)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
                                     (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
@@ -496,7 +500,7 @@ class ArcPyAnalysis:
                     temp_dict = {}
                     for morph_unit in mu_bad:
                         temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                    self.ras_mu = CellStatistics(temp_dict.values(), "SUM", "DATA")
+                    self.ras_mu = CellStatistics(fg.dict_values2list(temp_dict.values()), "SUM", "DATA")
                     temp_ras = Con((self.ras_mu >= 1), 0, 1.0)
                     self.ras_mu = temp_ras
                 except:
@@ -508,7 +512,7 @@ class ArcPyAnalysis:
                     temp_dict = {}
                     for morph_unit in mu_good:
                         temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                    self.ras_mu = CellStatistics(temp_dict.values(), "SUM", "DATA")
+                    self.ras_mu = CellStatistics(fg.dict_values2list(temp_dict.values()), "SUM", "DATA")
                     temp_ras = Con((self.ras_mu >= 1), 1.0, 0)
                     self.ras_mu = temp_ras
                 except:
@@ -525,7 +529,7 @@ class ArcPyAnalysis:
             if not (method < 0):
                 # if no MU delineation applies: method == -1
                 if self.verify_raster_info():
-                    self.logger.info("           * based on raster: " + self.raster_info_lf)
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels for both ras_mu and ras_dict
                     temp_ras_mu = Con((IsNull(self.ras_mu) == 1), (IsNull(self.ras_mu) * 0), self.ras_mu)
                     temp_ras_di = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
@@ -578,7 +582,7 @@ class ArcPyAnalysis:
                     self.ras_tcd = Con((dod.raster_scour < threshold_scour), 1.0)
 
                 if self.verify_raster_info():
-                    self.logger.info("           * based on raster: " + self.raster_info_lf)
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
                     if not self.inverse_tcd:
                         try:
@@ -639,7 +643,7 @@ class ArcPyAnalysis:
             self.ras_taux = self.compare_raster_set(tx_raster_list, threshold_taux)
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 try:
                     max_lf = float(max(self.lifespans))
                     self.logger.info("          * max. lifespan: " + str(max_lf))
@@ -698,7 +702,7 @@ class ArcPyAnalysis:
                     self.ras_tcd = Con(((dod.raster_fill < threshold_fill) | (dod.raster_scour < threshold_scour)), Float(1.0), Float(0.0))
 
                 if self.verify_raster_info():
-                    self.logger.info("           * based on raster: " + self.raster_info_lf)
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
                     # make temp_ras without noData pixels
                     try:
                         max_lf = float(max(self.lifespans))
@@ -745,7 +749,7 @@ class ArcPyAnalysis:
             self.ras_vel = self.compare_raster_set(u.rasters, threshold_u)
 
             if self.verify_raster_info():
-                self.logger.info("           * based on raster: " + self.raster_info_lf)
+                self.logger.info("          * based on raster: " + self.raster_info_lf)
                 # make temp_ras without noData pixels
                 temp_ras_u = Con((IsNull(self.ras_vel) == 1), (IsNull(self.ras_vel) * 0), self.ras_vel)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
@@ -891,7 +895,7 @@ class ArcPyAnalysis:
                 reclass = Reclassify(self.ras_sch, "VALUE", remap, "DATA")
 
                 if self.verify_raster_info():
-                    self.logger.info("          * based on raster: " + self.raster_info_lf)
+                    self.logger.info("         * based on raster: " + self.raster_info_lf)
                     # apply delineation to existing rasters and make low-relevance areas (6) to lf smaller one (div 7)
                     ras_sch_new = Con((self.ras_sch > 0), Con((self.ras_sch == 6), (reclass / 10.0),
                                                               Con(~(IsNull(self.raster_dict_lf[self.raster_info_lf])),
@@ -926,7 +930,7 @@ class ArcPyAnalysis:
             h = FlowDepth(self.condition)
             u = FlowVelocity(self.condition)
 
-            self.logger.info("             -- mobility frequency = " + str(self.threshold_freq) + " years")
+            self.logger.info("          * mobility frequency = " + str(self.threshold_freq) + " years")
 
             try:
                 i = self.lifespans.index(self.threshold_freq)
@@ -946,7 +950,7 @@ class ArcPyAnalysis:
             # self.ras_DSe = (h.rasters[5] * ras_Se / ((self.s - 1) * threshold_taux )) * 12
             # self.raster_dict_ds.update({"ras_DSe": self.ras_DSe})
 
-            temp_ras = Con(self.ras_Dst < 300, self.ras_Dst) # eliminate outliers at structures (PowerHouse, Sills)
+            temp_ras = Con(self.ras_Dst < 300, self.ras_Dst)  # eliminate outliers at structures (PowerHouse, Sills)
             self.ras_Dst = temp_ras
             self.raster_dict_ds.update({"ras_Dst": self.ras_Dst})
 
@@ -1096,7 +1100,7 @@ class ArcPyAnalysis:
             self.save_design(name)
         if ds and not lf:
             # applies when lifespan methods are used for creating ONE design raster
-            if not(bool(self.raster_dict_ds)):
+            if not bool(self.raster_dict_ds):
                 self.raster_dict_ds.update({self.raster_info_lf: self.raster_dict_lf[self.raster_info_lf]})
             self.save_design(name)
 
@@ -1114,7 +1118,7 @@ class ArcPyAnalysis:
         try:
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            for ras in reversed(self.raster_dict_ds.keys()):
+            for ras in self.raster_dict_ds.keys():
                 self.logger.info("   >> Saving design map " + ras + " (takes time) ... ")
                 try:
                     self.raster_dict_ds[ras].save(self.cache + ras + '.tif')
@@ -1124,19 +1128,21 @@ class ArcPyAnalysis:
                     par_name = ras[4:]
                 else:
                     par_name = ras[4:7]
-                __full_name__ = "ds_" + name.split('.tif') + "_" + par_name + '.tif'
+                __full_name__ = "ds_" + name.split('.')[0] + "_" + par_name.split('.')[0] + '.tif'
                 if __full_name__.__len__() > 17:
                     __full_name__ = __full_name__[0:13] + '.tif'
                     self.logger.info("      Preparing Cast: Modified ds raster name.")
-                self.logger.info("   >> Casting to " + self.output + __full_name__ +
-                                 " (may take time) ...")
-                if os.path.isfile(self.output + __full_name__ + '.tif'):
+                self.logger.info("   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
+                if os.path.isfile(self.output + __full_name__):
                     self.logger.info("      >>> Overwriting existing raster.")
                     file_locked = fg.rm_raster(self.output + __full_name__)
                     if file_locked:
                         self.logger.info(
                             "ERROR: Existing files are locked. Consider deleting manually or revise file structure.")
-                arcpy.CopyRaster_management(self.cache + ras, self.output + __full_name__)
+                try:
+                    arcpy.CopyRaster_management(self.cache + ras, self.output + __full_name__)
+                except:
+                    arcpy.CopyRaster_management(self.cache + str(ras).split('.')[0] + '.tif', self.output + __full_name__)
             try:
                 self.logger.info("   >> Clearing .cache (arcpy.Delete_management - temp.designs - please wait) ...")
                 for ras in self.raster_dict_ds:
@@ -1164,7 +1170,7 @@ class ArcPyAnalysis:
             except:
                 pass
         except:
-            self.logger.info("ERROR: "+ name + " - raster copy to Output/Rasters folder failed.")
+            self.logger.info("ERROR: " + name + " - raster copy to Output/Rasters folder failed.")
             self.logger.info(arcpy.GetMessages())
             try:
                 for ras in self.raster_dict_ds:
@@ -1248,17 +1254,27 @@ class ArcPyAnalysis:
             except:
                 pass
 
-    def set_extent(self):
-        if not (type(self.reach_extents) == str):
+    def set_extent(self, *args, **kwargs):
+        if self.extent_type == "standard":
+            if not (type(self.reach_extents) == str):
+                try:
+                    #                               XMin                 , YMin                 , XMax            , ... YMax
+                    arcpy.env.extent = arcpy.Extent(self.reach_extents[0], self.reach_extents[1], self.reach_extents[2],
+                                                    self.reach_extents[3])
+                except:
+                    self.logger.info("ERROR: Failed to set reach extents -- output is corrupted.")
+                    return -1
+            else:
+                arcpy.env.extent = self.reach_extents
+        if self.extent_type == "raster":
+            self.logger.info("      *** Using background Raster size for extent.")
             try:
-                #                               XMin                 , YMin                 , XMax            , ... YMax
-                arcpy.env.extent = arcpy.Extent(self.reach_extents[0], self.reach_extents[1], self.reach_extents[2],
-                                                self.reach_extents[3])
+                ext_raster = arcpy.Raster(os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\back.tif")
+                arcpy.env.extent = ext_raster.extent
             except:
-                self.logger.info("ERROR: Failed to set reach extents -- output is corrupted.")
-                return -1
-        else:
-            arcpy.env.extent = self.reach_extents
+                self.logger.info("WARNING: Could not load /01_Conditions/" + self.condition + "/back.tif - using MAXOF extents.")
+                arcpy.env.extent = "MAXOF"
 
     def verify_inverse_tcd(self, inverse):
         # inverse is boolean (False or True)

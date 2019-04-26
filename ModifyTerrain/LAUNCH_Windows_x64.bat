@@ -1,3 +1,6 @@
-start "Modify Terrain" "C:\Python27\ArcGISx6410.6\python.exe" "%cd%\modify_terrain_gui.py"
-exit
+@echo Modify Terrain
+@echo Loading module (please wait) ...
 
+call "%PROGRAMFILES%\ArcGIS\Pro\bin\Python\Scripts\propy" "%cd%\modify_terrain_gui.py"
+
+exit

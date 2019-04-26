@@ -1,12 +1,12 @@
 try:
     import os, sys
-    import Tkinter as tk
-    from tkMessageBox import askokcancel, showinfo
-    from tkFileDialog import *
+    import tkinter as tk
+    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.filedialog import *
     import webbrowser
     from functools import partial
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -20,6 +20,7 @@ except:
 
 class PopUpWindow(object):
     def __init__(self, master):
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
         msg0 = "Manning\'s n is used in the calculation of grain mobility for shear velocity.\n"
         msg1 = "Please refer to the manual (Lifespan mapping section about angular boulders and grain mobility) for more details.\n"
@@ -36,7 +37,7 @@ class PopUpWindow(object):
         self.b.pack(padx=5, pady=5)
         self.l_3 = tk.Label(top, text=msg3)
         self.l_3.pack(padx=5, pady=5)
-        self.top.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def cleanup(self):
         self.value = self.e.get()
@@ -45,7 +46,8 @@ class PopUpWindow(object):
 
 class RunGui:
     def __init__(self, master):
-        # Construct the Frame object.
+        # Construct the Frame object
+        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         self.master = tk.Toplevel(master)
         self.master.wm_title("CHECK CONSOLE MESSAGES")
         self.master.bell()
@@ -58,22 +60,19 @@ class RunGui:
         self.wy = (self.master.winfo_screenheight() - self.wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
 
-    def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n):
+    def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n, ext_type):
         import feature_analysis as fa
-        out_dir = fa.raster_maker(condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n)
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+        out_dir = fa.raster_maker(condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n, ext_type)
+        self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
         return out_dir
 
-    def gui_layout_maker(self, raster_directories):
+    def gui_map_maker(self, raster_directories, reach_ids_applied):
         import feature_analysis as fa
-        out_lyt_dirs = fa.layout_maker(raster_directories)
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
-        return out_lyt_dirs
-
-    def gui_map_maker(self, layout_directories, reach_ids_applied):
-        import feature_analysis as fa
-        fa.map_maker(layout_directories, reach_ids_applied)
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+        self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        if not reach_ids_applied:
+            return fa.map_maker(raster_directories)
+        else:
+            return fa.map_maker(raster_directories, reach_ids=reach_ids_applied)
 
     def gui_quit(self):
         self.master.destroy()
@@ -128,6 +127,7 @@ class FaGui(tk.Frame):
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
         self.gui_interpreter = tk.StringVar()
+        self.extent_type = tk.StringVar()
 
         # LABELS
         self.l_s_feat = tk.Label(self, text="Selected features: ")
@@ -137,11 +137,11 @@ class FaGui(tk.Frame):
         self.l_features.grid(sticky=tk.W, row=0, column=1, columnspan=6, padx=self.xd, pady=self.yd)
         self.l_reach_label = tk.Label(self, text="Reaches:")
         self.l_reach_label.grid(sticky=tk.W, row=1, column=0, columnspan=1, padx=self.xd, pady=self.yd * 2)
-        self.l_reaches = tk.Label(self, fg="red", text="Select from Reaches menu")
+        self.l_reaches = tk.Label(self, fg="red", text="Select from Reaches menu (required for Raster Maker only)")
         self.l_reaches.grid(sticky=tk.W, row=1, column=1, columnspan=6, padx=self.xd, pady=self.yd * 2)
         self.l_condition = tk.Label(self, text="Condition: \n (select)")
         self.l_condition.grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.l_v_condition = tk.Label(self, fg="red", text="Verify (Run menu)")
+        self.l_v_condition = tk.Label(self, fg="red", text="Verify (Run menu) \n Raster Maker only")
         self.l_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
         self.l_n = tk.Label(self, text="Roughness (Manning\'s n): %.3f " % self.manning_n)
         self.l_n.grid(sticky=tk.W, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd)
@@ -174,7 +174,7 @@ class FaGui(tk.Frame):
         self.make_menu()
 
         # CHECK BOXES(CHECKBUTTONS)
-        self.cb_lyt = tk.Checkbutton(self, text="Create layouts after running raster maker", command=lambda:
+        self.cb_lyt = tk.Checkbutton(self, text="Include mapping after raster preparation", command=lambda:
                                      self.mod_mapping())
         self.cb_lyt.grid(sticky=tk.W, row=7, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.cb_wild = tk.Checkbutton(self, text="Apply wildcard raster to spatially confine analysis", command=lambda:
@@ -184,13 +184,17 @@ class FaGui(tk.Frame):
         self.cb_habitat = tk.Checkbutton(self, text="Apply habitat matching",
                                          command=lambda: self.mod_habitat())
         self.cb_habitat.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.cb_extent = tk.Checkbutton(self, text="Limit computation extent to background (back.tif) raster",
+                                        variable=self.extent_type, onvalue="raster", offvalue="standard")
+        self.cb_extent.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.cb_extent.select()
 
         # MAKE PLACEHOLDER FILL
-        logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\title_042.GIF")
-        logo = logo.subsample(7, 6)
+        logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\welcome.gif")
+        logo = logo.subsample(6, 6)
         self.l_img = tk.Label(self, image=logo)
         self.l_img.image = logo
-        self.l_img.grid(sticky=tk.E, row=3, column=6, rowspan=7, columnspan=2)
+        self.l_img.grid(sticky=tk.E, row=3, column=6, rowspan=6, columnspan=2)
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
@@ -205,10 +209,9 @@ class FaGui(tk.Frame):
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
         if __name__ == '__main__':
             self.master.title("Lifespan Design")  # window title
-            self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+            self.master.iconbitmap(self.path_lvl_up + "\\.site_packages\\templates\\code_icon.ico")
 
     def make_menu(self):
-
         # DROP DOWN MENU
         # menu does not need packing - see tkinter manual page 44ff
         self.mbar = tk.Menu(self.master)  # create new menubar
@@ -231,7 +234,7 @@ class FaGui(tk.Frame):
         self.mbar.add_cascade(label="Run", menu=self.runmenu)  # attach it to the menubar
         self.runmenu.add_command(label="Verify settings", command=lambda: self.verify())
         self.runmenu.add_command(label="Run: Raster Maker", command=lambda: self.run_raster_maker())
-        self.runmenu.add_command(label="Run: Layout Maker", command=lambda: self.run_layout_maker())
+        # self.runmenu.add_command(label="Run: Layout Maker", command=lambda: self.run_layout_maker())
         self.runmenu.add_command(label="Run: Map Maker", command=lambda: self.run_map_maker())
 
         # UNIT SYSTEM DROP DOWN
@@ -247,13 +250,12 @@ class FaGui(tk.Frame):
         self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def add_reach(self, reach):
-        self.l_reaches.destroy()
         if str(reach).__len__() < 1:
             # appends all available reaches
-            self.reach_names_applied = self.reaches.name_dict.values()
-            self.reach_ids_applied = self.reaches.id_dict.values()
+            self.reach_names_applied = fg.dict_values2list(self.reaches.name_dict.values())
+            self.reach_ids_applied = fg.dict_values2list(self.reaches.id_dict.values())
             label_text = "All"
-            self.l_reaches = tk.Label(self, fg="dark slate gray", text=label_text)
+            self.l_reaches.config(fg="dark slate gray", text=label_text)
         else:
             if not(reach == "clear"):
                 if not(reach in self.reach_names_applied):
@@ -266,13 +268,11 @@ class FaGui(tk.Frame):
                         label_text = "Multiple (> 6)"
                 else:
                     label_text = ", ".join(self.reach_names_applied)
-                self.l_reaches = tk.Label(self, fg="dark slate gray", text=label_text)
+                self.l_reaches.config(fg="dark slate gray", text=label_text)
             else:
                 self.reach_names_applied = []
                 self.reach_ids_applied = []
-                self.l_reaches = tk.Label(self, fg="red", text="Select from \'Reaches\' Menu")
-
-        self.l_reaches.grid(sticky=tk.W, row=1, column=1, columnspan=6, padx=self.xd, pady=self.yd*2)
+                self.l_reaches.config(fg="red", text="Select from \'Reaches\' Menu")
 
     def build_feat_menu(self):
         self.featmenu.add_command(label="Add: ALL", command=lambda: self.define_feature(""))
@@ -417,7 +417,8 @@ class FaGui(tk.Frame):
         if self.verified:
             run = RunGui(self)
             out_dir = run.gui_raster_maker(self.condition, self.reach_ids_applied, self.feature_list,
-                                           self.mapping, self.habitat, self.unit, self.wild, self.manning_n)
+                                           self.mapping, self.habitat, self.unit, self.wild, self.manning_n,
+                                           str(self.extent_type.get()))
             if self.mapping:
                 self.out_lyt_dir = out_dir
             else:
@@ -435,7 +436,7 @@ class FaGui(tk.Frame):
                           self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd,
                                                      pady=self.yd)
             else:
-                tk.Button(self, bg="gold", width=25, text="IMPORTANT\n Read logfile(s) from Layout Maker",
+                tk.Button(self, bg="gold", width=25, text="IMPORTANT\n Read logfile(s) from Map Maker",
                           command=lambda:
                           self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd,
                                                      pady=self.yd)
@@ -443,55 +444,27 @@ class FaGui(tk.Frame):
                 tk.Label(self, fg="forest green", text=
                             "Applied habitat matching").grid(
                             sticky=tk.W, row=8, column=0, columnspan=6, padx=self.xd, pady=self.yd)
-            if self.mapping:
-                showinfo("INFORMATION",
-                             "Layouts (.mxd files) prepared in opened folder.\n\n>> For obtaining PDF maps do the following:\n   1) Open layouts (mxd) in ArcMap Desktop and adapt symbology of sym layer.\n   2) Save layouts (overwrite existing) without committing any other change.\n   3) Back in Python console: Run feature_analysis.map_making(condition). \n \n Then, run Map Maker to obtain PDF maps.")
-
-    def run_layout_maker(self):
-        if not self.verified:
-            self.verify(False)
-        if self.verified:
-            run = RunGui(self)
-            if self.out_ras_dir.__len__() < 1:
-                showinfo("INFORMATION", "Choose folder that contains lifespan and design rasters.")
-                self.out_ras_dir = [askdirectory(initialdir=".") + "/"]
-            self.out_lyt_dir = run.gui_layout_maker(self.out_ras_dir)
-            run.gui_quit()
-            self.cb_lyt.destroy()
-            self.cb_habitat.destroy()
-            self.cb_wild.destroy()
-            self.master.bell()
-            tk.Button(self, width=25, bg="pale green", text="QUIT\n",
-                      command=lambda:
-                      tk.Frame.quit(self)).grid(sticky=tk.EW, row=9, column=0, columnspan=2, padx=self.xd,
-                                                pady=self.yd)
-            tk.Button(self, bg="gold", width=25, text="IMPORTANT\n Read logfile(s) from Layout Maker", command=lambda:
-                      self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd, pady=self.yd)
-            showinfo("INFORMATION",
-                     "Layouts (.mxd files) prepared in opened folder.\n \n >> For obtaining PDF maps do the following:\n   1) Open layouts (mxd) in ArcMap Desktop and adapt symbology of sym layer.\n   2) Save layouts (overwrite existing) without committing any other change.\n   3) Back in Python console: Run feature_analysis.map_making(condition). \n \n Then, run Map Maker to obtain PDF maps.")
 
     def run_map_maker(self):
-        if not self.verified:
-            self.verify(False)
-        if self.verified:
-            run = RunGui(self)
-            if self.out_lyt_dir.__len__() < 1:
-                msg0 = "Choose folder that contains layouts.\n"
-                msg1 = "Try .../LifespanDesign/Output/Mapping/CONDITION/ > Layouts"
-                showinfo("INFORMATION", msg0 + msg1)
-                self.out_lyt_dir = [askdirectory(initialdir=".") + "/"]
-            run.gui_map_maker(self.out_lyt_dir, self.reach_ids_applied)
-            run.gui_quit()
-            self.cb_lyt.destroy()
-            self.cb_habitat.destroy()
-            self.cb_wild.destroy()
-            self.master.bell()
-            tk.Button(self, width=25, bg="pale green", text="QUIT\n",
-                      command=lambda:
-                      tk.Frame.quit(self)).grid(sticky=tk.EW, row=9, column=0, columnspan=2, padx=self.xd,
-                                                pady=self.yd)
-            tk.Button(self, bg="pale green", width=25, text="IMPORTANT\n Read logfile(s) from Map Maker", command=lambda:
-                      self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        run = RunGui(self)
+        if self.out_ras_dir.__len__() < 1:
+            showinfo("INFORMATION", "Choose folder that contains lifespan and design rasters.")
+            self.out_ras_dir = [askdirectory(initialdir=".") + "/"]
+        if not self.reach_ids_applied.__len__() < 1:
+            self.out_lyt_dir = run.gui_map_maker(self.out_ras_dir, self.reach_ids_applied)
+        else:
+            self.out_lyt_dir = run.gui_map_maker(self.out_ras_dir, None)
+        run.gui_quit()
+        self.cb_lyt.destroy()
+        self.cb_habitat.destroy()
+        self.cb_wild.destroy()
+        self.master.bell()
+        tk.Button(self, width=25, bg="pale green", text="QUIT\n",
+                  command=lambda:
+                  tk.Frame.quit(self)).grid(sticky=tk.EW, row=9, column=0, columnspan=2, padx=self.xd,
+                                            pady=self.yd)
+        tk.Button(self, bg="pale green", width=25, text="IMPORTANT\n Read logfile(s) from Map Maker", command=lambda:
+                  self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd, pady=self.yd)
 
     def set_n(self):
         sub_frame = PopUpWindow(self.master)
@@ -504,7 +477,7 @@ class FaGui(tk.Frame):
             showinfo("WARNING", "That seems to be an incredibly rough channel. Consider revising the new value for Manning\'s n")
 
     def show_credits(self):
-        msg = "Version info: 0.1 (July 2018)\nAuthor: Sebastian Schwindt\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
+        msg = "Version info: 0.1 (April 2019)\nAuthors: Sebastian Schwindt, Kenny Larrieu\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
         showinfo("Credits", msg)
 
     def unit_change(self):
@@ -550,17 +523,23 @@ class FaGui(tk.Frame):
                 else:
                     self.l_features.config(fg="forest green", text="Many / All")
             try:
-                if not ((sys.version_info.major == 2) and (sys.version_info.minor == 7)):
-                    error_msg.append("Wrong Python interpreter (Required: Python v.2.7 or higher--do not use v.3.x).")
+                if not (sys.version_info.major == 3):
+                    error_msg.append("Wrong Python interpreter (Required: Python3).")
                     self.errors = True
                     self.verified = False
             except:
                 pass
+            try:
+                import arcpy
+            except:
+                error_msg.append("Wrong Python interpreter (arcpy not available).")
+                self.errors = True
+                self.verified = False
         try:
             items = self.lb_condition.curselection()
             self.condition = [self.condition_list[int(item)] for item in items][0]
             input_dir = self.path_lvl_up + "\\01_Conditions\\" + str(self.condition)
-            if os.path.exists(input_dir):
+            if os.path.exists(input_dir) or self.mapping:
                 self.l_v_condition.config(fg="forest green", text="Selected: " + self.condition)
             else:
                 error_msg.append("Invalid file structure (non-existent directory /01_Conditions/condition ).")
