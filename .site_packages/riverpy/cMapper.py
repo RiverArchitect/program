@@ -20,7 +20,7 @@ class Mapper:
         # map_type = [str] options: "lf", "ds", "mlf", "mt"
         # args[0] alternative raster input directory - if empty: uses standard output
         # args[1] alternative output directory - if empty: 02_Maps/CONDITION/
-        self.start_logging(map_type)
+        self.logger = logging.getLogger("logfile")
 
         # get and make directories
         self.condition = condition
@@ -49,7 +49,7 @@ class Mapper:
             try:
                 self.dir_map_ras = str(self.get_input_ras_dir(map_type))
             except:
-                logging.info("WARNING: The provided path to rasters for mapping is invalid. Using templates instead.")
+                self.logger.info("WARNING: The provided path to rasters for mapping is invalid. Using templates instead.")
                 self.dir_map_ras = self.template_dir + "rasters"
 
         try:
@@ -63,7 +63,7 @@ class Mapper:
         try:
             self.aprx = self.copy_template_project()  # returns an arcpy.mp.ArcGISProject() object
         except:
-            logging.info("ERROR: Could read source project (ensure that " + self.template_dir + "river_template.aprx exists).")
+            self.logger.info("ERROR: Could read source project (ensure that " + self.template_dir + "river_template.aprx exists).")
 
     def choose_ref_layer(self, raster_type):
         # raster_type =  STR of mxd or raster name
@@ -152,11 +152,11 @@ class Mapper:
             if not os.path.isfile(self.output_dir + "maps_" + self.condition + "_design.aprx"):
                 arcpy.mp.ArcGISProject(self.template_dir + "river_template.aprx").saveACopy(self.output_dir + "maps_" + self.condition + "_design.aprx")
         except:
-            logging.info(" >> Using existing project: " + self.output_dir + "maps_" + self.condition + "_design.aprx")
+            self.logger.info(" >> Using existing project: " + self.output_dir + "maps_" + self.condition + "_design.aprx")
         try:
             return arcpy.mp.ArcGISProject(self.output_dir + "maps_" + self.condition + "_design.aprx")
         except:
-            logging.info(
+            self.logger.info(
                 "ERROR: Could not create new project (check write permissions for " + self.output_dir + ").")
             return -1
 
@@ -188,7 +188,7 @@ class Mapper:
             if length > 3:
                 self.output_dir = args[0]
                 fg.chk_dir(self.output_dir)
-                logging.info(" >> Alternative output directory provided: " + str(self.output_dir))
+                self.logger.info(" >> Alternative output directory provided: " + str(self.output_dir))
         except:
             pass
 
@@ -196,23 +196,23 @@ class Mapper:
             for k in kwargs.items():
                 if "extent" in str(k[0]).lower():
                     if k[1] == "raster":
-                        logging.info(" >> Using Raster coordinates for mapping.")
+                        self.logger.info(" >> Using Raster coordinates for mapping.")
                         self.make_xy_centerpoints(
                             [self.raster_extent.XMin, self.raster_extent.YMin, self.raster_extent.XMax,
                              self.raster_extent.YMax])
                     else:
                         if not (k[1] == "MAXOF"):
                             self.make_xy_centerpoints(k[1])
-                            logging.info(" >> Special reach extents provided.")
-                            logging.info("    --> Overwriting mapping.inp center point definitions.")
+                            self.logger.info(" >> Special reach extents provided.")
+                            self.logger.info("    --> Overwriting mapping.inp center point definitions.")
                 if "map_layout" in k[0]:
-                    logging.info(" >> External map layout provided - using: " + str(k[1]))
+                    self.logger.info(" >> External map layout provided - using: " + str(k[1]))
                     self.map_layout = k[1]
         except:
             pass
 
-        logging.info(" >> Starting PDF creation for: " + str(self.map_layout.name))
-        logging.info("    * Map format: ANSI E landscape (w = %0.1f in, h = %0.1f in)" % (self.map_layout.pageWidth, self.map_layout.pageHeight))
+        self.logger.info(" >> Starting PDF creation for: " + str(self.map_layout.name))
+        self.logger.info("    * Map format: ANSI E landscape (w = %0.1f in, h = %0.1f in)" % (self.map_layout.pageWidth, self.map_layout.pageHeight))
 
         if self.map_type == "lf":
             for lyr in self.m.listLayers():
@@ -225,7 +225,7 @@ class Mapper:
         arcpy.env.workspace = self.output_dir
         arcpy.env.overwriteOutput = True
         pdf_name = self.output_dir + map_name.split(".pdf")[0] + ".pdf"
-        logging.info("    * Creating PDF %s ..." % pdf_name)
+        self.logger.info("    * Creating PDF %s ..." % pdf_name)
         try:
             os.remove(pdf_name) if os.path.isfile(pdf_name) else print()
             __outputPDF__ = arcpy.mp.PDFDocumentCreate(pdf_name)
@@ -233,32 +233,47 @@ class Mapper:
             __count__ = 0
             for xy in self.xy_center_points:
                 __count__ += 1
-                logging.info("      - zooming to " + str(xy))
-                self.zoom2map(xy)
+                self.logger.info("      - zooming to " + str(xy))
+                try:
+                    self.zoom2map(xy)
+                except:
+                    self.logger.info("ERROR: Invalid x-y coordinates in extent source [mapping.inp / reaches].")
                 fig_name = "fig_" + "%02d" % (__count__,)
                 __PDFpath__ = self.output_dir + fig_name + "_temp.pdf"
-                logging.info("      - exporting PDF page ... ")
-                self.map_layout.exportToPDF(__PDFpath__, image_compression="ADAPTIVE", resolution=self.resolution)
-                logging.info("      - appending PDF page ... ")
-                __outputPDF__.appendPages(str(__PDFpath__))
-                __tempPDFs__.append(__PDFpath__)  # remember temp names to remove later on
-                logging.info("      - page complete.")
-            __outputPDF__.saveAndClose()
+                self.logger.info("      - exporting PDF page ... ")
+                try:
+                    self.map_layout.exportToPDF(__PDFpath__, image_compression="ADAPTIVE", resolution=self.resolution)
+                except:
+                    self.error = True
+                    self.logger.info("ERROR: Could not export PDF page no. " + str(__count__))
+                self.logger.info("      - appending PDF page ... ")
+                try:
+                    __outputPDF__.appendPages(str(__PDFpath__))
+                    __tempPDFs__.append(__PDFpath__)  # remember temp names to remove later on
+                    self.logger.info("      - page complete.")
+                except:
+                    self.error = True
+                    self.logger.info("ERROR: Could not append PDF page no." + str(__count__) + " to map assembly.")
+            try:
+                __outputPDF__.saveAndClose()
+            except:
+                self.error = True
+                self.logger.info("ERROR: Failed to save PDF map assembly.")
 
             for deletePDF in __tempPDFs__:
                 try:
                     os.remove(deletePDF)
                 except:
-                    logging.info("WARNING: Could not clean up PDF map temp_pages.")
-            logging.info("    * Finished map: " + self.output_dir + map_name.split(".pdf")[0] + ".pdf")
+                    self.logger.info("WARNING: Could not clean up PDF map temp_pages.")
+            self.logger.info("    * Finished map: " + self.output_dir + map_name.split(".pdf")[0] + ".pdf")
 
         except arcpy.ExecuteError:
-            logging.info(arcpy.GetMessages(2))
+            self.logger.info(arcpy.GetMessages(2))
             arcpy.AddError(arcpy.GetMessages(2))
-            logging.info("ERROR: Mapping failed.")
+            self.logger.info("ERROR: Mapping failed.")
             self.error = True
         except:
-            logging.info("ERROR: Mapping failed.")
+            self.logger.info("ERROR: Mapping failed.")
             self.error = True
 
     def make_xy_centerpoints(self, new_extents):
@@ -268,10 +283,10 @@ class Mapper:
             [float((new_extents[0] + new_extents[2]) / 2.), float((new_extents[1] + new_extents[3]) / 2.)])
         self.dx = float(new_extents[2] - new_extents[0])
         self.dy = float(new_extents[3] - new_extents[1])
-        logging.info("      - New X center: " + str(self.xy_center_points[0][0]))
-        logging.info("      - New Y center: " + str(self.xy_center_points[0][1]))
-        logging.info("      - New map width: " + str(self.dx))
-        logging.info("      - New map height: " + str(self.dy))
+        self.logger.info("      - New X center: " + str(self.xy_center_points[0][0]))
+        self.logger.info("      - New Y center: " + str(self.xy_center_points[0][1]))
+        self.logger.info("      - New map width: " + str(self.dx))
+        self.logger.info("      - New map height: " + str(self.dy))
         self.resolution = 192  # improve resolution of single maps
 
     def prepare_layout(self, *args, **kwargs):
@@ -296,26 +311,26 @@ class Mapper:
         if self.map_list.__len__() < 1:
             self.map_list = self.ras4map_list
 
-        logging.info("\n\nMAPPING")
-        logging.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
+        self.logger.info("\n\nMAPPING")
+        self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
 
         for map_item in self.map_list:
             map_name = str(map_item).lower().split(".tif")[0].split("_mlf")[0]
-            logging.info(" >> Preparing map: " + self.output_dir + map_name + ".pdf")
+            self.logger.info(" >> Preparing map: " + self.output_dir + map_name + ".pdf")
 
             # choose layout
             self.map_string = self.choose_ref_map(str(map_item).lower().split(".tif")[0])
-            logging.info("    * source map layer: " + self.map_string)
+            self.logger.info("    * source map layer: " + self.map_string)
             self.m = self.aprx.listMaps(self.map_string)[0]
-            logging.info("    * source map layout: " + self.choose_ref_layout(self.map_string))
+            self.logger.info("    * source map layout: " + self.choose_ref_layout(self.map_string))
             self.map_layout = self.aprx.listLayouts(self.choose_ref_layout(self.map_string))[0]
-            logging.info("    * setting legend ...")
+            self.logger.info("    * setting legend ...")
             self.legend = self.map_layout.listElements("legend_element", "legend")[0]
             self.legend.syncLayerOrder = False
             self.legend.syncLayerVisibility = False
             self.legend.syncNewLayer = False
             self.legend.syncReferenceScale = False
-            logging.info("    * saving updates ...")
+            self.logger.info("    * saving updates ...")
             self.aprx.save()
 
             try:
@@ -324,7 +339,7 @@ class Mapper:
                         self.map_frame = self.map_layout.listElements("mapframe_element")[0]
                     except:
                         pass
-                    logging.info("    * creating new layer ...")
+                    self.logger.info("    * creating new layer ...")
                     lf_source_layer = self.m.listLayers(self.choose_ref_layer(map_name))[0]  # lf_sym
                     __new_ras_lyr_name__ = map_name + ".lyrx"
                     __new_ras__ = arcpy.Raster(self.dir_map_ras + str(map_item))
@@ -333,20 +348,20 @@ class Mapper:
                     arcpy.SaveToLayerFile_management(__new_ras_lyr__, self.output_dir + "layers\\" + map_name)
                     __new_lyr_file__ = arcpy.mp.LayerFile(self.output_dir + "layers\\" + __new_ras_lyr_name__)
                     self.m.insertLayer(lf_source_layer, __new_lyr_file__, "BEFORE")
-                    logging.info("    * updating symbology ...")
+                    self.logger.info("    * updating symbology ...")
                     self.m.listLayers(map_name)[0].symbology = lf_source_layer.symbology
                 if self.map_type == "mlf":
-                    logging.info("    * retrieving symbology ...")
+                    self.logger.info("    * retrieving symbology ...")
                     try:
                         sym_lyr_f = arcpy.mp.LayerFile(self.template_dir + "symbology\\LifespanRasterSymbology.lyrx")
                         sym_lyr = sym_lyr_f.listLayers()[0]
                     except:
-                        logging.info("WARNING: Cannot load " + self.template_dir + "symbology\\LifespanRasterSymbology.lyrx")
-                    logging.info("    * updating layer sources ...")
+                        self.logger.info("WARNING: Cannot load " + self.template_dir + "symbology\\LifespanRasterSymbology.lyrx")
+                    self.logger.info("    * updating layer sources ...")
                     for lyr in self.m.listLayers():
                         visibility = True
                         if not ("background" in lyr.name.lower()):
-                            logging.info("      - layer source " + lyr.connectionProperties['dataset'])
+                            self.logger.info("      - layer source " + lyr.connectionProperties['dataset'])
                             dir_old = lyr.connectionProperties['connection_info']['database']
                             if str(lyr.connectionProperties['dataset']).endswith(".shp"):
                                 dir_new = self.dir_map_shp
@@ -362,7 +377,7 @@ class Mapper:
                                     __temp_ras__ = arcpy.Raster(dir_new + lyr.connectionProperties['dataset'])
                                     self.raster_extent = __temp_ras__.extent
                                     del __temp_ras__
-                                    logging.info("        * will be used for mapping extent")
+                                    self.logger.info("        * will be used for mapping extent")
                             lyr.updateConnectionProperties({'connection_info': {'database': dir_old}},
                                                            {'connection_info': {'database': dir_new}},
                                                            auto_update_joins_and_relates=True, validate=False)
@@ -383,48 +398,24 @@ class Mapper:
                                                                    auto_update_joins_and_relates=True, validate=False)
                                 if not extent_set:
                                     self.raster_extent = self.get_raster_extent(self.dir_map_ras + ras)
-                                    logging.info("        * %s will be used for mapping extent" % str(ras))
+                                    self.logger.info("        * %s will be used for mapping extent" % str(ras))
                                     extent_set = True
                         lyr.visible = True
 
                 self.aprx.save()
 
                 if direct_mapping:
-                    logging.info("    * Invoking PDF mapping ...")
+                    self.logger.info("    * Invoking PDF mapping ...")
                     self.make_pdf_maps(map_name, extent="raster")
 
             except arcpy.ExecuteError:
-                logging.info(arcpy.GetMessages(2))
-                logging.info(arcpy.AddError(arcpy.GetMessages(2)))
-                logging.info("ERROR: Map layout preparation failed.")
+                self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
+                self.logger.info("ERROR: Map layout preparation failed.")
                 self.error = True
             except:
-                logging.info("ERROR: Map layout preparation failed.")
+                self.logger.info("ERROR: Map layout preparation failed.")
                 self.error = True
-
-    def start_logging(self, *module_type):
-        # module_type[0] = optional STR that sets the logfile directory
-        logger_name = "logfile"
-        try:
-            if ("lf" in module_type[0]) or ("ds" in module_type[0]) or ("LifespanDesign" in module_type[0]):
-                logger_name = "lifespan_design"
-                dir_logfile = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
-            if ("mt" in module_type[0]) or ("ModifyTerrain" in module_type[0]):
-                dir_logfile = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\"
-            if ("mlf" in module_type[0]) or ("MaxLifespan" in module_type[0]):
-                dir_logfile = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\MaxLifespan\\"
-            if not ('dir_logfile' in locals()):
-                dir_logfile = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\"
-        except:
-            dir_logfile = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\"
-
-        logging.basicConfig(filename=dir_logfile + "logfile.log", format='%(asctime)s %(message)s', level=logging.INFO)
-        logging.StreamHandler().setLevel(logging.INFO)
-        logging.StreamHandler().setFormatter("%(asctime)s - %(message)s")
-        try:
-            logging.getLogger(logger_name)
-        except:
-            pass
 
     def zoom2map(self, xy):
         # type(xy) = list
@@ -432,7 +423,7 @@ class Mapper:
             x = float(xy[0])
             y = float(xy[1])
         except:
-            logging.info("ERROR: Mapping could not assign xy-values. Undefined zoom.")
+            self.logger.info("ERROR: Mapping could not assign xy-values. Undefined zoom.")
             x = 6719978.531
             y = 2203223.401
 
@@ -448,7 +439,7 @@ class Mapper:
             local_frame.panToExtent(new_extent)
             self.aprx.save()
         except:
-            logging.info("WARNING: Cannot zoom to defined extent.")
+            self.logger.info("WARNING: Cannot zoom to defined extent.")
 
     def __call__(self):
         pass

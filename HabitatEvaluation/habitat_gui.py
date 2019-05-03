@@ -11,60 +11,16 @@ except:
 try:
     # import own routines
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import cHabitatIO as chio
     import cHSI as chsi
     import cFish as cf
 
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fg
+    import cInputOutput as cio
+    from cLogger import Logger
 except:
     print("ExceptionERROR: Cannot find package files (riverpy/fGlobal.py).")
-
-
-class HabitatLogger:
-    def __init__(self):
-        print("Logger instantiated.")
-
-    def logging_start(self, logfile_name):
-        logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
-        for fn in logfilenames:
-            fn_full = os.path.join(os.getcwd(), fn)
-            if os.path.isfile(fn_full):
-                try:
-                    os.remove(fn_full)
-                except:
-                    pass
-        # start logging
-        logger = logging.getLogger(logfile_name)
-        logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(asctime)s - %(message)s")
-
-        # create console handler and set level to info
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-        # create error file handler and set level to error
-        err_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[0]), "w", encoding=None, delay="true")
-        err_handler.setLevel(logging.ERROR)
-        err_handler.setFormatter(formatter)
-        logger.addHandler(err_handler)
-        # create debug file handler and set level to debug
-        debug_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[1]), "w")
-        debug_handler.setLevel(logging.DEBUG)
-        debug_handler.setFormatter(formatter)
-        logger.addHandler(debug_handler)
-        return logger
-
-    def logging_stop(self, logger):
-        # stop logging and release logfile
-        for handler in logger.handlers:
-            handler.close()
-            logger.removeHandler(handler)
-
-    def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = HabitatLogger (Module: HabitatEvaluation)")
 
 
 class PopUpWindow(object):
@@ -86,8 +42,7 @@ class PopUpWindow(object):
 
 class MainGui(tk.Frame):
     def __init__(self, master=None):
-        self.log = HabitatLogger()
-        self.logger = self.log.logging_start("habitat_evaluation")
+        self.log = Logger("logfile", True)
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
 
         self.bound_shp = ""  # full path of a boundary shapefile
@@ -292,7 +247,7 @@ class MainGui(tk.Frame):
                                               command=lambda arg1=f_spec, arg2=lf_stage: self.set_fish(arg1, arg2))
         else:
             self.fish.assign_fish_names()
-            self.logger.info(" >> Rebuilding fish menu ...")
+            self.log.logger.info(" >> Rebuilding fish menu ...")
             entry_count = 6
             for f_spec in self.fish.species_dict.keys():
                 lf_stages = self.fish.species_dict[f_spec]
@@ -303,7 +258,7 @@ class MainGui(tk.Frame):
                     entry_count += 1
 
     def myquit(self):
-        self.log.logging_stop(self.logger)
+        self.log.logging_stop(self.log.logger)
         self.open_log_file()
         tk.Frame.quit(self)
 
@@ -325,7 +280,7 @@ class MainGui(tk.Frame):
             self.b_select_bshp.config(fg="forest green")
         else:
             self.b_select_bshp.config(text="Invalid file.")
-        self.logger.info(" >> Selected boundary shapefile: " + self.bound_shp)
+        self.log.logger.info(" >> Selected boundary shapefile: " + self.bound_shp)
 
     def select_HSIcondition(self, *args):
         if args[0] == "hy":
@@ -371,13 +326,13 @@ class MainGui(tk.Frame):
                 if not (species in self.fish_applied.keys()):
                     self.fish_applied.update({species: []})
                 self.fish_applied[species].append(lifestage)
-                self.logger.info(" >> Added species: " + str(species) + " -- lifestage: " + str(lifestage))
+                self.log.logger.info(" >> Added species: " + str(species) + " -- lifestage: " + str(lifestage))
             else:
                 self.fish_applied = {}
-                self.logger.info(" >> All species cleared.")
+                self.log.logger.info(" >> All species cleared.")
         else:
             self.fish_applied = self.fish.species_dict
-            self.logger.info(" >> All available species added.")
+            self.log.logger.info(" >> All available species added.")
 
     def set_wua(self):
         sub_frame = PopUpWindow(self.master)

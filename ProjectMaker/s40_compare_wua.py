@@ -2,19 +2,20 @@ import webbrowser
 import glob
 from operator import itemgetter
 from fFunctions import *
-logger = logging_start("logfile_40")
-import cIO
+logger = logging_start("logfile")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+import cInputOutput as cio
 import cWUA
 
 
 def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fish, reach, stn, unit, version):
-    # version = "v10"             # CHANGE: type() =  3-char str: vII
-    # reach = "TBR"               # CHANGE (corresponding to folder name)
-    # stn = "brb"                 # CHANGE
-    # condition_initial = "2008"  # CHANGE
-    # condition_project = "2008_tbr_lyr10"  # CHANGE
-    # cover_app_pre = False       # CHANGE
-    # fish = {"Chinook salmon": ["juvenile"]}  # CHANGE
+    # version = "v10"             # type() =  3-char str: vII
+    # reach = "TBR"               # (corresponding to folder name)
+    # stn = "brb"                 
+    # condition_initial = "2008"  
+    # condition_project = "2008_tbr_lyr10"
+    # cover_app_pre = False 
+    # fish = {"Chinook salmon": ["juvenile"]}
     error = False
     sys.path.append(dir2SR + ".site_packages\\openpyxl\\")
 
@@ -63,7 +64,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                 fish_sn = str(species).lower()[0:2] + str(ls[0])
                 xlsx_conditions = [condition_initial + "_" + fish_sn + ".xlsx",
                                    condition_project + "_" + fish_sn + ".xlsx"]
-                xlsx_aua = cIO.Write(xlsx_aua_template)
+                xlsx_aua = cio.Write(xlsx_aua_template)
                 xlsx_aua_name = dir2PP + "Geodata\\AUA_evaluation_" + fish_sn + ".xlsx"
                 conditions_aua = []
 
@@ -74,15 +75,15 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                     result_matrix = []
                     try:
                         logger.info(" >> Condition: " + str(xc).split(".xlsx")[0])
-                        xlsx_info = cIO.Read(dir2SR + "HabitatEvaluation\\AUA\\" + xc)
+                        xlsx_info = cio.Read(dir2SR + "HabitatEvaluation\\AUA\\" + xc)
                     except:
                         xlsx_info = ""
                         logger.info("ERROR: Could not access " + str(xc))
                         error = True
                     try:
                         logger.info("    -> Looking up discharge information (SR/HabitatEvaluation)...")
-                        discharges = xlsx_info.read_column("B", 4)
-                        exceedance_pr = xlsx_info.read_column("E", 4)
+                        discharges = xlsx_info.read_float_column_short("B", 4)
+                        exceedance_pr = xlsx_info.read_float_column_short("E", 4)
 
                         discharge_dict = dict(zip(discharges, exceedance_pr))
                         raster_list = glob.glob(dir2ras_chsi[xc_count] + "*.tif")
@@ -126,7 +127,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                         error = True
 
                     xc_count += 1
-                    start_write_col = cIO.Read.col_num_to_name(cIO.Read.col_name_to_num(start_write_col) + 5)
+                    start_write_col = cio.Read.col_num_to_name(cio.Read.col_name_to_num(start_write_col) + 5)
                     xlsx_info.close_wb()
 
                 logger.info(" >> Saving and closing " + xlsx_aua_name + " ...")
@@ -140,7 +141,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
 
                 try:
                     logger.info(" >> Transferring results (net AUA gain) to cost table ...")
-                    xlsx_costs = cIO.Write(xlsx_tar_costs)
+                    xlsx_costs = cio.Write(xlsx_tar_costs)
                     xlsx_costs.write_cell("G", 3, float(conditions_aua[1] - conditions_aua[0]))
                     xlsx_out_name = reach.upper() + "_" + stn + "_assessment_" + version + "_" + fish_sn + ".xlsx"
                     xlsx_costs.save_close_wb(dir2PP + xlsx_out_name)
@@ -158,7 +159,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
     # RELEASE LOGGER AND OPEN LOGFILE
     logging_stop(logger)
     try:
-        logfile = os.getcwd() + "\\logfile_40.log"
+        logfile = os.getcwd() + "\\logfile.log"
         try:
             if not error:
                 webbrowser.open(dir2PP + xlsx_out_name)

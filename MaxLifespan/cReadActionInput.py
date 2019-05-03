@@ -20,7 +20,7 @@ class Info(object):
         self.type_dict = {"d2w": 15, "det": 10, "dod": 9, "chsi": 8, "grains": 13, "h": 12,
                           "mu": 14, "u": 11, "dem": 16, "sidech": 17, "wild": 18}
 
-        self.logger = logging.getLogger("max_lifespan")
+        self.logger = logging.getLogger("logfile")
 
     def get_line_entries(self, line_no):
         if os.path.isfile(self.inp_file):

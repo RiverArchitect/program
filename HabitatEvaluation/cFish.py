@@ -6,8 +6,8 @@ except:
 
 
 try:
-    import cHabitatIO as chio
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import cInputOutput as cio
     import fGlobal as fg
 
 except:
@@ -18,11 +18,11 @@ class Fish:
     def __init__(self):
 
         self.life_stages = []
-        self.logger = logging.getLogger("habitat_evaluation")
+        self.logger = logging.getLogger("logfile")
         self.ls_row = 5
         self.ls_col_add = {"spawning": 1, "fry": 3, "ammocoetes": 3, "juvenile": 5, "adult": 7}  # ASCII codes
-        self.parameter_rows = {"u": 7, "h": 36, "substrate": 70, "cobbles": 79, "boulders": 80, "plants": 82,
-                               "wood": 83}
+        self.parameter_rows = {"u": 9, "h": 38, "substrate": 72, "cobbles": 81, "boulders": 82, "plants": 84,
+                               "wood": 85, "start_date": 6, "end_date": 7}
         self.path = os.path.dirname(os.path.abspath(__file__))
         self.reader = None
         self.species = []
@@ -71,7 +71,7 @@ class Fish:
         try:
             self.open_fish_wb()
         except:
-            self.logger.info("ERROR: Could not access Fish.xlsx for reading HSI curve data.")
+            self.logger.info("ERROR: Could not access Fish.xlsx.")
         try:
             start_row = self.parameter_rows[par]
         except:
@@ -86,7 +86,7 @@ class Fish:
                 self.reader.col_name_to_num(self.species_col[species]) + self.ls_col_add[lifestage] - 1)
             col_hsi = self.reader.col_num_to_name(
                 self.reader.col_name_to_num(self.species_col[species]) + self.ls_col_add[lifestage])
-            curve_data = [self.reader.read_column(col_par, start_row), self.reader.read_column(col_hsi, start_row)]
+            curve_data = [self.reader.read_float_column_short(col_par, start_row), self.reader.read_float_column_short(col_hsi, start_row)]
         except:
             self.logger.info("ERROR: Could not read parameter type " + str(par) + " from Fish.xlsx.")
             try:
@@ -100,8 +100,22 @@ class Fish:
             self.logger.info("ERROR: Could not access Fish.xlsx (close workbook).")
         return curve_data
 
+    def get_season_dates(self, species, lifestage):
+        try:
+            self.open_fish_wb()
+        except:
+            self.logger.info("ERROR: Could not access Fish.xlsx.")
+
+        col_date = self.reader.col_num_to_name(self.reader.col_name_to_num(self.species_col[species]) + self.ls_col_add[lifestage])
+
+        row_start = self.parameter_rows["start_date"]
+        row_end = self.parameter_rows["end_date"]
+        season_start_date = self.reader.read_date_from_cell(col_date, row_start)
+        season_end_date = self.reader.read_date_from_cell(col_date, row_end)
+        return {"start": season_start_date, "end": season_end_date}
+
     def open_fish_wb(self):
-        self.reader = chio.Read(self.path + "\\.templates\\Fish.xlsx")
+        self.reader = cio.Read(self.path + "\\.templates\\Fish.xlsx")
 
     def close_fish_wb(self):
         self.reader.close_wb()

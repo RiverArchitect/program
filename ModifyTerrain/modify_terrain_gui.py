@@ -11,7 +11,7 @@ except:
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fg
-    import cTerrainIO as cio
+    import cReachManager as cio
     import cDefinitions as cdef
     import cMapper as cmp
 except:
@@ -32,7 +32,7 @@ class MainGui(tk.Frame):
             os.path.join(os.path.dirname(__file__), "..")) + "\\MaxLifespan\\Output\\Rasters\\"
         self.in_topo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
         self.in_vol = os.path.dirname(os.path.abspath(__file__)) + "\\Input\\DEM\\"
-        self.logfile_name = ""
+        self.logfile_name = "logfile.log"
         self.mapping = False
         self.mod_dir = None
         self.prevent_popup = False

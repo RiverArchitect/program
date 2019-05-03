@@ -2,7 +2,7 @@
 import arcpy
 import webbrowser
 from fFunctions import *
-logger = logging_start("logfile_21")
+logger = logging_start("logfile")
 try:
     from arcpy.sa import *
 except:
@@ -157,7 +157,7 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     # RELEASE LOGGER AND OPEN LOGFILE
     logging_stop(logger)
     try:
-        logfile = os.getcwd() + "\\logfile_21.log"
+        logfile = os.getcwd() + "\\logfile.log"
         try:
             if not error:
                 webbrowser.open(xlsx_target)

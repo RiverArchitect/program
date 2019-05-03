@@ -13,15 +13,15 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import cMapper as cm
     import cDefinitions as cdef
-    import cTerrainIO as cmio
+    import cReachManager as cmio
     import fGlobal as fg
 except:
     print(
-        "ExceptionERROR: Cannot find package files (fGlobal.py, cMapLifespanDesign, cFeatureLifespan, cLifespanDesignAnalysis, MT/cDefinitions.py, MT/cTerrainIO).")
+        "ExceptionERROR: Cannot find package files (fGlobal.py, cMapLifespanDesign, cFeatureLifespan, cLifespanDesignAnalysis, MT/cDefinitions.py, MT/cReachManager).")
 
 
 def analysis_call(*args):
-    logger = logging.getLogger("lifespan_design")
+    logger = logging.getLogger("logfile")
 
     try:
         parameter_name = args[0]
@@ -76,7 +76,7 @@ def analysis_call(*args):
 def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system, wildcard, manning_n, extent_type):
     pot_err_msg = "logger initiation"  # a message that is printed in the case of a program crash
     try:
-        logger = logging.getLogger("lifespan_design")
+        logger = logging.getLogger("logfile")
 
         try:
             fg.clean_dir(os.getcwd()+"\\.cache\\")  # ensure that the cache is empty
