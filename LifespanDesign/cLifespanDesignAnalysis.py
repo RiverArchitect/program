@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Filename: cLifespanDesignAnalysis.py
 import os, logging
 try:
     from cParameters import *
@@ -72,7 +71,7 @@ class ArcPyAnalysis:
 
         self.info = Info()
         self.lifespans = self.info.lifespan_read()   # definition of lifespans in years from input_definitions.inp
-        self.logger = logging.getLogger("lifespan_design")
+        self.logger = logging.getLogger("logfile")
 
     def analyze_bio(self, threshold_S0, threshold_d2w_up):
         # lifespan analysis that forces steep terrain to be equipped with soil bio engineering

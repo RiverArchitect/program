@@ -13,9 +13,9 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import cDefinitions as cdef
     import fGlobal as fg
-    import cTerrainIO as cmio
+    import cReachManager as cmio
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py, RP/cDefinitions.py, RP/cTerrainIO).")
+    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py, RP/cDefinitions.py, RP/cReachManager).")
 
 
 class PopUpWindow(object):

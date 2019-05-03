@@ -1,4 +1,3 @@
-# all classes log to "habitat_enhancement" logger
 try:
     import sys, os, logging
 except:
@@ -12,10 +11,11 @@ except:
 
 try:
     # import own module classes
-    import cHabitatIO as chio
     import cFish as cf
+    import cMakeTable as cmkt
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import cInputOutput as cio
     import fGlobal as fg
 
 except:
@@ -28,7 +28,7 @@ class CHSI:
         self.condition = hab_condition
         self.combine_method = "geometric_mean"
         self.cover_applies = cover_applies  # BOOL
-        self.logger = logging.getLogger("habitat_evaluation")
+        self.logger = logging.getLogger("logfile")
 
         self.path_condition = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
         self.path_hsi = os.path.dirname(os.path.abspath(__file__)) + "\\HSI\\" + str(self.condition) + "\\"
@@ -76,10 +76,10 @@ class CHSI:
                     xsn = self.condition + "_" + fish_shortname + ".xlsx"
 
                 xlsx_name = os.path.dirname(os.path.abspath(__file__)) + "\\AUA\\" + xsn
-                xlsx = chio.Write()
+                xlsx = cmkt.MakeFishFlowTable()
                 xlsx.open_wb(xlsx_name, 0)
 
-                Q = xlsx.read_column("B", 4)
+                Q = xlsx.read_float_column_short("B", 4)
                 self.logger.info(" >> Reducing CHSI rasters to AUA threshold (" + str(wua_threshold) + ") ...")
                 for csi in csi_list:
                     self.logger.info("    -- CHSI raster: " + str(csi))
@@ -736,108 +736,3 @@ class CovHSI(HHSI):
 
     def __call__(self, *args):
         print("Class Info: <type> = CovHSI (Module: Habitat Evaluation)")
-
-
-class FlowAssessment:
-    def __init__(self):
-        self.Q_flowdur = []
-        self.exceedance_abs = []  # absolute exceedance duration in days
-        self.exceedance_rel = []  # relative exceedance duration in percent
-        self.logger = logging.getLogger("habitat_evaluation")
-
-    def calculate_relative_exceedance(self):
-        self.logger.info(" >> Calculating relative flow exceedances ...")
-        max_d = max(self.exceedance_abs)
-        for val in self.exceedance_abs:
-            try:
-                self.exceedance_rel.append(float(val / max_d))
-            except:
-                self.exceedance_rel.append(0.0)
-                self.logger.info("WARNING: Could not divide " + str(val) + " by " + str(max_d) + ".")
-        self.logger.info(" >> OK")
-
-    def get_flow_data(self, *alternative_flowdur):
-        # *alternative_flowdur can be an optional alternative workbook  with flow duration curve data
-        #     --> anyway, the alternative must have Q_flowdur data in col B and exceedance days in col C (start_row=2)
-        self.logger.info(" >> Retrieving flow data ...")
-        try:
-            hydro_wb = alternative_flowdur[0]
-        except:
-            hydro_wb = os.path.dirname(os.path.realpath(__file__)) + "\\hydrograph.xlsx"
-        self.logger.info(" >> Source: " + str(hydro_wb))
-        data_reader = chio.Read(hydro_wb)
-        self.Q_flowdur = data_reader.read_column("B", 2)  # cfs or m3
-        self.exceedance_abs = data_reader.read_column("C", 2)  # days
-
-        # interpolate zero-probability flow
-        Q_max = float(self.Q_flowdur[-1] - (self.Q_flowdur[-2] - self.Q_flowdur[-1]) / float(self.exceedance_abs[-2] - self.exceedance_abs[-1]))
-        self.Q_flowdur.append(Q_max)
-        self.exceedance_abs.append(0)
-
-        # add data consistency (ensure that self.Q_flowdur and self.exceedance are the same length)
-        __ex__ = []
-        for iq in range(0, self.Q_flowdur.__len__()):
-            try:
-                __ex__.append(self.exceedance_abs[iq])
-            except:
-                self.Q_flowdur.insert(0, Q_max)
-                self.logger.info(
-                    "WARNING: Flow_duration[...].xlsx has different lengths of \'Q_flowdur\' and \'exceedance days\' columns.")
-        self.exceedance_abs = __ex__
-        self.logger.info(" >> OK")
-        self.calculate_relative_exceedance()
-
-    def interpolate_flow_exceedance(self, Q_value):
-        # Q_value is a FLOAT discharge in cfs or m3s
-        self.logger.info(" >> Interpolating exceedance probability for Q_flowdur = " + str(Q_value))
-        try:
-            Q_value = float(Q_value)
-        except:
-            self.logger.info("ERROR: Invalid interpolation data type (type(Q_flowdur) == " + type(Q_value) + ").")
-
-        if Q_value <= max(self.Q_flowdur):
-            if not(Q_value <= min(self.Q_flowdur)):
-                # find closest smaller and higher discharge
-                iq = 0
-                for qq in sorted(self.Q_flowdur, reverse=True):
-                    # iterate Q_flowdur list (start from lowest)
-                    if iq == 0:
-                        Q_lower = self.Q_flowdur[iq]
-                        ex_lower = 1.0
-                    else:
-                        Q_lower = self.Q_flowdur[iq - 1]
-                        ex_lower = float(self.exceedance_rel[iq - 1])
-                    Q_higher = self.Q_flowdur[iq]
-                    ex_higher = self.exceedance_rel[iq]
-                    if Q_value > qq:
-                        self.logger.info(" -->> qq: " + str(qq))
-                        self.logger.info(" -->> Q_value: " + str(Q_value))
-                        break
-                    iq += 1
-            else:
-                Q_lower = Q_value
-                ex_lower = 1.0
-                Q_higher = min(self.Q_flowdur)
-                ex_higher = 1.0
-        else:
-            self.logger.info(" >> HIGH DISCHARGE. Annual exceedance probability close to zero.")
-            Q_lower = max(self.Q_flowdur)
-            ex_lower = 0.0
-            Q_higher = Q_value
-            ex_higher = 0.0
-        try:
-            self.logger.info(" -->> ex_low: " + str(ex_lower))
-            self.logger.info(" -->> ex_high: " + str(ex_higher))
-            self.logger.info(" -->> Q_low: " + str(Q_lower))
-            self.logger.info(" -->> Q_high: " + str(Q_higher))
-            pr_exceedance = ex_lower + ((Q_value - Q_lower) / (Q_higher - Q_lower)) * (ex_higher - ex_lower)
-            self.logger.info(" -->> Expected exceedance duration (per year): " + str(pr_exceedance * 100) + "%")
-            return pr_exceedance
-        except:
-            self.logger.info("ERROR: Could not interpolate exceedance probability of Q = " + str(Q_value) + ".")
-            return 0.0
-
-    def __call__(self, *args):
-        print("Class Info: <type> = FlowAssessment (Module: Habitat Evaluation)")
-
-

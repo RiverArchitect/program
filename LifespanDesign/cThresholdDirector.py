@@ -11,7 +11,7 @@ except:
 class ThresholdDirector:
     # Reads threshold values from file as a function of feature name
     def __init__(self, *args):
-        self.logger = logging.getLogger("lifespan_design")
+        self.logger = logging.getLogger("logfile")
         try:
             # LF instantiates with args[0] = True
             # avoids circular relations

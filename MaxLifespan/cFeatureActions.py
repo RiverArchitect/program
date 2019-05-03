@@ -16,7 +16,7 @@ class Director:
         # args[0] is an optional input path
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.path = os.path.dirname(os.path.abspath(__file__))
-        self.logger = logging.getLogger("max_lifespan")
+        self.logger = logging.getLogger("logfile")
         try:
             self.raster_input_path = args[0]
         except:

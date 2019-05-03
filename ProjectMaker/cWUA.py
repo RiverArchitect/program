@@ -1,4 +1,4 @@
-# logs to logfile_40.log
+# logs to logfile.log
 try:
     import sys, os, logging
 except:
@@ -23,7 +23,7 @@ class CAUA:
         self.cache_count = 0
         ff.chk_dir(self.cache)
         self.extents = [0, 0, 0, 0]
-        self.logger = logging.getLogger("logfile_40")
+        self.logger = logging.getLogger("logfile")
         self.ras_project = ""
         self.unit = unit
         if self.unit == "us":

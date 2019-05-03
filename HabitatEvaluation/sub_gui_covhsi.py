@@ -10,14 +10,12 @@ except:
 try:
     # import own routines
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import cHabitatIO as chio
     import cHSI as chsi
 
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\")
     import cParameters as cp
 
-    # load others
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fg
 except:

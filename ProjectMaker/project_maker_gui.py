@@ -145,7 +145,7 @@ class MainGui(tk.Frame):
         self.b_s21_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s21"))
         self.b_s21_help.grid(sticky=tk.E, row=20, column=2, padx=self.xd, pady=self.yd * 2)
 
-        self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN WEIGHTED USABLE AREA ")
+        self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN SEASONAL USABLE HABITAT AREA ")
         self.l_placeholder3.grid(sticky=tk.EW, row=21, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
         self.l_choose_fish = tk.Label(self, text="1) Select at least one fish species-lifestage from the Set fish menu.")
         self.l_choose_fish.grid(sticky=tk.W, row=22, column=0, columnspan=2, padx=self.xd, pady=self.yd)

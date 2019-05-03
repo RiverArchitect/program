@@ -8,57 +8,13 @@ try:
 
     # load classes files from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    from cLogger import Logger
     import cMapper as cm
     import fGlobal as fg
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
     print(
         "       PACKAGE requirement: cFeatureActions, cActionAssessment, /.site_packages/riverpy/fGlobal+cMapper.")
-
-
-def logging_start(logfile_name):
-    try:
-        logging_stop(logfile_name)
-    except:
-        pass
-    logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
-    for fn in logfilenames:
-        fn_full = os.path.dirname(os.path.abspath(__file__)) + "\\" + fn
-        if os.path.isfile(fn_full):
-            try:
-                os.remove(fn_full)
-                print("Overwriting old logfiles (" + fn + ").")
-            except:
-                print("WARNING: Old logfile is locked (geo_file_maker).")
-    # start logging
-    logger = logging.getLogger(logfile_name)
-    logger.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s - %(message)s")
-
-    # create console handler and set level to info
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    # create error file handler and set level to error
-    err_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[0]), "w", encoding=None, delay="true")
-    err_handler.setLevel(logging.ERROR)
-    err_handler.setFormatter(formatter)
-    logger.addHandler(err_handler)
-    # create debug file handler and set level to debug
-    debug_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[1]), "w")
-    debug_handler.setLevel(logging.DEBUG)
-    debug_handler.setFormatter(formatter)
-    logger.addHandler(debug_handler)
-    logger.info(logfile_name + ".max_lifespan initiated")
-    return logger
-
-
-def logging_stop(logger):
-    # stop logging and release logfile
-    for handler in logger.handlers:
-        handler.close()
-        logger.removeHandler(handler)
 
 
 def map_maker(condition, feature_groups, *args):
@@ -91,7 +47,7 @@ def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
     except:
         pass
 
-    logger = logging_start("logfile")
+    logger = Logger("logfile")
     logger.info("*** unit system: " + str(unit_system))
     logger.info("*** condition: " + str(condition))
     if not(feature_type in allowed_feature_types):
@@ -125,7 +81,7 @@ if __name__ == "__main__":
 
     # launch raster maker for lifespan and design rasters
     try:
-        geo_file_maker(condition, feature_type)
+        geo_file_maker(condition, feature_type, os.getcwd())
     except:
         print("Bad input. Using default condition (2008) and feature_type (terraforming).")
         geo_file_maker(condition="2008", feature_type="terraforming")
