@@ -86,7 +86,7 @@ class HHSIgui(object):
         self.b_flowdur_make.grid(sticky=tk.EW, row=0, column=0, columnspan=self.max_columnspan,
                                  padx=self.xd, pady=self.yd)
         
-        self.b_flowdur_select = tk.Button(top, bg="white", text="i) Select flow duration curve (xlsx)",
+        self.b_flowdur_select = tk.Button(top, bg="white", text="i) Select flow duration curve (.XLSX)",
                                           anchor='w', command=lambda: self.select_flowdur_xlsx())
         self.b_flowdur_select.grid(sticky=tk.EW, row=1, column=0, columnspan=self.max_columnspan,
                                    padx=self.xd, pady=self.yd)
