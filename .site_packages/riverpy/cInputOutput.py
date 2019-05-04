@@ -115,7 +115,6 @@ class Read:
             if valid_content:
                 data.append(cell_value)
                 __row__ += 1
-        self.logger.info("   * ok")
         return data
 
     def read_row_str(self, row, start_col, **kwargs):
@@ -144,9 +143,6 @@ class Read:
             end_col = "XFA"
         if not ("if_row" in locals()):
             if_row = row
-
-        self.logger.info(
-            "   * reading string row from " + str(self.xlsx_file).split("\\")[-1] + " (starting from " + str(start_col) + str(row) + ") ...")
 
         str_data = []
         valid_content = True
@@ -251,7 +247,6 @@ class Write(Read):
             self.logger.info("   * saving xlsx as:" + self.wb_out_name)
             self.wb.save(self.wb_out_name)
             self.wb.close()
-            self.logger.info("   * ok")
         except:
             self.logger.info("ERROR: Invalid file name or data.")
 
@@ -270,7 +265,6 @@ class Write(Read):
         for val in data_list:
             self.ws[str(column) + str(__row__)].value = val
             __row__ += 1
-        self.logger.info("   * ok")
 
     def write_matrix(self, start_col, start_row, data_matrix):
         # start_col = STR, e.g., "A"

@@ -133,7 +133,7 @@ class MainGui(tk.Frame):
         self.b_csi_c["state"] = "disabled"
 
         self.b_run_wua = tk.Button(self, width=30, bg="white",
-                                   text="6) Calculate Weighted Usable habitat Area (WUA)", anchor='w',
+                                   text="6) Calculate Annualized seasonal Usable habitat Area (AUA)", anchor='w',
                                    command=lambda: self.start_app("wua", cover=False))
         self.b_run_wua.grid(sticky=tk.EW, row=14, column=0, columnspan=self.max_columnspan, rowspan=2,
                             padx=self.xd, pady=self.yd)
