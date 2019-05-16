@@ -268,10 +268,7 @@ class CHSI:
                         # load inundation area Raster (wetted area)
                         try:
                             self.logger.info("        * loading innundated area raster ...")
-                            if q >= 1000:
-                                h_ras_name = "h%003dk.tif" % int(q/1000)
-                            else:
-                                h_ras_name = "h%003d.tif" % q
+                            h_ras_name = "h%0000006d.tif" % int(q)
                             if boundary_shp.__len__() > 0:
                                 self.logger.info("        * clipping to boundary ...")
                                 inundation_ras = Con(~IsNull(boundary_ras), arcpy.Raster(self.path_condition + h_ras_name))
@@ -537,19 +534,14 @@ class HHSI:
         for rn in all_rasters:
             if (rn[0] == "h") or (rn[0] == "u"):
                 try:
-                    if str(rn).endswith("k") or str(rn).endswith("k.tif"):
-                        # multiply "k"-raster name discharges with 1000
-                        thousand = 1000.0
-                    else:
-                        thousand = 1.0
                     if rn[0] == "h":
                         self.logger.info("     -- Adding flow depth raster: " + str(rn))
-                        _Q_ = float(str(rn).split("h")[1].split(".tif")[0].split("k")[0]) * thousand
+                        _Q_ = float(str(rn).split("h")[1].split(".tif")[0])
                         self.flow_dict_h.update({str(rn): int(_Q_)})
                         self.ras_h.append(str(rn))
                     if rn[0] == "u":
                         self.logger.info("     -- Adding flow velocity raster: " + str(rn))
-                        _Q_ = float(str(rn).split("u")[1].split(".tif")[0].split("k")[0]) * thousand
+                        _Q_ = float(str(rn).split("u")[1].split(".tif")[0])
                         self.flow_dict_u.update({str(rn): int(_Q_)})
                         self.ras_u.append(str(rn))
                 except:
