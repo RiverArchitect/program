@@ -8,6 +8,10 @@ try:
 except:
     print("ERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 try:
+    import GetStarted
+except:
+    print("ERROR: Could not import Welcome Screen (Get Started).")
+try:
     import ProjectMaker
 except:
     print("ERROR: Could not import ProjectMaker.")
@@ -44,7 +48,8 @@ class RaGui(tk.Frame):
 
         self.tab_container = ttk.Notebook(master)
 
-        self.tab_names = ['Lifespan Design',
+        self.tab_names = ['Get Started',
+                          'Lifespan Design',
                           'Max Lifespan',
                           'Modify Terrain',
                           'Habitat Evaluation',
@@ -52,7 +57,8 @@ class RaGui(tk.Frame):
                           'Project Maker']
 
         # working directory suffixes for each module
-        self.tab_dir_names = ['\\LifespanDesign\\',
+        self.tab_dir_names = ['\\GetStarted\\',
+                              '\\LifespanDesign\\',
                               '\\MaxLifespan\\',
                               '\\ModifyTerrain\\',
                               '\\HabitatEvaluation\\',
@@ -60,7 +66,8 @@ class RaGui(tk.Frame):
                               '\\ProjectMaker\\']
 
         # Frames initialized by module, with parent being tab container
-        self.tab_list = [LifespanDesign.lifespan_design_gui.FaGui(self.tab_container),
+        self.tab_list = [GetStarted.welcome_gui.MainGui(self.tab_container),
+                         LifespanDesign.lifespan_design_gui.FaGui(self.tab_container),
                          MaxLifespan.action_gui.ActionGui(self.tab_container),
                          ModifyTerrain.modify_terrain_gui.MainGui(self.tab_container),
                          HabitatEvaluation.habitat_gui.MainGui(self.tab_container),
