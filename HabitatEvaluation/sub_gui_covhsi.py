@@ -254,7 +254,7 @@ class CovHSIgui(object):
         except:
             pass
 
-        showinfo("COMPUTATION FINISHED", "Check logfile (habitat_evaluation.log).")
+        showinfo("COMPUTATION FINISHED", "Check logfile (logfile.log).")
 
     def select_condition(self):
         items = self.lb_condition.curselection()
