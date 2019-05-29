@@ -14,7 +14,7 @@ class CHSI:
     # This class stores all information about combined habitat suitability rasters.
 
     def __init__(self, condition):
-        input_info = Info("chsi")
+        input_info = Info(condition, "chsi")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -31,7 +31,7 @@ class DEM:
     # This class stores all information about DEM rasters.
 
     def __init__(self, condition):
-        input_info = Info("dem")
+        input_info = Info(condition, "dem")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -51,7 +51,7 @@ class DEMdet:
     # This class stores all information about detrended DEM rasters.
 
     def __init__(self, condition):
-        input_info = Info("det")
+        input_info = Info(condition, "det")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -72,7 +72,7 @@ class DoD:
     # Instantiate an object by: myDoD = DoD() in feet
 
     def __init__(self, condition):
-        input_info = Info("dod")
+        input_info = Info(condition, "dod")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -99,7 +99,7 @@ class FlowDepth:
     # This class stores all information about flow depth rasters.
 
     def __init__(self, condition):
-        input_info = Info("h")
+        input_info = Info(condition, "h")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -121,7 +121,7 @@ class FlowDepth:
 class FlowVelocity:
     # This class stores all information about flow velocity rasters.
     def __init__(self, condition):
-        input_info = Info("u")
+        input_info = Info(condition, "u")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -141,7 +141,7 @@ class FlowVelocity:
 
 class GrainSizes:
     def __init__(self, condition):
-        input_info = Info("grains")
+        input_info = Info(condition, "grains")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -160,7 +160,7 @@ class GrainSizes:
 class MU:
     # This class stores all information about Morphological Units rasters and thresholds.
     def __init__(self, condition):
-        input_info = Info("mu")
+        input_info = Info(condition, "mu")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -186,7 +186,7 @@ class SideChannelDelineation:
     # This class stores all information about depth to groundwater table rasters.
 
     def __init__(self, condition):
-        input_info = Info("sidech")
+        input_info = Info(condition, "sidech")
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\"
@@ -205,7 +205,7 @@ class WaterTable:
     # This class stores all information about depth to groundwater table rasters.
 
     def __init__(self, condition):
-        input_info = Info("d2w")
+        input_info = Info(condition, "d2w")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(
@@ -225,7 +225,7 @@ class Wildcard:
     # This class stores all information about depth to groundwater table rasters.
 
     def __init__(self, condition):
-        input_info = Info("wild")
+        input_info = Info(condition, "wild")
 
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(

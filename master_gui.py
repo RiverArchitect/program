@@ -28,7 +28,7 @@ try:
 except:
     print("ERROR: Could not import ModifyTerrain.")
 try:
-    import HabitatEvaluation
+    import SHArC
 except:
     print("ERROR: Could not import HabitatEvaluation.")
 try:
@@ -61,7 +61,7 @@ class RaGui(tk.Frame):
                               '\\LifespanDesign\\',
                               '\\MaxLifespan\\',
                               '\\ModifyTerrain\\',
-                              '\\HabitatEvaluation\\',
+                              '\\SHArC\\',
                               '\\EcoMorphology\\',
                               '\\ProjectMaker\\']
 
@@ -70,7 +70,7 @@ class RaGui(tk.Frame):
                          LifespanDesign.lifespan_design_gui.FaGui(self.tab_container),
                          MaxLifespan.action_gui.ActionGui(self.tab_container),
                          ModifyTerrain.modify_terrain_gui.MainGui(self.tab_container),
-                         HabitatEvaluation.habitat_gui.MainGui(self.tab_container),
+                         SHArC.sharc_gui.MainGui(self.tab_container),
                          EcoMorphology.ecomy_gui.MainGui(self.tab_container),
                          ProjectMaker.project_maker_gui.MainGui(self.tab_container)
                          ]

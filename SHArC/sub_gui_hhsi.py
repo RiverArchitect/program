@@ -11,15 +11,15 @@ try:
     # import own routines
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import cHSI as chsi
-    import cFlows as cq
-    import cMakeTable as cmkt
 
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import cMakeTable as cmkt
+    import cFlows as cq
     import cInputOutput as cio
     import fGlobal as fg
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
+    print("ExceptionERROR: Cannot find package files (riverpy).")
 
 
 class HHSIgui(object):
@@ -147,7 +147,7 @@ class HHSIgui(object):
                 template = os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\Q_def_hab_template_" + str(
                                            self.unit) + ".xlsx"
                 spreadsheet_handle.set_directories(self.condition, template)
-                self.discharge_xlsx.append(spreadsheet_handle.make_condition_xlsx(fish_shortname))
+                self.discharge_xlsx.append(spreadsheet_handle.make_condition_fish_xlsx(fish_shortname))
 
                 # get discharge statistics and write them to workbook
                 Q_stats = cq.FlowAssessment()

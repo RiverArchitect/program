@@ -16,7 +16,7 @@ except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: fFunctions).")
 
 
-class CAUA:
+class SHArC:
     def __init__(self, unit, reach, stn, version):
         self.path2geodata = os.path.dirname(os.path.realpath(__file__)) + "\\" + str(reach).upper() + "_" + str(stn).lower() + "_" + str(version) + "\\Geodata\\"
         self.cache = self.path2geodata + ".cache\\"

@@ -5,10 +5,10 @@ from fFunctions import *
 logger = logging_start("logfile")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
 import cInputOutput as cio
-import cWUA
+import cSHArC
 
 
-def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fish, reach, stn, unit, version):
+def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fish, reach, stn, unit, version):
     # version = "v10"             # type() =  3-char str: vII
     # reach = "TBR"               # (corresponding to folder name)
     # stn = "brb"                 
@@ -17,7 +17,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
     # cover_app_pre = False 
     # fish = {"Chinook salmon": ["juvenile"]}
     error = False
-    sys.path.append(dir2SR + ".site_packages\\openpyxl\\")
+    sys.path.append(dir2ra + ".site_packages\\openpyxl\\")
 
     # set directories
     if cover_pre:
@@ -30,8 +30,8 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
         post_ext = "no_cover"
 
     dir2PP = os.path.dirname(os.path.realpath(__file__)) + "\\" + reach + "_" + stn + "_" + version + "\\"
-    dir2ras_chsi = [dir2SR + "HabitatEvaluation\\AUA\\Rasters\\" + condition_initial + "\\" + pre_ext + "\\",
-                    dir2SR + "HabitatEvaluation\\AUA\\Rasters\\" + condition_project + "\\" + post_ext + "\\"]
+    dir2ras_chsi = [dir2ra + "SHArC\\SHArea\\Rasters\\" + condition_initial + "\\" + pre_ext + "\\",
+                    dir2ra + "SHArC\\SHArea\\Rasters\\" + condition_project + "\\" + post_ext + "\\"]
     dir2ras_tar = [dir2PP + "Geodata\\Rasters\\" + condition_initial + "\\" + pre_ext + "\\",
                    dir2PP + "Geodata\\Rasters\\" + condition_project + "\\" + post_ext + "\\"]
     chk_dir(dir2ras_tar[0])
@@ -43,30 +43,30 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
     xlsx_tar_costs = dir2PP + reach.upper() + "_" + stn + "_assessment_" + version + ".xlsx"
     if unit == "us":
         u_mass_flux = "cfs"
-        xlsx_aua_template = dir2PP + "Geodata\\AUA_evaluation_template_us.xlsx"
+        xlsx_sha_template = dir2PP + "Geodata\\SHArea_evaluation_template_us.xlsx"
     else:
         u_mass_flux = "m3/s"
-        xlsx_aua_template = dir2PP + "Geodata\\AUA_evaluation_template_si.xlsx"
+        xlsx_sha_template = dir2PP + "Geodata\\SHArea_evaluation_template_si.xlsx"
 
-    # INSTANTIATE AUA CLASS OBJECT:
-    aua = cWUA.CAUA(unit, reach, stn, version)
+    # INSTANTIATE SHArea CLASS OBJECT:
+    sha = cSHArC.SHArC(unit, reach, stn, version)
 
-    # RUN AUA ANALYSIS
+    # RUN SHArea ANALYSIS
     try:
-        logger.info("Starting AUA analysis ...")
+        logger.info("Starting SHArea analysis ...")
         project_area = shp_dir + "ProjectArea.shp"
         fields = ["SHAPE@", "gridcode"]
-        aua.get_extents(project_area, fields)
-        aua.set_project_area("ProjectArea", fields[1])
+        sha.get_extents(project_area, fields)
+        sha.set_project_area("ProjectArea", fields[1])
         for species in fish.keys():
             for ls in fish[species]:
-                logger.info("AUA ANALYSIS FOR " + str(species).upper() + " - " + str(ls).upper())
+                logger.info("SHArea ANALYSIS FOR " + str(species).upper() + " - " + str(ls).upper())
                 fish_sn = str(species).lower()[0:2] + str(ls[0])
                 xlsx_conditions = [condition_initial + "_" + fish_sn + ".xlsx",
                                    condition_project + "_" + fish_sn + ".xlsx"]
-                xlsx_aua = cio.Write(xlsx_aua_template)
-                xlsx_aua_name = dir2PP + "Geodata\\AUA_evaluation_" + fish_sn + ".xlsx"
-                conditions_aua = []
+                xlsx_sha = cio.Write(xlsx_sha_template)
+                xlsx_sha_name = dir2PP + "Geodata\\SHArea_evaluation_" + fish_sn + ".xlsx"
+                conditions_sha = []
 
                 xc_count = 0
                 start_write_col = "B"
@@ -75,13 +75,13 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                     result_matrix = []
                     try:
                         logger.info(" >> Condition: " + str(xc).split(".xlsx")[0])
-                        xlsx_info = cio.Read(dir2SR + "HabitatEvaluation\\AUA\\" + xc)
+                        xlsx_info = cio.Read(dir2ra + "SHArC\\SHArea\\" + xc)
                     except:
                         xlsx_info = ""
                         logger.info("ERROR: Could not access " + str(xc))
                         error = True
                     try:
-                        logger.info("    -> Looking up discharge information (SR/HabitatEvaluation)...")
+                        logger.info("    -> Looking up discharge information (RiverArchitect/SHArC)...")
                         discharges = xlsx_info.read_float_column_short("B", 4)
                         exceedance_pr = xlsx_info.read_float_column_short("E", 4)
 
@@ -94,25 +94,25 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                             print(str(raster_list))
                             ras = [r for r in raster_list if (r == test_ras)][0]
                             logger.info("    ---> Usable habitat area assessment for Q = " + str(q) + u_mass_flux)
-                            result_matrix.append([q, discharge_dict[q], aua.get_usable_area(ras.split(".tif")[0], dir2ras_tar[xc_count])])
+                            result_matrix.append([q, discharge_dict[q], sha.get_usable_area(ras.split(".tif")[0], dir2ras_tar[xc_count])])
                             logger.info("         ok")
                     except:
                         logger.info("ERROR: Could not process information from " + str(xc))
                         error = True
 
                     try:
-                        logger.info("    -> Writing discharges and usable area to " + xlsx_aua_name + " ...")
+                        logger.info("    -> Writing discharges and usable area to " + xlsx_sha_name + " ...")
                         result_matrix.sort(key=itemgetter(0), reverse=True)
                         write_row = 9
                         for res in result_matrix:
-                            xlsx_aua.write_row(start_write_col, write_row, [res[0], res[1], res[2]])  # q, pr, area
+                            xlsx_sha.write_row(start_write_col, write_row, [res[0], res[1], res[2]])  # q, pr, area
                             write_row += 1
                         logger.info("    -> ok")
                     except:
-                        logger.info("ERROR: Could not write AUA data for  " + str(species) + " - " + str(ls))
+                        logger.info("ERROR: Could not write SHArea data for  " + str(species) + " - " + str(ls))
                         error = True
 
-                    # calculate AUA for transfer independent from xlsx calculation
+                    # calculate SHArea for transfer independent from xlsx calculation
                     try:
                         ex_pr_pdf = [float(exceedance_pr[0])]
                         for i_pr in range(1, exceedance_pr.__len__()):
@@ -120,40 +120,40 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2SR, fi
                                 ex_pr_pdf.append(float(exceedance_pr[i_pr] - exceedance_pr[i_pr - 1]))
                             else:
                                 ex_pr_pdf.append(0.0)
-                        conditions_aua.append(
-                                aua.calculate_wua([pr for pr in ex_pr_pdf], [l[2] for l in result_matrix]))
+                        conditions_sha.append(
+                                sha.calculate_wua([pr for pr in ex_pr_pdf], [l[2] for l in result_matrix]))
                     except:
-                        logger.info("ERROR: Could not transfer AUA data for  " + str(species) + " - " + str(ls))
+                        logger.info("ERROR: Could not transfer SHArea data for  " + str(species) + " - " + str(ls))
                         error = True
 
                     xc_count += 1
                     start_write_col = cio.Read.col_num_to_name(cio.Read.col_name_to_num(start_write_col) + 5)
                     xlsx_info.close_wb()
 
-                logger.info(" >> Saving and closing " + xlsx_aua_name + " ...")
+                logger.info(" >> Saving and closing " + xlsx_sha_name + " ...")
                 try:
-                    xlsx_aua.save_close_wb(xlsx_aua_name)
+                    xlsx_sha.save_close_wb(xlsx_sha_name)
                 except:
-                    logger.info("ERROR: Could not save " + xlsx_aua_name)
-                del xlsx_aua
+                    logger.info("ERROR: Could not save " + xlsx_sha_name)
+                del xlsx_sha
 
-                aua.clear_cache(True)  # limit cache size
+                sha.clear_cache(True)  # limit cache size
 
                 try:
-                    logger.info(" >> Transferring results (net AUA gain) to cost table ...")
+                    logger.info(" >> Transferring results (net SHArea gain) to cost table ...")
                     xlsx_costs = cio.Write(xlsx_tar_costs)
-                    xlsx_costs.write_cell("G", 3, float(conditions_aua[1] - conditions_aua[0]))
+                    xlsx_costs.write_cell("G", 3, float(conditions_sha[1] - conditions_sha[0]))
                     xlsx_out_name = reach.upper() + "_" + stn + "_assessment_" + version + "_" + fish_sn + ".xlsx"
                     xlsx_costs.save_close_wb(dir2PP + xlsx_out_name)
                     logger.info(" >> CHECK RESULTS IN: " + dir2PP + xlsx_out_name)
                 except:
-                    logger.info("ERROR: Could not transfer net AUA gain.")
+                    logger.info("ERROR: Could not transfer net SHArea gain.")
                     error = True
 
-        aua.clear_cache()
+        sha.clear_cache()
 
     except:
-        logger.info("ERROR: Could not run AUA analysis.")
+        logger.info("ERROR: Could not run SHArea analysis.")
         error = True
 
     # RELEASE LOGGER AND OPEN LOGFILE

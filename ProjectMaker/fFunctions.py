@@ -3,7 +3,7 @@ import os, logging, sys
 
 def chk_dir(directory):
     if not os.path.exists(directory):
-            os.makedirs(directory)
+        os.makedirs(directory)
 
 
 def del_ovr_files(directory):
