@@ -1,0 +1,3 @@
+Version: 0.3 (June 2019)
+Authors: Sebastian Schwindt, Kenny Larrieu, Gregory Pasternack
+Email: river.architect.program[at]gmail.com

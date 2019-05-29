@@ -59,6 +59,13 @@ def dict_values2list(dv):
     return out_list
 
 
+def get_credits():
+    c_file = open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\credits.txt", "r")
+    credits_str = "\n".join(c_file.read().splitlines())
+    c_file.close()
+    return credits_str
+
+
 def get_newest_output_folder(directory):
     # return that the newest folder in a directory
     lof = glob.glob(directory + "*\\")

@@ -56,7 +56,11 @@ class MainGui(tk.Frame):
         logo = logo.subsample(6, 6)
         self.l_img = tk.Label(self, image=logo)
         self.l_img.image = logo
-        self.l_img.grid(sticky=tk.E, row=3, column=6, rowspan=7, columnspan=2, padx=self.xd*20, pady=self.yd)
+        self.l_img.grid(sticky=tk.E, row=3, column=2, rowspan=7, columnspan=2, padx=self.xd*10, pady=self.yd)
+
+        # Add credits
+        self.l_credits = tk.Label(self, fg="gray50", text=fg.get_credits(), justify=LEFT)
+        self.l_credits.grid(sticky=tk.E, row=8, column=0, rowspan=3, columnspan=2, padx=self.xd, pady=self.yd)
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
@@ -126,8 +130,7 @@ class MainGui(tk.Frame):
             tk.Frame.quit(self)
 
     def show_credits(self):
-        msg = "Version info: 0.3 (June 2019)\nAuthors: Sebastian Schwindt, Kenny Larrieu\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
-        showinfo("Credits", msg)
+        showinfo("Credits", fg.get_credits())
 
     def __call__(self):
         self.mainloop()

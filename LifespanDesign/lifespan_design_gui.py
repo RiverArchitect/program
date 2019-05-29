@@ -189,12 +189,6 @@ class FaGui(tk.Frame):
         self.cb_extent.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.cb_extent.select()
 
-        # MAKE PLACEHOLDER FILL
-        logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\welcome.gif")
-        logo = logo.subsample(6, 6)
-        self.l_img = tk.Label(self, image=logo)
-        self.l_img.image = logo
-        self.l_img.grid(sticky=tk.E, row=3, column=6, rowspan=6, columnspan=2)
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
@@ -477,8 +471,7 @@ class FaGui(tk.Frame):
             showinfo("WARNING", "That seems to be an incredibly rough channel. Consider revising the new value for Manning\'s n")
 
     def show_credits(self):
-        msg = "Version info: 0.1 (April 2019)\nAuthors: Sebastian Schwindt, Kenny Larrieu\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
-        showinfo("Credits", msg)
+        showinfo("Credits", fg.get_credits())
 
     def unit_change(self):
         if self.unit == "si":

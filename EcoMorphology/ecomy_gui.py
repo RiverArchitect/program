@@ -163,8 +163,7 @@ class MainGui(tk.Frame):
 
 
     def show_credits(self):
-        msg = "Version info: 0.3 (2019)\nAuthor: Sebastian Schwindt\n  Kenny Larrieu\n  leogoesger\nInstitute: Pasternack Lab, UC Davis \n\nEmail: river.architect.program[at]gmail.com"
-        showinfo("Credits", msg)
+        showinfo("Credits", fg.get_credits())
 
 
     def unit_change(self):
