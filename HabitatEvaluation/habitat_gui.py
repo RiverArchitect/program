@@ -447,8 +447,7 @@ class MainGui(tk.Frame):
         self.open_log_file()
 
     def show_credits(self):
-        msg = "Version info: 0.1 (November 2018)\nAuthor: Sebastian Schwindt\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
-        showinfo("Credits", msg)
+        showinfo("Credits", fg.get_credits())
 
     def unit_change(self):
         if self.unit == "si":

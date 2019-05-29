@@ -471,8 +471,7 @@ class MainGui(tk.Frame):
             self.l_inpath_vol.config(fg="red", text="Invalid directory")
 
     def show_credits(self):
-        msg = "Version info: 0.3 (May 2019)\nAuthor: Sebastian Schwindt\n     Kenny Larrieu\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
-        showinfo("Credits", msg)
+        showinfo("Credits", fg.get_credits())
 
     def unit_change(self):
         if self.unit == "si":

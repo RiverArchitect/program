@@ -11,7 +11,9 @@ try:
     import s20_plantings_delineation as s20
     import s21_plantings_stabilization as s21
     import s40_compare_wua as s40
-    import fFunctions as ff
+
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import fGlobal as fg
 except:
     print("ERROR: Missing sub routines (cannot access python files in subfolder).")
 
@@ -387,8 +389,7 @@ class MainGui(tk.Frame):
             showinfo("Fish added", "All available species added.")
 
     def show_credits(self):
-        msg = "Version info: 0.1 (August 2018)\nAuthor: Sebastian Schwindt\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
-        showinfo("Credits", msg)
+        showinfo("Credits", fg.get_credits())
 
     def start_app(self, app_name):
         # app_name = STR
