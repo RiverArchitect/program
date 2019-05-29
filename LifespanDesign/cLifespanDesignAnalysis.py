@@ -69,8 +69,8 @@ class ArcPyAnalysis:
         self.g = 9.81 / self.ft2m   # (ft/s2) gravity acceleration
         self.s = 2.68               # (--) relative grain density (ratio of rho_s and rho_w)
 
-        self.info = Info()
-        self.lifespans = self.info.lifespan_read()   # definition of lifespans in years from input_definitions.inp
+        self.info = Info(condition)
+        self.lifespans = self.info.lifespan_read()   # definition of lifespans in years from CONDITION/input_definitions.inp
         self.logger = logging.getLogger("logfile")
 
     def analyze_bio(self, threshold_S0, threshold_d2w_up):
@@ -786,7 +786,7 @@ class ArcPyAnalysis:
                                          Float(self.lifespans[r_index]))))
             except:
                 self.logger.error("ERROR: Incoherent data in " + str(ras) + " (raster comparison).")
-                self.logger.info("ERROR HINT: Verify Raster definitions in input_definitions.inp.")
+                self.logger.info("ERROR HINT: Verify Raster definitions in 01_Conditions/%s/input_definitions.inp." % self.condition)
             r_index += 1
         try:
             return Float(CellStatistics(__ras__, "MINIMUM", "DATA"))

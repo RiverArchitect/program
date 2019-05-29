@@ -5,12 +5,12 @@ try:
     from tkinter.filedialog import *
     import webbrowser, shutil, random
 except:
-    print("ERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
     import s20_plantings_delineation as s20
     import s21_plantings_stabilization as s21
-    import s40_compare_wua as s40
+    import s40_compare_sharea as s40
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fg
@@ -182,7 +182,7 @@ class MainGui(tk.Frame):
         self.b_select_c_p = tk.Button(self, width=14, background="white", text="Confirm Selection",
                                       command=lambda: self.select_condition("chsi_project"))
         self.b_select_c_p.grid(sticky=tk.E, row=28, column=2, padx=self.xd, pady=self.yd)
-        self.b_s40 = tk.Button(self, text="Calculate Net gain in Annually Usable habitat Area (AUA)", command=lambda: self.start_app("s40"))
+        self.b_s40 = tk.Button(self, text="Calculate Net gain in Seasonal Habitat Area (SHArea)", command=lambda: self.start_app("s40"))
         self.b_s40.grid(sticky=tk.EW, row=30, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_s40["state"] = "disabled"
         self.b_s40_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s40"))
@@ -235,7 +235,7 @@ class MainGui(tk.Frame):
         self.condition_pl_list = []  # reset plant condition list
         self.condition_tbx_list = []  # reset tbx condition list
 
-        dir2HE = self.dir2ra + "HabitatEvaluation\\CHSI\\"
+        dir2HE = self.dir2ra + "SHArC\\CHSI\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
         for f in full_list:
             self.condition_i_list.append(str(f))  # pre-project propositions
@@ -289,8 +289,8 @@ class MainGui(tk.Frame):
             msges.append("Weighted Usable habitat Area module requirements:\n")
             msges.append("- ProjectArea.shp (Polygon)")
             msges.append("- The fish menu is situated in the upper left corner of the GUI window.")
-            msges.append("- The fish menu contents originate from definitions in /HabitatEvaluation/.templates/Fish.xlsx.")
-            msges.append("- CHSI conditions refer to available folders in /HabitatEvaluation/CHSI\n")
+            msges.append("- The fish menu contents originate from definitions in /RiverArchitect/.site_packages/templates/Fish.xlsx.")
+            msges.append("- CHSI conditions refer to available folders in /SHArC/CHSI\n")
 
         showinfo("Module Info", "\n".join(msges))
 
@@ -298,12 +298,12 @@ class MainGui(tk.Frame):
         # rebuild = True -> rebuilt menu mode
         if not self.rebuild_fish_menu:
             # initial menu construction
-            sys.path.append(self.dir2ra + "HabitatEvaluation\\")
+            sys.path.append(self.dir2ra + "\\.site_packages\\riverpy\\")
             try:
                 import cFish as cf
                 self.fish = cf.Fish()
             except:
-                showinfo("ERROR", "Invalid directory to RiverArchitect/HabitatEvaluation.")
+                showinfo("ERROR", "Invalid directory to RiverArchitect/.site_packages/riverpy/.")
                 return -1
             self.fishmenu.entryconfig(0, label="EDIT FISH", command=lambda: self.fish.edit_xlsx())
             self.fishmenu.add_command(label="RE-BUILD FISH MENU", command=lambda: self.make_fish_menu())
@@ -431,7 +431,7 @@ class MainGui(tk.Frame):
                     showinfo("ATTENTION", "Select at least one fish species - lifestage!")
                     return -1
                 if self.cover_app_pre.get() or self.cover_app_post.get():
-                    msg1 = "Make sure that cover cHSI rasters are available in HabitatEvaluation/cHSI/"
+                    msg1 = "Make sure that cover cHSI rasters are available in SHArC/cHSI/"
                     msg2 = str(self.condition_init) + " AND / OR " + str(self.condition_proj) + "/cover/.\n\n"
                     msg3 = "Press OK to launch AUA calculation with cover."
                     showinfo("Info", msg1 + msg2 + msg3)

@@ -96,6 +96,7 @@ class FaGui(tk.Frame):
 
         self.condition = ""
         self.condition_list = fg.get_subdir_names(self.path_lvl_up + "\\01_Conditions\\")
+        self.condition_selected = False
         self.errors = False
         self.feature_list = []
         self.features = cdef.Features(False)
@@ -139,10 +140,11 @@ class FaGui(tk.Frame):
         self.l_reach_label.grid(sticky=tk.W, row=1, column=0, columnspan=1, padx=self.xd, pady=self.yd * 2)
         self.l_reaches = tk.Label(self, fg="red", text="Select from Reaches menu (required for Raster Maker only)")
         self.l_reaches.grid(sticky=tk.W, row=1, column=1, columnspan=6, padx=self.xd, pady=self.yd * 2)
-        self.l_condition = tk.Label(self, text="Condition: \n (select)")
+        self.l_condition = tk.Label(self, text="Condition: \n")
         self.l_condition.grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.l_v_condition = tk.Label(self, fg="red", text="Verify (Run menu) \n Raster Maker only")
-        self.l_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
+        self.b_v_condition = tk.Button(self, fg="red", text="Select \n Raster Maker only",
+                                       command=lambda: self.select_condition)
+        self.b_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
         self.l_n = tk.Label(self, text="Roughness (Manning\'s n): %.3f " % self.manning_n)
         self.l_n.grid(sticky=tk.W, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
@@ -159,6 +161,7 @@ class FaGui(tk.Frame):
         self.b_mod_r = tk.Button(self, width=25, bg="white", text="Modify raster input", command=lambda:
                                  self.open_inp_file("input_definitions.inp"))
         self.b_mod_r.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_mod_r["state"] = "disabled"
         self.b_mod_m = tk.Button(self, width=25, bg="white", text="Modify global map parameters", command=lambda:
                                  self.open_inp_file("mapping.inp"))
         self.b_mod_m.grid(sticky=tk.EW,row=5, column=2, columnspan=2, padx=self.xd, pady=self.yd)
@@ -228,7 +231,6 @@ class FaGui(tk.Frame):
         self.mbar.add_cascade(label="Run", menu=self.runmenu)  # attach it to the menubar
         self.runmenu.add_command(label="Verify settings", command=lambda: self.verify())
         self.runmenu.add_command(label="Run: Raster Maker", command=lambda: self.run_raster_maker())
-        # self.runmenu.add_command(label="Run: Layout Maker", command=lambda: self.run_layout_maker())
         self.runmenu.add_command(label="Run: Map Maker", command=lambda: self.run_map_maker())
 
         # UNIT SYSTEM DROP DOWN
@@ -380,18 +382,22 @@ class FaGui(tk.Frame):
                 _f = r'' + os.path.abspath(
                     os.path.join(os.path.dirname(__file__), '..')) + "\\ModifyTerrain\\.templates\\" + filename
             else:
-                _f = r'' + os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\" + filename
+                _f = self.path_lvl_up + "\\01_Conditions\\" + self.condition + "\\" + filename
         except:
-            _f = r'' + os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\" + filename
+            try:
+                _f = self.path_lvl_up + "\\01_Conditions\\" + self.condition + "\\" + filename
+            except:
+                _f = None
 
         if os.path.isfile(_f):
             try:
                 webbrowser.open(_f)
             except:
-                showinfo("ERROR ", "Cannot open " + str(filename) +
-                         ". Make sure that your operating system has a standard application defined for *.inp-files.")
+                showinfo("ERROR ", "Cannot open " + str(_f) +
+                         ".\nMake sure that the file was created (Get Started tab) and that your operating system has a standard application defined for *.inp-files.")
         else:
-            showinfo("ERROR ", "The file " + str(filename) +" does not exist. Check feature_analysis directory.")
+            showinfo("ERROR ",
+                     "The file " + str(_f) + " does not exist.\nUse the Get Started tab to create and input file.")
 
     def open_log_file(self):
         logfilenames = ["error.log", "rasterlogfile.log", "logfile.log", "map_logfile.log", "mxd_logfile.log"]
@@ -470,6 +476,26 @@ class FaGui(tk.Frame):
         if float(self.manning_n) > 0.2:
             showinfo("WARNING", "That seems to be an incredibly rough channel. Consider revising the new value for Manning\'s n")
 
+    def select_condition(self):
+        try:
+            items = self.lb_condition.curselection()
+            self.condition = [self.condition_list[int(item)] for item in items][0]
+            input_dir = self.path_lvl_up + "\\01_Conditions\\" + str(self.condition)
+            if os.path.exists(input_dir) or self.mapping:
+                self.b_v_condition.config(fg="forest green", text="Selected:\n" + self.condition)
+                self.b_mod_r["state"] = "normal"
+                self.condition_selected = True
+                return ""
+            else:
+                self.b_v_condition.config(fg="red", text="ERROR")
+                self.errors = True
+                self.verified = False
+                return "Invalid file structure (non-existent directory /01_Conditions/CONDITION/)."
+        except:
+            self.errors = True
+            self.verified = False
+            return "Invalid entry for \'Condition\'."
+
     def show_credits(self):
         showinfo("Credits", fg.get_credits())
 
@@ -528,21 +554,10 @@ class FaGui(tk.Frame):
                 error_msg.append("Wrong Python interpreter (arcpy not available).")
                 self.errors = True
                 self.verified = False
-        try:
-            items = self.lb_condition.curselection()
-            self.condition = [self.condition_list[int(item)] for item in items][0]
-            input_dir = self.path_lvl_up + "\\01_Conditions\\" + str(self.condition)
-            if os.path.exists(input_dir) or self.mapping:
-                self.l_v_condition.config(fg="forest green", text="Selected: " + self.condition)
-            else:
-                error_msg.append("Invalid file structure (non-existent directory /01_Conditions/condition ).")
-                self.l_v_condition.config(fg="red", text="ERROR                                 ")
-                self.errors = True
-                self.verified = False
-        except:
-            error_msg.append("Invalid entry for \'Condition\'.")
-            self.errors = True
-            self.verified = False
+
+        if not self.condition_selected:
+            condition_selection = self.select_condition()
+            error_msg.append(condition_selection)
         if self.errors:
             self.master.bell()
             showinfo("VERIFICATION ERROR(S)", "\n ".join(error_msg))

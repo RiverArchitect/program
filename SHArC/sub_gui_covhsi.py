@@ -19,7 +19,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fg
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
+    print("ExceptionERROR: Cannot find package files (riverpy/fGlobal.py).")
 
 
 class CovHSIgui(object):
