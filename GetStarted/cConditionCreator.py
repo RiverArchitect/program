@@ -4,7 +4,7 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
 
 try:
-    import cDepth2Groundwater as cDG
+    import cWaterLevel as cWL
     import cDetrendedDEM as cDD
     import cMorphUnits as cMU
     import fSubCondition as fSC
@@ -36,9 +36,9 @@ class ConditionCreator:
             self.error = True
 
     def make_d2w(self, h_ras_dir, dem_ras_dir):
-        d2w = cDG.D2W(self.dir2condition)
+        wle = cWL.WLE(self.dir2condition)
         try:
-            self.error = d2w.calculate_d2w(h_ras_dir, dem_ras_dir)
+            self.error = wle.calculate_d2w(h_ras_dir, dem_ras_dir)
         except:
             self.error = True
 
