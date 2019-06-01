@@ -2,7 +2,7 @@
 import arcpy
 import webbrowser
 from fFunctions import *
-logger = logging_start("logfile")
+logger = logging.getLogger("logfile")
 try:
     from arcpy.sa import *
 except:
@@ -122,7 +122,7 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     for k in feature_dict.keys():
         write_dict.update({k: 0.0})  # set to zero for surface count
 
-    stat_data = read_txt(quant_dir + "plant_stab.txt", logger)
+    stat_data = read_txt(quant_dir + "plant_stab.txt")
     logger.info(" >> Extracting relevant area sizes ...")
 
     for row in stat_data:
@@ -155,7 +155,6 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     logger.info(" -- OK (Clean up)\n")
 
     # RELEASE LOGGER AND OPEN LOGFILE
-    logging_stop(logger)
     try:
         logfile = os.getcwd() + "\\logfile.log"
         try:

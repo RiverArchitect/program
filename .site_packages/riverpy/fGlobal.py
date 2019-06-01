@@ -1,5 +1,6 @@
 try:
     import os, logging, sys, glob, webbrowser, time
+    from collections import Iterable  # used in the flatten function
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, glob, logging, time, webbrowser).")
 
@@ -59,6 +60,15 @@ def dict_values2list(dv):
     return out_list
 
 
+def flatten(lis):
+    for item in lis:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            for x in flatten(item):
+                yield x
+        else:
+            yield item
+
+
 def get_credits():
     c_file = open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\credits.txt", "r")
     credits_str = "\n".join(c_file.read().splitlines())
@@ -93,22 +103,22 @@ def initialize_logger(output_dir, app_name):
     logger.setLevel(logging.INFO)
 
     # create console handler and set level to info
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_formatter = logging.Formatter("%(asctime)s - %(message)s")
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(console_handler)
+    # console_handler = logging.StreamHandler()
+    # console_handler.setLevel(logging.INFO)
+    # console_formatter = logging.Formatter("%(asctime)s - %(message)s")
+    # console_handler.setFormatter(console_formatter)
+    # logger.addHandler(console_handler)
 
-    # create error file handler and set level to error
-    err_handler = logging.FileHandler(os.path.join(output_dir, "error.log"), "w", encoding=None, delay="true")
-    err_handler.setLevel(logging.ERROR)
-    err_formatter = logging.Formatter("%(asctime)s - %(message)s")
-    err_handler.setFormatter(err_formatter)
-    logger.addHandler(err_handler)
+    # # create error file handler and set level to error
+    # err_handler = logging.FileHandler(os.path.join(output_dir, "error.log"), "w", encoding=None, delay="true")
+    # err_handler.setLevel(logging.ERROR)
+    # err_formatter = logging.Formatter("%(asctime)s - %(message)s")
+    # err_handler.setFormatter(err_formatter)
+    # logger.addHandler(err_handler)
 
     # create debug file handler and set level to debug
     debug_handler = logging.FileHandler(os.path.join(output_dir, "logfile.log"), "w")
-    debug_handler.setLevel(logging.DEBUG)
+    debug_handler.setLevel(logging.INFO)
     debug_formatter = logging.Formatter("%(asctime)s - %(message)s")
     debug_handler.setFormatter(debug_formatter)
     logger.addHandler(debug_handler)
@@ -133,7 +143,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     [feat_id_list.append(features.name_dict[item]) for item in relevant_feat_names]
     feat_col_list = []
     [feat_col_list.append(features.col_name_dict[item]) for item in relevant_feat_names]
-    dir2LD = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\..')) + "\\LifespanDesign\\"
+    dir2LD = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
 
     if reach_ids.__len__() == 1:
         reach_name = "_" + str(reach_ids[0])
@@ -247,6 +257,13 @@ def open_folder(directory):
         pass
 
 
+def print_dict(dictionary):
+    out_str = ""
+    for k, v in dictionary.items():
+        out_str += "{0} - {1}".format(str(k), str("".join(v)))
+    return out_str
+
+
 def rm_dir(directory):
     # Deletes everything reachable from the directory named in 'directory', and the directory itself
     # assuming there are no symbolic links.
@@ -324,6 +341,7 @@ def stop_logging(logger):
         handler.close()
         logger.removeHandler(handler)
 
+
 def tuple2num(arg):
     # function converts float number with ',' separator for digits to '.' separator
     # type(arg) = tuple with two entries, e.g. (2,40)
@@ -334,7 +352,7 @@ def tuple2num(arg):
 
 def write_data(folder_dir, file_name, data):
     if not os.path.exists(folder_dir):
-            os.mkdir(folder_dir)
+        os.mkdir(folder_dir)
     os.chdir(folder_dir)
 
     f = open(file_name+'.txt', 'w')

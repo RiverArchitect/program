@@ -2,7 +2,7 @@
 import arcpy
 import webbrowser
 from fFunctions import *
-logger = logging_start("logfile")
+logger = logging.getLogger("logfile")
 try:
     from arcpy.sa import *
 except:
@@ -10,7 +10,7 @@ except:
 try:
     # load RiverArchitects own packages
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cDefinitions as cdef
+    import cDefinitions as cDef
 except:
     print("ExceptionError: Could not find own packages (./site_packages/riverpy/)")
 
@@ -23,7 +23,7 @@ def main(action_dir, reach, stn, unit, version):
     # unit = "us" or "si"
     # version = "v10"  # type() =  3-char str: vII
     error = False
-    features = cdef.Features(False)  # read feature IDs (required to identify plants)
+    features = cDef.Features(False)  # read feature IDs (required to identify plants)
 
     if unit == "us":
         area_units = "SQUARE_FEET_US"
@@ -181,7 +181,7 @@ def main(action_dir, reach, stn, unit, version):
     logger.info("Processing table statistics ...")
     write_dict = {}
     for sf in stat_files.keys():
-        stat_data = read_txt(stat_files[sf], logger)
+        stat_data = read_txt(stat_files[sf])
         logger.info("     --> Extracting relevant area ...")
         polygon_count = 0
         total_area_ft2 = 0.0
@@ -195,12 +195,11 @@ def main(action_dir, reach, stn, unit, version):
 
     # WRITE AREA DATA TO EXCEL FILE
     logger.info("Writing results ...")
-    write_dict2xlsx(write_dict, xlsx_target, "B", "C", 4, logger)
+    write_dict2xlsx(write_dict, xlsx_target, "B", "C", 4)
 
     logger.info(" -- OK (PLANT DELINEATION FINISHED)\n")
 
     # RELEASE LOGGER AND OPEN LOGFILE
-    logging_stop(logger)
     try:
         logfile = os.getcwd() + "\\logfile.log"
         try:

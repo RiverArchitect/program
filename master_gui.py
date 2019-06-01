@@ -8,6 +8,11 @@ try:
 except:
     print("ERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 try:
+    sys.path.append(os.path.dirname(__file__) + "\\.site_packages\\riverpy\\")
+    from cLogger import Logger
+except:
+    print("ERROR: Could not import Logger (riverpy).")
+try:
     import GetStarted
 except:
     print("ERROR: Could not import Welcome Screen (Get Started).")
@@ -30,7 +35,7 @@ except:
 try:
     import SHArC
 except:
-    print("ERROR: Could not import HabitatEvaluation.")
+    print("ERROR: Could not import SHArC.")
 try:
     import EcoMorphology
 except:
@@ -41,6 +46,7 @@ class RaGui(tk.Frame):
     # master GUI for all RiverArchitect modules
     def __init__(self, master=None):
         tk.Frame.__init__(self, master)
+        self.logger = Logger("logfile")
         self.pack()
 
         self.master.title("River Architect")
@@ -52,7 +58,7 @@ class RaGui(tk.Frame):
                           'Lifespan Design',
                           'Max Lifespan',
                           'Modify Terrain',
-                          'Habitat Evaluation',
+                          'SHArC',
                           'Eco Morphology',
                           'Project Maker']
 

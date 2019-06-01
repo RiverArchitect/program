@@ -3,14 +3,13 @@ try:
     import sys, os, logging
     # add folder containing package routines to the system path
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import cActionAssessment as ca
-    import cFeatureActions as cf
+    import cActionAssessment as cAA
+    import cFeatureActions as cFA
 
     # load classes files from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    from cLogger import Logger
-    import cMapper as cm
-    import fGlobal as fg
+    import cMapper as cMp
+    import fGlobal as fG
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
     print(
@@ -22,13 +21,13 @@ def map_maker(condition, feature_groups, *args):
     # feature_group = LIST of feature groups
     # args[0] = alternative input dir
     try:
-        mapper = cm.Mapper(condition, "mlf", args[0])
+        mapper = cMp.Mapper(condition, "mlf", args[0])
     except:
-        mapper = cm.Mapper(condition, "mlf")
+        mapper = cMp.Mapper(condition, "mlf")
     mapper.prepare_layout(True, map_items=feature_groups)
 
     if not mapper.error:
-        fg.open_folder(mapper.output_dir)
+        fG.open_folder(mapper.output_dir)
 
 
 def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
@@ -47,7 +46,7 @@ def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
     except:
         pass
 
-    logger = Logger("logfile")
+    logger = logging.getLogger("logfile")
     logger.info("*** unit system: " + str(unit_system))
     logger.info("*** condition: " + str(condition))
     if not(feature_type in allowed_feature_types):
@@ -57,17 +56,17 @@ def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
     # set environment
     temp_path = os.getcwd() + "\\.cache\\"
     if os.path.exists(temp_path):
-        fg.rm_dir(temp_path)  # delete cache if there are remainders from previous analysis
+        fG.rm_dir(temp_path)  # delete cache if there are remainders from previous analysis
         logger.info("Found and deleted old .cache folder.")
-    fg.chk_dir(temp_path)
+    fG.chk_dir(temp_path)
 
-    feature_assessment = ca.ArcPyContainer(condition, feature_type, dir_base_ras, unit_system, alternate_inpath)
+    feature_assessment = cAA.ArcPyContainer(condition, feature_type, dir_base_ras, unit_system, alternate_inpath)
     feature_assessment()  # call data processing
 
     try:
         # erase traces
         del feature_assessment
-        fg.rm_dir(temp_path)  # dump cache after feature analysis
+        fG.rm_dir(temp_path)  # dump cache after feature analysis
     except:
         logger.info("WARNING: Could not remove .cache.")
 

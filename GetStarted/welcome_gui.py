@@ -46,8 +46,11 @@ class MainGui(tk.Frame):
                                         command=lambda: self.create_c_sub())
         self.b_create_sub_c.grid(sticky=tk.EW, row=2, column=0, columnspan=2, padx=self.xd, pady=self.yd*2)
 
-        # self.b_create_Q = tk.Button(self, width=30, bg="white", text="Generate Discharge Tables", command=lambda: self.create_Q())
-        # self.b_create_Q.grid(sticky=tk.EW, row=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_analyze_Q = tk.Button(self, width=30, bg="white", text="Analyze Flows", command=lambda: self.analyze_Q())
+        self.b_analyze_Q.grid(sticky=tk.EW, row=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+
+        self.b_make_inp = tk.Button(self, width=30, bg="white", text="Make Input File", command=lambda: self.make_inp())
+        self.b_make_inp.grid(sticky=tk.EW, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
         self.make_menu()
 
@@ -89,6 +92,17 @@ class MainGui(tk.Frame):
         self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
         self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
+    def analyze_Q(self):
+        try:
+            import popup_analyze_q as pcq
+        except:
+            showinfo("Oups ...", "Cannot find discharge analysis routines -  check RA installation.")
+            return -1
+        new_window = pcq.FlowAnalysis(self.master)
+        self.b_analyze_Q["state"] = "disabled"
+        self.master.wait_window(new_window.top)
+        self.b_analyze_Q["state"] = "normal"
+
     def create_c(self):
         try:
             import popup_create_c as pcc
@@ -113,6 +127,17 @@ class MainGui(tk.Frame):
 
     def create_Q(self):
         pass
+
+    def make_inp(self):
+        try:
+            import popup_make_inp as pmi
+        except:
+            showinfo("Oups ...", "Cannot find discharge analysis routines -  check RA installation.")
+            return -1
+        new_window = pmi.InpFrame(self.master)
+        self.b_make_inp["state"] = "disabled"
+        self.master.wait_window(new_window.top)
+        self.b_make_inp["state"] = "normal"
 
     def populate_c(self):
         try:

@@ -8,7 +8,7 @@ try:
     from cThresholdDirector import *
     # add special routines
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cDefinitions as cdef
+    import cDefinitions as cDef
     from cPlants import *
     from cGravel import *
 except:
@@ -316,7 +316,7 @@ class RestorationFeature:
 
     def __init__(self, feature_name, *sub_feature):
         # sub_feature = BOOL (optional)
-        self.feats = cdef.Features(False)
+        self.feats = cDef.Features(False)
         self.sub = False
         self.name = feature_name
         self.id = self.feats.name_dict[feature_name]

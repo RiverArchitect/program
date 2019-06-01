@@ -12,15 +12,13 @@ try:
     # import own routines
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import cHSI as chsi
-
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cFish as cf
-    import fGlobal as fg
-    import cInputOutput as cio
-    from cLogger import Logger
+    import cFish as cFi
+    import fGlobal as fG
+    import cInputOutput as cIO
 except:
-    print("ExceptionERROR: Cannot find package files (riverpy/fGlobal.py).")
+    print("ExceptionERROR: Cannot find package files (riverpy).")
 
 
 class PopUpWindow(object):
@@ -42,7 +40,7 @@ class PopUpWindow(object):
 
 class MainGui(tk.Frame):
     def __init__(self, master=None):
-        self.log = Logger("logfile", True)
+        self.logger = logging.getLogger("logfile")
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
 
         self.bound_shp = ""  # full path of a boundary shapefile
@@ -53,9 +51,9 @@ class MainGui(tk.Frame):
         self.dir_inp_hsi_cov = ""
         self.chsi_condition_hy = ""
         self.chsi_condition_cov = ""
-        self.condition_list = fg.get_subdir_names(self.dir_conditions)
+        self.condition_list = fG.get_subdir_names(self.dir_conditions)
         self.cover_applies = False
-        self.fish = cf.Fish()
+        self.fish = cFi.Fish()
         self.fish_applied = {}
         self.max_columnspan = 5
         self.unit = "us"
@@ -74,24 +72,36 @@ class MainGui(tk.Frame):
         self.set_geometry()
 
         # LABELS
-        self.l_combine = tk.Label(self, text="3) Select HSI combination method: ")
-        self.l_combine.grid(sticky=tk.W, row=2, rowspan=1, column=0, columnspan=1, padx=self.xd, pady=self.yd)
-        self.l_condition_hy = tk.Label(self, text="4a) Available hydraulic habitat\n     conditions: ")
-        self.l_condition_hy.grid(sticky=tk.W, row=3, rowspan=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
-        self.l_inpath_hy = tk.Label(self, fg="gray60", text="Source: " + str(self.dir_conditions))
-        self.l_inpath_hy.grid(sticky=tk.W, row=6, column=0, columnspan=self.max_columnspan + 1, padx=self.xd, pady=self.yd)
-        self.l_condition_cov = tk.Label(self, text="4b) Available cover habitat\n     conditions: ")
-        self.l_condition_cov.grid(sticky=tk.W, row=8, rowspan=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
-        self.l_inpath_cov = tk.Label(self, fg="gray60", text="Source: " + str(self.dir_conditions))
-        self.l_inpath_cov.grid(sticky=tk.W, row=11, column=0, columnspan=self.max_columnspan + 1, padx=self.xd,
+        self.l_aqua = tk.Label(self, fg="firebrick3", text="Select Aquatic Ambiance (at least one)")
+        self.l_aqua.grid(sticky=tk.W, row=0, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_combine = tk.Label(self, text="Select HSI combination method: ")
+        self.l_combine.grid(sticky=tk.W, row=2, column=0, columnspan=1, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=3, column=0)  # dummy
+
+        imsg = "\n(Use \'Make HSI Rasters\' menu to create habitat conditions)"
+        self.l_condition_hy = tk.Label(self, justify=tk.LEFT, fg="cyan4", text="Hydraulic habitat conditions (no cover):" + imsg)
+        self.l_condition_hy.grid(sticky=tk.W, row=4, rowspan=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_inpath_hy = tk.Label(self, justify=tk.LEFT, fg="cyan4", text="Source: " + str(self.dir_conditions))
+        self.l_inpath_hy.grid(sticky=tk.W, row=7, column=0, columnspan=self.max_columnspan + 1, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=9, column=0)  # dummy
+        self.l_condition_hy["state"] = "disabled"
+        self.l_inpath_hy["state"] = "disabled"
+
+        self.l_condition_cov = tk.Label(self, justify=tk.LEFT, fg="gold4", text="Cover habitat conditions:" + imsg)
+        self.l_condition_cov.grid(sticky=tk.W, row=10, rowspan=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_inpath_cov = tk.Label(self, justify=tk.LEFT, fg="gold4", text="Source: " + str(self.dir_conditions))
+        self.l_inpath_cov.grid(sticky=tk.W, row=13, column=0, columnspan=self.max_columnspan + 1, padx=self.xd,
                                pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=15, column=0)  # dummy
+        self.l_condition_cov["state"] = "disabled"
+        self.l_inpath_cov["state"] = "disabled"
 
         # DROP DOWN ENTRIES (SCROLL BARS)
         self.sb_condition_hy = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.sb_condition_hy.grid(sticky=tk.W, row=3, column=3, padx=0, pady=self.yd)
+        self.sb_condition_hy.grid(sticky=tk.W, row=4, column=3, padx=0, pady=self.yd)
         self.lb_condition_hy = tk.Listbox(self, height=3, width=15, yscrollcommand=self.sb_condition_hy.set)
         self.sb_condition_cov = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.sb_condition_cov.grid(sticky=tk.W, row=8, column=3, padx=0, pady=self.yd)
+        self.sb_condition_cov.grid(sticky=tk.W, row=10, column=3, padx=0, pady=self.yd)
         self.lb_condition_cov = tk.Listbox(self, height=3, width=15, yscrollcommand=self.sb_condition_cov.set)
         self.list_habitat_conditions()
 
@@ -103,47 +113,50 @@ class MainGui(tk.Frame):
         self.cb_combine_method_pd = tk.Checkbutton(self, text="Product", variable=self.combine_method,
                                                    onvalue="product", offvalue="geometric_mean")
         self.cb_combine_method_pd.grid(sticky=tk.W, row=2, column=3, columnspan=2, padx=self.xd, pady=self.yd)
-        self.cb_bshp = tk.Checkbutton(self, text="Use calculation boundary (rectanglar polygon) shapefile",
+        self.cb_bshp = tk.Checkbutton(self, text="Use calculation boundary (rectangular polygon) shapefile",
                                       variable=self.apply_boundary, onvalue=True, offvalue=False,
-                                      command=lambda: self.activate_button(self.b_select_bshp))
-        self.cb_bshp.grid(sticky=tk.W, row=0, rowspan=2, column=0, columnspan=self.max_columnspan - 1, padx=self.xd, pady=self.yd)
-        self.cb_use_cov = tk.Checkbutton(self, text="Use cover CHSI (requires that 5b was executed)",
+                                      command=lambda: self.activate_shape_selection(self.b_select_bshp))
+        self.cb_bshp.grid(sticky=tk.W, row=1, column=0, columnspan=self.max_columnspan - 1, padx=self.xd, pady=self.yd)
+        self.cb_use_cov = tk.Checkbutton(self, fg="gold4", text="Use cover CHSI (requires COVER HSI conditions)",
                                          variable=self.cover_applies_sharea,
                                          onvalue=True, offvalue=False)
-        self.cb_use_cov.grid(sticky=tk.W, row=13, column=0, columnspan=self.max_columnspan, padx=self.xd,
+        self.cb_use_cov.grid(sticky=tk.W, row=16, column=0, columnspan=self.max_columnspan, padx=self.xd,
                              pady=self.yd)
+        self.cb_use_cov["state"] = "disabled"
 
         # BUTTONS
-        self.b_show_fish = tk.Button(self, width=15, fg="RoyalBlue3", bg="white", text="Show selected\nfish species", command=lambda:
-                                     self.shout_dict(self.fish_applied))
-        self.b_show_fish.grid(sticky=tk.W, row=0, rowspan=2, column=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_show_fish = tk.Button(self, width=15, fg="RoyalBlue3", bg="white", text="Show selected\nAquatic Ambiance(s)",
+                                     command=lambda: self.shout_dict(self.fish_applied))
+        self.b_show_fish.grid(sticky=tk.W, row=0, rowspan=3, column=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_show_fish["state"] = "disabled"
 
-        self.b_select_bshp = tk.Button(self, width=8, bg="white", text="Select\nshp file", command=lambda: self.select_boundary_shp())
-        self.b_select_bshp.grid(sticky=tk.W, row=0, rowspan=2, column=self.max_columnspan - 1, padx=self.xd, pady=self.yd)
+        self.b_select_bshp = tk.Button(self, width=8, bg="white", text="Select file", command=lambda: self.select_boundary_shp())
+        self.b_select_bshp.grid(sticky=tk.W, row=1, column=self.max_columnspan - 1, padx=self.xd, pady=self.yd)
         self.b_select_bshp["state"] = "disabled"
 
-        self.b_csi_nc = tk.Button(self, width=30, bg="white", text="5a) Combine HSI rasters (pure hydraulic)", anchor='w',
+        self.b_csi_nc = tk.Button(self, fg="cyan4", width=30, bg="white", text="Combine HSI rasters (pure hydraulic)",
                                   command=lambda: self.start_app("chsi", cover=False))
-        self.b_csi_nc.grid(sticky=tk.EW, row=7, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_csi_nc.grid(sticky=tk.EW, row=8, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_csi_nc["state"] = "disabled"
 
-        self.b_csi_c = tk.Button(self, width=30, bg="white", text="5b) Combine HSI rasters (hydraulic and cover)", anchor='w',
+        self.b_csi_c = tk.Button(self, fg="gold4", width=30, bg="white",
+                                 text="Combine HSI rasters (hydraulic and cover)",
                                  command=lambda: self.start_app("chsi", cover=True))
-        self.b_csi_c.grid(sticky=tk.EW, row=12, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_csi_c.grid(sticky=tk.EW, row=14, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_csi_c["state"] = "disabled"
 
-        self.b_run_sharea = tk.Button(self, width=30, bg="white",
-                                   text="6) Run Seasonal Habitat Area Calculator (SHArC)", anchor='w',
-                                   command=lambda: self.start_app("sharea", cover=False))
-        self.b_run_sharea.grid(sticky=tk.EW, row=14, column=0, columnspan=self.max_columnspan, rowspan=2,
-                            padx=self.xd, pady=self.yd)
-        self.b_run_sharea["state"] = "disabled"
+        self.b_sharc = tk.Button(self, width=30, bg="white",
+                                 text="Run Seasonal Habitat Area Calculator (SHArC)",
+                                 command=lambda: self.start_app("sharea", cover=False))
+        self.b_sharc.grid(sticky=tk.EW, row=17, column=0, columnspan=self.max_columnspan, rowspan=2,
+                          padx=self.xd, pady=self.yd)
+        self.b_sharc["state"] = "disabled"
 
-        self.b_sharea_th = tk.Button(self, width=15, fg="RoyalBlue3", bg="white",
+        self.b_sha_th = tk.Button(self, width=15, fg="RoyalBlue3", bg="white",
                                   text="Set SHArea\nthreshold\nCurrent: CHSI = " + str(self.sharea_threshold),
                                   command=lambda: self.set_sharea())
-        self.b_sharea_th.grid(sticky=tk.EW, row=13, rowspan=4, column=self.max_columnspan, padx=self.xd, pady=self.yd)
-        self.b_sharea_th["state"] = "disabled"
+        self.b_sha_th.grid(sticky=tk.EW, row=16, rowspan=3, column=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_sha_th["state"] = "disabled"
 
         self.make_menu()
 
@@ -152,13 +165,13 @@ class MainGui(tk.Frame):
         self.xd = 5  # distance holder in x-direction (pixel)
         self.yd = 5  # distance holder in y-direction (pixel)
         # width and height of the window
-        self.ww = 550
-        self.wh = 495
+        self.ww = 690
+        self.wh = 550
         self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
         self.wy = (self.master.winfo_screenheight() - self.wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
         if __name__ == '__main__':
-            self.master.title("Habitat Enhancement Evaluation")  # window title
+            self.master.title("Seasonal Habitat Area Calculator (SHArC)")  # window title
             self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def make_menu(self):
@@ -168,7 +181,7 @@ class MainGui(tk.Frame):
 
         # MAKE FISH SPECIES DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="1) Set fish", menu=self.fishmenu)  # attach it to the menubar
+        self.mbar.add_cascade(label="Select Aquatic Ambiance", menu=self.fishmenu)  # attach it to the menubar
         self.fishmenu.add_command(label="DEFINE FISH SPECIES", command=lambda: self.fish.edit_xlsx())
         self.fishmenu.add_command(label="RE-BUILD MENU", command=lambda: self.make_fish_menu(rebuild=True))
         self.fishmenu.add_command(label="_____________________________")
@@ -179,13 +192,14 @@ class MainGui(tk.Frame):
 
         # MAKE HSI DROP DOWN
         self.hsimenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="2) Make HSI rasters (habitat conditions)",
+        self.mbar.add_cascade(label="Make HSI Rasters (habitat conditions)",
                               menu=self.hsimenu)  # attach it to the menubar
         self.hsimenu.add_command(label="HYDRAULIC", foreground="gray60")  # POTENTIAL ERROR SOURCE: "foreground"
-        self.hsimenu.add_command(label="> Flow depth - flow velocity HSIs", command=lambda: self.start_app("hhsi_gui"))
+        self.hsimenu.add_command(label="> Flow depth - flow velocity HSIs", foreground="cyan4",
+                                 command=lambda: self.start_app("hhsi_gui"))
         self.hsimenu.add_command(label="OTHER (COVER)", foreground="gray60")  # POTENTIAL ERROR SOURCE: "foreground"
         label_text = "> Substrate - Boulder - Cobble - Streamwood - Vegetation HSIs"
-        self.hsimenu.add_command(label=label_text, command=lambda: self.start_app("mhsi_gui"))
+        self.hsimenu.add_command(label=label_text, foreground="gold4", command=lambda: self.start_app("mhsi_gui"))
 
         # UNIT SYSTEM DROP DOWN
         self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
@@ -197,17 +211,38 @@ class MainGui(tk.Frame):
         self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
         self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Open logfile (stops logging)", command=lambda: self.stop_logging())
-        self.closemenu.add_command(label="Quit programm", command=lambda: self.myquit())
+        self.closemenu.add_command(label="Open logfile", command=lambda: self.open_log_file())
+        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
-    def activate_button(self, button):
-        button["state"] = "normal"
+    def activate_shape_selection(self, button):
         if self.apply_boundary.get():
+            button["state"] = "normal"
             self.b_select_bshp.config(fg="red")
+        else:
+            button["state"] = "disabled"
+
+    def activate_buttons(self, **kwargs):
+        target_state = "normal"
+        # parse optional arguments
+        try:
+            for k in kwargs.items():
+                if "revert" in k[0]:
+                    if k[1]:
+                        # disable buttons if revert = True
+                        target_state = "disabled"
+        except:
+            pass
+        self.b_show_fish["state"] = target_state
+        self.b_c_select_cov["state"] = target_state
+        self.b_c_select_hy["state"] = target_state
+        self.l_condition_hy["state"] = target_state
+        self.l_inpath_hy["state"] = target_state
+        self.l_condition_cov["state"] = target_state
+        self.l_inpath_cov["state"] = target_state
 
     def list_habitat_conditions(self):
         # update habitat conditions listbox
-        self.condition_list = fg.get_subdir_names(self.dir_conditions)
+        self.condition_list = fG.get_subdir_names(self.dir_conditions)
         try:
             self.lb_condition_hy.delete(0, tk.END)
             self.lb_condition_cov.delete(0, tk.END)
@@ -217,9 +252,9 @@ class MainGui(tk.Frame):
         for e in self.condition_list:
             self.lb_condition_hy.insert(tk.END, e)
             self.lb_condition_cov.insert(tk.END, e)
-        self.lb_condition_hy.grid(sticky=tk.E, row=3, column=2, padx=0, pady=self.yd)
+        self.lb_condition_hy.grid(sticky=tk.E, row=4, column=2, padx=0, pady=self.yd)
         self.sb_condition_hy.config(command=self.lb_condition_hy.yview)
-        self.lb_condition_cov.grid(sticky=tk.E, row=8, column=2, padx=0, pady=self.yd)
+        self.lb_condition_cov.grid(sticky=tk.E, row=10, column=2, padx=0, pady=self.yd)
         self.sb_condition_cov.config(command=self.lb_condition_cov.yview)
 
         # update selection button
@@ -227,14 +262,16 @@ class MainGui(tk.Frame):
             self.b_c_select_hy.config(text="Confirm\nselection", command=lambda: self.select_HSIcondition("hy"))
             self.b_c_select_cov.config(text="Confirm\nselection", command=lambda: self.select_HSIcondition("cov"))
         except:
-            self.b_c_select_hy = tk.Button(self, width=8, bg="white", text="Confirm\nselection", command=lambda:
-                                           self.select_HSIcondition("hy"))
-            self.b_c_select_cov = tk.Button(self, width=8, bg="white", text="Confirm\nselection", command=lambda:
-                                            self.select_HSIcondition("cov"))
-            self.b_c_select_hy.grid(sticky=tk.W, row=3, rowspan=2, column=self.max_columnspan - 1, padx=self.xd,
+            self.b_c_select_hy = tk.Button(self, fg="cyan4", width=8, bg="white", text="Confirm\nselection",
+                                           command=lambda: self.select_HSIcondition("hy"))
+            self.b_c_select_cov = tk.Button(self, fg="gold4", width=8, bg="white", text="Confirm\nselection",
+                                            command=lambda: self.select_HSIcondition("cov"))
+            self.b_c_select_hy.grid(sticky=tk.W, row=4, rowspan=2, column=self.max_columnspan - 1, padx=self.xd,
                                     pady=self.yd)
-            self.b_c_select_cov.grid(sticky=tk.W, row=8, rowspan=2, column=self.max_columnspan - 1, padx=self.xd,
+            self.b_c_select_cov.grid(sticky=tk.W, row=10, rowspan=2, column=self.max_columnspan - 1, padx=self.xd,
                                      pady=self.yd)
+            self.b_c_select_hy["state"] = "disabled"
+            self.b_c_select_cov["state"] = "disabled"
 
     def make_fish_menu(self, rebuild):
         # rebuild = True -> rebuilt menu mode
@@ -247,7 +284,7 @@ class MainGui(tk.Frame):
                                               command=lambda arg1=f_spec, arg2=lf_stage: self.set_fish(arg1, arg2))
         else:
             self.fish.assign_fish_names()
-            self.log.logger.info(" >> Rebuilding fish menu ...")
+            self.logger.info(" >> Rebuilding Aquatic Ambiance menu ...")
             entry_count = 6
             for f_spec in self.fish.species_dict.keys():
                 lf_stages = self.fish.species_dict[f_spec]
@@ -258,7 +295,6 @@ class MainGui(tk.Frame):
                     entry_count += 1
 
     def myquit(self):
-        self.log.logging_stop(self.log.logger)
         self.open_log_file()
         tk.Frame.quit(self)
 
@@ -280,7 +316,7 @@ class MainGui(tk.Frame):
             self.b_select_bshp.config(fg="forest green")
         else:
             self.b_select_bshp.config(text="Invalid file.")
-        self.log.logger.info(" >> Selected boundary shapefile: " + self.bound_shp)
+        self.logger.info(" >> Selected boundary shapefile: " + self.bound_shp)
 
     def select_HSIcondition(self, *args):
         if args[0] == "hy":
@@ -289,16 +325,16 @@ class MainGui(tk.Frame):
             self.dir_inp_hsi_hy = self.dir + "\\HSI\\" + str(self.chsi_condition_hy) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_hy):
-                self.l_inpath_hy.config(fg="forest green", text="Selected: " + str(self.dir_inp_hsi_hy))
+                self.l_inpath_hy.config(fg="cyan4", text="Selected: " + str(self.dir_inp_hsi_hy))
             else:
                 self.l_inpath_hy.config(fg="red", text="SELECTION ERROR                                       ")
 
             self.b_csi_nc["state"] = "normal"
             # update SHArea buttons
             if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_hy + "\\"):
-                self.b_sharea_th["state"] = "normal"
+                self.b_sha_th["state"] = "normal"
                 if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
-                    self.b_run_sharea["state"] = "normal"
+                    self.b_sharc["state"] = "normal"
 
         if args[0] == "cov":
             items = self.lb_condition_cov.curselection()
@@ -306,15 +342,16 @@ class MainGui(tk.Frame):
             self.dir_inp_hsi_cov = self.dir + "\\HSI\\" + str(self.chsi_condition_cov) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_cov):
-                self.l_inpath_cov.config(fg="forest green", text="Selected: " + str(self.dir_inp_hsi_cov))
+                self.l_inpath_cov.config(fg="gold4", text="Selected: " + str(self.dir_inp_hsi_cov))
             else:
                 self.l_inpath_cov.config(fg="red", text="SELECTION ERROR                                       ")
             self.b_csi_c["state"] = "normal"
             # update SHArea buttons
             if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_cov + "\\"):
-                self.b_sharea_th["state"] = "normal"
+                self.b_sha_th["state"] = "normal"
                 if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
-                    self.b_run_sharea["state"] = "normal"
+                    self.b_sharc["state"] = "normal"
+                    self.cb_use_cov["state"] = "normal"
 
     def set_fish(self, species, *lifestage):
         try:
@@ -326,37 +363,43 @@ class MainGui(tk.Frame):
                 if not (species in self.fish_applied.keys()):
                     self.fish_applied.update({species: []})
                 self.fish_applied[species].append(lifestage)
-                self.log.logger.info(" >> Added species: " + str(species) + " -- lifestage: " + str(lifestage))
+                self.logger.info(" >> Added ambiance: " + str(species) + " - " + str(lifestage))
+                self.activate_buttons()
+                self.l_aqua.config(text="")
             else:
+                self.activate_buttons(revert=True)
                 self.fish_applied = {}
-                self.log.logger.info(" >> All species cleared.")
+                self.logger.info(" >> All species cleared.")
+                self.l_aqua.config(text="Select Aquatic Ambiance (at least one)")
         else:
             self.fish_applied = self.fish.species_dict
-            self.log.logger.info(" >> All available species added.")
+            self.logger.info(" >> All available ambiances added.")
+            self.activate_buttons()
+            self.l_aqua.config(text="")
 
     def set_sharea(self):
         sub_frame = PopUpWindow(self.master)
-        self.b_sharea_th["state"] = "disabled"
+        self.b_sha_th["state"] = "disabled"
         self.master.wait_window(sub_frame.top)
-        self.b_sharea_th["state"] = "normal"
+        self.b_sha_th["state"] = "normal"
         self.sharea_threshold = float(sub_frame.value)
-        self.b_sharea_th.config(text="Set SHArea\nthreshold\nCurrent: CHSI = " + str(self.sharea_threshold))
+        self.b_sha_th.config(text="Set SHArea\nthreshold\nCurrent: CHSI = " + str(self.sharea_threshold))
 
         if float(self.sharea_threshold) > 1.0:
             showinfo("WARNING", "The CHSI threshold value for SHArea calcula-\ntion needs to be smaller than 1.0.")
 
     def shout_dict(self, the_dict):
-        msg = "Selected fish:"
+        msg = "Selected Ambiance(s):"
         for k in the_dict.keys():
-            msg = msg + "\n\n > " + str(k) + " lifestage(s):\n   -- " + "\n   -- ".join(the_dict[k])
-        showinfo("Applied Fish", msg)
+            msg = msg + "\n\n > " + str(k) + " - \n   - " + "\n   - ".join(the_dict[k])
+        showinfo("Aquatic Ambiance Info", msg)
 
     def start_app(self, app_name, *args, **kwargs):
         # parse optional arguments
         try:
-            for opt_var in kwargs.items():
-                if "cover" in opt_var[0]:
-                    self.cover_applies = opt_var[1]
+            for k in kwargs.items():
+                if "cover" in k[0]:
+                    self.cover_applies = k[1]
         except:
             pass
 
@@ -396,6 +439,7 @@ class MainGui(tk.Frame):
             try:
                 if self.cover_applies:
                     combine_hsi = chsi.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
+                    self.cb_use_cov["state"] = "normal"
                     self.cb_use_cov.select()
                 else:
                     combine_hsi = chsi.CHSI(self.chsi_condition_hy, self.cover_applies, self.unit)
@@ -406,11 +450,11 @@ class MainGui(tk.Frame):
                 combine_hsi.clear_cache()
                 self.master.bell()
                 if not (ans == "OK"):
-                    showinfo("WARNING", "No HSI rasters were available for the selected fish species -- lifestage.")
+                    showinfo("WARNING", "No HSI rasters were available for the selected fish species - lifestage.")
                 else:
                     # update SHArea buttons
-                    self.b_run_sharea["state"] = "normal"
-                    self.b_sharea_th["state"] = "normal"
+                    self.b_sharc["state"] = "normal"
+                    self.b_sha_th["state"] = "normal"
                     webbrowser.open(combine_hsi.path_csi)
             except:
                 showinfo("ERROR", "Problem in CHSI object.")
@@ -434,7 +478,7 @@ class MainGui(tk.Frame):
                 if ans == "OK":
                     webbrowser.open(sharea.xlsx_out)
                 else:
-                    showinfo("WARNING", "No CHSI rasters were available for the selected fish species -- lifestage.")
+                    showinfo("WARNING", "No CHSI rasters were available for the selected fish species - lifestage.")
             except:
                 showinfo("ERROR", "Could not instantiate CHSI object for SHArea calculation.")
 
@@ -442,12 +486,8 @@ class MainGui(tk.Frame):
             msg = "CONFIRM HABITAT CONDITION !"
             showinfo("ERROR", msg)
 
-    def stop_logging(self):
-        self.log.logging_stop(self.logger)
-        self.open_log_file()
-
     def show_credits(self):
-        showinfo("Credits", fg.get_credits())
+        showinfo("Credits", fG.get_credits())
 
     def unit_change(self):
         if self.unit == "si":

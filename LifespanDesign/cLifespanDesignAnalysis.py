@@ -4,7 +4,7 @@ try:
     from cParameters import *
     from cReadInpLifespan import *
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fG
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py, cParameters.py, cReadInpLifespan.py).")
 
@@ -40,7 +40,7 @@ class ArcPyAnalysis:
         try:
             self.output = args[0]
         except:
-            self.output = fg.get_newest_output_folder(
+            self.output = fG.get_newest_output_folder(
                 os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Rasters\\")
 
         try:
@@ -499,7 +499,7 @@ class ArcPyAnalysis:
                     temp_dict = {}
                     for morph_unit in mu_bad:
                         temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                    self.ras_mu = CellStatistics(fg.dict_values2list(temp_dict.values()), "SUM", "DATA")
+                    self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
                     temp_ras = Con((self.ras_mu >= 1), 0, 1.0)
                     self.ras_mu = temp_ras
                 except:
@@ -511,7 +511,7 @@ class ArcPyAnalysis:
                     temp_dict = {}
                     for morph_unit in mu_good:
                         temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                    self.ras_mu = CellStatistics(fg.dict_values2list(temp_dict.values()), "SUM", "DATA")
+                    self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
                     temp_ras = Con((self.ras_mu >= 1), 1.0, 0)
                     self.ras_mu = temp_ras
                 except:
@@ -804,7 +804,7 @@ class ArcPyAnalysis:
             self.set_extent()
             self.logger.info("      >>> Designing filter stability.")
             Dmean = GrainSizes(self.condition)  # in ft
-            ras_D15c = Dmean.raster * 0.25 * self.ft2in  # factor 0.25 from approximation of 2008 map (cf Excel) and 12 in/ft
+            ras_D15c = Dmean.raster * 0.25 * self.ft2in  # factor 0.25 from approximation of 2008 map (cFi Excel) and 12 in/ft
             self.ras_D15 = ras_D15c / 20
             self.ras_D85 = ras_D15c / 5
             temp_D15 = Con((self.ras_D85 < Dmaxf), self.ras_D15)
@@ -1134,7 +1134,7 @@ class ArcPyAnalysis:
                 self.logger.info("   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
                 if os.path.isfile(self.output + __full_name__):
                     self.logger.info("      >>> Overwriting existing raster.")
-                    file_locked = fg.rm_raster(self.output + __full_name__)
+                    file_locked = fG.rm_raster(self.output + __full_name__)
                     if file_locked:
                         self.logger.info(
                             "ERROR: Existing files are locked. Consider deleting manually or revise file structure.")
@@ -1209,7 +1209,7 @@ class ArcPyAnalysis:
                 "   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
             if os.path.isfile(self.output + __full_name__ + '.tif'):
                 self.logger.info("      >>> Overwriting existing raster.")
-                file_locked = fg.rm_raster(self.output + __full_name__)
+                file_locked = fG.rm_raster(self.output + __full_name__)
                 if file_locked:
                     self.logger.info(
                         "ERROR: Existing files are locked. Consider deleting manually or revise file structure.")

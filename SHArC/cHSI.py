@@ -11,10 +11,10 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cFish as cf
-    import cMakeTable as cmkt
-    import cInputOutput as cio
-    import fGlobal as fg
+    import cFish as cFi
+    import cMakeTable as cMkT
+    import cInputOutput as cIO
+    import fGlobal as fG
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 
@@ -34,10 +34,10 @@ class CHSI:
         else:
             p_ext = "no_cover"
         self.path_csi = os.path.dirname(os.path.abspath(__file__)) + "\\CHSI\\" + str(self.condition) + "\\" + p_ext + "\\"
-        self.path_sha_ras = os.path.dirname(os.path.abspath(__file__)) + "\\SHArea\\Rasters\\" + str(self.condition) + "\\" + p_ext + "\\"
-        fg.chk_dir(self.cache)
-        fg.chk_dir(self.path_csi)
-        fg.chk_dir(self.path_sha_ras)
+        self.path_sha_ras = os.path.dirname(os.path.abspath(__file__)) + "\\SHArea\\Rasters_" + str(self.condition) + "\\" + p_ext + "\\"
+        fG.chk_dir(self.cache)
+        fG.chk_dir(self.path_csi)
+        fG.chk_dir(self.path_sha_ras)
 
         self.unit = unit
         if self.unit == "us":
@@ -65,15 +65,15 @@ class CHSI:
         cc = 0  # appended in cache to avoid overwriting problems
         for species in fish.keys():
             for ls in fish[species]:
-                self.logger.info(" -- Usable Area FOR " + str(species).upper() + " - " + str(ls).upper())
-                fish_shortname = str(species).lower()[0:2] + str(ls[0])
+                self.logger.info(" -- Usable Area for " + str(species).upper() + " - " + str(ls).upper())
+                fish_shortname = str(species).lower()[0:2] + str(ls).lower()[0:2]
                 if self.cover_applies:
-                    xsn = self.condition + "_" + fish_shortname + "_cov.xlsx"
+                    xsn = self.condition + "_sharea_" + fish_shortname + "_cov.xlsx"
                 else:
-                    xsn = self.condition + "_" + fish_shortname + ".xlsx"
+                    xsn = self.condition + "_sharea_" + fish_shortname + ".xlsx"
 
                 xlsx_name = os.path.dirname(os.path.abspath(__file__)) + "\\SHArea\\" + xsn
-                xlsx = cmkt.MakeFishFlowTable()
+                xlsx = cMkT.MakeFlowTable(self.condition, "sharc")
                 xlsx.open_wb(xlsx_name, 0)
 
                 Q = xlsx.read_float_column_short("B", 4)
@@ -117,7 +117,7 @@ class CHSI:
                         arcpy.AddField_management(shp_name, "F_AREA", "FLOAT", 9)
                         arcpy.CalculateGeometryAttributes_management(shp_name, geometry_property=[["F_AREA", "AREA"]],
                                                                      area_unit=self.area_unit)
-                        self.logger.info("         summing up area ...")
+                        self.logger.info("         ... summing up area ...")
                         with arcpy.da.UpdateCursor(shp_name, "F_AREA") as cursor:
                             for row in cursor:
                                 try:
@@ -179,10 +179,10 @@ class CHSI:
                     pass
             try:
                 arcpy.env.workspace = os.path.dirname(os.path.abspath(__file__))  # temporary workspace
-                fg.rm_dir(self.cache)
+                fG.rm_dir(self.cache)
                 if not args[0]:
                     self.logger.info("        * restoring cache ...")
-                    fg.chk_dir(self.cache)
+                    fG.chk_dir(self.cache)
                     arcpy.env.workspace = self.cache
             except:
                 self.logger.info("   >> Cleared .cache folder (arcpy.Delete_management) ...")
@@ -249,7 +249,7 @@ class CHSI:
         for species in fish.keys():
             for ls in fish[species]:
                 self.logger.info(" -- Usable Area for " + str(species).upper() + " - " + str(ls).upper())
-                fish_shortname = str(species).lower()[0:2] + str(ls[0])
+                fish_shortname = str(species).lower()[0:2] + str(ls[0:2])
                 for ras in hsi_list:
                     if not (fish_shortname in str(ras)):
                         continue
@@ -359,16 +359,16 @@ class HHSI:
         self.error = False
         self.flow_dict_h = {}
         self.flow_dict_u = {}
-        self.fish = cf.Fish()
+        self.fish = cFi.Fish()
         self.logger = logging.getLogger("habitat_evaluation")
         self.raster_dict = {}
         self.ras_h = []
         self.ras_u = []
 
-        fg.chk_dir(self.cache)
-        fg.clean_dir(self.cache)
-        fg.chk_dir(self.path_hsi)
-        fg.chk_dir(self.dir_in_geo)
+        fG.chk_dir(self.cache)
+        fG.clean_dir(self.cache)
+        fG.chk_dir(self.path_hsi)
+        fG.chk_dir(self.dir_in_geo)
 
         # set unit system variables
         try:
@@ -397,10 +397,10 @@ class HHSI:
                     pass
             try:
                 arcpy.env.workspace = os.path.dirname(os.path.abspath(__file__))  # temporary workspace
-                fg.rm_dir(self.cache)
+                fG.rm_dir(self.cache)
                 if not args[0]:
                     self.logger.info("        * restoring cache ...")
-                    fg.chk_dir(self.cache)
+                    fG.chk_dir(self.cache)
                     arcpy.env.workspace = self.cache
             except:
                 self.logger.info(" >> Cleared .cache folder (arcpy.Delete_management) ...")
@@ -447,7 +447,7 @@ class HHSI:
                 pass
 
         for species in fish_applied.keys():
-            self.logger.info(" >> FISH SPECIES  : " + str(species))
+            self.logger.info(" >> SPECIES  : " + str(species))
             for ls in fish_applied[species]:
                 self.logger.info("         LIFESTAGE: " + str(ls))
                 self.logger.info("   >> Calculating DEPTH HSI (DSI)")
@@ -464,7 +464,7 @@ class HHSI:
                         rh_ras = __temp_h_ras__
                     ras_out = self.nested_con_raster_calc(rh_ras, curve_data)
                     self.logger.info("      - OK")
-                    ras_name = "dsi_" + str(species[0:2]).lower() + str(ls)[0] + str(self.flow_dict_h[str(rh)]) + ".tif"
+                    ras_name = "dsi_" + str(species[0:2]).lower() + str(ls)[0:2] + str(self.flow_dict_h[str(rh)]) + ".tif"
                     self.logger.info("    > Saving: " + self.path_hsi + ras_name + " ...")
                     try:
                         ras_out.save(self.path_hsi + ras_name)
@@ -485,7 +485,7 @@ class HHSI:
                         rh_ras = __temp_h_ras__
                     ras_out = self.nested_con_raster_calc(rh_ras, curve_data)
                     self.logger.info("      - OK")
-                    ras_name = "vsi_" + str(species[0:2]).lower() + str(ls)[0] + str(self.flow_dict_u[str(ru)]) + ".tif"
+                    ras_name = "vsi_" + str(species[0:2]).lower() + str(ls)[0:2] + str(self.flow_dict_u[str(ru)]) + ".tif"
                     self.logger.info(
                         "    > Saving: " + self.path_hsi + ras_name + " ...")
                     try:
@@ -637,7 +637,7 @@ class CovHSI(HHSI):
         arcpy.env.extent = "MAXOF"
         self.logger.info("* * * CREATING " + str(self.cover_type).upper() + " COVER RASTER * * *")
         for species in fish_applied.keys():
-            self.logger.info(" >> FISH SPECIES  : " + str(species))
+            self.logger.info(" >> SPECIES  : " + str(species))
             for ls in fish_applied[species]:
                 self.logger.info("         LIFESTAGE: " + str(ls))
                 self.logger.info("   -> Retrieving " + self.cover_type + " curve from Fish.xlsx ...")

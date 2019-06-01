@@ -6,9 +6,9 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cDefinitions as cdef
+    import cDefinitions as cDef
 except:
-    print("ExceptionERROR: Cannot find package files (RP/cDefinitions.py).")
+    print("ExceptionERROR: Cannot find package files (riverpy).")
 
 
 class Director:
@@ -62,7 +62,7 @@ class FrameworkFeatures(Director):
             Director.__init__(self, condition, args[0])
         except:
             Director.__init__(self, condition)
-        self.features = cdef.Features()
+        self.features = cDef.Features()
         self.names = self.features.name_list_framework
         self.shortnames = self.features.id_list_framework
         self.ds_rasters = self.append_ds_rasters(self.shortnames)
@@ -77,7 +77,7 @@ class PlantFeatures(Director):
             Director.__init__(self, condition, args[0])
         except:
             Director.__init__(self, condition)
-        self.features = cdef.Features()
+        self.features = cDef.Features()
         self.names = self.features.name_list_plants
         self.shortnames = self.features.id_list_plants
         self.ds_rasters = self.append_ds_rasters(self.shortnames)
@@ -92,7 +92,7 @@ class ToolboxFeatures(Director):
             Director.__init__(self, condition, args[0])
         except:
             Director.__init__(self, condition)
-        self.features = cdef.Features()
+        self.features = cDef.Features()
         self.names = self.features.name_list_toolbox
         self.shortnames = self.features.id_list_toolbox
         self.ds_rasters = self.append_ds_rasters(self.shortnames)
@@ -107,7 +107,7 @@ class ComplementaryFeatures(Director):
             Director.__init__(self, condition, args[0])
         except:
             Director.__init__(self, condition)
-        self.features = cdef.Features()
+        self.features = cDef.Features()
         self.names = self.features.name_list_complement
         self.shortnames = self.features.id_list_complement
         self.ds_rasters = self.append_ds_rasters(self.shortnames)

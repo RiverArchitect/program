@@ -11,7 +11,7 @@ except:
     print("ExceptionERROR: No valid ARCPY found.")
 
 try:
-    import fFunctions as ff
+    import fFunctions as fF
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: fFunctions).")
 
@@ -21,7 +21,7 @@ class SHArC:
         self.path2geodata = os.path.dirname(os.path.realpath(__file__)) + "\\" + str(reach).upper() + "_" + str(stn).lower() + "_" + str(version) + "\\Geodata\\"
         self.cache = self.path2geodata + ".cache\\"
         self.cache_count = 0
-        ff.chk_dir(self.cache)
+        fF.chk_dir(self.cache)
         self.extents = [0, 0, 0, 0]
         self.logger = logging.getLogger("logfile")
         self.ras_project = ""
@@ -72,10 +72,10 @@ class SHArC:
                     arcpy.Delete_management(str(shp))
                 except:
                     pass
-            ff.rm_dir(self.cache)
+            fF.rm_dir(self.cache)
             self.cache_count = 0
             if recreate_cache:
-                ff.chk_dir(self.cache)
+                fF.chk_dir(self.cache)
             self.logger.info("   * ok")
         except:
             self.logger.info("WARNING: .cache folder will be removed by package controls.")

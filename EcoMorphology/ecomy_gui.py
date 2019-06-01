@@ -13,7 +13,7 @@ try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fG
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -52,7 +52,7 @@ class MainGui(tk.Frame):
             self.dir = os.path.dirname(os.path.abspath(__file__))
             self.dir_conditions = self.dir
             self.max_columnspan = 4
-            self.condition_list = fg.get_subdir_names(self.dir_conditions)
+            self.condition_list = fG.get_subdir_names(self.dir_conditions)
             self.unit = "us"
 
             msg0 = "UNDER CONSTRUCTION\n\n"
@@ -79,7 +79,7 @@ class MainGui(tk.Frame):
             #
             #
             # # BUTTONS
-            # self.b_1 = tk.Button(self, width=15, fg="RoyalBlue3", bg="white", text="Click", command=lambda: print("button works"))
+            # self.b_1 = tk.Button(self, width=15, fG="RoyalBlue3", bg="white", text="Click", command=lambda: print("button works"))
             # self.b_1.grid(sticky=tk.W, row=0, rowspan=2, column=self.max_columnspan, padx=self.xd, pady=self.yd)
 
         except:
@@ -163,7 +163,7 @@ class MainGui(tk.Frame):
 
 
     def show_credits(self):
-        showinfo("Credits", fg.get_credits())
+        showinfo("Credits", fG.get_credits())
 
 
     def unit_change(self):
