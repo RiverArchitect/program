@@ -5,7 +5,7 @@ try:
     from tkinter.filedialog import *
     import webbrowser
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
     # import own routines
@@ -14,10 +14,10 @@ try:
 
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\")
-    import cParameters as cp
+    import cParameters as cPa
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fG
 except:
     print("ExceptionERROR: Cannot find package files (riverpy/fGlobal.py).")
 
@@ -32,7 +32,7 @@ class CovHSIgui(object):
         self.dir_conditions = self.path_lvl_up + "\\01_Conditions\\"
         self.dir_input_ras = ""
         self.condition = ""
-        self.condition_list = fg.get_subdir_names(self.dir_conditions)
+        self.condition_list = fG.get_subdir_names(self.dir_conditions)
         self.flow_path = ""     # full path to whetted-region defining raster
         self.h_list = ["all terrain"]
         self.h_ras_path = ""
@@ -212,7 +212,7 @@ class CovHSIgui(object):
         for _f in f_list:
             print(str(_f))
             self.user_message("Do not forget to save files after editing ...")
-            fg.open_file(_f)
+            fG.open_file(_f)
 
     def print_msg(self, msg):
         print(str(msg))
@@ -237,13 +237,13 @@ class CovHSIgui(object):
                 dir_out = cov_hsi.path_hsi
             del cov_hsi
             try:
-                fg.clean_dir(os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\")
+                fG.clean_dir(os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\")
             except:
                 print("WARNING: Could not clean up cache.")
         self.top.bell()
         try:
             if not error_occurred:
-                fg.open_folder(dir_out)
+                fG.open_folder(dir_out)
                 self.l_run_info.config(fg="forest green", text="HSI RASTERS SUCCESSFULLY CREATED")
                 self.b_run.config(width=30, bg="pale green", text="RE-run (generate habitat condition)",
                                   command=lambda: self.run_raster_calc())
@@ -288,7 +288,7 @@ class CovHSIgui(object):
 
         # update depth raster file list from condition folder contents (raster has .aux.xml?)
         self.h_list = ["all terrain"]
-        folder_names = fg.get_subdir_names(self.dir_input_ras)
+        folder_names = fG.get_subdir_names(self.dir_input_ras)
         if folder_names.__len__() < 1:
             folder_names = [i for i in os.listdir(self.dir_input_ras) if i.endswith('.tif')]
         for fn in folder_names:

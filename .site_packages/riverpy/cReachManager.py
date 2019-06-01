@@ -4,7 +4,6 @@ try:
     import os, sys, logging
     import datetime as dt
     sys.path.append(os.path.dirname(__file__))
-    from cLogger import Logger
     # import own functions -- make sure that all *.py files are in the same folder
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
     import openpyxl as oxl  # modified package
@@ -17,6 +16,7 @@ class Read:
         # type defines lines to read in .inp file
         self.path2mt = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\"
         self.xlsx_coord = self.path2mt + ".templates\\computation_extents.xlsx"
+        self.logger = logging.getLogger("logfile")
 
         # define columns
         self.col_min_x = "D"
@@ -30,47 +30,43 @@ class Read:
         self.row_start = 6
 
     def get_reach_coordinates(self, internal_reach_id):
-        logger = Logger("logfile", False)
-        logger.logger.info(" ->> Reading Reach coordinates from computation_extents.xlsx ...")
+        self.logger.info(" ->> Reading Reach coordinates from computation_extents.xlsx ...")
 
         try:
             wb = oxl.load_workbook(filename=self.xlsx_coord, read_only=True, data_only=True)
         except:
             wb = ""
-            logger.logger.info("ERROR: Failed to access computation_extents.xlsx.")
+            self.logger.info("ERROR: Failed to access computation_extents.xlsx.")
         try:
             ws = wb['extents']
         except:
             ws = []
-            logger.logger.info("ERROR: Could not find sheet \'extents\' in computation_extents.xlsx.")
+            self.logger.info("ERROR: Could not find sheet \'extents\' in computation_extents.xlsx.")
         try:
             min_x = float(ws[self.col_min_x + self.row_dict[internal_reach_id]].value)
             max_x = float(ws[self.col_max_x + self.row_dict[internal_reach_id]].value)
             min_y = float(ws[self.col_min_y + self.row_dict[internal_reach_id]].value)
             max_y = float(ws[self.col_max_y + self.row_dict[internal_reach_id]].value)
-            logger.logger.info(" ->> Success.")
+            self.logger.info(" ->> Success.")
             wb.close()
-            logger.logging_stop()
             return [min_x, min_y, max_x, max_y]
         except:
-            logger.logger.info("ERROR: Failed to read coordinates from computation_extents.xlsx (return 0).")
-            logger.logging_stop()
+            self.logger.info("ERROR: Failed to read coordinates from computation_extents.xlsx (return 0).")
             return [0, 0, 0, 0]
 
     def get_reach_info(self, type):
         # type = full_name sets column read to "B"
         # type = id sets column read to "C"
-        logger = Logger("logfile", False)
         allowed_types = ["full_name", "id"]
         if type in allowed_types:
             if type == "full_name":
                 col = "B"
-                logger.logger.info(" ->> Reading Reach names (col. " + str(col) + ") from computation_extents.xlsx ...")
+                self.logger.info(" ->> Reading Reach names (col. " + str(col) + ") from computation_extents.xlsx ...")
             if type == "id":
                 col = "C"
-                logger.logger.info(" ->> Reading Reach IDs (col. " + str(col) + ") from computation_extents.xlsx ...")
+                self.logger.info(" ->> Reading Reach IDs (col. " + str(col) + ") from computation_extents.xlsx ...")
         else:
-            logger.logger.info("WARNING: Invalid type assignment -- setting reach names to IDs.")
+            self.logger.info("WARNING: Invalid type assignment -- setting reach names to IDs.")
             col = "C"
         reach_list = []
 
@@ -87,16 +83,16 @@ class Read:
                     reach_list.append(cell_content)
                 i += 1
                 if i > 15:
-                    logger.logger.info("WARNING: computation_extents.xls contains too many reach names.")
+                    self.logger.info("WARNING: computation_extents.xls contains too many reach names.")
                     break
             wb.close()
         except:
-            logger.logger.info("ERROR: failed to access computation_extents.xlsx (return empty list).")
-        logger.logging_stop()
+            self.logger.info("ERROR: failed to access computation_extents.xlsx (return empty list).")
         return reach_list
 
-    def __call__(self):
-        print("Class Info: <type> = Read (Module: ModifyTerrain)")
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = Read (%s)" % os.path.dirname(__file__))
+        print(dir(self))
 
 
 class Write:
@@ -119,28 +115,27 @@ class Write:
         # type(volumes) ==  list of list of floats (nested)
         # type(unit) ==  string (either cy or m3)
         # type(vol_signature) == INT: -1 --> negative volumes (ecav), +1 --> positive volume (fill)
-        logger = Logger("logfile", False)
         wb_name = str(condition) + "_volumes.xlsx"
         try:
             if os.path.isfile(self.xlsx_output_dir + str(wb_name)):
                 try:
-                    logger.logger.info(" ->> Opening ModifyTerrain/Output/Workbooks/" + str(wb_name) + " ...")
+                    self.logger.info(" ->> Opening ModifyTerrain/Output/Workbooks/" + str(wb_name) + " ...")
                     wb_new = oxl.load_workbook(filename=self.xlsx_output_dir + wb_name)
                 except:
-                    logger.logger.info("ERROR: Failed to access " + str(self.xlsx_output_dir) + str(wb_name) +".")
+                    self.logger.info("ERROR: Failed to access " + str(self.xlsx_output_dir) + str(wb_name) +".")
                     return -1
             else:
                 try:
                     wb = oxl.load_workbook(filename=self.xlsx_output_dir + "volumes_template.xlsx")
                 except:
-                    logger.logger.info("ERROR: Failed to access " + str(self.xlsx_output_dir) + str(wb_name) + ".")
+                    self.logger.info("ERROR: Failed to access " + str(self.xlsx_output_dir) + str(wb_name) + ".")
                     return -1
                 wb_new = wb
                 wb.close()
             try:
                 ws_temp = wb_new['template']
             except:
-                logger.logger.info("ERROR: TEMPLATE sheet does not exist.")
+                self.logger.info("ERROR: TEMPLATE sheet does not exist.")
                 return -1
             ws_new = wb_new.copy_worksheet(ws_temp)
             now = dt.datetime.now()
@@ -158,7 +153,7 @@ class Write:
                 ws_new["B1"]._style = ws_new["A1"]._style
                 ws_new["C1"]._style = ws_new["A1"]._style
             except:
-                logger.logger.info("WARNING: Could not reset styles.")
+                self.logger.info("WARNING: Could not reset styles.")
 
             # write condition
             ws_new["C2"] = str(condition)
@@ -175,7 +170,7 @@ class Write:
                     ws_new[chr(i) + str(self.row_start-3)] = fn
                     ws_new[chr(i) + str(self.row_start-3)]._style = ws_new[self.col_volume + str(self.row_start-3)]._style
                 except:
-                    logger.logger.info("ERROR: Invalid feature names for column headers.")
+                    self.logger.info("ERROR: Invalid feature names for column headers.")
                 i += 1
             del i
 
@@ -190,7 +185,7 @@ class Write:
             try:
                 ws_new[self.col_volume + str(self.row_start - 1)] = "(" + str(unit) + ")"
             except:
-                logger.logger.info("WARNING: Failed to write unit system to worksheet.")
+                self.logger.info("WARNING: Failed to write unit system to worksheet.")
 
             j = ord(self.col_volume)  # convert char('C') to ascii value
             for vol_list in volumes:
@@ -205,7 +200,7 @@ class Write:
                             ws_new[chr(j) + str(i - 2)].value = ws_new[self.col_volume + str(i - 2)].value
                             ws_new[chr(j) + str(i - 1)].value = ws_new[self.col_volume + str(i - 1)].value
                         except:
-                            logger.logger.info("WARNING: Could not write headers.")
+                            self.logger.info("WARNING: Could not write headers.")
                     try:
                         val = float(vol)
                     except:
@@ -213,7 +208,7 @@ class Write:
                     try:
                         ws_new[chr(j) + str(i)] = val
                     except:
-                        logger.logger.info("ERROR: Volume value assignment failed.")
+                        self.logger.info("ERROR: Volume value assignment failed.")
                     cum_sum += val
 
                     if j > ord(self.col_volume):
@@ -230,22 +225,22 @@ class Write:
             try:
                 wb_new._sheets.sort(key=lambda ws: ws.title)
             except:
-                logger.logger.info("WARNING: Failed to arrange worksheets.")
+                self.logger.info("WARNING: Failed to arrange worksheets.")
 
             # save and close workbook: once saved, the same wb cannot be saved with the same name
-            logger.logger.info(" ->> Writing to ModifyTerrain/Output/Workbooks/" + str(wb_name) + "(sheet name:" + str(
+            self.logger.info(" ->> Writing to ModifyTerrain/Output/Workbooks/" + str(wb_name) + "(sheet name:" + str(
                 ws_new.title) + ") ...")
             try:
                 wb_new.save(self.xlsx_output_dir + wb_name)
-                logger.logger.info("FINISHED.")
+                self.logger.info("FINISHED.")
             except:
-                logger.logger.info("ERROR: Writing failed.")
+                self.logger.info("ERROR: Writing failed.")
             wb_new.close()
 
         except:
-            logger.logger.info("ERROR: Failed to create " + str(wb_name) + ".")
-        logger.logging_stop()
+            self.logger.info("ERROR: Failed to create " + str(wb_name) + ".")
+
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = Write (Module: ModifyTerrain)")
-
+        print("Class Info: <type> = Write (%s)" % os.path.dirname(__file__))
+        print(dir(self))

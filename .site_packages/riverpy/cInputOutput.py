@@ -62,6 +62,7 @@ class Read:
                 return -1
 
     def read_column(self, column, start_row):
+        # ATTENTION: Empty cells in a ws are ignored, i.e., if col A=empty, then col B shifts to col A
         # reads COLUMN beginning at START_ROW until it meets an empty cell
         # column = STR, e.g., "A"
         # start_row = INT
@@ -111,7 +112,12 @@ class Read:
             try:
                 cell_value = float(self.ws[str(column) + str(__row__)].value)
             except:
-                valid_content = False
+                try:
+                    cell_value = self.ws[str(column) + str(__row__)].value
+                    if not cell_value:
+                        valid_content = False
+                except:
+                    valid_content = False
             if valid_content:
                 data.append(cell_value)
                 __row__ += 1
@@ -190,7 +196,7 @@ class Read:
         # assign column head names
         col_no = 64 + self.ws.min_column
         for head in data[0].keys():
-            self.header_dict.update({chr(col_no): head})
+            self.header_dict.update({self.col_num_to_name(col_no): head})
             col_no += 1
         return data
 
@@ -221,14 +227,25 @@ class Read:
         return ''.join(reversed(letters))
 
     def __call__(self):
-        print("Class Info: <type> = Read (ProjectProposal)")
+        print("Class Info: <type> = Read (%s)" % os.path.dirname(__file__))
+        print(dir(self))
 
 
 class Write(Read):
-    def __init__(self, template):
+    def __init__(self, template, **kwargs):
+        # ** kwargs: worksheet_no
+        self.ws_no = 0
+        # parse optional arguments
+        try:
+            for k in kwargs.items():
+                if "worksheet_no" in k[0]:
+                    self.ws_no = k[1]
+        except:
+            pass
+
         Read.__init__(self, template, False)
         try:
-            self.open_wb(str(template), 0, read_mode=False, direct_data=True)
+            self.open_wb(str(template), self.ws_no, read_mode=False, direct_data=True)
         except:
             self.logger.info("ERROR: Could not open workbook (cInputOutput.Write.__init__() -- " + str(template) + ").")
 
@@ -244,7 +261,7 @@ class Write(Read):
             pass
 
         try:
-            self.logger.info("   * saving xlsx as:" + self.wb_out_name)
+            self.logger.info("   * saving as: " + self.wb_out_name)
             self.wb.save(self.wb_out_name)
             self.wb.close()
         except:
@@ -286,7 +303,7 @@ class Write(Read):
         # row = INT
         # start_col = CHR, e.g., start_col = "B"
         col_skip = 1
-        # parse optional arguments
+        # parse optional keyword arguments
         try:
             for opt_var in kwargs.items():
                 if "col_skip" in opt_var[0]:
@@ -309,5 +326,6 @@ class Write(Read):
             __col__ = self.col_num_to_name(__col_num__)  # re-convert int to ascii-chr
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = Write (ProjectProposal)")
+        print("Class Info: <type> = Write (%s)" % os.path.dirname(__file__))
+        print(dir(self))
 

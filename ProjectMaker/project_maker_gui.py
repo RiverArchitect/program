@@ -13,7 +13,7 @@ try:
     import s40_compare_sharea as s40
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fG
 except:
     print("ERROR: Missing sub routines (cannot access python files in subfolder).")
 
@@ -389,7 +389,7 @@ class MainGui(tk.Frame):
             showinfo("Fish added", "All available species added.")
 
     def show_credits(self):
-        showinfo("Credits", fg.get_credits())
+        showinfo("Credits", fG.get_credits())
 
     def start_app(self, app_name):
         # app_name = STR

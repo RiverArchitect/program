@@ -10,7 +10,7 @@ except:
 try:
     # load function from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fG
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py).")
 
@@ -66,7 +66,7 @@ class ActionGui(tk.Frame):
         self.feature_text = []
         self.feature_type = []
         self.condition = "set condition"
-        self.condition_list = fg.get_subdir_names(self.path2fa_rasters)
+        self.condition_list = fG.get_subdir_names(self.path2fa_rasters)
         self.inpath = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\Products\\Rasters\\" + str(
             self.condition) + "\\"

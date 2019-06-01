@@ -1,7 +1,7 @@
 # !/usr/bin/python
 import sys, os
 try:
-    import cReachManager as cio
+    import cReachManager as cRM
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
     import openpyxl as oxl
 except:
@@ -11,7 +11,6 @@ except:
 class FeatureReader:
     # Reads threshold values from file as a function of feature name
     def __init__(self):
-
         self.row_feat_names = 4
         self.row_feat_ids = 5
 
@@ -56,8 +55,9 @@ class FeatureReader:
             feature_list.append(cell_value)
         return feature_list
 
-    def __call__(self):
-        print("Class Info: <type> = FeatureReader")
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = FeatureReader (%s)" % os.path.dirname(__file__))
+        print(dir(self))
 
 
 class Features:
@@ -128,13 +128,17 @@ class Features:
             self.fill_ids.append("cust")
             self.excavate_ids.append("cust")
 
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = Features (%s)" % os.path.dirname(__file__))
+        print(dir(self))
+
 
 class Reaches:
     def __init__(self):
         self.internal_id = ["reach_00", "reach_01", "reach_02", "reach_03", "reach_04", "reach_05", "reach_06",
                             "reach_07"]
         self.reach_no = range(0, self.internal_id.__len__())
-        self.reader = cio.Read()
+        self.reader = cRM.Read()
         self.id_xlsx = self.reader.get_reach_info("id")
         self.id_dict = dict(zip(self.internal_id, self.id_xlsx))
         self.id_no_dict = dict(zip(self.id_xlsx, self.reach_no))
@@ -152,3 +156,6 @@ class Reaches:
             i += 1
         del i
 
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = Reaches (%s)" % os.path.dirname(__file__))
+        print(dir(self))

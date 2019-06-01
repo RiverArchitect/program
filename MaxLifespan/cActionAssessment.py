@@ -1,11 +1,11 @@
 #!/usr/bin/python
 try:
-    import cFeatureActions as cf
+    import cFeatureActions as cFA
     import os, logging, sys
     # load functions from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
-    import cDefinitions as cdef  # contains reach and feature definitions
+    import fGlobal as fG
+    import cDefinitions as cDef  # contains reach and feature definitions
 except:
     print("ExceptionERROR: Missing fundamental packages or module files (required: cFeatureActions, os, logging, sys")
 
@@ -23,17 +23,17 @@ class ArcPyContainer:
         self.raster_info_lf = ""
         self.condition = str(condition)
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
-        self.feature_info = cdef.Features()
+        self.feature_info = cDef.Features()
         self.output_ras = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Rasters\\" + self.condition + "\\"
-        fg.chk_dir(self.output_ras)
+        fG.chk_dir(self.output_ras)
         self.output_shp = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Shapefiles\\" + self.condition + "\\"
-        fg.chk_dir(self.output_shp)
+        fG.chk_dir(self.output_shp)
         try:
             # if optional input raster directory is provided ...
             if args[1]:
-                self.features = cf.Manager(condition, feature_type, args[1])  # feature class object
+                self.features = cFA.Manager(condition, feature_type, args[1])  # feature class object
         except:
-            self.features = cf.Manager(condition, feature_type)  # feature class object
+            self.features = cFA.Manager(condition, feature_type)  # feature class object
         self.raster_dict = {}
         try:
             # one zero-raster that is updated, another wont be updated
@@ -164,7 +164,7 @@ class ArcPyContainer:
             try:
                 self.logger.info("   >> Calculating cell statistics ...")
                 self.raster_dict.update({"temp": self.null_ras})  # temporal raster extension
-                self.best_lf_ras = CellStatistics(fg.dict_values2list(self.raster_dict.values()), "MAXIMUM", "DATA")
+                self.best_lf_ras = CellStatistics(fG.dict_values2list(self.raster_dict.values()), "MAXIMUM", "DATA")
                 del self.raster_dict["temp"]  # remove temp entry
                 self.logger.info("      -> Extending raster ...")
             except:
@@ -212,7 +212,7 @@ class ArcPyContainer:
                 self.logger.info("   >> Saving maximum lifespan rasters (all features) ...")
                 self.best_lf_ras.save(self.cache + "max_lf.tif")
                 try:
-                    if not(self.feature_info.id_list_plants[0] in " ".join(fg.dict_values2list(self.raster_dict.keys()))):
+                    if not(self.feature_info.id_list_plants[0] in " ".join(fG.dict_values2list(self.raster_dict.keys()))):
                         arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf.tif")
                     else:
                         arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf_plants.tif")
@@ -247,7 +247,7 @@ class ArcPyContainer:
         arcpy.CheckOutExtension('Spatial')  # check out license
         zero_ras_str = os.path.dirname(os.path.realpath(__file__)) + "\\.templates\\rasters\\zeros.tif"
         if os.path.isfile(zero_ras_str):
-            fg.rm_file(zero_ras_str)
+            fG.rm_file(zero_ras_str)
         try:
             base_dem = arcpy.Raster(dir_base_ras)
             self.logger.info(" >> Preparing zero raster based on \n    " + dir_base_ras)

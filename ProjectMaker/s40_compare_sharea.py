@@ -2,9 +2,9 @@ import webbrowser
 import glob
 from operator import itemgetter
 from fFunctions import *
-logger = logging_start("logfile")
+logger = logging.getLogger("logfile")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-import cInputOutput as cio
+import cInputOutput as cIO
 import cSHArC
 
 
@@ -64,7 +64,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
                 fish_sn = str(species).lower()[0:2] + str(ls[0])
                 xlsx_conditions = [condition_initial + "_" + fish_sn + ".xlsx",
                                    condition_project + "_" + fish_sn + ".xlsx"]
-                xlsx_sha = cio.Write(xlsx_sha_template)
+                xlsx_sha = cIO.Write(xlsx_sha_template)
                 xlsx_sha_name = dir2PP + "Geodata\\SHArea_evaluation_" + fish_sn + ".xlsx"
                 conditions_sha = []
 
@@ -75,7 +75,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
                     result_matrix = []
                     try:
                         logger.info(" >> Condition: " + str(xc).split(".xlsx")[0])
-                        xlsx_info = cio.Read(dir2ra + "SHArC\\SHArea\\" + xc)
+                        xlsx_info = cIO.Read(dir2ra + "SHArC\\SHArea\\" + xc)
                     except:
                         xlsx_info = ""
                         logger.info("ERROR: Could not access " + str(xc))
@@ -127,7 +127,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
                         error = True
 
                     xc_count += 1
-                    start_write_col = cio.Read.col_num_to_name(cio.Read.col_name_to_num(start_write_col) + 5)
+                    start_write_col = cIO.Read.col_num_to_name(cIO.Read.col_name_to_num(start_write_col) + 5)
                     xlsx_info.close_wb()
 
                 logger.info(" >> Saving and closing " + xlsx_sha_name + " ...")
@@ -141,7 +141,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
 
                 try:
                     logger.info(" >> Transferring results (net SHArea gain) to cost table ...")
-                    xlsx_costs = cio.Write(xlsx_tar_costs)
+                    xlsx_costs = cIO.Write(xlsx_tar_costs)
                     xlsx_costs.write_cell("G", 3, float(conditions_sha[1] - conditions_sha[0]))
                     xlsx_out_name = reach.upper() + "_" + stn + "_assessment_" + version + "_" + fish_sn + ".xlsx"
                     xlsx_costs.save_close_wb(dir2PP + xlsx_out_name)
@@ -157,7 +157,6 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
         error = True
 
     # RELEASE LOGGER AND OPEN LOGFILE
-    logging_stop(logger)
     try:
         logfile = os.getcwd() + "\\logfile.log"
         try:

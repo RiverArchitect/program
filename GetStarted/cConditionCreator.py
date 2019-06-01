@@ -9,9 +9,11 @@ try:
     import cMorphUnits as cMU
     import fSubCondition as fSC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fG
+    import cMakeTable as cMT
+    import cFlows as cFl
 except:
-    print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
+    print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 
 try:
     import arcpy
@@ -28,6 +30,26 @@ class ConditionCreator:
         self.dir2condition = dir2condition  # string of the condition to be created
         self.error = False
         self.logger = logging.getLogger("logfile")
+
+    def create_discharge_table(self):
+        try:
+            flow_table = cMT.MakeFlowTable(self.dir2condition.split("/")[-1].split("\\")[-1], "q_return")
+            return flow_table.make_condition_xlsx()
+        except:
+            self.error = True
+
+    def create_flow_duration_table(self, input_flow_xlsx, aquatic_ambiance):
+        try:
+            condition = self.dir2condition.split("/")[-1].split("\\")[-1]
+            flows = cFl.SeasonalFlowProcessor(input_flow_xlsx)
+            for fish in aquatic_ambiance.keys():
+                for lfs in aquatic_ambiance[fish]:
+                    flows.get_fish_seasons(fish, lfs)
+            output_xlsx = flows.make_flow_duration(condition)
+            flows.make_condition_flow2d_duration(condition)
+            return output_xlsx
+        except:
+            self.error = True
 
     def create_sub_condition(self, dir2src_condition, dir2bound):
         try:

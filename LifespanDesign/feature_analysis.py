@@ -269,7 +269,7 @@ def raster_maker(condition, reach_ids, *args):
         if r == reach_ids[0]:
             output_dir = fg.make_output_dir(condition, reach_ids, habitat_analysis, feature_list)
             outputs.append(output_dir)
-        # fg.clean_dir(output_dir)
+        # fG.clean_dir(output_dir)
         for f in feature_list:
             logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
             if reach_extents == "MAXOF":

@@ -19,53 +19,11 @@ def del_ovr_files(directory):
                 pass
 
 
-def logging_start(logfile_name):
-    logfilenames = ["error.log", logfile_name + ".log", "logfile.log"]
-    for fn in logfilenames:
-        fn_full = os.path.join(os.getcwd(), fn)
-        if os.path.isfile(fn_full):
-            try:
-                os.remove(fn_full)
-            except:
-                pass
-    # start logging
-    logger = logging.getLogger(logfile_name)
-    logger.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s - %(message)s")
-
-    # create console handler and set level to info
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    # create error file handler and set level to error
-    err_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[0]), "w", encoding=None, delay="true")
-    err_handler.setLevel(logging.ERROR)
-    err_handler.setFormatter(formatter)
-    logger.addHandler(err_handler)
-    # create debug file handler and set level to debug
-    debug_handler = logging.FileHandler(os.path.join(os.getcwd(), logfilenames[1]), "w")
-    debug_handler.setLevel(logging.DEBUG)
-    debug_handler.setFormatter(formatter)
-    logger.addHandler(debug_handler)
-    return logger
-
-
-def logging_stop(logger):
-    # stop logging and release logfile
-    for handler in logger.handlers:
-        handler.close()
-        logger.removeHandler(handler)
-
-
-def read_txt(file_name, *logger):
+def read_txt(file_name):
     # returns numeric data of a comma delimited text file
     # INPUT:  file = full path of text (or csv) file
     # OUTPUT: data = LIST: [[col0_row0, col1_row0, ...], [col0_row1, col1_row1, ...], ...]
-    try:
-        logger = logger[0]
-    except:
-        logger = logging_start("logfile")
+    logger = logging.getLogger("logfile")
     logger.info(" >> Reading " + str(file_name))
     data = []
     if os.path.isfile(file_name):
@@ -118,10 +76,7 @@ def rm_dir(directory):
 def write_dict2xlsx(data_dict, file, key_col, val_col, start_row, *logger):
     # uses openpyxl to write data to an xlsx-workbook
     # INPUT:  file = full path of xlsx file
-    try:
-        logger = logger[0]
-    except:
-        logger = logging_start("logfile")
+    logger = logging.getLogger("logfile")
     try:
         # load relevant files from RiverArchitect/ModifyTerrain module
         sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")

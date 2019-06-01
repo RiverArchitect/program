@@ -4,16 +4,16 @@ try:
     from tkinter.messagebox import askokcancel, showinfo
     from tkinter.filedialog import *
     import webbrowser
-    import cModifyTerrain as cmt
+    import cModifyTerrain as cMT
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
-    import cReachManager as cio
-    import cDefinitions as cdef
-    import cMapper as cmp
+    import fGlobal as fG
+    import cReachManager as cRM
+    import cDefinitions as cDef
+    import cMapper as cMp
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/*.py).")
 
@@ -25,19 +25,18 @@ class MainGui(tk.Frame):
         self.path = r"" + os.path.dirname(os.path.abspath(__file__))
         self.condition = ""
         self.errors = False
-        self.features = cdef.Features()
+        self.features = cDef.Features()
         self.feature_id_list = []
         self.feature_name_list = []
         self.in_feat = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..")) + "\\MaxLifespan\\Output\\Rasters\\"
         self.in_topo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
         self.in_vol = os.path.dirname(os.path.abspath(__file__)) + "\\Input\\DEM\\"
-        self.logfile_name = "logfile.log"
         self.mapping = False
         self.mod_dir = None
         self.prevent_popup = False
-        self.reader = cio.Read()
-        self.reaches = cdef.Reaches()
+        self.reader = cRM.Read()
+        self.reaches = cDef.Reaches()
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
         self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
         self.reach_lookup_needed = False
@@ -180,8 +179,8 @@ class MainGui(tk.Frame):
 
     def add_reach(self, reach):
         if str(reach).__len__() < 1:
-            self.reach_names_applied = fg.dict_values2list(self.reaches.name_dict.values())
-            self.reach_ids_applied = fg.dict_values2list(self.reaches.id_dict.values())
+            self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
+            self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
             if self.reach_names_applied.__len__() > 5:
                 label_text = "Many / All"
             else:
@@ -386,7 +385,7 @@ class MainGui(tk.Frame):
         if not self.verified:
             self.verify()
         if self.verified:
-            mapper = cmp.Mapper(self.condition, "mt", self.dir_ras_vol)
+            mapper = cMp.Mapper(self.condition, "mt", self.dir_ras_vol)
             map_list = []
             for fid in self.feature_id_list:
                 add_str = ""
@@ -408,7 +407,7 @@ class MainGui(tk.Frame):
                                                                 padx=self.xd, pady=self.yd)
             try:
                 if not mapper.error:
-                    fg.open_folder(mapper.output_dir)
+                    fG.open_folder(mapper.output_dir)
             except:
                 pass
 
@@ -418,7 +417,7 @@ class MainGui(tk.Frame):
         if not self.verified:
             self.verify()
         if self.verified:
-            modification = cmt.ModifyTerrain(condition=self.condition, unit_system=self.unit,
+            modification = cMT.ModifyTerrain(condition=self.condition, unit_system=self.unit,
                                              feature_ids=self.feature_id_list, topo_in_dir=self.in_topo,
                                              feat_in_dir=self.in_feat, reach_ids=self.reach_ids_applied)
             self.logfile = modification()
@@ -438,7 +437,7 @@ class MainGui(tk.Frame):
         if not self.verified:
             self.verify()
         if self.verified:
-            modification = cmt.ModifyTerrain(condition=self.condition, unit_system=self.unit,
+            modification = cMT.ModifyTerrain(condition=self.condition, unit_system=self.unit,
                                              feature_ids=self.feature_id_list, topo_in_dir=self.in_topo,
                                              feat_in_dir=self.in_feat, reach_ids=self.reach_ids_applied)
 
@@ -446,7 +445,7 @@ class MainGui(tk.Frame):
             self.dir_ras_vol = modification.output_ras_dir
             self.prevent_popup = True
             del modification
-            fg.rm_dir(self.path + "\\.cache\\")
+            fG.rm_dir(self.path + "\\.cache\\")
 
             if self.mapping.get():
                 self.run_map_maker()
@@ -471,7 +470,7 @@ class MainGui(tk.Frame):
             self.l_inpath_vol.config(fg="red", text="Invalid directory")
 
     def show_credits(self):
-        showinfo("Credits", fg.get_credits())
+        showinfo("Credits", fG.get_credits())
 
     def unit_change(self):
         if self.unit == "si":

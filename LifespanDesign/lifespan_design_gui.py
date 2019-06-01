@@ -11,9 +11,9 @@ except:
 try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cDefinitions as cdef
-    import fGlobal as fg
-    import cReachManager as cmio
+    import cDefinitions as cDef
+    import fGlobal as fG
+    import cReachManager as cRM
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py, RP/cDefinitions.py, RP/cReachManager).")
 
@@ -95,11 +95,11 @@ class FaGui(tk.Frame):
         self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
         self.condition = ""
-        self.condition_list = fg.get_subdir_names(self.path_lvl_up + "\\01_Conditions\\")
+        self.condition_list = fG.get_subdir_names(self.path_lvl_up + "\\01_Conditions\\")
         self.condition_selected = False
         self.errors = False
         self.feature_list = []
-        self.features = cdef.Features(False)
+        self.features = cDef.Features(False)
         self.habitat = False
         self.manning_n = 0.0473934
         self.mapping = False
@@ -107,11 +107,11 @@ class FaGui(tk.Frame):
             os.path.join(os.path.dirname(__file__), '..')) + "\\ModifyTerrain\\.templates\\"
         self.out_lyt_dir = []
         self.out_ras_dir = []
-        self.reaches = cdef.Reaches()
+        self.reaches = cDef.Reaches()
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
         self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
         self.reach_lookup_needed = False
-        self.reach_reader = cmio.Read()
+        self.reach_reader = cRM.Read()
         self.unit = "us"
         self.verified = False
         self.wild = False
@@ -248,8 +248,8 @@ class FaGui(tk.Frame):
     def add_reach(self, reach):
         if str(reach).__len__() < 1:
             # appends all available reaches
-            self.reach_names_applied = fg.dict_values2list(self.reaches.name_dict.values())
-            self.reach_ids_applied = fg.dict_values2list(self.reaches.id_dict.values())
+            self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
+            self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
             label_text = "All"
             self.l_reaches.config(fg="dark slate gray", text=label_text)
         else:
@@ -497,7 +497,7 @@ class FaGui(tk.Frame):
             return "Invalid entry for \'Condition\'."
 
     def show_credits(self):
-        showinfo("Credits", fg.get_credits())
+        showinfo("Credits", fG.get_credits())
 
     def unit_change(self):
         if self.unit == "si":
