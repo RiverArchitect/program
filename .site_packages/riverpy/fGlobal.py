@@ -60,6 +60,31 @@ def dict_values2list(dv):
     return out_list
 
 
+def eliminate_nan_from_list(base_list, *args):
+    # eliminates nan values from a list and all other lists provided with *args
+    partner_lists = []
+    try:
+        for partner_list in args:
+            partner_lists.append(partner_list)
+    except:
+        pass
+
+    test_list = base_list
+    for val in base_list:
+        try:
+            test = float(val)
+        except:
+            while val in base_list:
+                rem_index = base_list.index(val)
+                del base_list[rem_index]
+                try:
+                    for partner_list in partner_lists:
+                        del partner_list[rem_index]
+                except:
+                    pass
+    partner_lists.insert(0, base_list)
+    return partner_lists
+
 def flatten(lis):
     for item in lis:
         if isinstance(item, Iterable) and not isinstance(item, str):
@@ -86,44 +111,6 @@ def get_newest_output_folder(directory):
 def get_subdir_names(directory):
     subdir_list = [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
     return subdir_list
-
-
-def initialize_logger(output_dir, app_name):
-    logfilenames = ["error.log", "lifespan_design.log", "logfile.log", "mapper.log"]
-    for fn in logfilenames:
-        fn_full = os.path.join(os.getcwd(), fn)
-        if os.path.isfile(fn_full):
-            try:
-                os.remove(fn_full)
-                print("Overwriting old logfiles (" + fn + ").")
-            except:
-                print("WARNING: Old logfiles are locked.")
-
-    logger = logging.getLogger(app_name)
-    logger.setLevel(logging.INFO)
-
-    # create console handler and set level to info
-    # console_handler = logging.StreamHandler()
-    # console_handler.setLevel(logging.INFO)
-    # console_formatter = logging.Formatter("%(asctime)s - %(message)s")
-    # console_handler.setFormatter(console_formatter)
-    # logger.addHandler(console_handler)
-
-    # # create error file handler and set level to error
-    # err_handler = logging.FileHandler(os.path.join(output_dir, "error.log"), "w", encoding=None, delay="true")
-    # err_handler.setLevel(logging.ERROR)
-    # err_formatter = logging.Formatter("%(asctime)s - %(message)s")
-    # err_handler.setFormatter(err_formatter)
-    # logger.addHandler(err_handler)
-
-    # create debug file handler and set level to debug
-    debug_handler = logging.FileHandler(os.path.join(output_dir, "logfile.log"), "w")
-    debug_handler.setLevel(logging.INFO)
-    debug_formatter = logging.Formatter("%(asctime)s - %(message)s")
-    debug_handler.setFormatter(debug_formatter)
-    logger.addHandler(debug_handler)
-
-    return logger
 
 
 def interpolate_linear(x1, x2, y1, y2, xi):
@@ -333,13 +320,6 @@ def str2tuple(arg):
         print('ERROR: Bad assignment of separator.\nSeparator must be [,].')
     tup = (int(arg[0]), int(arg[1]))
     return tup
-
-
-def stop_logging(logger):
-    # stop logging and release logfile
-    for handler in logger.handlers:
-        handler.close()
-        logger.removeHandler(handler)
 
 
 def tuple2num(arg):
