@@ -11,17 +11,28 @@ except:
 
 
 class Read:
-    def __init__(self, full_file_name, *args):
+    def __init__(self, full_file_name, *args, **kwargs):
         # args[0] = BOOL that prevents opening the xlsx file in read_mode (FALSE -> WB is not OPENED)
+        # kwargs: ws = INT
+        # ** kwargs: worksheet_no
+        self.ws_no = 0
+        # parse optional arguments
+        try:
+            for k in kwargs.items():
+                if "worksheet_no" in k[0]:
+                    self.ws_no = k[1]
+        except:
+            pass
+
         self.header_dict = {}
         self.logger = logging.getLogger("logfile")
         self.ws_data = []
         self.xlsx_file = full_file_name
         try:
             if not args[0]:
-                self.open_wb(full_file_name, 0)
+                self.open_wb(full_file_name, self.ws_no)
         except:
-            self.open_wb(full_file_name, 0)
+            self.open_wb(full_file_name, self.ws_no)
 
     def close_wb(self):
         try:
@@ -234,7 +245,7 @@ class Read:
 class Write(Read):
     def __init__(self, template, **kwargs):
         # ** kwargs: worksheet_no
-        self.ws_no = 0
+        Read.__init__(self, template, False)
         # parse optional arguments
         try:
             for k in kwargs.items():
@@ -242,8 +253,6 @@ class Write(Read):
                     self.ws_no = k[1]
         except:
             pass
-
-        Read.__init__(self, template, False)
         try:
             self.open_wb(str(template), self.ws_no, read_mode=False, direct_data=True)
         except:

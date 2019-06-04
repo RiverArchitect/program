@@ -89,7 +89,8 @@ class FlowAnalysis(object):
         self.l_ct_dir = tk.Label(top, text="Current selection: {0}".format(fG.print_dict(self.eco_flow_type_applied)))
         self.l_ct_dir.grid(sticky=tk.W, row=10, column=0, columnspan=4, padx=self.xd, pady=self.yd)
 
-        self.b_q_inp = tk.Button(top, width=self.col_0_width * 2, fg="firebrick3", bg="white", text="Select input Flow Series",
+        self.b_q_inp = tk.Button(top, width=self.col_0_width * 2, fg="firebrick3", bg="white",
+                                 text="Select input Flow Series",
                                  command=lambda: self.select_flow_series_xlsx())
         self.b_q_inp.grid(sticky=tk.EW, row=11, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 

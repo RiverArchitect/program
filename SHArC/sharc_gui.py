@@ -14,9 +14,11 @@ try:
     import cHSI as chsi
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import cFlows as cFl
     import cFish as cFi
     import fGlobal as fG
     import cInputOutput as cIO
+    import cInterpolator as cIp
 except:
     print("ExceptionERROR: Cannot find package files (riverpy).")
 
@@ -45,8 +47,8 @@ class MainGui(tk.Frame):
 
         self.bound_shp = ""  # full path of a boundary shapefile
         self.combine_method = "geometric_mean"
-        self.dir = os.path.dirname(os.path.abspath(__file__))
-        self.dir_conditions = self.dir + "\\HSI\\"
+        self.dir = os.path.dirname(os.path.abspath(__file__)) + "\\"
+        self.dir_conditions = self.dir + "HSI\\"
         self.dir_inp_hsi_hy = ""
         self.dir_inp_hsi_cov = ""
         self.chsi_condition_hy = ""
@@ -58,6 +60,8 @@ class MainGui(tk.Frame):
         self.max_columnspan = 5
         self.unit = "us"
         self.sharea_threshold = 0.5
+        self.side_pnl_width = 15
+        self.xlsx_condition = []
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
@@ -66,12 +70,15 @@ class MainGui(tk.Frame):
             self.master = self.master.master
 
         self.apply_boundary = tk.BooleanVar()
+        self.external_flow_series = tk.BooleanVar()
         self.cover_applies_sharea = tk.BooleanVar()
         self.pack(expand=True, fill=tk.BOTH)
 
         self.set_geometry()
 
         # LABELS
+        self.l_side_bar = tk.Label(self, text="", bg="white", height=int(self.wh*0.065), width=self.side_pnl_width + self.xd * 2)
+        self.l_side_bar.grid(sticky=tk.W, row=0, rowspan=30, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.l_aqua = tk.Label(self, fg="firebrick3", text="Select Aquatic Ambiance (at least one)")
         self.l_aqua.grid(sticky=tk.W, row=0, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.l_combine = tk.Label(self, text="Select HSI combination method: ")
@@ -125,9 +132,10 @@ class MainGui(tk.Frame):
         self.cb_use_cov["state"] = "disabled"
 
         # BUTTONS
-        self.b_show_fish = tk.Button(self, width=15, fg="RoyalBlue3", bg="white", text="Show selected\nAquatic Ambiance(s)",
+        self.b_show_fish = tk.Button(self, width=self.side_pnl_width, fg="RoyalBlue3", bg="white",
+                                     text="Show selected\nAquatic Ambiance(s)",
                                      command=lambda: self.shout_dict(self.fish_applied))
-        self.b_show_fish.grid(sticky=tk.W, row=0, rowspan=3, column=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_show_fish.grid(sticky=tk.EW, row=0, rowspan=2, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_show_fish["state"] = "disabled"
 
         self.b_select_bshp = tk.Button(self, width=8, bg="white", text="Select file", command=lambda: self.select_boundary_shp())
@@ -146,17 +154,37 @@ class MainGui(tk.Frame):
         self.b_csi_c["state"] = "disabled"
 
         self.b_sharc = tk.Button(self, width=30, bg="white",
-                                 text="Run Seasonal Habitat Area Calculator (SHArC)",
+                                 text="Run Seasonal Habitat Area Calculator - SHArC",
                                  command=lambda: self.start_app("sharea", cover=False))
         self.b_sharc.grid(sticky=tk.EW, row=17, column=0, columnspan=self.max_columnspan, rowspan=2,
                           padx=self.xd, pady=self.yd)
         self.b_sharc["state"] = "disabled"
 
-        self.b_sha_th = tk.Button(self, width=15, fg="RoyalBlue3", bg="white",
+        self.b_sha_th = tk.Button(self, width=self.side_pnl_width, fg="RoyalBlue3", bg="white",
                                   text="Set SHArea\nthreshold\nCurrent: CHSI = " + str(self.sharea_threshold),
                                   command=lambda: self.set_sharea())
-        self.b_sha_th.grid(sticky=tk.EW, row=16, rowspan=3, column=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.b_sha_th.grid(sticky=tk.EW, row=16, rowspan=4, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_sha_th["state"] = "disabled"
+
+
+        # Q-UA analyses section
+        tk.Label(self, text="").grid(sticky=tk.W, row=18, column=0, columnspan=self.max_columnspan)  # dummy
+        tk.Label(self, text="", bg="white", height=6).grid(sticky=tk.EW, row=19, rowspan=6, column=0, columnspan=self.max_columnspan)  # dummy
+        self.l_qua = tk.Label(self, text="Q -  Area Analysis", bg="white")
+        self.l_qua.grid(sticky=tk.NW, row=19, column=0, columnspan=self.max_columnspan,
+                        padx=self.xd, pady=self.yd)
+        self.cb_extq = tk.Checkbutton(self, text="Use external flow series", variable=self.external_flow_series,
+                                      onvalue=True, offvalue=False, bg="white")
+        self.cb_extq.grid(sticky=tk.W, row=20, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
+        self.cb_extq.deselect()
+        self.b_qua = tk.Button(self, bg="white", text="Discharge - Aquatic Ambiance Area Curve",
+                               command=lambda: self.make_qua(input_type="statistic"))
+        self.b_qua.grid(sticky=tk.EW, row=21, column=0, columnspan=1, padx=self.xd, pady=self.yd)
+        self.b_quat = tk.Button(self, bg="white", text="Time series - Aquatic Ambiance Area",
+                                command=lambda: self.make_qua(input_type="time_series"))
+        self.b_quat.grid(sticky=tk.EW, row=21, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_qua["state"] = "disabled"
+        self.b_quat["state"] = "disabled"
 
         self.make_menu()
 
@@ -165,8 +193,8 @@ class MainGui(tk.Frame):
         self.xd = 5  # distance holder in x-direction (pixel)
         self.yd = 5  # distance holder in y-direction (pixel)
         # width and height of the window
-        self.ww = 690
-        self.wh = 550
+        self.ww = 800
+        self.wh = 800  # must be multiple of 10
         self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
         self.wy = (self.master.winfo_screenheight() - self.wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
@@ -240,6 +268,15 @@ class MainGui(tk.Frame):
         self.l_condition_cov["state"] = target_state
         self.l_inpath_cov["state"] = target_state
 
+    def activate_qua(self):
+        if self.external_flow_series.get():
+            self.b_qua["state"] = "normal"
+            self.b_quat["state"] = "normal"
+            self.select_flow_series_xlsx()
+        else:
+            self.b_qua["state"] = "disabled"
+            self.b_quat["state"] = "disabled"
+
     def list_habitat_conditions(self):
         # update habitat conditions listbox
         self.condition_list = fG.get_subdir_names(self.dir_conditions)
@@ -294,6 +331,76 @@ class MainGui(tk.Frame):
                                               command=lambda arg1=f_spec, arg2=lf_stage: self.set_fish(arg1, arg2))
                     entry_count += 1
 
+    def make_qua(self, input_type):
+        # input_type = STR either "statistic" or "time_series"
+        xlsx_template = ""
+        self.error = False
+        interpolation_mger = cIp.Interpolator()
+        if input_type == "time_series":
+            xlsx_template = askopenfilename(initialdir=self.dir2ra + "00_Flows\\InputFlowSeries",
+                                            title="Select flow series workbook (xlsx)",
+                                            filetypes=[("Workbooks", "*.xlsx")])
+
+        col_Q = "B"
+        col_UA = "F"
+        start_row = 4
+        for cxlsx in self.xlsx_condition:
+            condition = cxlsx.split("\\")[-1].split("/")[-1].split("_sharea_")[0]
+            for f_spec in self.fish_applied.keys():
+                lf_stages = self.fish_applied[f_spec]
+                for ls in lf_stages:
+                    try:
+                        self.logger.info(" > Creating Q - Area workbook for {0} - {1}".format(f_spec, ls))
+                        fsn = str(f_spec).lower()[0:2] + str(ls).lower()[0:2]
+                        xlsx_tar_data = cIO.Read(cxlsx)
+                        if input_type == "statistic":
+                            Q_template = cFl.FlowAssessment()
+                            if self.cover_applies:
+                                self.logger.info("   * with cover")
+                                cstr = "_cov.xlsx"
+                            else:
+                                cstr = ".xlsx"
+                            xlsx_template = self.dir2ra + "00_Flows\\" + condition + "\\flow_duration_" + fsn + cstr
+                            self.logger.info("   * using flow duration curve (%s)" % xlsx_template)
+                            Q_template.get_flow_duration_data_from_xlsx(xlsx_template)
+                            dates = Q_template.exceedance_rel
+                            flows = Q_template.Q_flowdur
+                            xlsx_out = self.dir + "SHArea\\{0}_QvsSharea_{1}_stats.xlsx".format(condition, fsn)
+                        else:
+                            self.logger.info("   * using flow time series (%s)" % xlsx_template)
+                            Q_template = cFl.SeasonalFlowProcessor()
+                            Q_template.get_flow_duration_data_from_xlsx(xlsx_template)
+                            dates = Q_template.date_column
+                            flows = Q_template.flow_column
+                            xlsx_out = self.dir + "SHArea\\{0}_QvsSharea_{1}_time.xlsx".format(condition, fsn)
+                        self.logger.info("   * interpolating SHArea ...")
+                        interpolation_mger.assign_targets(xlsx_tar_data.read_float_column_short(col_Q, start_row),
+                                                          xlsx_tar_data.read_float_column_short(col_UA, start_row))
+                        UA_interp = interpolation_mger.linear_central(flows)
+                        writer = cIO.Write(self.dir + ".templates\\CONDITION_QvsSharea_template_{0}.xlsx".format(self.unit))
+                        self.logger.info("   * writing workbook %s ..." % xlsx_out)
+                        writer.write_column("A", 3, flows)
+                        writer.write_column("B", 3, UA_interp)
+                        writer.write_column("C", 3, dates)
+                        if input_type == "statistic":
+                            writer.write_cell("C", 2, "% Exceedance")
+                            writer.write_cell("D", 2, "Discharge vs % Exceedance")
+                        else:
+                            writer.write_cell("C", 2, "Date")
+                            writer.write_cell("D", 2, "Discharge cs date")
+                        self.logger.info("   * saving ...")
+                        writer.save_close_wb(xlsx_out)
+                        try:
+                            del writer
+                        except:
+                            pass
+                    except:
+                        showinfo("ERROR", "Could not create Area analyses for{0} - {1}. \nRead console Error and Warning messages.".format(f_spec, ls))
+                        self.error = True
+
+        if not self.error:
+            webbrowser.open(self.dir + "SHArea\\")
+
     def myquit(self):
         self.open_log_file()
         tk.Frame.quit(self)
@@ -318,11 +425,19 @@ class MainGui(tk.Frame):
             self.b_select_bshp.config(text="Invalid file.")
         self.logger.info(" >> Selected boundary shapefile: " + self.bound_shp)
 
+    def select_flow_series_xlsx(self):
+        msg0 = "Select condition xlsx file containing discharge-area curve data"
+        msg1 = ".\n\n Flow data must be in Col. B (start at row 4).\n"
+        msg2 = "Area data must be in Col. F (start at row 4)."
+        showinfo("INFO", msg0 + msg1 + msg2)
+        self.xlsx_condition = [askopenfilename(initialdir=self.dir + "SHArea\\", title=msg0)]
+        self.cb_extq.config(text="Use external flow series (selected: %s)" % ", ".join(self.xlsx_condition))
+
     def select_HSIcondition(self, *args):
         if args[0] == "hy":
             items = self.lb_condition_hy.curselection()
             self.chsi_condition_hy = [self.condition_list[int(item)] for item in items][0]
-            self.dir_inp_hsi_hy = self.dir + "\\HSI\\" + str(self.chsi_condition_hy) + "\\"
+            self.dir_inp_hsi_hy = self.dir + "HSI\\" + str(self.chsi_condition_hy) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_hy):
                 self.l_inpath_hy.config(fg="cyan4", text="Selected: " + str(self.dir_inp_hsi_hy))
@@ -331,15 +446,15 @@ class MainGui(tk.Frame):
 
             self.b_csi_nc["state"] = "normal"
             # update SHArea buttons
-            if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_hy + "\\"):
+            if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_hy + "\\"):
                 self.b_sha_th["state"] = "normal"
-                if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
+                if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
                     self.b_sharc["state"] = "normal"
 
         if args[0] == "cov":
             items = self.lb_condition_cov.curselection()
             self.chsi_condition_cov = [self.condition_list[int(item)] for item in items][0]
-            self.dir_inp_hsi_cov = self.dir + "\\HSI\\" + str(self.chsi_condition_cov) + "\\"
+            self.dir_inp_hsi_cov = self.dir + "HSI\\" + str(self.chsi_condition_cov) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_cov):
                 self.l_inpath_cov.config(fg="gold4", text="Selected: " + str(self.dir_inp_hsi_cov))
@@ -347,9 +462,9 @@ class MainGui(tk.Frame):
                 self.l_inpath_cov.config(fg="red", text="SELECTION ERROR                                       ")
             self.b_csi_c["state"] = "normal"
             # update SHArea buttons
-            if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_cov + "\\"):
+            if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_cov + "\\"):
                 self.b_sha_th["state"] = "normal"
-                if os.path.isdir(self.dir + "\\CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
+                if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
                     self.b_sharc["state"] = "normal"
                     self.cb_use_cov["state"] = "normal"
 
@@ -472,11 +587,13 @@ class MainGui(tk.Frame):
                     except:
                         showinfo("INFO", "Using \'WITH COVER\' option (hydraulic only condition is empty).")
                         sharea = chsi.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
-                ans = sharea.calculate_sha(self.sharea_threshold, self.fish_applied)
+                self.xlsx_condition = sharea.calculate_sha(self.sharea_threshold, self.fish_applied)
                 sharea.clear_cache()
 
-                if ans == "OK":
-                    webbrowser.open(sharea.xlsx_out)
+                if self.xlsx_condition.__len__() > 0:
+                    webbrowser.open(self.dir + "SHArea\\")
+                    self.b_qua["state"] = "normal"
+                    self.b_quat["state"] = "normal"
                 else:
                     showinfo("WARNING", "No CHSI rasters were available for the selected fish species - lifestage.")
             except:

@@ -51,8 +51,6 @@ class CHSI:
             self.u_discharge = "m3"
             self.ft2ac = 1
 
-        self.xlsx_out = ""
-
     def calculate_sha(self, sha_threshold, fish):
         # SHArea_threshold =  FLOAT -- value between 0.0 and 1.0
         # fish = DICT -- fish.keys()==species_names; fish.values()==lifestages
@@ -63,6 +61,7 @@ class CHSI:
         self.logger.info(" >> Retrieving CHSI rasters ...")
         csi_list = arcpy.ListRasters()
         cc = 0  # appended in cache to avoid overwriting problems
+        xlsx_result_list = []
         for species in fish.keys():
             for ls in fish[species]:
                 self.logger.info(" -- Usable Area for " + str(species).upper() + " - " + str(ls).upper())
@@ -151,14 +150,14 @@ class CHSI:
 
                 try:
                     xlsx.save_close_wb(xlsx_name)
-                    self.xlsx_out = xlsx_name
+                    xlsx_result_list.append(xlsx_name)
                 except:
                     self.logger.info("ERROR: Failed to save " + str(xlsx_name))
         arcpy.CheckInExtension('Spatial')
         if cc > 0:
-            return "OK"
+            return xlsx_result_list
         else:
-            return "NoMatch"
+            return []
 
     def clear_cache(self, *args):
         # if args[0]==False: the cache folder itself is not deleted

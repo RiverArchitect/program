@@ -10,7 +10,7 @@ try:
     import fGlobal as fG
     import cMakeTable as cMT
 except:
-    print("ExceptionERROR: Missing RiverArchitect packages (required: cFish, fGlobal).")
+    print("ExceptionERROR: Missing RiverArchitect packages (riverpy).")
 
 
 class FlowAssessment:
@@ -39,16 +39,17 @@ class FlowAssessment:
             self.logger.info("ERROR: Could not read flow duration curve data")
             return -1
         try:
-            # sort non-numeric out
-            test_list = self.Q_flowdur
-            for val in test_list:
-                try:
-                    test = float(val)
-                except:
-                    while val in self.Q_flowdur:
-                        rem_index = self.Q_flowdur.index(val)
-                        del self.Q_flowdur[rem_index]
-                        del self.exceedance_rel[rem_index]
+            [self.Q_flowdur, self.exceedance_rel] = fG.eliminate_nan_from_list(self.Q_flowdur, self.exceedance_rel)
+            # # sort non-numeric out
+            # test_list = self.Q_flowdur
+            # for val in test_list:
+            #     try:
+            #         test = float(val)
+            #     except:
+            #         while val in self.Q_flowdur:
+            #             rem_index = self.Q_flowdur.index(val)
+            #             del self.Q_flowdur[rem_index]
+            #             del self.exceedance_rel[rem_index]
         except:
             pass
 
@@ -113,10 +114,6 @@ class FlowAssessment:
             Q_higher = Q_value
             ex_higher = 0.0
         try:
-            # self.logger.info(" -->> ex_low: " + str(ex_lower))
-            # self.logger.info(" -->> ex_high: " + str(ex_higher))
-            # self.logger.info(" -->> Q_low: " + str(Q_lower))
-            # self.logger.info(" -->> Q_high: " + str(Q_higher))
             pr_exceedance = ex_lower + ((Q_value - Q_lower) / (Q_higher - Q_lower)) * (ex_higher - ex_lower)
             self.logger.info(" -->> Expected exceedance duration (per year): " + str(pr_exceedance) + "%")
             return pr_exceedance
