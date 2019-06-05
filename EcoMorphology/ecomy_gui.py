@@ -40,7 +40,7 @@ class MainGui(tk.Frame):
         tk.Frame.__init__(self, master)
         # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
         if __name__ != '__main__':
-            self.master = self.master.master
+            self.master = self.winfo_toplevel()
         self.set_geometry()
         try:
             import rasterio

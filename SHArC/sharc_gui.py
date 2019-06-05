@@ -67,7 +67,7 @@ class MainGui(tk.Frame):
         tk.Frame.__init__(self, master)
         # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
         if __name__ != '__main__':
-            self.master = self.master.master
+            self.master = self.winfo_toplevel()
 
         self.apply_boundary = tk.BooleanVar()
         self.external_flow_series = tk.BooleanVar()
@@ -194,7 +194,7 @@ class MainGui(tk.Frame):
         self.yd = 5  # distance holder in y-direction (pixel)
         # width and height of the window
         self.ww = 800
-        self.wh = 800  # must be multiple of 10
+        self.wh = 840  # must be multiple of 10
         self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
         self.wy = (self.master.winfo_screenheight() - self.wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
