@@ -113,7 +113,7 @@ class HHSIgui(object):
     def prepare_discharge_file(self):
         for species in self.fish_applied.keys():
             for ls in self.fish_applied[species]:
-                fsn = str(species).lower()[0:2] + str(ls[0:2])
+                fsn = str(species).lower()[0:2] + str(ls)[0:2]
                 # copy spreadsheet with discharge dependencies (if not yet existent)
                 spreadsheet_handle = cMkT.MakeFlowTable(self.condition, "sharc", unit=self.unit)
                 self.discharge_xlsx.append(spreadsheet_handle.make_aquatic_condition_xlsx(fsn))
