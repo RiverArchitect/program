@@ -40,16 +40,6 @@ class FlowAssessment:
             return -1
         try:
             [self.Q_flowdur, self.exceedance_rel] = fG.eliminate_nan_from_list(self.Q_flowdur, self.exceedance_rel)
-            # # sort non-numeric out
-            # test_list = self.Q_flowdur
-            # for val in test_list:
-            #     try:
-            #         test = float(val)
-            #     except:
-            #         while val in self.Q_flowdur:
-            #             rem_index = self.Q_flowdur.index(val)
-            #             del self.Q_flowdur[rem_index]
-            #             del self.exceedance_rel[rem_index]
         except:
             pass
 
@@ -335,11 +325,11 @@ class SeasonalFlowProcessor:
             # xlsx_write.open_wb(export_xlsx_name, 0)
             self.logger.info("   * writing data ...")
             try:
-                xlsx_write.write_cell("F", 4, fish)
-                xlsx_write.write_cell("F", 5, " Month:" + str(self.fish_seasons[fish]["start"]["month"]) + " Day:" + str(self.fish_seasons[fish]["start"]["day"]))
-                xlsx_write.write_cell("F", 6, " Month:" + str(self.fish_seasons[fish]["end"]["month"]) + " Day:" + str(self.fish_seasons[fish]["end"]["day"]))
-                xlsx_write.write_cell("F", 7, self.min_year)
-                xlsx_write.write_cell("F", 8, self.max_year)
+                xlsx_write.write_cell("E", 4, fish)
+                xlsx_write.write_cell("E", 5, " Month:" + str(self.fish_seasons[fish]["start"]["month"]) + " Day:" + str(self.fish_seasons[fish]["start"]["day"]))
+                xlsx_write.write_cell("E", 6, " Month:" + str(self.fish_seasons[fish]["end"]["month"]) + " Day:" + str(self.fish_seasons[fish]["end"]["day"]))
+                xlsx_write.write_cell("E", 7, self.min_year)
+                xlsx_write.write_cell("E", 8, self.max_year)
                 xlsx_write.write_matrix("A", 3, self.export_dict[fish])
             except:
                 self.logger.info("")
