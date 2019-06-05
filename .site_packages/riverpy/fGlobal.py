@@ -247,7 +247,7 @@ def open_folder(directory):
 def print_dict(dictionary):
     out_str = ""
     for k, v in dictionary.items():
-        out_str += "{0} - {1}".format(str(k), str("".join(v)))
+        out_str += "   {0} - {1}".format(str(k), str(" + ".join(v)))
     return out_str
 
 

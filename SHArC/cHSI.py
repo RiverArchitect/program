@@ -134,7 +134,7 @@ class CHSI:
                     except:
                         self.logger.info("ERROR: Area calculation failed.")
 
-                    self.logger.info("       * writing Usable Area to workbook:")
+                    self.logger.info("       * writing Usable Area to workbook ...")
                     for q in Q.keys():
                         try:
                             q_str = str(csi).split(fish_shortname)[1].split('.tif')[0]
@@ -323,10 +323,10 @@ class CHSI:
                                     chsi = Con(~IsNull(inundation_ras), Con(Float(inundation_ras) > 0.0, Float(dsi * vsi)))
 
                             if not ('.tif' in str(ras)):
-                                self.logger.info("        * saving as: " + str(ras).strip("dsi") + ".tif")
+                                self.logger.info("        * saving as: csi" + str(ras).strip("dsi") + ".tif")
                                 chsi.save(self.path_csi + "csi" + str(ras).strip("dsi") + ".tif")
                             else:
-                                self.logger.info("        * saving as: " + str(ras).strip("dsi"))
+                                self.logger.info("        * saving as: csi" + str(ras).strip("dsi"))
                                 chsi.save(self.path_csi + "csi" + str(ras).strip("dsi"))
 
                             self.logger.info("        * clearing cache buffer ...")
@@ -437,6 +437,7 @@ class HHSI:
         arcpy.env.extent = "MAXOF"
 
         if boundary_shp.__len__() > 0:
+            self.logger.info("     * using external boundary shapefile (%s)" + str(boundary_shp))
             boundary_ras = self.make_boundary_ras(boundary_shp)
             try:
                 if boundary_ras == -1:
@@ -505,10 +506,13 @@ class HHSI:
         i_par_prev = 0.0
         i_hsi_prev = curve_data[1][0]
         for i_par in curve_data[0]:
-            __ras__.append(Float(Con((Float(ras) >= Float(i_par_prev)) & (Float(ras) < Float(i_par)), (
-                                     Float(i_hsi_prev) + (
-                                      (Float(ras) - Float(i_par_prev)) / (Float(i_par) - Float(i_par_prev)) * Float(
-                                        curve_data[1][index] - i_hsi_prev))), Float(0.0))))
+            try:
+                __ras__.append(Float(Con((Float(ras) >= Float(i_par_prev)) & (Float(ras) < Float(i_par)), (
+                                         Float(i_hsi_prev) + (
+                                          (Float(ras) - Float(i_par_prev)) / (Float(i_par) - Float(i_par_prev)) * Float(
+                                            curve_data[1][index] - i_hsi_prev))), Float(0.0))))
+            except:
+                self.logger.info("WARNING: Invalid curve data (Fish.xlsx): PAR={0}, HSI={1}.".format(str(i_par_prev), str(i_hsi_prev)))
             i_hsi_prev = curve_data[1][index]
             i_par_prev = i_par
             index += 1

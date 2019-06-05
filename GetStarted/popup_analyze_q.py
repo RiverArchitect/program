@@ -95,7 +95,7 @@ class FlowAnalysis(object):
         self.b_q_inp.grid(sticky=tk.EW, row=11, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
         self.b_q_dur = tk.Button(top, width=self.col_0_width * 2, fg="firebrick3", bg="white",
-                                 text="Make flow duration curve", command=lambda: self.make_flow_duration())
+                                 text="Make flow duration curve(s)", command=lambda: self.make_flow_duration())
         self.b_q_dur.grid(sticky=tk.EW, row=12, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
         self.b_sct["state"] = "disabled"
