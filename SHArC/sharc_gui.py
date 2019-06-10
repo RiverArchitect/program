@@ -174,7 +174,7 @@ class MainGui(tk.Frame):
         self.l_qua = tk.Label(self, text="Q -  Area Analysis", bg="LightBlue1")
         self.l_qua.grid(sticky=tk.NW, row=19, column=0, columnspan=self.max_columnspan,
                         padx=self.xd, pady=self.yd)
-        self.cb_extq = tk.Checkbutton(self, text="Use external flow series", variable=self.external_flow_series,
+        self.cb_extq = tk.Checkbutton(self, text="Use other flow duration curve", variable=self.external_flow_series,
                                       onvalue=True, offvalue=False, bg="LightBlue1")
         self.cb_extq.grid(sticky=tk.W, row=20, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.cb_extq.deselect()
@@ -370,18 +370,18 @@ class MainGui(tk.Frame):
                         Q_template.get_flow_duration_data_from_xlsx(xlsx_template)
                         dates = Q_template.exceedance_rel
                         flows = Q_template.Q_flowdur
-                        xlsx_out = self.dir + "SHArea\\{0}_QvsSharea_{1}_stats.xlsx".format(condition, fsn)
+                        xlsx_out = self.dir + "SHArea\\{0}_QvsA_{1}_stats.xlsx".format(condition, fsn)
                     else:
                         self.logger.info("   * using flow time series (%s)" % xlsx_template)
                         Q_template = cFl.SeasonalFlowProcessor(xlsx_template)
                         dates = Q_template.date_column
                         flows = Q_template.flow_column
-                        xlsx_out = self.dir + "SHArea\\{0}_QvsSharea_{1}_time.xlsx".format(condition, fsn)
+                        xlsx_out = self.dir + "SHArea\\{0}_QvsA_{1}_time.xlsx".format(condition, fsn)
                     self.logger.info("   * interpolating SHArea ...")
                     interpolation_mger.assign_targets(xlsx_tar_data.read_float_column_short(col_Q, start_row),
                                                       xlsx_tar_data.read_float_column_short(col_UA, start_row))
                     UA_interp = interpolation_mger.linear_central(flows)
-                    writer = cIO.Write(self.dir + ".templates\\CONDITION_QvsSharea_template_{0}.xlsx".format(self.unit))
+                    writer = cIO.Write(self.dir + ".templates\\CONDITION_QvsA_template_{0}.xlsx".format(self.unit))
                     self.logger.info("   * writing workbook %s ..." % xlsx_out)
                     writer.write_column("A", 3, flows)
                     writer.write_column("B", 3, UA_interp)
@@ -489,7 +489,7 @@ class MainGui(tk.Frame):
                 self.activate_buttons(revert=True)
                 self.fish_applied = {}
                 self.logger.info(" >> All species cleared.")
-                self.l_aqua.config(text="Select Aquatic Ambiance (at least one)")
+                self.l_aqua.config(text="Select Aquatic Ambiance for fish (at least one)")
         else:
             self.fish_applied = self.fish.species_dict
             self.logger.info(" >> All available ambiances added.")
@@ -524,7 +524,7 @@ class MainGui(tk.Frame):
 
         # shout if no fish was selected
         if self.fish_applied.__len__() == 0:
-            showinfo("ATTENTION", "Select fish species!")
+            showinfo("ATTENTION", "Select Aquatic Ambiance for fish!")
             return -1
 
         # instantiate app
