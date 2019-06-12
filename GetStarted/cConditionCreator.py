@@ -11,6 +11,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fG
     import cMakeTable as cMT
+    import cMakeInp as cMI
     import cFlows as cFl
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
@@ -54,6 +55,13 @@ class ConditionCreator:
     def create_sub_condition(self, dir2src_condition, dir2bound):
         try:
             self.error = fSC.make_sub_condition(dir2src_condition, self.dir2condition, dir2bound)
+        except:
+            self.error = True
+
+    def generate_input_file(self, dir2flow_definitions):
+        try:
+            new_inp_file = cMI.MakeInputFile(self.dir2condition)
+            return new_inp_file.make_info(dir2flow_definitions)
         except:
             self.error = True
 

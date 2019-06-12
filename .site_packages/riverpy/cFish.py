@@ -17,7 +17,7 @@ class Fish:
         self.life_stages = []
         self.logger = logging.getLogger("logfile")
         self.ls_row = 5
-        self.ls_col_add = {"spawning": 1, "fry": 3, "ammocoetes": 3, "juvenile": 5, "adult": 7, "hydrologic year": 1,
+        self.ls_col_add = {"spawning": 1, "fry": 3, "ammocoetes": 3, "juvenile": 5, "adult": 7, "hydrological year": 1,
                            "season": 3, "depth > x": 5, "velocity > x": 7}
         self.parameter_rows = {"u": 9, "h": 38, "substrate": 72, "cobbles": 81, "boulders": 82, "plants": 84,
                                "wood": 85, "start_date": 6, "end_date": 7}

@@ -136,7 +136,7 @@ class Features:
 class Reaches:
     def __init__(self):
         self.internal_id = ["reach_00", "reach_01", "reach_02", "reach_03", "reach_04", "reach_05", "reach_06",
-                            "reach_07"]
+                            "reach_07", "none"]
         self.reach_no = range(0, self.internal_id.__len__())
         self.reader = cRM.Read()
         self.id_xlsx = self.reader.get_reach_info("id")

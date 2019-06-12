@@ -110,6 +110,10 @@ class Mapper:
                 return "layout_ds_Dw"
         if "volume_" in map_name:
             return map_name
+        if "exc" in map_name:
+            return "volume_cust_neg"
+        if "fil" in map_name:
+            return "volume_cust_pos"
 
     def choose_ref_map(self, map_name):
         # type(map_name) == str
@@ -146,6 +150,10 @@ class Mapper:
                 return "layer_ds_Dw"
         if "volume_" in map_name:
             return map_name
+        if "exc" in map_name:
+            return "volume_cust_neg"
+        if "fil" in map_name:
+            return "volume_cust_pos"
 
     def copy_template_project(self):
         try:
@@ -391,11 +399,11 @@ class Mapper:
                             lyr.updateConnectionProperties({'connection_info': {'database': dir_old}},
                                                            {'connection_info': {'database': self.dir_map_ras}},
                                                            auto_update_joins_and_relates=True, validate=False)
-                            for ras in self.ras4map_list:
-                                if str(ras).split(".")[0] in str(ras_connection):
-                                    lyr.updateConnectionProperties({'dataset': str(ras_connection)},
-                                                                   {'dataset': str(ras)},
-                                                                   auto_update_joins_and_relates=True, validate=False)
+                            for ras in self.map_list:
+                                # if str(ras).split(".")[0] in str(ras_connection):
+                                lyr.updateConnectionProperties({'dataset': str(ras_connection)},
+                                                               {'dataset': str(ras)},
+                                                               auto_update_joins_and_relates=True, validate=False)
                                 if not extent_set:
                                     self.raster_extent = self.get_raster_extent(self.dir_map_ras + ras)
                                     self.logger.info("        * %s will be used for mapping extent" % str(ras))
@@ -405,7 +413,7 @@ class Mapper:
                 self.aprx.save()
 
                 if direct_mapping:
-                    self.logger.info("    * Invoking PDF mapping ...")
+                    self.logger.info("    * Calling PDF map creator ...")
                     self.make_pdf_maps(map_name, extent="raster")
 
             except arcpy.ExecuteError:

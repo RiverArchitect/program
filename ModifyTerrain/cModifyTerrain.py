@@ -22,7 +22,6 @@ class ModifyTerrain:
 
         # general directories and parameters
         self.all_rasters = []  # will get assigned an arcpy.ListRasters() list
-        self.alt_dir_volDEM = r""
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
         fG.chk_dir(self.cache)
         fG.clean_dir(self.cache)
@@ -35,13 +34,8 @@ class ModifyTerrain:
         fG.clean_dir(self.output_ras_dir)
         self.raster_dict = {}
         self.raster_info = ""
-        self.rasters_for_pos_vol = []
-        self.rasters_for_neg_vol = []
         self.reader = cRM.Read()
         self.reaches = cDef.Reaches()
-        self.volume_neg_dict = {}
-        self.volume_pos_dict = {}
-        self.writer = cRM.Write()
 
         # set relevant reaches
         try:
@@ -64,20 +58,14 @@ class ModifyTerrain:
 
         for feat in self.applied_feat_ids:
             self.applied_feat_names.append(self.features.feat_name_dict[feat])
-            self.volume_pos_dict.update({feat: []})
-            self.volume_neg_dict.update({feat: []})
-            for reach_id in self.reaches.id_dict.values():
-                # prepare zero lists for volume computation
-                self.volume_pos_dict[feat].append(+0.0)
-                self.volume_neg_dict[feat].append(-0.0)
 
         # set unit system variables
         if ("us" in str(unit_system)) or ("si" in str(unit_system)):
             self.units = unit_system
         else:
             self.units = "us"
-            print("WARNING: Invalid unit_system identifier. unit_system must be either \'us\' or \'si\'.")
-            print("         Setting unit_system default to \'us\'.")
+            self.logger.info("WARNING: Invalid unit_system identifier. unit_system must be either \'us\' or \'si\'.")
+            self.logger.info("         Setting unit_system default to \'us\'.")
 
         if self.units == "us":
             self.convert_volume_to_cy = 0.037037037037037037037037037037037  #ft3 -> cy: float((1/3)**3)
@@ -142,28 +130,6 @@ class ModifyTerrain:
             self.logger.info("ERROR: Cannot find " + str(feature_name) + " max. lifespan raster.")
             return -1
 
-    def get_cad_rasters_for_volume(self, feat_id):
-        # instruction: rasters must contain feat_ids in names
-        arcpy.env.workspace = self.alt_dir_volDEM
-        arcpy.CheckOutExtension('Spatial')  # check out license
-        all_rasters = arcpy.ListRasters()
-        raster_identified = False
-        for ras_name in all_rasters:
-            if ("dem" in ras_name) or (feat_id in ras_name) or ("mod" in ras_name):
-                raster_identified = True
-                ras_neg_vol = Con(((self.ras_dem - arcpy.Raster(self.alt_dir_volDEM + ras_name)) >= self.volume_threshold),
-                                  (self.ras_dem - arcpy.Raster(self.alt_dir_volDEM + ras_name)), 0)
-                self.raster_dict.update({feat_id[0:3] + "_diffneg": ras_neg_vol})
-                ras_pos_vol = Con(((self.ras_dem - arcpy.Raster(self.alt_dir_volDEM + ras_name)) <= -self.volume_threshold),
-                                  (arcpy.Raster(self.alt_dir_volDEM + ras_name) - self.ras_dem), 0)
-                self.raster_dict.update({feat_id[0:3] + "_diffpos": ras_pos_vol})
-
-        if not raster_identified:
-            self.logger.info("ERROR: Cannot find modified DEM. Ensure that file names contain \'dem\' or \'mod\'.")
-
-        arcpy.env.workspace = self.cache
-        arcpy.CheckInExtension('Spatial')  # release license
-
     def lower_dem_for_plants(self, feat_id, extents):
         self.logger.info("")
         feature_name = self.features.feat_name_dict[feat_id]
@@ -207,7 +173,7 @@ class ModifyTerrain:
             max_d2w = 10.0
             self.logger.info("ERROR: Failed to read maximum depth to water value for terrain grading/widening (using default = 10).")
 
-        if self.raster_info.__len__() > 0 and not ("diff" in self.raster_info):
+        if self.raster_info.__len__() > 0:
             self.logger.info("     ... based on modified " + str(self.raster_info) + " DEM  ... ")
             dem = Float(self.raster_dict[self.raster_info])
             # det = self.dem_det - (self.ras_dem - self.raster_dict[self.raster_info])
@@ -218,10 +184,7 @@ class ModifyTerrain:
             d2w = Float(self.ras_d2w)
 
         feat_dem = Con(feat_ras_cor > 0.0, Con((d2w > Float(max_d2w)), Float(dem - (d2w - max_d2w)), dem), dem)
-        # feat_dem = Con(feat_ras_cor > 0.0, dem - 50, dem)  # neglect water table
-        feat_dem_diff = dem - feat_dem
 
-        self.raster_dict.update({feat_id[0:3] + "_diffneg": feat_dem_diff})
         self.raster_info = feat_id[0:3]
         self.raster_dict.update({self.raster_info: feat_dem})
 
@@ -273,39 +236,22 @@ class ModifyTerrain:
             for ras in self.raster_dict.keys():
                 if self.raster_dict[ras].maximum > 0:
                     if str(ras).__len__() > 5:
-                        ras_name = reach_name + "_" + str(ras)[0:5]
+                        ras_name = reach_name + "_" + str(ras)[0:5] + ".tif"
                     else:
-                        ras_name = reach_name + "_" + str(ras)
+                        ras_name = reach_name + "_" + str(ras) + ".tif"
 
                     # save only relevant rasters -- empty rasters may crash python
                     try:
-                        if "diff" in str(ras):
-                            if "pos" in str(ras):
-                                suffix = "_pos.tif"
-                            if "neg" in str(ras):
-                                suffix = "_neg.tif"
-                        else:
-                            suffix = ".tif"
-
                         self.logger.info("  >> Saving raster: " + ras_name + " ... ")
                         self.logger.info("     *** takes time ***")
                         self.raster_dict[ras].save(self.cache + ras + ".tif")
                         self.logger.info(
-                            "    -- Casting to " + self.output_ras_dir + ras_name + suffix + ".tif ...")
-                        arcpy.CopyRaster_management(self.cache + ras + ".tif", self.output_ras_dir + ras_name + suffix)
-
-                        if "diff" in str(ras):
-                            if "pos" in str(ras):
-                                self.rasters_for_pos_vol.append(arcpy.Raster(self.output_ras_dir + ras_name + suffix))
-                            if "neg" in str(ras):
-                                self.rasters_for_neg_vol.append(arcpy.Raster(self.output_ras_dir + ras_name + suffix))
+                            "    -- Casting to " + self.output_ras_dir + ras_name + " ...")
+                        arcpy.CopyRaster_management(self.cache + ras + ".tif", self.output_ras_dir + ras_name)
 
                     except:
                         self.logger.info("ERROR: Raster could not be saved.")
                 else:
-                    if "diff" in str(ras):
-                        self.rasters_for_pos_vol.append(self.zero_ras)
-                        self.rasters_for_neg_vol.append(self.zero_ras)
                     self.logger.info("    -- " + str(ras) + " is empty (not applicable on reach): Export canceled.")
 
         except arcpy.ExecuteError:
@@ -318,70 +264,7 @@ class ModifyTerrain:
             self.logger.info("ERROR: Raster copy to Output folder failed.")
             self.logger.info(arcpy.GetMessages())
 
-    def volume_computation(self):
-        self.logger.info("")
-        self.logger.info("* *   * *   * * VOLUME CALCULATION * *   * *  * *")
-        # requires 3D extension
-        self.logger.info("  >> Calculating masses (volumes) of required earth works.")
-        arcpy.CheckOutExtension("3D")
-        arcpy.env.extent = "MAXOF"
-
-        for vol_ras in self.rasters_for_pos_vol:
-            try:
-                if "zero" in str(vol_ras):
-                    self.logger.info("     Dummy calculation (placeholder to keep order in output files).")
-                else:
-                    self.logger.info("     Deriving fill volume of " + str(vol_ras))
-                    self.logger.info("     *** takes time ***")
-                feat_vol = arcpy.SurfaceVolume_3d(vol_ras, "", "ABOVE", 0.0, 1.0)
-                voltxt = feat_vol.getMessage(1).split("Volume=")[1]
-                self.logger.info("     RESULT: " + str(float(voltxt)*self.convert_volume_to_cy) + self.unit_info + ".")
-                for feat_id in self.applied_feat_ids:
-                    # parse applied feature id to find the accurate key in volume_pos_dict
-                    if feat_id[0:3] in str(vol_ras):
-                        # append volume to correct list entry
-                        self.volume_pos_dict[feat_id][self.reaches.id_no_dict[self.current_reach_id]] = float(
-                            voltxt) * self.convert_volume_to_cy
-            except:
-                self.logger.info("ERROR: Calculation of volume from " + str(vol_ras) + " failed.")
-
-        for vol_ras in self.rasters_for_neg_vol:
-            try:
-                if "zero" in str(vol_ras):
-                    self.logger.info("     Dummy calculation (place holder to keep order in output files).")
-                else:
-                    self.logger.info("     Deriving excavation volume of " + str(vol_ras))
-                    self.logger.info("     *** takes time ***")
-                feat_vol = arcpy.SurfaceVolume_3d(vol_ras, "", "ABOVE", 0.0, 1.0)
-                voltxt = feat_vol.getMessage(1).split("Volume=")[1]
-                self.logger.info("     RESULT: " + str(float(voltxt)*self.convert_volume_to_cy) + self.unit_info + ".")
-                for feat_id in self.applied_feat_ids:
-                    # parse applied feature id to find the accurate key in volume_pos_dict
-                    if feat_id[0:3] in str(vol_ras):
-                        # append volume to correct list entry
-                        self.volume_neg_dict[feat_id][self.reaches.id_no_dict[self.current_reach_id]] = float(
-                            voltxt) * self.convert_volume_to_cy
-            except:
-                self.logger.info("ERROR: Calculation of volume from " + str(vol_ras) + " failed.")
-
-        # ALTERNATIVE OPTION IF arcpy.SurfaceVolume_3d FAILS
-        # import numpy
-        # myArray = arcpy.RasterToNumPyArray(outVol)
-        # totVolume = numpy.sum(myArray)
-        arcpy.CheckInExtension("3D")
-
-    def __call__(self, *args):
-        # args[0] can be volume_calculation_only = True or False (default: False)
-        # args[1] directory of rasters to compare for volume computation
-        try:
-            volume_calculation_only = args[0]
-            try:
-                self.alt_dir_volDEM = args[1]
-            except:
-                print("ERROR: Received request for volume calculation but not input directory is provided.")
-                return -1
-        except:
-            volume_calculation_only = False
+    def __call__(self):
 
         for rn in self.reach_ids_applied:
             self.current_reach_id = rn
@@ -389,29 +272,13 @@ class ModifyTerrain:
             self.logger.info("\n\n     REACH NAME: " + str(reach_name).capitalize())
             self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
 
-            if not volume_calculation_only:
-                for feat_id in self.applied_feat_ids:
-                    self.modification_manager(feat_id)
-            else:
-                for feat_id in self.applied_feat_ids:
-                    self.get_cad_rasters_for_volume(feat_id)
+            for feat_id in self.applied_feat_ids:
+                self.modification_manager(feat_id)
+
             self.save_rasters()
-            self.volume_computation()
             # reset raster storage
             self.raster_dict = {}
             self.raster_info = ""
-            self.rasters_for_neg_vol = []
-            self.rasters_for_pos_vol = []
-
-        # write excavation volumes to excel
-        self.writer.write_volumes(self.condition, self.applied_feat_names, self.reaches.names_xlsx,
-                                  fG.dict_values2list(self.volume_neg_dict.values()), self.unit_info.strip(), -1)
-        # write fill volumes to excel
-        self.writer.write_volumes(self.condition, self.applied_feat_names, self.reaches.names_xlsx,
-                                  fG.dict_values2list(self.volume_pos_dict.values()), self.unit_info.strip(), 1)
-        import time
-        self.logger.info("  >> Waiting for processes to terminate ...")
-        time.sleep(3)
 
         try:
             self.logger.info("  >> Clearing .cache (arcpy.Delete_management - temp.designs - please wait) ...")
@@ -426,14 +293,6 @@ class ModifyTerrain:
             self.logger.info("WARNING: Could not clear .cache folder.")
         self.logger.info("FINISHED.")
 
-        # copy logfile (contains volume information)
-        try:
-            from shutil import copyfile
-            copyfile(os.path.dirname(__file__) + "\\logfile.log", os.path.dirname(__file__) + "\\Output\\Logfiles\\logfile.log")
-        except:
-            pass
-
-        return os.path.dirname(__file__) + "\\Output\\Logfiles\\logfile.log"
 
 
 

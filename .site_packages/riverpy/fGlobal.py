@@ -6,7 +6,7 @@ except:
 
 
 try:
-    import cDefinitions as cdef
+    import cDefinitions as cDef
 except:
     print("ExceptionERROR: Cannot find package files (cDefinitions.py).")
 
@@ -125,7 +125,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     # reach_id = LIST from MT/.templates/computation_extents.xlsx
     # habitat_analysis = BOOL
     # relevant_feat_names = LIST with entries from LD/.templates/threshold_values.xlsx
-    features = cdef.Features()
+    features = cDef.Features()
     feat_id_list = []
     [feat_id_list.append(features.name_dict[item]) for item in relevant_feat_names]
     feat_col_list = []

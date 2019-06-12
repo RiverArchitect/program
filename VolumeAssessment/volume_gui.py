@@ -4,15 +4,16 @@ try:
     from tkinter.messagebox import askokcancel, showinfo
     from tkinter.filedialog import *
     import webbrowser
-    import cModifyTerrain as cMT
+    import cVolumeAssessment as cMT
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fG
     import cReachManager as cRM
     import cDefinitions as cDef
+    import cMapper as cMp
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/*.py).")
 
@@ -20,15 +21,13 @@ except:
 class MainGui(tk.Frame):
     def __init__(self, master=None):
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
-        self.condition = ""
+        self.dir_ras_vol = ""
+        self.path = r"" + os.path.dirname(os.path.abspath(__file__))
         self.errors = False
-        self.features = cDef.Features()
-        self.feature_id_list = []
-        self.feature_name_list = []
-        self.in_feat = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")) + "\\MaxLifespan\\Output\\Rasters\\"
-        self.in_topo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
-        self.prevent_popup = False
+        self.org_dem_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
+        self.mod_dem_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
+        self.mapping = False
+        self.raster4mapping = []
         self.reader = cRM.Read()
         self.reaches = cDef.Reaches()
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
@@ -36,7 +35,7 @@ class MainGui(tk.Frame):
         self.reach_lookup_needed = False
         self.template_dir = os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\"
         self.unit = "us"
-        self.verified = False
+        self.vol_name = ""
 
         # Construct the Frame object.
         tk.Frame.__init__(self, master)
@@ -57,38 +56,32 @@ class MainGui(tk.Frame):
         self.l_reach_label.grid(sticky=tk.W, row=0, column=0, columnspan=1, padx=self.xd, pady=self.yd * 2)
         self.l_reaches = tk.Label(self, fg="red", text="Select from Reaches menu")
         self.l_reaches.grid(sticky=tk.W, row=0, column=1, columnspan=5, padx=self.xd, pady=self.yd * 2)
-        self.l_condition = tk.Label(self, fg="dark slate gray", text="Condition: ")
-        self.l_condition.grid(sticky=tk.W, row=2, column=0, padx=self.xd, pady=self.yd * 2)
-        self.l_s_feat = tk.Label(self, fg="dark slate gray", text="Selected features: ")
-        self.l_s_feat.grid(sticky=tk.W, row=1, column=0, padx=self.xd, pady=self.yd * 2)
-        self.l_features = tk.Label(self, fg="red",
-                                   text="Choose from \"Features\" Menu\n(requires maximum lifespan rasters)")
-        self.l_features.grid(sticky=tk.W, row=1, column=1, columnspan=7, padx=self.xd, pady=self.yd)
-        self.l_inp = tk.Label(self, fg="dark slate gray", text="Current input Raster directory:")
-        self.l_inp.grid(sticky=tk.W, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
-        self.l_inpath_topo = tk.Label(self, fg="dark slate gray", text=str(self.in_topo))
-        self.l_inpath_topo.grid(sticky=tk.W, row=5, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.l_inp_feat = tk.Label(self, text="Current MaxLifespan Raster directory (threshold-based modification):")
-        tk.Label(self, text="").grid(row=7, column=0, padx=self.xd, pady=self.yd)
-        self.l_inp_feat.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.l_inpath_feat = tk.Label(self, text=str(self.in_feat))
-        self.l_inpath_feat.grid(sticky=tk.W, row=10, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
-        # ENTRIES
-        self.e_condition = tk.Entry(self, bg="salmon", width=10, textvariable=self.gui_condition)
-        self.e_condition.grid(sticky=tk.EW, row=2, column=1, padx=self.xd, pady=self.yd)
+        self.l_org_dem = tk.Label(self, text="Original DEM Raster:")
+        self.l_org_dem.grid(sticky=tk.W, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_dir2orgdem = tk.Label(self, fg="dark slate gray", text="None")
+        self.l_dir2orgdem.grid(sticky=tk.W, row=5, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.l_mod_dem = tk.Label(self, text="Modified DEM Raster:")
+        self.l_mod_dem.grid(sticky=tk.W, row=13, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.l_dir2modem = tk.Label(self, fg="dark slate gray", text="None")
+        self.l_dir2modem.grid(sticky=tk.W, row=14, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
         # BUTTONS
-        self.b_condition = tk.Button(self, width=5, bg="white", text="Verify",
-                                     command=lambda: self.generate_inpath())
-        self.b_condition.grid(sticky=tk.W, row=2, column=2, padx=self.xd, pady=self.yd*5)
-        self.b_in_topo = tk.Button(self, width=25, bg="white", text="Change input DEM directory (optional)",
-                                   command=lambda: self.change_in_topo())
-        self.b_in_topo.grid(sticky=tk.EW, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.b_in_feat = tk.Button(self, width=25, text="Change max. lifespan Raster directory (optional)",
-                                   command=lambda: showinfo("INFO", "Check max. lifespan raster box first."))
-        self.b_in_feat.grid(sticky=tk.EW, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.b_chg_org_dem = tk.Button(self, width=25, bg="white", text="Select original DEM Raster",
+                                       command=lambda: self.select_org_dem())
+        self.b_chg_org_dem.grid(sticky=tk.EW, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.b_chg_mod_dem = tk.Button(self, width=25, text="Select modified DEM Raster",
+                                       command=lambda: self.select_mod_dem())
+        self.b_chg_mod_dem.grid(sticky=tk.EW, row=12, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+
         self.make_menu()
+
+        # CHECK BOXES
+        self.cb_mapping = tk.Checkbutton(self, fg="dark slate gray",
+                                         text="Automatically run mapping after DEM / volume calculation.",
+                                         variable=self.mapping, onvalue=True, offvalue=False)
+        self.cb_mapping.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd*2)
+        self.cb_mapping.deselect()  # select by default
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
@@ -103,7 +96,7 @@ class MainGui(tk.Frame):
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
         # Give the window a title.
         if __name__ == '__main__':
-            self.master.title("Modify Terrain")
+            self.master.title("Volume Assessment")
             self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def make_menu(self):
@@ -114,11 +107,6 @@ class MainGui(tk.Frame):
 
         # FEATURES DROP DOWN
         self.featmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Features", menu=self.featmenu)  # attach it to the menubar
-        self.featmenu.add_command(label="ALL", command=lambda: self.define_feature(""))
-        self.featmenu.add_command(label="Terraform: Grading (threshold-based)", command=lambda: self.define_feature("grade"))
-        self.featmenu.add_command(label="Terraform: Widen (threshold-based)", command=lambda: self.define_feature("widen"))
-        self.featmenu.add_command(label="CLEAR ALL", command=lambda: self.define_feature("clear"))
 
         # REACH  DROP DOWN
         self.reach_lookup_needed = False
@@ -135,8 +123,8 @@ class MainGui(tk.Frame):
         # RUN DROP DOWN
         self.runmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Run", menu=self.runmenu)  # attach it to the menubar
-        self.runmenu.add_command(label="Verify settings", command=lambda: self.verify())
-        self.runmenu.add_command(label="Threshold-based DEM Modification")
+        self.runmenu.add_command(label="Run: Volume Calculator", command=lambda: self.run_volume_calculator())
+        self.runmenu.add_command(label="Run: Map Maker", command=lambda: showinfo("INFO", "Run volume calculator first."))
 
         # CLOSE DROP DOWN
         self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
@@ -204,54 +192,23 @@ class MainGui(tk.Frame):
             self.reachmenu.entryconfig(13, label=self.reaches.name_dict["reach_06"])
             self.reachmenu.entryconfig(14, label=self.reaches.name_dict["reach_07"])
 
-    def change_in_feat(self):
-        msg0 = "Make sure there is ONE raster in the directory that contains the string of a feature ID. "
-        msg1 = "Valid feature IDs are:\n"
-        msglist = []
-        try:
-            feat_dict = dict(zip(self.features.name_list, self.features.id_list))
-            for feat in feat_dict.items():
-                msglist.append(": ".join(feat))
-            showinfo("SET DIRECTORY", msg0 + msg1 + ", ".join(msglist))
-        except:
-            pass
-        self.in_feat = askdirectory(initialdir=".") + "/"
-        if str(self.in_feat).__len__() > 1:
-            self.l_inpath_feat.config(fg="dark slate gray", text=str(self.in_feat))
+    def select_mod_dem(self):
+        self.mod_dem_dir = askopenfilename(initialdir=self.mod_dem_dir.split(".")[0],
+                                           title="Select modified DEM tif",
+                                           filetypes=[("GeoTIFF", "*.tif")])
+        if str(self.l_dir2modem).__len__() > 1:
+            self.l_dir2modem.config(fg="forest green", text=str(self.mod_dem_dir))
         else:
-            self.l_inpath_feat.config(fg="red", text="Invalid directory")
+            self.l_dir2modem.config(fg="red", text="Invalid directory")
 
-    def change_in_topo(self):
-        msg0 = "Make sure there is ONE raster in the directory is named \'dem\'.\n"
-        showinfo("SET DIRECTORY", msg0)
-        self.in_topo = askdirectory(initialdir=".") + "/"
-        if str(self.in_topo).__len__() > 1:
-            self.l_inpath_topo.config(fg="dark slate gray", text=str(self.in_topo))
+    def select_org_dem(self):
+        self.org_dem_dir = askopenfilename(initialdir=self.org_dem_dir.split(".")[0],
+                                           title="Select original DEM tif",
+                                           filetypes=[("GeoTIFF", "*.tif")])
+        if str(self.org_dem_dir).__len__() > 1:
+            self.l_dir2orgdem.config(fg="forest green", text=str(self.org_dem_dir))
         else:
-            self.l_inpath_topo.config(fg="red", text="Invalid directory")
-
-    def define_feature(self, feature_id):
-        if feature_id.__len__() < 1:
-            # append ALL available features
-            self.feature_id_list = self.features.id_list
-            self.feature_name_list = self.features.name_list
-            self.l_features.config(fg="SteelBlue", text=", ".join(self.feature_name_list))
-        else:
-            if not(feature_id == "clear"):
-                if not(feature_id in self.feature_id_list):
-                    # append single features
-                    self.feature_id_list.append(feature_id)
-                    self.feature_name_list.append(self.features.feat_name_dict[feature_id])
-                self.l_features.config(fg="SteelBlue", text=", ".join(self.feature_name_list))
-            else:
-                # clear all features
-                self.feature_id_list = []
-                self.feature_name_list = []
-                self.l_features.config(fg="red", text="Select from \'Features\' Menu")
-
-        if ("grade" in self.feature_id_list) or ("widen" in self.feature_id_list):
-            self.runmenu.entryconfig(1, label="Threshold-based DEM Modification",
-                                     command=lambda: self.run_modification())
+            self.l_dir2orgdem.config(fg="red", text="Invalid directory")
 
     def define_reaches(self):
         try:
@@ -260,57 +217,38 @@ class MainGui(tk.Frame):
         except:
             showinfo("ERROR", "Cannot open the file\n" + self.template_dir + "computation_extents.xlsx")
 
-    def enable_mterrain(self):
-        self.b_in_feat.config(command=lambda: self.change_in_feat())
-        self.l_inpath_feat.config(text=str(self.in_feat))
-        self.runmenu.entryconfig(1, label="Threshold-based DEM Modification",
-                                 command=lambda: self.run_modification())
-
-    def generate_inpath(self):
-        self.condition = self.e_condition.get()
-        self.in_topo = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\" + str(self.condition) + "\\"
-        self.in_feat = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")) + "\\MaxLifespan\\Output\\Rasters\\" + str(
-            self.condition) + "\\"
-
-        self.e_condition.config(bg="pale green", width=10, textvariable=self.gui_condition)
-
-        if os.path.exists(self.in_topo):
-            self.l_inpath_topo.config(fg="forest green", text=str(self.in_topo))
-        else:
-            if not os.path.isfile(self.in_topo + 'dem.tif'):
-                self.b_in_topo.config(fg="red", width=25, bg="white",
-                                      text="Change input topo (condition DEM) directory (REQUIRED)",
-                                      command=lambda: self.change_in_topo())
-                showinfo("WARNING", "Cannot find DEM grid:\n" + self.in_topo + "dem\nTopo (DEM) input directory required")
-            self.l_inpath_topo.config(fg="red", text="Set topo input directory")
-        if os.path.exists(self.in_feat):
-            self.l_inpath_feat.config(fg="forest green", text=str(self.in_feat))
-        else:
-            self.l_inpath_feat.config(text="No alternative feature input directory provided.")
-        self.enable_mterrain()
-
     def myquit(self):
         if askokcancel("Close", "Do you really wish to quit?"):
             tk.Frame.quit(self)
 
-    def run_modification(self):
-        showinfo("INFORMATION",
-                 " Analysis takes a while.\nPython windows seem unresponsive in the meanwhile.\nCheck console messages.\n\nPRESS OK TO START")
-        if not self.verified:
-            self.verify()
-        if self.verified:
-            modification = cMT.ModifyTerrain(condition=self.condition, unit_system=self.unit,
-                                             feature_ids=self.feature_id_list, topo_in_dir=self.in_topo,
-                                             feat_in_dir=self.in_feat, reach_ids=self.reach_ids_applied)
-            modification()
-            self.prevent_popup = True
+    def run_map_maker(self):
+        mapper = cMp.Mapper(self.vol_name, "mt", self.dir_ras_vol)
+        for ras in self.raster4mapping:
+            mapper.prepare_layout(True, map_items=[ras])
 
-            self.master.bell()
-            tk.Button(self, width=25, bg="pale green", text="Terrain modification finished. Click to quit.",
-                      command=lambda: self.myquit()).grid(sticky=tk.EW, row=8, column=0, columnspan=5,
-                                                          padx=self.xd, pady=self.yd)
+        self.master.bell()
+        tk.Button(self, width=25, bg="pale green", text="Mapping finished. Click to quit.",
+                  command=lambda: self.myquit()).grid(sticky=tk.EW, row=12, column=0, columnspan=5,
+                                                      padx=self.xd, pady=self.yd)
+        try:
+            if not mapper.error:
+                fG.open_folder(mapper.output_dir)
+        except:
+            pass
+
+    def run_volume_calculator(self):
+        showinfo("INFORMATION",
+                 " Analysis may take a while.\nPython windows seem unresponsive in the meanwhile.\nCheck console messages.\n \n PRESS OK TO START")
+        vola = cMT.VolumeAssessment(unit_system=self.unit, org_ras_dir=self.org_dem_dir,
+                                    mod_ras_dir=self.mod_dem_dir, reach_ids=self.reach_ids_applied)
+        self.vol_name, self.dir_ras_vol = vola.get_volumes()
+        self.raster4mapping = vola.rasters
+        fG.rm_dir(self.path + "\\.cache\\")
+
+        self.runmenu.entryconfig(1, command=lambda: self.run_map_maker())
+        if self.mapping.get():
+            self.run_map_maker()
+        self.master.bell()
 
     def show_credits(self):
         showinfo("Credits", fG.get_credits())
@@ -332,41 +270,11 @@ class MainGui(tk.Frame):
             showinfo("UNIT CHANGE", "Unit system changed to SI (metric).")
         self.unit = new_unit
 
-    def verify(self, *args):
-        # args[0] = True limits verification to condition only
-        try:
-            full_check = args[0]
-        except:
-            full_check = True
-
-        error_msg = []
-        self.verified = True
-        if full_check:
-            try:
-                import cModifyTerrain
-            except:
-                error_msg.append("Check installation of modify_terrain package.")
-                self.verified = False
-                self.errors = True
-            try:
-                import arcpy
-                if not (sys.version_info.major == 3):
-                    error_msg.append("Wrong Python interpreter (Required: Python3 and arcpy).")
-                    self.errors = True
-                    self.verified = False
-            except:
-                pass
-
-        if self.errors:
-            self.master.bell()
-            showinfo("VERIFICATION ERROR(S)", "\n ".join(error_msg))
-            self.errors = False
-
     def __call__(self):
         self.mainloop()
 
 
 # enable script to run stand-alone
 if __name__ == "__main__":
-    print("Loading GUI (ModifyTerrain) ...")
+    print("Loading GUI (VolumeAssessment) ...")
     MainGui().mainloop()
