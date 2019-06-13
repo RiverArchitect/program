@@ -33,6 +33,10 @@ try:
 except:
     print("ERROR: Could not import ModifyTerrain.")
 try:
+    import VolumeAssessment
+except:
+    print("ERROR: Could not import VolumeAssessment.")
+try:
     import SHArC
 except:
     print("ERROR: Could not import SHArC.")
@@ -40,6 +44,10 @@ try:
     import EcoMorphology
 except:
     print("ERROR: Could not import EcoMorphology.")
+try:
+    import Connectivity
+except:
+    print("ERROR: Could not import Connectivity.")
 
 
 class RaGui(tk.Frame):
@@ -56,23 +64,23 @@ class RaGui(tk.Frame):
 
         self.tab_names = ['Get Started',
                           'Lifespan',
-                          'Morphology',
-                          'Ecohydraulics',
+                          'Terraforming',
+                          'Eco-Morphology',
                           'Project Maker']
 
         self.sub_tab_parents = ['Lifespan',
-                                'Morphology',
-                                'Ecohydraulics']
+                                'Terraforming',
+                                'Eco-Morphology']
 
         self.sub_tab_names = [['Lifespan Design', 'Max Lifespan'],
-                              ['Terrain Creation', 'Volume Assessment'],
+                              ['Modify Terrain', 'Volume Assessment'],
                               ['SHArC', 'Connectivity']]
 
         # working directory suffixes for each module
         self.tab_dir_names = ['\\GetStarted\\',
                               ['\\LifespanDesign\\', '\\MaxLifespan\\'],
-                              ['\\ModifyTerrain\\', '\\ModifyTerrain\\'],
-                              ['\\SHArC\\', '\\SHArC\\'],
+                              ['\\ModifyTerrain\\', '\\VolumeAssessment\\'],
+                              ['\\SHArC\\', '\\Connectivity\\'],
                               '\\ProjectMaker\\']
 
         # Frames initialized by module, with parent being tab container
@@ -88,10 +96,10 @@ class RaGui(tk.Frame):
         # sub tabs initialized, with parents being associated top-level tabs
         self.sub_tab_list = [[LifespanDesign.lifespan_design_gui.FaGui(self.tabs['Lifespan']),
                               MaxLifespan.action_gui.ActionGui(self.tabs['Lifespan'])],
-                             [ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Morphology']),
-                              ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Morphology'])],
-                             [SHArC.sharc_gui.MainGui(self.tabs['Ecohydraulics']),
-                              SHArC.sharc_gui.MainGui(self.tabs['Ecohydraulics'])]]
+                             [ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Terraforming']),
+                              VolumeAssessment.volume_gui.MainGui(self.tabs['Terraforming'])],
+                             [SHArC.sharc_gui.MainGui(self.tabs['Eco-Morphology']),
+                              Connectivity.connect_gui.MainGui(self.tabs['Eco-Morphology'])]]
 
         self.sub_tab_names = dict(zip(self.sub_tab_parents, self.sub_tab_names))
         self.sub_tabs = dict(zip(self.sub_tab_parents, self.sub_tab_list))

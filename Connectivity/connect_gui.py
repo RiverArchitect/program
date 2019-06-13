@@ -65,21 +65,19 @@ class MainGui(tk.Frame):
             # self.b_1.grid(sticky=tk.W, row=0, rowspan=2, column=self.max_columnspan, padx=self.xd, pady=self.yd)
 
         except:
-            msg0 = "Cannot import GDAL and/or RASTERIO. Check requirements.\n\n"
-            msg1 = "The Eco-Morphology module uses leogoesger\'s FFF connectors.\n"
-            msg2 = "Find out more: https://github.com/leogoesger/FFF-connectors"
+            msg0 = "Under construction."
 
             # LABELS
-            self.l_1 = tk.Label(self, fg="snow4", text=msg0 + msg1)
+            self.l_1 = tk.Label(self, fg="snow4", text=msg0)
             self.l_1.grid(sticky=tk.EW, row=2, rowspan=1, column=1, columnspan=4, padx=self.xd, pady=self.yd)
-            self.l_2 = tk.Label(self, fg="blue", text=msg2, cursor="hand2")
+            self.l_2 = tk.Label(self, fg="blue", text="Wiki pages", cursor="hand2")
             self.l_2.grid(sticky=tk.EW, row=4, rowspan=1, column=1, columnspan=4, padx=self.xd, pady=self.yd)
             self.l_2.bind("<Button-1>", self.callback)
 
         self.make_menu()
 
     def callback(self, event):
-        webbrowser.open_new(r"https://github.com/leogoesger/FFF-connectors")
+        webbrowser.open_new(r"https://github.com/sschwindt/RiverArchitect/wiki/Connectivity")
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
