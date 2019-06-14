@@ -159,6 +159,6 @@ class ConditionCreator:
             self.logger.info("ERROR: The selected folder does not contain any depth/velocity Raster containing the defined string.")
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = ConditionCreator (Module: GetStarted)")
+        print("Class Info: <type> = ConditionCreator (%s)" % os.path.dirname(__file__))
         print(dir(self))
 

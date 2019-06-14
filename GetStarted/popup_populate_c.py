@@ -8,9 +8,9 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    import cConditionCreator as ccc
+    import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -19,7 +19,7 @@ class PopulateCondition(object):
     def __init__(self, master):
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.condition_list = fg.get_subdir_names(self.dir2ra + "01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
         self.dir2condition = '.'
         self.dir2dem = ''
         self.dir2h = ''
@@ -110,12 +110,12 @@ class PopulateCondition(object):
         self.top.destroy()
 
     def run_d2w(self):
-        condition = ccc.ConditionCreator(self.dir2condition)
+        condition = cCC.ConditionCreator(self.dir2condition)
         condition.make_d2w(self.dir2h, self.dir2dem)
         self.top.bell()
         try:
             if not condition.error:
-                fg.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition)
                 self.b_d2w.config(fg="forest green", text="d2w.tif created.")
             else:
                 self.b_d2w.config(fg="red", text="d2w.tif creation failed.")
@@ -123,12 +123,12 @@ class PopulateCondition(object):
             pass
 
     def run_det(self):
-        condition = ccc.ConditionCreator(self.dir2condition)
+        condition = cCC.ConditionCreator(self.dir2condition)
         condition.make_det(self.dir2h, self.dir2dem)
         self.top.bell()
         try:
             if not condition.error:
-                fg.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition)
                 self.b_det.config(fg="forest green", text="dem_detrend.tif created.")
             else:
                 self.b_det.config(fg="red", text="dem_detrend.tif creation failed.")
@@ -136,12 +136,12 @@ class PopulateCondition(object):
             pass
 
     def run_mu(self):
-        condition = ccc.ConditionCreator(self.dir2condition)
+        condition = cCC.ConditionCreator(self.dir2condition)
         condition.make_det(self.dir2h, self.dir2u)
         self.top.bell()
         try:
             if not condition.error:
-                fg.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition)
                 self.b_mu.config(fg="forest green", text="mu.tif created.")
             else:
                 self.b_mu.config(fg="red", text="mu.tif creation failed.")

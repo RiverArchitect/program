@@ -6,7 +6,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fG
 except:
-    print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py, cParameters.py, cReadInpLifespan.py).")
+    print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/).")
 
 try:
     import arcpy
@@ -84,26 +84,28 @@ class ArcPyAnalysis:
 
             dem = DEM(self.condition)       # a.s.l.
             d2w = WaterTable(self.condition)
+            if (str(dem.raster).__len__() > 1) and (str(d2w.raster).__len__() > 1):
+                self.logger.info("      >>> Calculating terrain slope ...")
+                out_measurement = "PERCENT_RISE"
+                z_factor = 1.0
+                ras_S0 = Float((Slope(dem.raster, out_measurement, z_factor))/100)  # (--)
 
-            self.logger.info("      >>> Calculating terrain slope ...")
-            out_measurement = "PERCENT_RISE"
-            z_factor = 1.0
-            ras_S0 = Float((Slope(dem.raster, out_measurement, z_factor))/100)  # (--)
+                self.logger.info("      >>> Applying threshold values ...")
+                try:
+                    min_lf = float(max(self.lifespans))
+                    max_lf = float(max(self.lifespans))
+                    self.logger.info("          * max. lifespan: " + str(max_lf))
+                except:
+                    min_lf = 1.0
+                    max_lf = 50.0
+                    self.logger.info("          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
+                self.ras_biolf = Con((Float(ras_S0) >= Float(threshold_S0)),
+                                     Con((Float(d2w.raster) < Float(threshold_d2w_up)), Float(max_lf), Float(min_lf)))
 
-            self.logger.info("      >>> Applying threshold values ...")
-            try:
-                min_lf = float(max(self.lifespans))
-                max_lf = float(max(self.lifespans))
-                self.logger.info("          * max. lifespan: " + str(max_lf))
-            except:
-                min_lf = 1.0
-                max_lf = 20.0
-                self.logger.info("          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
-            self.ras_biolf = Con((Float(ras_S0) >= Float(threshold_S0)),
-                                 Con((Float(d2w.raster) < Float(threshold_d2w_up)), Float(max_lf), Float(min_lf)))
-
-            self.raster_info_lf = "ras_biolf"
-            self.raster_dict_lf.update({"ras_biolf": self.ras_biolf})
+                self.raster_info_lf = "ras_biolf"
+                self.raster_dict_lf.update({"ras_biolf": self.ras_biolf})
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -130,24 +132,26 @@ class ArcPyAnalysis:
             self.set_extent()
             self.logger.info("      >>> Analyzing depth to groundwater.")
             d2w = WaterTable(self.condition)
+            if str(d2w.raster).__len__() > 1:
+                if not(self.raster_dict_lf.items().__len__() > 0):
+                    # routine to override noData pixels if required.
+                    temp_d2w = Con((IsNull(d2w.raster) == 1), (IsNull(d2w.raster) * 0), d2w.raster)
+                    d2w.raster = temp_d2w
 
-            if not(self.raster_dict_lf.items().__len__() > 0):
-                # routine to override noData pixels if required.
-                temp_d2w = Con((IsNull(d2w.raster) == 1), (IsNull(d2w.raster) * 0), d2w.raster)
-                d2w.raster = temp_d2w
+                self.ras_d2w = Con(((d2w.raster >= threshold_low) & (d2w.raster <= threshold_up)), 1.0)
 
-            self.ras_d2w = Con(((d2w.raster >= threshold_low) & (d2w.raster <= threshold_up)), 1.0)
-
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
-                temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
-                temp_ras_d2w = Con((IsNull(self.ras_d2w) == 1), (IsNull(self.ras_d2w) * 0), self.ras_d2w)
-                ras_d2w_new = Con(((temp_ras_d2w == 1.0) & (temp_ras_base > 0)), temp_ras_base)
-                self.ras_d2w = ras_d2w_new
-            self.raster_info_lf = "ras_d2w"
-            self.raster_dict_lf.update({"ras_d2w": self.ras_d2w})
+                if self.verify_raster_info():
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
+                    temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                        (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                        self.raster_dict_lf[self.raster_info_lf])
+                    temp_ras_d2w = Con((IsNull(self.ras_d2w) == 1), (IsNull(self.ras_d2w) * 0), self.ras_d2w)
+                    ras_d2w_new = Con(((temp_ras_d2w == 1.0) & (temp_ras_base > 0)), temp_ras_base)
+                    self.ras_d2w = ras_d2w_new
+                self.raster_info_lf = "ras_d2w"
+                self.raster_dict_lf.update({"ras_d2w": self.ras_d2w})
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -174,26 +178,28 @@ class ArcPyAnalysis:
             self.set_extent()
             self.logger.info("      >>> Analyzing detrended DEM.")
             det = DEMdet(self.condition)
+            if str(det.raster).__len__() > 1:
+                if not(self.raster_dict_lf.items().__len__() > 0):
+                    # routine to override noData pixels if required.
+                    temp_det = Con((IsNull(det.raster) == 1), (IsNull(det.raster) * 0), det.raster)
+                    det.raster = temp_det
 
-            if not(self.raster_dict_lf.items().__len__() > 0):
-                # routine to override noData pixels if required.
-                temp_det = Con((IsNull(det.raster) == 1), (IsNull(det.raster) * 0), det.raster)
-                det.raster = temp_det
+                self.ras_det = Con(((det.raster >= threshold_low) & (det.raster <= threshold_up)), 1)
 
-            self.ras_det = Con(((det.raster >= threshold_low) & (det.raster <= threshold_up)), 1)
-
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
-                # make temp_ras without noData pixels --> det is inclusive!
-                temp_ras = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                               (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                self.raster_dict_lf[self.raster_info_lf])
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                # special case det: usage of logical OR instead of AND (only application is Widen)
-                ras_det_new = Con(((self.ras_det == 1) | (temp_ras > 0)), 1.0)
-                self.ras_det = ras_det_new
-            self.raster_info_lf = "ras_det"
-            self.raster_dict_lf.update({self.raster_info_lf: self.ras_det})
+                if self.verify_raster_info():
+                    self.logger.info("          * based on raster: " + self.raster_info_lf)
+                    # make temp_ras without noData pixels --> det is inclusive!
+                    temp_ras = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                   (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                   self.raster_dict_lf[self.raster_info_lf])
+                    # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                    # special case det: usage of logical OR instead of AND (only application is Widen)
+                    ras_det_new = Con(((self.ras_det == 1) | (temp_ras > 0)), 1.0)
+                    self.ras_det = ras_det_new
+                self.raster_info_lf = "ras_det"
+                self.raster_dict_lf.update({self.raster_info_lf: self.ras_det})
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -238,7 +244,7 @@ class ArcPyAnalysis:
                         max_lf = float(max(self.lifespans))
                         self.logger.info("          * max. lifespan: " + str(max_lf))
                     except:
-                        max_lf = 20.0
+                        max_lf = 50.0
                         self.logger.info(
                             "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
                     if not self.inverse_tcd:
@@ -287,41 +293,46 @@ class ArcPyAnalysis:
 
             Dcr_raster_list = []
             for i in range(0, h.raster_names.__len__()):
-                if arcpy.Exists(u.rasters[i]) and arcpy.Exists(h.rasters[i]):
+                if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
                     __ras__ = (Square(u.rasters[i] * self.n) / ((self.s - 1) *
                                                                 threshold_taux * Power(h.rasters[i], (1 / 3))))
                     Dcr_raster_list.append(__ras__)
                 else:
                     Dcr_raster_list.append("")
-
-            self.ras_Dcf = self.compare_raster_set(Dcr_raster_list, D85_fines)
-
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
+            if any(str(e).__len__() > 0 for e in Dcr_raster_list):
+                self.ras_Dcf = self.compare_raster_set(Dcr_raster_list, D85_fines)
                 try:
-                    max_lf = float(max(self.lifespans))
-                    self.logger.info("          * max. lifespan: " + str(max_lf))
+                    self.ras_Dcf.extent  # crashes if CellStatistics failed
+                    if self.verify_raster_info():
+                        self.logger.info("          * based on raster: " + self.raster_info_lf)
+                        try:
+                            max_lf = float(max(self.lifespans))
+                            self.logger.info("          * max. lifespan: " + str(max_lf))
+                        except:
+                            max_lf = 50.0
+                            self.logger.info(
+                                "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
+                        # make temp_ras without noData pixels
+                        temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                            (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                            self.raster_dict_lf[self.raster_info_lf])
+                        temp_ras_dcf = Con((IsNull(self.ras_Dcf) == 1), (IsNull(self.ras_Dcf) * max_lf), self.ras_Dcf)
+                        # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                        ras_Dcr_new = Con(((temp_ras_dcf < temp_ras_base) & (temp_ras_dcf > 0)),
+                                          temp_ras_dcf, self.raster_dict_lf[self.raster_info_lf])
+                        self.ras_Dcr = ras_Dcr_new
+
+                    # eliminate pixels where "fines" are not "fine"
+                    ras_exclude = Con((D85_fines < Dmaxf), self.ras_Dcf)
+                    self.ras_Dcf = ras_exclude
+
+                    # update lf dictionary
+                    self.raster_info_lf = "ras_Dcf"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_Dcf})
                 except:
-                    max_lf = 20.0
-                    self.logger.info(
-                        "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
-                # make temp_ras without noData pixels
-                temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
-                temp_ras_dcf = Con((IsNull(self.ras_Dcf) == 1), (IsNull(self.ras_Dcf) * max_lf), self.ras_Dcf)
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                ras_Dcr_new = Con(((temp_ras_dcf < temp_ras_base) & (temp_ras_dcf > 0)),
-                                  temp_ras_dcf, self.raster_dict_lf[self.raster_info_lf])
-                self.ras_Dcr = ras_Dcr_new
-
-            # eliminate pixels where "fines" are not "fine"
-            ras_exclude = Con((D85_fines < Dmaxf), self.ras_Dcf)
-            self.ras_Dcf = ras_exclude
-
-            # update lf dictionary
-            self.raster_info_lf = "ras_Dcf"
-            self.raster_dict_lf.update({self.raster_info_lf: self.ras_Dcf})
+                    pass
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in fine sediment stability.")
@@ -347,33 +358,38 @@ class ArcPyAnalysis:
 
             Fr_raster_list = []
             for i in range(0, h.raster_names.__len__()):
-                if arcpy.Exists(u.rasters[i]) and arcpy.Exists(h.rasters[i]):
+                if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
                     __ras__ = u.rasters[i] / SquareRoot(self.g * h.rasters[i])
                     Fr_raster_list.append(__ras__)
                 else:
                     Fr_raster_list.append("")
-
-            self.ras_Fr = self.compare_raster_set(Fr_raster_list, threshold_Fr)
-
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
+            if any(str(e).__len__() > 0 for e in Fr_raster_list):
+                self.ras_Fr = self.compare_raster_set(Fr_raster_list, threshold_Fr)
                 try:
-                    max_lf = float(max(self.lifespans))
-                    self.logger.info("          * max. lifespan: " + str(max_lf))
-                except:
-                    max_lf = 20.0
-                    self.logger.info(
-                        "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
-                temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    Float(self.raster_dict_lf[self.raster_info_lf]))
-                temp_ras_Fr = Con((IsNull(self.ras_Fr) == 1), (IsNull(self.ras_Fr) * max_lf), Float(self.ras_Fr))
-                ras_Fr_new = Con((temp_ras_Fr < temp_ras_base), temp_ras_Fr, Float(self.raster_dict_lf[self.raster_info_lf]))
-                self.ras_Fr = ras_Fr_new
+                    self.ras_Fr.extent  # crashes if CellStatistics failed
+                    if self.verify_raster_info():
+                        self.logger.info("          * based on raster: " + self.raster_info_lf)
+                        try:
+                            max_lf = float(max(self.lifespans))
+                            self.logger.info("          * max. lifespan: " + str(max_lf))
+                        except:
+                            max_lf = 50.0
+                            self.logger.info(
+                                "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
+                        temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                            (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                            Float(self.raster_dict_lf[self.raster_info_lf]))
+                        temp_ras_Fr = Con((IsNull(self.ras_Fr) == 1), (IsNull(self.ras_Fr) * max_lf), Float(self.ras_Fr))
+                        ras_Fr_new = Con((temp_ras_Fr < temp_ras_base), temp_ras_Fr, Float(self.raster_dict_lf[self.raster_info_lf]))
+                        self.ras_Fr = ras_Fr_new
 
-            # update lf dictionary
-            self.raster_info_lf = "ras_Fr"
-            self.raster_dict_lf.update({self.raster_info_lf: self.ras_Fr})
+                    # update lf dictionary
+                    self.raster_info_lf = "ras_Fr"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_Fr})
+                except:
+                    pass
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in Froude.")
@@ -401,19 +417,23 @@ class ArcPyAnalysis:
             self.logger.info("      >>> Analyzing hyd (h only).")
 
             h = FlowDepth(self.condition)
-            self.ras_dth = self.compare_raster_set(h.rasters, threshold_h)
-
-            try:
-                max_lf = float(max(self.lifespans))
-                self.logger.info("          * max. lifespan: " + str(max_lf))
-            except:
-                max_lf = 20.0
-            ras_h_new = Con((IsNull(self.ras_dth) == 1), (IsNull(self.ras_dth) * max_lf), Float(self.ras_dth))
-
-            self.ras_dth = ras_h_new
-
-            self.raster_info_lf = "ras_dth"
-            self.raster_dict_lf.update({self.raster_info_lf: self.ras_dth})
+            if any(str(e).__len__() > 0 for e in h.rasters):
+                self.ras_dth = self.compare_raster_set(h.rasters, threshold_h)
+                try:
+                    self.ras_dth.extent  # crashes if CellStatistics failed
+                    try:
+                        max_lf = float(max(self.lifespans))
+                        self.logger.info("          * max. lifespan: " + str(max_lf))
+                    except:
+                        max_lf = 50.0
+                    ras_h_new = Con((IsNull(self.ras_dth) == 1), (IsNull(self.ras_dth) * max_lf), Float(self.ras_dth))
+                    self.ras_dth = ras_h_new
+                    self.raster_info_lf = "ras_dth"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_dth})
+                except:
+                    pass
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -438,35 +458,40 @@ class ArcPyAnalysis:
             self.logger.info("      >>> Analyzing Dcr (mobile grains) with n = " + str(self.n) + " " + self.n_label)
             h = FlowDepth(self.condition)
             u = FlowVelocity(self.condition)
-            Dmean = GrainSizes(self.condition)  # in ft
+            Dmean = GrainSizes(self.condition)  # in ft or m
 
             Dcr_raster_list = []
             for i in range(0, h.raster_names.__len__()):
-                if arcpy.Exists(u.rasters[i]) and arcpy.Exists(h.rasters[i]):
-                    __ras__ = (Square(u.rasters[i] * self.n) / ((self.s - 1) *
-                                                                threshold_taux * Power(h.rasters[i], (1 / 3))))
+                if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
+                    __ras__ = (Square(u.rasters[i] * Float(self.n)) / ((Float(self.s) - 1) *
+                                                                       threshold_taux * Power(h.rasters[i], (1 / 3))))
                     Dcr_raster_list.append(__ras__)
                 else:
                     Dcr_raster_list.append("")
+            if any(str(e).__len__() > 0 for e in Dcr_raster_list) and (str(Dmean.raster).__len__() > 1):
+                self.ras_Dcr = self.compare_raster_set(Dcr_raster_list, Dmean.raster)
+                try:
+                    self.ras_Dcr.extent  # crashes if CellStatistics failed
+                    if not(self.threshold_freq == 0.0):
+                        temp_ras = Con((self.ras_Dcr > self.threshold_freq), self.ras_Dcr)
+                        self.ras_Dcr = temp_ras
 
-            self.ras_Dcr = self.compare_raster_set(Dcr_raster_list, Dmean.raster)
+                    if self.verify_raster_info():
+                        self.logger.info("          * based on raster: " + self.raster_info_lf)
+                        temp_ras_Dcr = Con((IsNull(self.ras_Dcr) == 1), (IsNull(self.ras_Dcr) * 0), self.ras_Dcr)
+                        temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                            (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                            self.raster_dict_lf[self.raster_info_lf])
+                        ras_Dcr_new = Con(((temp_ras_Dcr < temp_ras_base) & (temp_ras_Dcr > 0)),
+                                          self.ras_Dcr, self.raster_dict_lf[self.raster_info_lf])
+                        self.ras_Dcr = ras_Dcr_new
 
-            if not(self.threshold_freq == 0.0):
-                temp_ras = Con((self.ras_Dcr > self.threshold_freq), self.ras_Dcr)
-                self.ras_Dcr = temp_ras
-
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
-                temp_ras_Dcr = Con((IsNull(self.ras_Dcr) == 1), (IsNull(self.ras_Dcr) * 0), self.ras_Dcr)
-                temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
-                ras_Dcr_new = Con(((temp_ras_Dcr < temp_ras_base) & (temp_ras_Dcr > 0)),
-                                  self.ras_Dcr, self.raster_dict_lf[self.raster_info_lf])
-                self.ras_Dcr = ras_Dcr_new
-
-            self.raster_info_lf = "ras_Dcr"
-            self.raster_dict_lf.update({self.raster_info_lf: self.ras_Dcr})
+                    self.raster_info_lf = "ras_Dcr"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_Dcr})
+                except:
+                    pass
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
             arcpy.CheckInExtension('Spatial')
 
         except arcpy.ExecuteError:
@@ -492,56 +517,57 @@ class ArcPyAnalysis:
             self.set_extent()
             self.logger.info("      >>> Analyzing morphologic units.")
             mu = MU(self.condition)
-
-            if method == 0:
-                self.logger.info("          MU: using exclusive method.")
-                try:
-                    temp_dict = {}
-                    for morph_unit in mu_bad:
-                        temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                    self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
-                    temp_ras = Con((self.ras_mu >= 1), 0, 1.0)
-                    self.ras_mu = temp_ras
-                except:
-                    self.logger.info("ERROR: Could not assign MU raster.")
-
-            if method == 1:
-                self.logger.info("          MU: using inclusive method.")
-                try:
-                    temp_dict = {}
-                    for morph_unit in mu_good:
-                        temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                    self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
-                    temp_ras = Con((self.ras_mu >= 1), 1.0, 0)
-                    self.ras_mu = temp_ras
-                except:
-                    self.logger.info("ERROR: Could not assign MU raster.")
+            if str(mu.raster).__len__() > 1:
+                if method == 0:
+                    self.logger.info("          MU: using exclusive method.")
                     try:
-                        self.logger.info("        -- mu_good: " + str(mu_good))
+                        temp_dict = {}
+                        for morph_unit in mu_bad:
+                            temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
+                        self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
+                        temp_ras = Con((self.ras_mu >= 1), 0, 1.0)
+                        self.ras_mu = temp_ras
                     except:
-                        self.logger.info("        -- bad mu_good list assignment.")
-                    try:
-                        self.logger.info("        -- method: " + str(method))
-                    except:
-                        self.logger.info("        -- bad method assignment.")
+                        self.logger.info("ERROR: Could not assign MU raster.")
 
-            if not (method < 0):
-                # if no MU delineation applies: method == -1
-                if self.verify_raster_info():
-                    self.logger.info("          * based on raster: " + self.raster_info_lf)
-                    # make temp_ras without noData pixels for both ras_mu and ras_dict
-                    temp_ras_mu = Con((IsNull(self.ras_mu) == 1), (IsNull(self.ras_mu) * 0), self.ras_mu)
-                    temp_ras_di = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                      (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                      self.raster_dict_lf[self.raster_info_lf])
-                    # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                    ras_mu_new = Con(((temp_ras_mu == 1.0) & (temp_ras_di > 0)), temp_ras_di)
-                    self.ras_mu = ras_mu_new
-                self.raster_info_lf = "ras_mu"
-                self.raster_dict_lf.update({"ras_mu": self.ras_mu})
+                if method == 1:
+                    self.logger.info("          MU: using inclusive method.")
+                    try:
+                        temp_dict = {}
+                        for morph_unit in mu_good:
+                            temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
+                        self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
+                        temp_ras = Con((self.ras_mu >= 1), 1.0, 0)
+                        self.ras_mu = temp_ras
+                    except:
+                        self.logger.info("ERROR: Could not assign MU raster.")
+                        try:
+                            self.logger.info("        -- mu_good: " + str(mu_good))
+                        except:
+                            self.logger.info("        -- bad mu_good list assignment.")
+                        try:
+                            self.logger.info("        -- method: " + str(method))
+                        except:
+                            self.logger.info("        -- bad method assignment.")
+
+                if not (method < 0):
+                    # if no MU delineation applies: method == -1
+                    if self.verify_raster_info():
+                        self.logger.info("          * based on raster: " + self.raster_info_lf)
+                        # make temp_ras without noData pixels for both ras_mu and ras_dict
+                        temp_ras_mu = Con((IsNull(self.ras_mu) == 1), (IsNull(self.ras_mu) * 0), self.ras_mu)
+                        temp_ras_di = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                          (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                          self.raster_dict_lf[self.raster_info_lf])
+                        # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                        ras_mu_new = Con(((temp_ras_mu == 1.0) & (temp_ras_di > 0)), temp_ras_di)
+                        self.ras_mu = ras_mu_new
+                    self.raster_info_lf = "ras_mu"
+                    self.raster_dict_lf.update({"ras_mu": self.ras_mu})
+                else:
+                    self.logger.info("          --> skipped (threshold workbook has no valid entries for mu)")
             else:
-                self.logger.info("          --> skipped (threshold workbook has no valid entries for mu)")
-
+                self.logger.info("          * Nothing to do (no Rasters provided).")
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in MU.")
@@ -588,7 +614,7 @@ class ArcPyAnalysis:
                             max_lf = float(max(self.lifespans))
                             self.logger.info("          * max. lifespan: " + str(max_lf))
                         except:
-                            max_lf = 20.0
+                            max_lf = 50.0
                             self.logger.info(
                                 "          * using default max. lifespan (error in input.inp definitions): " + str(
                                     max_lf))
@@ -629,39 +655,46 @@ class ArcPyAnalysis:
             h = FlowDepth(self.condition)  # thresholds are
             u = FlowVelocity(self.condition)
             grains = GrainSizes(self.condition)
+            if str(grains.raster).__len__() > 1:
+                tx_raster_list = []
+                for i in range(0, h.raster_names.__len__()):
+                    if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
+                        __ras__ = (self.rho_w * Square(u.rasters[i] / (5.75 * Log10(12.2 * h.rasters[i] /
+                                   (2 * 2.2 * grains.raster))))) / (self.rho_w * self.g * (self.s - 1) * grains.raster)
+                        tx_raster_list.append(__ras__)
+                    else:
+                        tx_raster_list.append("")
+                if any(str(e).__len__() > 0 for e in tx_raster_list):
+                    self.ras_taux = self.compare_raster_set(tx_raster_list, threshold_taux)
+                    try:
+                        self.ras_taux.extent  # crashes if CellStatistics failed
+                        if self.verify_raster_info():
+                            self.logger.info("          * based on raster: " + self.raster_info_lf)
+                            try:
+                                max_lf = float(max(self.lifespans))
+                                self.logger.info("          * max. lifespan: " + str(max_lf))
+                            except:
+                                max_lf = 50.0
+                                self.logger.info(
+                                    "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
+                            # make temp_ras without noData pixels
+                            temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                                (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                                Float(self.raster_dict_lf[self.raster_info_lf]))
+                            temp_ras_tx = Con((IsNull(self.ras_taux) == 1), (IsNull(self.ras_taux) * max_lf), Float(self.ras_taux))
+                            # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                            ras_taux_new = Con((temp_ras_tx < temp_ras_base),
+                                               self.ras_taux, Float(self.raster_dict_lf[self.raster_info_lf]))
+                            self.ras_taux = ras_taux_new
 
-            tx_raster_list = []
-            for i in range(0, h.raster_names.__len__()):
-                if arcpy.Exists(u.rasters[i]) and arcpy.Exists(h.rasters[i]):
-                    __ras__ = (self.rho_w * Square(u.rasters[i] / (5.75 * Log10(12.2 * h.rasters[i] /
-                               (2 * 2.2 * grains.raster))))) / (self.rho_w * self.g * (self.s - 1) * grains.raster)
-                    tx_raster_list.append(__ras__)
+                        self.raster_info_lf = "ras_taux"
+                        self.raster_dict_lf.update({"ras_taux": self.ras_taux})
+                    except:
+                        pass
                 else:
-                    tx_raster_list.append("")
-
-            self.ras_taux = self.compare_raster_set(tx_raster_list, threshold_taux)
-
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
-                try:
-                    max_lf = float(max(self.lifespans))
-                    self.logger.info("          * max. lifespan: " + str(max_lf))
-                except:
-                    max_lf = 20.0
-                    self.logger.info(
-                        "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
-                # make temp_ras without noData pixels
-                temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    Float(self.raster_dict_lf[self.raster_info_lf]))
-                temp_ras_tx = Con((IsNull(self.ras_taux) == 1), (IsNull(self.ras_taux) * max_lf), Float(self.ras_taux))
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                ras_taux_new = Con((temp_ras_tx < temp_ras_base),
-                                   self.ras_taux, Float(self.raster_dict_lf[self.raster_info_lf]))
-                self.ras_taux = ras_taux_new
-
-            self.raster_info_lf = "ras_taux"
-            self.raster_dict_lf.update({"ras_taux": self.ras_taux})
+                    self.logger.info("          * Nothing to do (no Rasters provided).")
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in taux.")
@@ -707,7 +740,7 @@ class ArcPyAnalysis:
                         max_lf = float(max(self.lifespans))
                         self.logger.info("          * max. lifespan: " + str(max_lf))
                     except:
-                        max_lf = 20.0
+                        max_lf = 50.0
                         self.logger.info(
                             "          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
                     temp_ras = Con((IsNull(self.ras_tcd) == 1), (IsNull(self.ras_tcd) * max_lf), Float(self.ras_tcd))
@@ -745,22 +778,28 @@ class ArcPyAnalysis:
             self.logger.info("      >>> Analyzing flow velocity (u).")
 
             u = FlowVelocity(self.condition)
-            self.ras_vel = self.compare_raster_set(u.rasters, threshold_u)
+            if any(str(e).__len__() > 0 for e in u.rasters):
+                self.ras_vel = self.compare_raster_set(u.rasters, threshold_u)
+                try:
+                    self.ras_vel.extent  # crashes if CellStatistics failed
+                    if self.verify_raster_info():
+                        self.logger.info("          * based on raster: " + self.raster_info_lf)
+                        # make temp_ras without noData pixels
+                        temp_ras_u = Con((IsNull(self.ras_vel) == 1), (IsNull(self.ras_vel) * 0), self.ras_vel)
+                        temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
+                                            (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
+                                            self.raster_dict_lf[self.raster_info_lf])
+                        # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                        ras_vel_new = Con(((temp_ras_u < temp_ras_base) & (temp_ras_u > 0)), Float(self.ras_vel),
+                                          Float(self.raster_dict_lf[self.raster_info_lf]))
+                        self.ras_vel = ras_vel_new
 
-            if self.verify_raster_info():
-                self.logger.info("          * based on raster: " + self.raster_info_lf)
-                # make temp_ras without noData pixels
-                temp_ras_u = Con((IsNull(self.ras_vel) == 1), (IsNull(self.ras_vel) * 0), self.ras_vel)
-                temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
-                                    (IsNull(self.raster_dict_lf[self.raster_info_lf]) * 0),
-                                    self.raster_dict_lf[self.raster_info_lf])
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                ras_vel_new = Con(((temp_ras_u < temp_ras_base) & (temp_ras_u > 0)), Float(self.ras_vel),
-                                  Float(self.raster_dict_lf[self.raster_info_lf]))
-                self.ras_vel = ras_vel_new
-
-            self.raster_info_lf = "ras_vel"
-            self.raster_dict_lf.update({self.raster_info_lf: self.ras_vel})
+                    self.raster_info_lf = "ras_vel"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_vel})
+                except:
+                    pass
+            else:
+                self.logger.info("          * Nothing to do (no Rasters provided).")
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in u.")
@@ -782,16 +821,25 @@ class ArcPyAnalysis:
         r_index = 0
         for ras in raster_set:
             try:
-                __ras__.append(Float(Con(Float(ras) >= Float(threshold),
-                                         Float(self.lifespans[r_index]))))
+                try:
+                    float(threshold)
+                except:
+                    continue
+                if str(ras).__len__() > 1:
+                    __ras__.append(Float(Con(Float(ras) >= Float(threshold),
+                                             Float(self.lifespans[r_index]))))
             except:
                 self.logger.error("ERROR: Incoherent data in " + str(ras) + " (raster comparison).")
                 self.logger.info("ERROR HINT: Verify Raster definitions in 01_Conditions/%s/input_definitions.inp." % self.condition)
             r_index += 1
         try:
-            return Float(CellStatistics(__ras__, "MINIMUM", "DATA"))
+            if __ras__.__len__() > 1:
+                return Float(CellStatistics(__ras__, "MINIMUM", "DATA"))
+            else:
+                self.logger.info("          * Nothing to do (CellStatistics returns None-types)")
+                return None
         except:
-            self.logger.error("ERROR: Could not calculate CellStatistics (raster comparison).")
+            self.logger.error("ERROR: Could not calculate CellStatistics (Raster comparison).")
 
     def design_filter(self, Dmaxf):
         # Returns minimum filter grain sizes Dmaxf for fine sediment
@@ -802,17 +850,18 @@ class ArcPyAnalysis:
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
             self.set_extent()
-            self.logger.info("      >>> Designing filter stability.")
             Dmean = GrainSizes(self.condition)  # in ft
-            ras_D15c = Dmean.raster * 0.25 * self.ft2in  # factor 0.25 from approximation of 2008 map (cFi Excel) and 12 in/ft
-            self.ras_D15 = ras_D15c / 20
-            self.ras_D85 = ras_D15c / 5
-            temp_D15 = Con((self.ras_D85 < Dmaxf), self.ras_D15)
-            temp_D85 = Con((self.ras_D85 < Dmaxf), self.ras_D85)
-            self.ras_D15 = temp_D15
-            self.ras_D85 = temp_D85
-            self.raster_dict_ds.update({"ras_D15": self.ras_D15})
-            self.raster_dict_ds.update({"ras_D85": self.ras_D85})
+            if str(Dmean.raster).__len__() > 1:
+                self.logger.info("      >>> Designing filter stability.")
+                ras_D15c = Dmean.raster * 0.25 * self.ft2in  # factor 0.25 from approximation of 2008 map (cFi Excel) and 12 in/ft
+                self.ras_D15 = ras_D15c / 20
+                self.ras_D85 = ras_D15c / 5
+                temp_D15 = Con((self.ras_D85 < Dmaxf), self.ras_D15)
+                temp_D85 = Con((self.ras_D85 < Dmaxf), self.ras_D85)
+                self.ras_D15 = temp_D15
+                self.ras_D85 = temp_D85
+                self.raster_dict_ds.update({"ras_D15": self.ras_D15})
+                self.raster_dict_ds.update({"ras_D85": self.ras_D85})
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in filter stability.")
@@ -885,7 +934,6 @@ class ArcPyAnalysis:
             arcpy.env.workspace = self.cache
             self.set_extent()
             self.logger.info("      >>> Applying side channel delineation ...")
-
             self.sch = SideChannelDelineation(self.condition)
             # routine to override noData pixels if required.
             if str(self.sch.raster).__len__() > 1:
@@ -936,22 +984,21 @@ class ArcPyAnalysis:
             except:
                 i = 0
                 self.logger.info("WARNING: Design map - Could not assign frequency threshold. Using default.")
+            if (str(h.rasters[i]).__len__() > 1) and (str(u.rasters[i]).__len__() > 1):
+                self.ras_Dst = (Square(u.rasters[i] * self.n) / ((self.s - 1) * threshold_taux * Power(h.rasters[i], (1 / 3)))) * self.ft2in * self.sf
 
-            self.ras_Dst = (Square(u.rasters[i] * self.n) / ((self.s - 1) * threshold_taux *
-                                                              Power(h.rasters[i], (1 / 3)))) * self.ft2in * self.sf
+                # alternative using arcpy s Slope function:
+                # outMeasurement = "PERCENT_RISE"
+                # zFactor = 1.0
+                # dem = DEM(self.condition)
+                # ras_energy = dem.raster + h.rasters[5] + Square(u.rasters[5]) / (2 * self.g)
+                # ras_Se = (Slope(ras_energy, outMeasurement, zFactor))/100
+                # self.ras_DSe = (h.rasters[5] * ras_Se / ((self.s - 1) * threshold_taux )) * 12
+                # self.raster_dict_ds.update({"ras_DSe": self.ras_DSe})
 
-            # alternative using arcpy s Slope function:
-            # outMeasurement = "PERCENT_RISE"
-            # zFactor = 1.0
-            # dem = DEM(self.condition)
-            # ras_energy = dem.raster + h.rasters[5] + Square(u.rasters[5]) / (2 * self.g)
-            # ras_Se = (Slope(ras_energy, outMeasurement, zFactor))/100
-            # self.ras_DSe = (h.rasters[5] * ras_Se / ((self.s - 1) * threshold_taux )) * 12
-            # self.raster_dict_ds.update({"ras_DSe": self.ras_DSe})
-
-            temp_ras = Con(self.ras_Dst < 300, self.ras_Dst)  # eliminate outliers at structures (PowerHouse, Sills)
-            self.ras_Dst = temp_ras
-            self.raster_dict_ds.update({"ras_Dst": self.ras_Dst})
+                temp_ras = Con(self.ras_Dst < 300, self.ras_Dst)  # eliminate outliers at structures (PowerHouse, Sills)
+                self.ras_Dst = temp_ras
+                self.raster_dict_ds.update({"ras_Dst": self.ras_Dst})
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -984,11 +1031,11 @@ class ArcPyAnalysis:
                 self.logger.info("WARNING: Design map - Could not assign frequency threshold. Using default.")
 
             # assumption: probability of motion = 0
-            self.ras_Dw = 0.32/0.18 * h.rasters[i] * self.ft2in
-
-            temp_ras = Con(self.ras_Dw < (25 * self.ft2in), self.ras_Dw)  # eliminate outliers at structures (PowerHouse, Sills)
-            self.ras_Dw = temp_ras
-            self.raster_dict_ds.update({"ras_Dw": self.ras_Dw})
+            if str(h.rasters[i]).__len__() > 1:
+                self.ras_Dw = 0.32/0.18 * h.rasters[i] * self.ft2in
+                temp_ras = Con(self.ras_Dw < (25 * self.ft2in), self.ras_Dw)  # eliminate outliers at structures (PowerHouse, Sills)
+                self.ras_Dw = temp_ras
+                self.raster_dict_ds.update({"ras_Dw": self.ras_Dw})
 
         except arcpy.ExecuteError:
             self.logger.info("ExecuteERROR: (arcpy) in Design Wood Dw.")
@@ -1013,29 +1060,30 @@ class ArcPyAnalysis:
             self.logger.info("   >> Matching with cHSI raster.")
 
             chsi = CHSI(self.condition)
-            chsi_threshold = 0.4
+            if str(chsi.raster).__len__() > 1:
+                chsi_threshold = 0.5
 
-            # set NoData to non-habitat values (=0)
-            base_chsi = Con(IsNull(chsi.raster), IsNull(chsi.raster) * 0, chsi.raster)
+                # set NoData to non-habitat values (=0)
+                base_chsi = Con(IsNull(chsi.raster), IsNull(chsi.raster) * 0, chsi.raster)
 
-            if self.verify_raster_info() and (self.raster_dict_lf.__len__() > 0):
-                self.logger.info("           ... using lifespan raster: " + self.raster_info_lf)
-                self.logger.info("           *** takes time ***")
+                if self.verify_raster_info() and (self.raster_dict_lf.__len__() > 0):
+                    self.logger.info("           ... using lifespan raster: " + self.raster_info_lf)
+                    self.logger.info("           *** takes time ***")
 
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                self.ras_hab = Con((base_chsi < chsi_threshold), self.raster_dict_lf[self.raster_info_lf])
-                self.raster_info_lf = "ras_hab"
-                self.raster_dict_lf.update({self.raster_info_lf: self.ras_hab})
+                    # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                    self.ras_hab = Con((base_chsi < chsi_threshold), self.raster_dict_lf[self.raster_info_lf])
+                    self.raster_info_lf = "ras_hab"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_hab})
 
-            if self.raster_dict_ds.__len__() > 0:
-                i = 0
-                for ras_ds in self.raster_dict_ds.keys():
-                    self.logger.info("           ... applying to design raster: " + str(ras_ds))
-                    # update ds_dict
-                    self.raster_dict_ds.update(
-                        {"ras_hab" + str(i): Con((base_chsi < chsi_threshold), self.raster_dict_ds[ras_ds])})
-                    del self.raster_dict_ds[ras_ds]
-                    i += 1
+                if self.raster_dict_ds.__len__() > 0:
+                    i = 0
+                    for ras_ds in self.raster_dict_ds.keys():
+                        self.logger.info("           ... applying to design raster: " + str(ras_ds))
+                        # update ds_dict
+                        self.raster_dict_ds.update(
+                            {"ras_hab" + str(i): Con((base_chsi < chsi_threshold), self.raster_dict_ds[ras_ds])})
+                        del self.raster_dict_ds[ras_ds]
+                        i += 1
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -1059,23 +1107,24 @@ class ArcPyAnalysis:
             self.logger.info("   >> Apply to Wildcard raster.")
 
             wildcard = Wildcard(self.condition)
-            # make temp_ras without noData pixels
-            temp_ras = Con((IsNull(wildcard.raster) == 1), (IsNull(wildcard.raster) * 0), wildcard.raster)
+            if str(wildcard.raster).__len__() > 1:
+                # make temp_ras without noData pixels
+                temp_ras = Con((IsNull(wildcard.raster) == 1), (IsNull(wildcard.raster) * 0), wildcard.raster)
 
-            if self.verify_raster_info():
-                self.logger.info("            ...  to lifespan raster: " + self.raster_info_lf)
-                # compare temp_ras with raster_dict but use self.ras_... values if condition is True
-                self.ras_wild = Con((temp_ras > 0), self.raster_dict_lf[self.raster_info_lf])
-                self.raster_info_lf = "ras_wild"
-                self.raster_dict_lf.update({self.raster_info_lf: self.ras_wild})
+                if self.verify_raster_info():
+                    self.logger.info("            ...  to lifespan raster: " + self.raster_info_lf)
+                    # compare temp_ras with raster_dict but use self.ras_... values if condition is True
+                    self.ras_wild = Con((temp_ras > 0), self.raster_dict_lf[self.raster_info_lf])
+                    self.raster_info_lf = "ras_wild"
+                    self.raster_dict_lf.update({self.raster_info_lf: self.ras_wild})
 
-            if self.raster_dict_ds.__len__() > 0:
-                i = 0
-                for ras_ds in self.raster_dict_ds.keys():
-                    self.logger.info("           ... to design raster: " + str(ras_ds))
-                    self.raster_dict_ds.update({"ds_hab" + str(i): Con((temp_ras > 0), self.raster_dict_ds[ras_ds])})
-                    del self.raster_dict_ds[ras_ds]
-                    i += 1
+                if self.raster_dict_ds.__len__() > 0:
+                    i = 0
+                    for ras_ds in self.raster_dict_ds.keys():
+                        self.logger.info("           ... to design raster: " + str(ras_ds))
+                        self.raster_dict_ds.update({"ds_hab" + str(i): Con((temp_ras > 0), self.raster_dict_ds[ras_ds])})
+                        del self.raster_dict_ds[ras_ds]
+                        i += 1
 
             arcpy.CheckInExtension('Spatial')
         except arcpy.ExecuteError:
@@ -1184,7 +1233,7 @@ class ArcPyAnalysis:
 
         if name.__len__() > 13:
             # shorten name if required
-            name = name[:10] + '.tif'
+            name = name[:10].split(".")[0] + '.tif'
 
         try:
             arcpy.gp.overwriteOutput = True
@@ -1192,7 +1241,7 @@ class ArcPyAnalysis:
             self.logger.info("   >> Saving lifespan raster (takes time) ... ")
             try:
                 if self.raster_info_lf.__len__() > 17:
-                    self.raster_info_lf = self.raster_info_lf[0:13] + '.tif'
+                    self.raster_info_lf = self.raster_info_lf[0:13].split(".")[0] + '.tif'
                     self.logger.info("      .cache: Modified lf raster name.")
             except:
                 pass
@@ -1255,7 +1304,7 @@ class ArcPyAnalysis:
 
     def set_extent(self, *args, **kwargs):
         if self.extent_type == "standard":
-            if not (type(self.reach_extents) == str):
+            if type(self.reach_extents) == list:
                 try:
                     #                               XMin                 , YMin                 , XMax            , ... YMax
                     arcpy.env.extent = arcpy.Extent(self.reach_extents[0], self.reach_extents[1], self.reach_extents[2],
@@ -1264,12 +1313,12 @@ class ArcPyAnalysis:
                     self.logger.info("ERROR: Failed to set reach extents -- output is corrupted.")
                     return -1
             else:
-                arcpy.env.extent = self.reach_extents
+                arcpy.env.extent = "MAXOF"
         if self.extent_type == "raster":
-            self.logger.info("      *** Using background Raster size for extent.")
+            bg_ras_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\back.tif"
+            self.logger.info("      *** Using background Raster size for extent (%s)." % bg_ras_dir)
             try:
-                ext_raster = arcpy.Raster(os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\back.tif")
+                ext_raster = arcpy.Raster(bg_ras_dir)
                 arcpy.env.extent = ext_raster.extent
             except:
                 self.logger.info("WARNING: Could not load /01_Conditions/" + self.condition + "/back.tif - using MAXOF extents.")

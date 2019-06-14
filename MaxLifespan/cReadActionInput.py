@@ -116,8 +116,9 @@ class Info(object):
             raster_names.append(entry.strip())
         return raster_names
 
-    def __call__(self):
-        print("Class Info: <type> = Info-reader (Module: MaxLifespan)")
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = Info (%s)" % os.path.dirname(__file__))
+        print(dir(self))
 
 
 

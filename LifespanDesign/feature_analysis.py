@@ -7,86 +7,130 @@ except:
 try:
     # add folder containing package routines to the system path
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import cFeatureLifespan as cf
-    import cLifespanDesignAnalysis as ca
+    import cLifespanDesignAnalysis as cLDA
     # add riverpy routines
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cMapper as cm
-    import cDefinitions as cdef
-    import cReachManager as cmio
-    import fGlobal as fg
+    import cMapper as cMp
+    import cDefinitions as cDef
+    import cReachManager as cRM
+    import fGlobal as fG
+    import cFeatures as cFe
 except:
-    print(
-        "ExceptionERROR: Cannot find package files (fGlobal.py, cMapLifespanDesign, cFeatureLifespan, cLifespanDesignAnalysis, MT/cDefinitions.py, MT/cReachManager).")
+    print("ExceptionERROR: Cannot find RiverArchitect/.site_packages/riverpy.")
 
 
-def analysis_call(*args):
+def analysis_call(parameter_name, feature, feature_analysis):
     logger = logging.getLogger("logfile")
+    # NOTE: if not type(...) statements exclude empty values from thresholds workbook
 
     try:
-        parameter_name = args[0]
-        feature = args[1]
-        feature_analysis = args[2]
-
         # invoke design raster creation
-        if parameter_name == "ds_compare_slopes":
-            feature_analysis.design_energy_slope()
-        if parameter_name == "ds_filter":
-            feature_analysis.design_filter(feature.threshold_Dmaxf)
-        if parameter_name == "ds_stable_grains":
-            feature_analysis.design_stable_grains(feature.threshold_taux)
-        if parameter_name == "ds_wood":
-            feature_analysis.design_wood()
-        if parameter_name == "sidech":
-            feature_analysis.design_side_channel()
+        if feature.ds:
+            if parameter_name == "ds_compare_slopes":
+                feature_analysis.design_energy_slope()
+            if parameter_name == "ds_filter":
+                if not type(feature.threshold_Dmaxf) is list:
+                    feature_analysis.design_filter(feature.threshold_Dmaxf)
+            if parameter_name == "ds_stable_grains":
+                if not type(feature.threshold_taux) is list:
+                    feature_analysis.design_stable_grains(feature.threshold_taux)
+                else:
+                    logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+            if parameter_name == "ds_wood":
+                feature_analysis.design_wood()
+            if parameter_name == "sidech":
+                feature_analysis.design_side_channel()
 
         # invoke lifespan raster creation
         if parameter_name == "d2w":
-            feature_analysis.analyse_d2w(feature.threshold_d2w_low, feature.threshold_d2w_up)
+            if not (type(feature.threshold_d2w_low) is list) and not (type(feature.threshold_d2w_up) is list):
+                feature_analysis.analyse_d2w(feature.threshold_d2w_low, feature.threshold_d2w_up)
         if parameter_name == "det":
-            feature_analysis.analyse_det(feature.threshold_det_low, feature.threshold_det_up)
+            if not (type(feature.threshold_det_low) is list) and not (type(feature.threshold_det_up) is list):
+                feature_analysis.analyse_det(feature.threshold_det_low, feature.threshold_det_up)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "Fr":
-            feature_analysis.analyse_Fr(feature.threshold_Fr)
+            if not type(feature.threshold_Fr) is list:
+                feature_analysis.analyse_Fr(feature.threshold_Fr)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "fill":
-            feature_analysis.analyse_fill(feature.threshold_fill)
+            if not type(feature.threshold_fill) is list:
+                feature_analysis.analyse_fill(feature.threshold_fill)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "fine_grains":
-            feature_analysis.analyse_fine_grains(feature.threshold_taux, feature.threshold_Dmaxf)
+            if not (type(feature.threshold_taux) is list) and not (type(feature.threshold_Dmaxf) is list):
+                feature_analysis.analyse_fine_grains(feature.threshold_taux, feature.threshold_Dmaxf)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "h":
-            feature_analysis.analyse_h(feature.threshold_h)
+            if not type(feature.threshold_h) is list:
+                feature_analysis.analyse_h(feature.threshold_h)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "mobile_grains":
-            feature_analysis.analyse_mobile_grains(feature.threshold_taux)
+            if not type(feature.threshold_taux) is list:
+                feature_analysis.analyse_mobile_grains(feature.threshold_taux)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "mu":
-            feature_analysis.analyse_mu(feature.mu_bad, feature.mu_good, feature.mu_method)
+            if (0 in feature.mu_method) or (1 in feature.mu_method):
+                feature_analysis.analyse_mu(feature.mu_bad, feature.mu_good, feature.mu_method)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "scour":
-            feature_analysis.analyse_scour(feature.threshold_scour)
+            if not type(feature.threshold_scour) is list:
+                feature_analysis.analyse_scour(feature.threshold_scour)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "taux":
-            feature_analysis.analyse_taux(feature.threshold_taux)
+            if not type(feature.threshold_taux) is list:
+                feature_analysis.analyse_taux(feature.threshold_taux)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "tcd":
-            feature_analysis.analyse_tcd(feature.threshold_fill, feature.threshold_scour)
+            run = False
+            if not (type(feature.threshold_fill) is list) and not (type(feature.threshold_scour) is list):
+                feature_analysis.analyse_tcd(feature.threshold_fill, feature.threshold_scour)
+                run = True
+            if (type(feature.threshold_fill) is list) and not (type(feature.threshold_scour) is list):
+                feature_analysis.analyse_scour(feature.threshold_scour)
+                run = True
+            if not (type(feature.threshold_fill) is list) and (type(feature.threshold_scour) is list):
+                feature_analysis.analyse_fill(feature.threshold_fill)
+                run = True
+            if not run:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "u":
-            feature_analysis.analyse_u(feature.threshold_u)
+            if not type(feature.threshold_u) is list:
+                feature_analysis.analyse_u(feature.threshold_u)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
         if parameter_name == "lf_bioengineering":
-            feature_analysis.analyze_bio(feature.threshold_S0, feature.threshold_d2w_up)
-        return feature_analysis
-
+            if not (type(feature.threshold_S0) is list) and not (type(feature.threshold_d2w_up) is list):
+                feature_analysis.analyze_bio(feature.threshold_S0, feature.threshold_d2w_up)
+            else:
+                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
     except:
-        logger.info("ERROR: Function analysis_call received bad arguments.")
+        logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+    return feature_analysis
 
 
 def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system, wildcard, manning_n, extent_type):
-    pot_err_msg = "logger initiation"  # a message that is printed in the case of a program crash
+    logger = logging.getLogger("logfile")
+    pot_err_msg = "FUNDAMENTAL APPLICATION ERROR - Revise River Architect usage instructions"
     try:
-        logger = logging.getLogger("logfile")
-
         try:
-            fg.clean_dir(os.getcwd()+"\\.cache\\")  # ensure that the cache is empty
+            fG.clean_dir(os.getcwd() + "\\.cache\\")  # ensure that the cache is empty
             pass
         except:
             logger.info("ERROR: .cache folder in use.")
 
         # instantiate GIS Analysis Object
         pot_err_msg = "ArcPyAnalysis"
-        feature_analysis = ca.ArcPyAnalysis(condition, reach_extents, habitat, output_dir, unit_system, manning_n)  # arcpy class
+        feature_analysis = cLDA.ArcPyAnalysis(condition, reach_extents, habitat, output_dir, unit_system, manning_n)  # arcpy class
         feature_analysis.extent_type = extent_type
 
         # assign analysis specific parameters if applies
@@ -131,20 +175,18 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
         feature_analysis.save_manager(feature.ds, feature.lf, feature.id)
 
     except:
-        try:
-            logger.info("ERROR: Analysis stopped (" + pot_err_msg + " failed).")
-        except:
-            print("Call ERROR: Analysis stopped (" + pot_err_msg + " failed).")
+        logger.info("ERROR: Analysis stopped (" + pot_err_msg + " failed).")
 
 
 def map_maker(*args, **kwargs):
     # prepares layout of all available rasters in Output folder
     # *args[0] = LIST with (optional) directory for input rasters
     #  args[1] = LIST of reach_IDs
+    logger = logging.getLogger("logfile")
     try:
         raster_dirs = args[0]
-        print("Raster input directories provided:")
-        print("\n ".join(raster_dirs))
+        logger.info("Raster input directories provided:")
+        logger.info("\n ".join(raster_dirs))
     except:
         raster_dirs = [os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\02_Maps\\templates\\rasters\\"]
     reaches = None
@@ -152,11 +194,11 @@ def map_maker(*args, **kwargs):
         for k in kwargs.items():
             if "reach_ids" in k[0].lower():
                 reach_IDs = k[1]
-                reaches = cdef.Reaches()
+                reaches = cDef.ReachDefinitions()
                 reach_names = []
                 [reach_names.append(reaches.dict_id_names[rid]) for rid in reach_IDs]
-                print("Mapping reach(es):")
-                print("\n ".join(reach_names))
+                logger.info("Mapping reach(es):")
+                logger.info("\n ".join(reach_names))
     except:
         pass
 
@@ -166,28 +208,28 @@ def map_maker(*args, **kwargs):
                 condition_new = rd.split("\\")[-2]
             else:
                 condition_new = rd.split("/")[-2]
-            print("* identified condition = " + str(condition_new))
+            logger.info("* identified condition = " + str(condition_new))
         except:
-            print("WARNING: Invalid raster directory: " + str(rd))
-        mapper = cm.Mapper(condition_new, "lf")
+            logger.info("WARNING: Invalid raster directory: " + str(rd))
+        mapper = cMp.Mapper(condition_new, "lf")
         mapper.prepare_layout(False)
 
         if reaches:
-            reach_reader = cmio.Read()  # define xy map center point s in feet according to mapping_details.xlsx
+            reach_reader = cRM.Read()  # define xy map center point s in feet according to mapping_details.xlsx
             for rid in reach_IDs:
                 try:
                     reach_extents = reach_reader.get_reach_coordinates(reaches.dict_id_int_id[rid])
                 except:
                     reach_extents = "MAXOF"
-                for ras in mapper.raster_list:
+                for ras in mapper.map_list:
                     mapper.make_pdf_maps(str(ras).split(".tif")[0], extent=reach_extents)
         else:
-            for ras in mapper.raster_list:
+            for ras in mapper.map_list:
                 mapper.make_pdf_maps(str(ras).split(".tif")[0], extent='raster')
 
     try:
         if not mapper.error:
-            fg.open_folder(mapper.output_dir)
+            fG.open_folder(mapper.output_dir)
     except:
         pass
 
@@ -202,7 +244,8 @@ def raster_maker(condition, reach_ids, *args):
     # args[4] = wildcard raster application
     # args[5] = FLOAT manning n in s/m^(1/3)
     # args[6] = STR extent_type either "standard" (reaches) or "raster" (background raster)
-    features = cdef.Features(False)
+    features = cDef.FeatureDefinitions(False)
+    logger = logging.getLogger("logfile")
     if not args:
         # use general feature list and default settings if no arguments are provided
         feature_list = features.feature_name_list
@@ -221,15 +264,15 @@ def raster_maker(condition, reach_ids, *args):
             feature_list = features.feature_name_list
         try:
             mapping = args[1]
-            print("Integrated mapping (layout creation) activated.")
+            logger.info("Integrated mapping (layout creation) activated.")
         except:
             mapping = False
-            print("Integrated mapping deactivated.")
+            logger.info("Integrated mapping deactivated.")
         try:
             habitat_analysis = args[2]
         except:
             habitat_analysis = False
-            print("Physical feature stability analysis only.")
+            logger.info("Physical feature stability analysis only.")
         try:
             unit_system = args[3]
         except:
@@ -247,17 +290,15 @@ def raster_maker(condition, reach_ids, *args):
         except:
             extent_type = "standard"
 
-    # start logging
-    logger = fg.initialize_logger(os.path.dirname(os.path.abspath(__file__)), "lifespan_design")
     logger.info("lifespan_design.raster_maker initiated with feature list = " + str(feature_list) + "\nUnit system: " +
                 str(unit_system))
 
     # set environment settings
     temp_path = os.getcwd()+"\\.cache\\"
-    fg.chk_dir(temp_path)
+    fG.chk_dir(temp_path)
 
-    reach_reader = cmio.Read()
-    reaches = cdef.Reaches()
+    reach_reader = cRM.Read()
+    reaches = cDef.ReachDefinitions()
 
     outputs = []
 
@@ -267,7 +308,7 @@ def raster_maker(condition, reach_ids, *args):
         else:
             reach_extents = "MAXOF"
         if r == reach_ids[0]:
-            output_dir = fg.make_output_dir(condition, reach_ids, habitat_analysis, feature_list)
+            output_dir = fG.make_output_dir(condition, reach_ids, habitat_analysis, feature_list)
             outputs.append(output_dir)
         # fG.clean_dir(output_dir)
         for f in feature_list:
@@ -277,18 +318,20 @@ def raster_maker(condition, reach_ids, *args):
             else:
                 logger.info("FEATURE (REACH: " + reaches.dict_id_names[r] + "): " + str(f))
             logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
-            feature = cf.RestorationFeature(f)  # instantiate object containing all restoration feature attributes
+            feature = cFe.FeatureContainer(f)  # instantiate object containing all restoration feature attributes
 
             if not feature.sub:
-                analysis(feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard, manning_n, extent_type)
+                analysis(feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard,
+                         manning_n, extent_type)
             else:
-                sub_feature = cf.RestorationFeature(f, feature.sub)
-                analysis(sub_feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system, wildcard, manning_n, extent_type)
+                sub_feature = cFe.FeatureContainer(f, feature.sub)
+                analysis(sub_feature.feature, condition, reach_extents, habitat_analysis, output_dir, unit_system,
+                         wildcard, manning_n, extent_type)
         if reach_extents == "MAXOF":
             break
 
     try:
-        fg.rm_dir(temp_path)  # dump cache after feature analysis
+        fG.rm_dir(temp_path)  # dump cache after feature analysis
     except:
         logger.info("WARNING: Package could not remove .cache folder.")
     logger.info("RASTERS FINISHED.")
@@ -296,10 +339,6 @@ def raster_maker(condition, reach_ids, *args):
     if mapping:
         outputs = map_maker(outputs)
 
-    # stop logging and release logfile
-    for handler in logger.handlers:
-        handler.close()
-        logger.removeHandler(handler)
     return outputs
 
 

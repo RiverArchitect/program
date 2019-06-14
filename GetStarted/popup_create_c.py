@@ -8,9 +8,9 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    import cConditionCreator as ccc
+    import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -149,7 +149,7 @@ class CreateCondition(object):
             os.makedirs(self.dir2condition)
         else:
             showinfo("WARNING", "The defined condition already exists and files may be overwritten. Make sure to SAVE IMPORTANT FILE from the existing condition BEFORE CLICKING OK.")
-        new_condition = ccc.ConditionCreator(self.dir2condition)
+        new_condition = cCC.ConditionCreator(self.dir2condition)
         new_condition.transfer_rasters_from_folder(self.dir2h, "h", str(self.str_h.get()))
         new_condition.transfer_rasters_from_folder(self.dir2u, "u", str(self.str_u.get()))
         new_condition.save_tif(self.dir2dem, "dem")
@@ -160,7 +160,7 @@ class CreateCondition(object):
         self.top.bell()
         try:
             if not new_condition.error:
-                fg.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition)
                 self.l_run_info.config(fg="forest green", text="Condition successfully created.")
             else:
                 self.l_run_info.config(fg="red", text="Condition creation failed.")

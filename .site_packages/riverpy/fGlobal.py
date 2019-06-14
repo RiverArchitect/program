@@ -85,6 +85,7 @@ def eliminate_nan_from_list(base_list, *args):
     partner_lists.insert(0, base_list)
     return partner_lists
 
+
 def flatten(lis):
     for item in lis:
         if isinstance(item, Iterable) and not isinstance(item, str):
@@ -125,7 +126,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     # reach_id = LIST from MT/.templates/computation_extents.xlsx
     # habitat_analysis = BOOL
     # relevant_feat_names = LIST with entries from LD/.templates/threshold_values.xlsx
-    features = cDef.Features()
+    features = cDef.FeatureDefinitions()
     feat_id_list = []
     [feat_id_list.append(features.name_dict[item]) for item in relevant_feat_names]
     feat_col_list = []
@@ -133,7 +134,10 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     dir2LD = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
 
     if reach_ids.__len__() == 1:
-        reach_name = "_" + str(reach_ids[0])
+        if not str(reach_ids[0]) == "none":
+            reach_name = "_" + str(reach_ids[0])
+        else:
+            reach_name = ""
     else:
         reach_name = "_all"
 
@@ -156,7 +160,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
         # define output directory as a function of layer type
         if feat_lyr_type > 0:
             for i in range(0, 9):
-                test_folder = str(condition)[0:4] + reach_name + "_lyr" + str(feat_lyr_type) + str(i)
+                test_folder = str(condition) + reach_name + "_lyr" + str(feat_lyr_type) + str(i)
                 test_dir = dir2LD + "Output\\Rasters\\" + test_folder + "\\"
                 if not os.path.exists(test_dir):
                     os.makedirs(test_dir)
@@ -184,13 +188,13 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
                         if not (i < 9):
                             print("Maximum folder size for this layer reached -- restarting at lyrX0.")
                             print("Consider better file structure; this time, old files are deleted.")
-                            test_folder = str(condition)[0:4] + "_lyr" + str(feat_lyr_type) + str(0)
+                            test_folder = str(condition) + "_lyr" + str(feat_lyr_type) + str(0)
                             output_dir = dir2LD + "Output\\Rasters\\" + test_folder + "\\"
                             break
         else:
-            output_dir = dir2LD + "Output\\Rasters\\" + str(condition)[0:4] + reach_name + "lyr00\\"
+            output_dir = dir2LD + "Output\\Rasters\\" + str(condition) + reach_name + "lyr00\\"
     else:
-        output_dir = dir2LD + "Output\\Rasters\\" + str(condition)[0:4] + reach_name + "_hab\\"
+        output_dir = dir2LD + "Output\\Rasters\\" + str(condition) + reach_name + "_hab\\"
 
     if not("output_dir" in locals()):
         print("No reach or feature layer or habitat_analysis information.")

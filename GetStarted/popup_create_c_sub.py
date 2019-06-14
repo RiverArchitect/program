@@ -8,9 +8,9 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    import cConditionCreator as ccc
+    import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -19,7 +19,7 @@ class CreateSubCondition(object):
     def __init__(self, master):
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.condition_list = fg.get_subdir_names(self.dir2ra + "01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
         self.dir2src_condition = '.'
         self.dir2sub_condition = '.'
         self.dir2bound = '.'
@@ -94,12 +94,12 @@ class CreateSubCondition(object):
         else:
             showinfo("WARNING",
                      "The defined condition already exists and files may be overwritten. Make sure to SAVE IMPORTANT FILE from the existing condition BEFORE CLICKING OK.")
-        condition = ccc.ConditionCreator(self.dir2sub_condition)
+        condition = cCC.ConditionCreator(self.dir2sub_condition)
         condition.create_sub_condition(self.dir2src_condition, self.dir2bound)
         self.top.bell()
         try:
             if not condition.error:
-                fg.open_folder(self.dir2sub_condition)
+                fGl.open_folder(self.dir2sub_condition)
                 self.b_create_c.config(fg="forest green", text="Sub-Condition created.")
                 self.l_run_info.config(text="New condition: %s" % self.dir2sub_condition)
             else:

@@ -7,7 +7,7 @@ try:
     import cReachManager as cRM
     import cDefinitions as cDef
     import fGlobal as fG
-    import cPlants as cPl
+    import cFeatures as cFe
 except:
     print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
 
@@ -25,7 +25,7 @@ class ModifyTerrain:
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
         fG.chk_dir(self.cache)
         fG.clean_dir(self.cache)
-        self.features = cDef.Features()
+        self.features = cDef.FeatureDefinitions()
         self.condition = condition
         self.current_reach_id = ""
         self.logger = logging.getLogger("logfile")
@@ -35,7 +35,7 @@ class ModifyTerrain:
         self.raster_dict = {}
         self.raster_info = ""
         self.reader = cRM.Read()
-        self.reaches = cDef.Reaches()
+        self.reaches = cDef.ReachDefinitions()
 
         # set relevant reaches
         try:
@@ -154,13 +154,13 @@ class ModifyTerrain:
         self.logger.info("  >> Calculating DEM after terrain " + feature_name + " ... ")
 
         try:
-            pl_1 = cPl.Plant1(self.features.id_list_plants[0])
+            pl_1 = cFe.Feature(self.features.id_list_plants[0])
             try:
-                pl_2 = cPl.Plant2(self.features.id_list_plants[1])
+                pl_2 = cFe.Feature(self.features.id_list_plants[1])
                 try:
-                    pl_3 = cPl.Plant3(self.features.id_list_plants[2])
+                    pl_3 = cFe.Feature(self.features.id_list_plants[2])
                     try:
-                        pl_4 = cPl.Plant4(self.features.id_list_plants[3])
+                        pl_4 = cFe.Feature(self.features.id_list_plants[3])
                         max_d2w = min([pl_1.threshold_d2w_up, pl_2.threshold_d2w_up, pl_3.threshold_d2w_up,
                                        pl_4.threshold_d2w_up])
                     except:

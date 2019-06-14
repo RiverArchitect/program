@@ -3,7 +3,7 @@ try:
     import tkinter as tk
     from tkinter.messagebox import askokcancel, showinfo
     from tkinter.filedialog import *
-    import webbrowser
+    import webbrowser, logging
     from functools import partial
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
@@ -67,9 +67,11 @@ class RunGui:
         return out_dir
 
     def gui_map_maker(self, raster_directories, reach_ids_applied):
+        # raster_directories = LIST
+        # reach_ids_applied = LIST
         import feature_analysis as fa
         self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
-        if not reach_ids_applied:
+        if not reach_ids_applied or any(str(rid) == "none" for rid in reach_ids_applied):
             return fa.map_maker(raster_directories)
         else:
             return fa.map_maker(raster_directories, reach_ids=reach_ids_applied)
@@ -93,13 +95,14 @@ class FaGui(tk.Frame):
 
         self.path = r"" + os.path.dirname(os.path.abspath(__file__))
         self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        self.logger = logging.getLogger("logfile")
 
         self.condition = ""
         self.condition_list = fG.get_subdir_names(self.path_lvl_up + "\\01_Conditions\\")
         self.condition_selected = False
         self.errors = False
         self.feature_list = []
-        self.features = cDef.Features(False)
+        self.features = cDef.FeatureDefinitions(False)
         self.habitat = False
         self.manning_n = 0.0473934
         self.mapping = False
@@ -107,7 +110,7 @@ class FaGui(tk.Frame):
             os.path.join(os.path.dirname(__file__), '..')) + "\\ModifyTerrain\\.templates\\"
         self.out_lyt_dir = []
         self.out_ras_dir = []
-        self.reaches = cDef.Reaches()
+        self.reaches = cDef.ReachDefinitions()
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
         self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
         self.reach_lookup_needed = False
@@ -142,8 +145,8 @@ class FaGui(tk.Frame):
         self.l_reaches.grid(sticky=tk.W, row=1, column=1, columnspan=6, padx=self.xd, pady=self.yd * 2)
         self.l_condition = tk.Label(self, text="Condition: \n")
         self.l_condition.grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.b_v_condition = tk.Button(self, fg="red", text="Select \n Raster Maker only",
-                                       command=lambda: self.select_condition)
+        self.b_v_condition = tk.Button(self, fg="red", text="Select",
+                                       command=lambda: self.select_condition())
         self.b_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
         self.l_n = tk.Label(self, text="Roughness (Manning\'s n): %.3f " % self.manning_n)
         self.l_n.grid(sticky=tk.W, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd)
@@ -158,7 +161,7 @@ class FaGui(tk.Frame):
         self.sb_condition.config(command=self.lb_condition.yview)
 
         # BUTTONS
-        self.b_mod_r = tk.Button(self, width=25, bg="white", text="Modify raster input", command=lambda:
+        self.b_mod_r = tk.Button(self, width=25, bg="white", text="Revise input file", command=lambda:
                                  self.open_inp_file("input_definitions.inp"))
         self.b_mod_r.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_r["state"] = "disabled"
@@ -191,7 +194,6 @@ class FaGui(tk.Frame):
                                         variable=self.extent_type, onvalue="raster", offvalue="standard")
         self.cb_extent.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.cb_extent.select()
-
 
     def set_geometry(self):
         # ARRANGE GEOMETRY
@@ -250,13 +252,20 @@ class FaGui(tk.Frame):
             # appends all available reaches
             self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
             self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
+            self.reach_names_applied.remove("Raster extents")
+            self.reach_ids_applied.remove("none")
             label_text = "All"
             self.l_reaches.config(fg="dark slate gray", text=label_text)
         else:
             if not(reach == "clear"):
-                if not(reach in self.reach_names_applied):
-                    self.reach_names_applied.append(self.reaches.name_dict[reach])
-                    self.reach_ids_applied.append(self.reaches.id_dict[reach])
+                if not (reach == "ignore"):
+                    if not(reach in self.reach_names_applied):
+                        self.reach_names_applied.append(self.reaches.name_dict[reach])
+                        self.reach_ids_applied.append(self.reaches.id_dict[reach])
+                else:
+                    # ignore reaches
+                    self.reach_names_applied = ["Raster extents"]
+                    self.reach_ids_applied = ["none"]
                 if self.reach_names_applied.__len__() > 6:
                     if self.reach_names_applied.__len__() == 8:
                         label_text = "All"
@@ -280,7 +289,7 @@ class FaGui(tk.Frame):
         self.featmenu.add_command(label="Group layer: Terraforming", command=lambda: self.define_feature("framework"))
         self.featmenu.add_command(label="Group layer: Plantings", command=lambda: self.define_feature("plants"))
         self.featmenu.add_command(label="Group layer: Bioengineering", command=lambda: self.define_feature("toolbox"))
-        self.featmenu.add_command(label="Group layer: Maintenance", command=lambda: self.define_feature("complementary"))
+        self.featmenu.add_command(label="Group layer: Connectivity", command=lambda: self.define_feature("complementary"))
         self.featmenu.add_command(label="CLEAR ALL", command=lambda: self.define_feature("clear"))
 
     def build_reach_menu(self):
@@ -289,6 +298,7 @@ class FaGui(tk.Frame):
             self.reachmenu.add_command(label="RE-BUILD MENU", command=lambda: self.build_reach_menu())
             self.reachmenu.add_command(label="_____________________________")
             self.reachmenu.add_command(label="ALL", command=lambda: self.add_reach(""))
+            self.reachmenu.add_command(label="IGNORE (Use Raster extents)", command=lambda: self.add_reach("ignore"))
             self.reachmenu.add_command(label="CLEAR ALL", command=lambda: self.add_reach("clear"))
             self.reachmenu.add_command(label="_____________________________")
             self.reachmenu.add_command(label=self.reaches.name_dict["reach_00"], command=lambda: self.add_reach("reach_00"))
@@ -304,14 +314,14 @@ class FaGui(tk.Frame):
             # re-build reach names if spreadsheet was modified
             self.reaches.names_xlsx = self.reach_reader.get_reach_info("full_name")
             self.reaches.name_dict = dict(zip(self.reaches.internal_id, self.reaches.names_xlsx))
-            self.reachmenu.entryconfig(6, label=self.reaches.name_dict["reach_00"])
-            self.reachmenu.entryconfig(7, label=self.reaches.name_dict["reach_01"])
-            self.reachmenu.entryconfig(8, label=self.reaches.name_dict["reach_02"])
-            self.reachmenu.entryconfig(9, label=self.reaches.name_dict["reach_03"])
-            self.reachmenu.entryconfig(10, label=self.reaches.name_dict["reach_04"])
-            self.reachmenu.entryconfig(11, label=self.reaches.name_dict["reach_05"])
-            self.reachmenu.entryconfig(12, label=self.reaches.name_dict["reach_06"])
-            self.reachmenu.entryconfig(13, label=self.reaches.name_dict["reach_07"])
+            self.reachmenu.entryconfig(7, label=self.reaches.name_dict["reach_00"])
+            self.reachmenu.entryconfig(8, label=self.reaches.name_dict["reach_01"])
+            self.reachmenu.entryconfig(9, label=self.reaches.name_dict["reach_02"])
+            self.reachmenu.entryconfig(10, label=self.reaches.name_dict["reach_03"])
+            self.reachmenu.entryconfig(11, label=self.reaches.name_dict["reach_04"])
+            self.reachmenu.entryconfig(12, label=self.reaches.name_dict["reach_05"])
+            self.reachmenu.entryconfig(13, label=self.reaches.name_dict["reach_06"])
+            self.reachmenu.entryconfig(14, label=self.reaches.name_dict["reach_07"])
 
     def define_feature(self, feature_name):
         if feature_name.__len__() < 1:
@@ -411,7 +421,7 @@ class FaGui(tk.Frame):
 
     def run_raster_maker(self):
         showinfo("INFORMATION",
-                 " Analysis takes a while. \n Python windows seem unresponsive in the meanwhile. \n Check console messages.\n \n PRESS OK TO START")
+                 "Analysis takes a while.\nPython windows seem unresponsive in the meanwhile.\nCheck console messages.\n\nPRESS OK TO START")
         if not self.verified:
             self.verify()
         if self.verified:
@@ -432,24 +442,22 @@ class FaGui(tk.Frame):
                       tk.Frame.quit(self)).grid(sticky=tk.EW, row=9, column=0, columnspan=2, padx=self.xd,
                                                 pady=self.yd)
             if not self.mapping:
-                tk.Button(self, bg="salmon", width=25, text="IMPORTANT\n Read logfile(s)", command=lambda:
-                          self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd,
-                                                     pady=self.yd)
+                msg = "IMPORTANT\n Read logfile(s)"
             else:
-                tk.Button(self, bg="gold", width=25, text="IMPORTANT\n Read logfile(s) from Map Maker",
-                          command=lambda:
-                          self.open_log_file()).grid(sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd,
-                                                     pady=self.yd)
+                msg = "IMPORTANT\n Read logfile(s) from Map Maker"
+            tk.Button(self, bg="DarkOliveGreen1", width=25, text=msg, command=lambda: self.open_log_file()).grid(
+                sticky=tk.EW, row=9, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+            
             if self.habitat:
-                tk.Label(self, fg="forest green", text=
-                            "Applied habitat matching").grid(
-                            sticky=tk.W, row=8, column=0, columnspan=6, padx=self.xd, pady=self.yd)
+                tk.Label(self, fg="forest green", text="Applied habitat matching").grid(sticky=tk.W, row=8, column=0,
+                                                                                        columnspan=6, padx=self.xd,
+                                                                                        pady=self.yd)
 
     def run_map_maker(self):
         run = RunGui(self)
         if self.out_ras_dir.__len__() < 1:
             showinfo("INFORMATION", "Choose folder that contains lifespan and design rasters.")
-            self.out_ras_dir = [askdirectory(initialdir=".") + "/"]
+            self.out_ras_dir = [askdirectory(initialdir=self.path + "/Output/") + "/"]
         if not self.reach_ids_applied.__len__() < 1:
             self.out_lyt_dir = run.gui_map_maker(self.out_ras_dir, self.reach_ids_applied)
         else:

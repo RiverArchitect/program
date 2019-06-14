@@ -29,7 +29,7 @@ class MainGui(tk.Frame):
         self.mapping = False
         self.raster4mapping = []
         self.reader = cRM.Read()
-        self.reaches = cDef.Reaches()
+        self.reaches = cDef.ReachDefinitions()
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
         self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
         self.reach_lookup_needed = False
@@ -136,6 +136,8 @@ class MainGui(tk.Frame):
         if str(reach).__len__() < 1:
             self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
             self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
+            self.reach_names_applied.remove("Raster extents")
+            self.reach_ids_applied.remove("none")
             if self.reach_names_applied.__len__() > 5:
                 label_text = "Many / All"
             else:

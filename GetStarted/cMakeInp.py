@@ -5,7 +5,7 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
     import cInputOutput as cIO
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
@@ -39,8 +39,8 @@ class MakeInputFile:
                     value_applies = False
             if value_applies:
                 self.return_periods.append(str(temp_return_periods[e]))
-                self.h_rasters.append(str(temp_h_rasters[e]))
-                self.u_rasters.append(str(temp_u_rasters[e]))
+                self.h_rasters.append(str(temp_h_rasters[e]).split(".tif")[0])
+                self.u_rasters.append(str(temp_u_rasters[e]).split(".tif")[0])
                 last_entry = temp_return_periods[e]
 
         self.return_periods.reverse()
@@ -54,7 +54,7 @@ class MakeInputFile:
             if ("scour" in str(ras)) or ("fill" in str(ras)):
                 self.dod.append(str(ras).split(".tif")[0])
             if "dmean" in str(ras):
-                self.dmean = str(ras).split(".tif")
+                self.dmean = str(ras).split(".tif")[0]
 
     def make_info(self, flow_info_table):
         self.get_info(flow_info_table)

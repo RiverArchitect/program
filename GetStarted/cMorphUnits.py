@@ -14,7 +14,7 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
 
@@ -25,7 +25,7 @@ class MU:
         # kwargs
 
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
-        fg.chk_dir(self.cache)
+        fGl.chk_dir(self.cache)
 
         try:
             self.out_dir = args[0]
@@ -92,7 +92,7 @@ class MU:
 
             try:
                 self.logger.info(" * Updating MU raster ...")
-                self.ras_mu = CellStatistics(fg.dict_values2list(self.raster_dict.values()), "MAXIMUM", "DATA")
+                self.ras_mu = CellStatistics(fGl.dict_values2list(self.raster_dict.values()), "MAXIMUM", "DATA")
                 self.logger.info(" * OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
@@ -117,8 +117,8 @@ class MU:
         try:
             self.logger.info(" * Cleaning up ...")
             del self.ras_mu, self.raster_dict
-            fg.clean_dir(self.cache)
-            fg.rm_dir(self.cache)
+            fGl.clean_dir(self.cache)
+            fGl.rm_dir(self.cache)
             self.logger.info(" * OK")
         except:
             self.logger.info(" * Failed to clean up .cache folder.")
@@ -184,4 +184,5 @@ class MU:
         return False
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = cMorphUnits.MU")
+        print("Class Info: <type> = MU (%s)" % os.path.dirname(__file__))
+        print(dir(self))

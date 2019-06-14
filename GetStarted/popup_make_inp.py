@@ -8,9 +8,9 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    import cConditionCreator as ccc
+    import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -19,7 +19,7 @@ class InpFrame(object):
     def __init__(self, master):
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.condition_list = fg.get_subdir_names(self.dir2ra + "01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
         self.dir2condition = '.'
         self.dir2dem = ''
         self.dir2h = ''
@@ -74,11 +74,11 @@ class InpFrame(object):
         items = self.lb_condition.curselection()
         # INFO: dir2condition may not end with "\\"!
         condition = str([self.condition_list[int(item)] for item in items][0])
-        condition4input = ccc.ConditionCreator(self.dir2ra + "01_Conditions\\" + condition)
+        condition4input = cCC.ConditionCreator(self.dir2ra + "01_Conditions\\" + condition)
         condition4input.generate_input_file(self.dir2ra + "01_Conditions\\" + condition + "\\flow_definitions.xlsx")
         try:
             if not condition4input.error:
-                fg.open_file(self.dir2condition + "\\input_definition.inp")
+                fGl.open_file(self.dir2condition + "\\input_definition.inp")
                 self.b_sc.config(fg="forest green")
                 self.l_c_dir.config(fg="forest green", text=self.dir2condition + "\\input_definition.inp")
             else:
@@ -87,8 +87,5 @@ class InpFrame(object):
         except:
             pass
 
-
-
     def __call__(self, *args, **kwargs):
         self.top.mainloop()
-

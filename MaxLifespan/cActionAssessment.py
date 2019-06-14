@@ -23,7 +23,7 @@ class ArcPyContainer:
         self.raster_info_lf = ""
         self.condition = str(condition)
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
-        self.feature_info = cDef.Features()
+        self.feature_info = cDef.FeatureDefinitions()
         self.output_ras = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Rasters\\" + self.condition + "\\"
         fG.chk_dir(self.output_ras)
         self.output_shp = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Shapefiles\\" + self.condition + "\\"

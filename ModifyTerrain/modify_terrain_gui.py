@@ -22,7 +22,7 @@ class MainGui(tk.Frame):
         self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         self.condition = ""
         self.errors = False
-        self.features = cDef.Features()
+        self.features = cDef.FeatureDefinitions()
         self.feature_id_list = []
         self.feature_name_list = []
         self.in_feat = os.path.abspath(
@@ -30,7 +30,7 @@ class MainGui(tk.Frame):
         self.in_topo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
         self.prevent_popup = False
         self.reader = cRM.Read()
-        self.reaches = cDef.Reaches()
+        self.reaches = cDef.ReachDefinitions()
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
         self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
         self.reach_lookup_needed = False
@@ -148,6 +148,8 @@ class MainGui(tk.Frame):
         if str(reach).__len__() < 1:
             self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
             self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
+            self.reach_names_applied.remove("Raster extents")
+            self.reach_ids_applied.remove("none")
             if self.reach_names_applied.__len__() > 5:
                 label_text = "Many / All"
             else:

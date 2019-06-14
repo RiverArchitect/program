@@ -33,7 +33,7 @@ class VolumeAssessment:
         self.rasters_for_pos_vol = {}
         self.rasters_for_neg_vol = {}
         self.reader = cRM.Read()
-        self.reaches = cDef.Reaches()
+        self.reaches = cDef.ReachDefinitions()
         self.volume_neg_dict = {}
         self.volume_pos_dict = {}
 
@@ -70,11 +70,11 @@ class VolumeAssessment:
         if self.units == "us":
             self.convert_volume_to_cy = 0.037037037037037037037037037037037  #ft3 -> cy: float((1/3)**3)
             self.unit_info = " cubic yard"
-            self.volume_threshold = 0.99
+            self.volume_threshold = 0.99  # ft -- CHANGE lod US customary HERE --
         else:
-            self.convert_volume_to_cy = 1.0
+            self.convert_volume_to_cy = 1.0  # m3
             self.unit_info = " cubic meter"
-            self.volume_threshold = 0.30
+            self.volume_threshold = 0.30  # m -- CHANGE lod SI metric HERE --
 
     def make_volume_diff_rasters(self):
         # Writes Raster Dataset to Output/Rasters/vol_name folder

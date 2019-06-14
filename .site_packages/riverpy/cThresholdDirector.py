@@ -1,25 +1,23 @@
 # !/usr/bin/python
 try:
     import sys, os, logging
-    # make openypyxl accessible
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
     import openpyxl as oxl
 except:
-    print("ExceptionERROR: Cannot find package files (/.site_packages/openpyxl/openpyxl).")
+    print("ExceptionERROR: Cannot find package files (.site_packages/openpyxl/openpyxl).")
 
 
 class ThresholdDirector:
     # Reads threshold values from file as a function of feature name
     def __init__(self, *args):
         self.logger = logging.getLogger("logfile")
+        self.dir2lf = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
         try:
             # LF instantiates with args[0] = True
-            # avoids circular relations
+            # avoids circular relation and only locally import cDef
+            import cDefinitions as cDef  # contains reach and feature definitions
             self.feat_id = args[0]
-            sys.path.append(
-                os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-            import cDefinitions as cdef  # contains reach and feature definitions
-            self.features = cdef.Features()
+            self.features = cDef.FeatureDefinitions()
         except:
             self.logger.info("ERROR: Invalid feature ID.")
             self.feat_id = ""
@@ -27,9 +25,10 @@ class ThresholdDirector:
 
         self.thresh_row_dict = {"d2w_low": 7, "d2w_up": 8, "det_low": 9, "det_up": 10, "u": 12, "h": 11, "Fr": 13,
                                 "D": 14, "freq": 15, "mu_bad": 16, "mu_good": 17, "mu_method": 18, "sf": 19,
-                                "inverse_tcd": 21, "fill": 22, "scour": 23, "S0": 20, "taux": 6}
+                                "inverse_tcd": 21, "fill": 22, "scour": 23, "S0": 20, "taux": 6, "lf": 24, "ds": 25,
+                                "name": 4}
         self.unit_conv_candidates = ["d2w_low", "d2w_up", "det_low", "det_up", "u", "h", "D", "fill", "scour"]
-        self.thresh_xlsx = os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\threshold_values.xlsx"
+        self.thresh_xlsx = self.dir2lf + ".templates\\threshold_values.xlsx"
 
         try:
             self.wb = oxl.load_workbook(filename=self.thresh_xlsx, read_only=True, data_only=True)

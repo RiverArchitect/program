@@ -10,7 +10,7 @@ except:
 try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -62,7 +62,7 @@ class MainGui(tk.Frame):
         self.l_img.grid(sticky=tk.E, row=3, column=2, rowspan=7, columnspan=2, padx=self.xd*10, pady=self.yd)
 
         # Add credits
-        self.l_credits = tk.Label(self, fg="gray50", text=fg.get_credits(), justify=LEFT)
+        self.l_credits = tk.Label(self, fg="gray50", text=fGl.get_credits(), justify=LEFT)
         self.l_credits.grid(sticky=tk.E, row=8, column=0, rowspan=3, columnspan=2, padx=self.xd, pady=self.yd)
 
     def set_geometry(self):
@@ -155,7 +155,7 @@ class MainGui(tk.Frame):
             tk.Frame.quit(self)
 
     def show_credits(self):
-        showinfo("Credits", fg.get_credits())
+        showinfo("Credits", fGl.get_credits())
 
     def __call__(self):
         self.mainloop()

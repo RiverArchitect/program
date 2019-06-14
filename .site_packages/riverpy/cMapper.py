@@ -1,7 +1,7 @@
 # !/usr/bin/python
 import os, sys, logging
 try:
-    import fGlobal as fg
+    import fGlobal as fGl
     from shutil import copyfile
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\")
     from cReadInpLifespan import Info
@@ -44,7 +44,7 @@ class Mapper:
                 self.dir_map_ras = args[0]
             else:
                 self.dir_map_ras = str(self.get_input_ras_dir(map_type))
-            fg.chk_dir(self.dir_map_ras)
+            fGl.chk_dir(self.dir_map_ras)
         except:
             try:
                 self.dir_map_ras = str(self.get_input_ras_dir(map_type))
@@ -57,8 +57,8 @@ class Mapper:
         except:
             self.output_dir = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), '..\\..')) + "\\02_Maps\\" + self.condition + "\\"
-        fg.chk_dir(self.output_dir)
-        fg.chk_dir(self.output_dir + "layers\\")
+        fGl.chk_dir(self.output_dir)
+        fGl.chk_dir(self.output_dir + "layers\\")
 
         try:
             self.aprx = self.copy_template_project()  # returns an arcpy.mp.ArcGISProject() object
@@ -195,7 +195,7 @@ class Mapper:
             length = args[0].__len__()
             if length > 3:
                 self.output_dir = args[0]
-                fg.chk_dir(self.output_dir)
+                fGl.chk_dir(self.output_dir)
                 self.logger.info(" >> Alternative output directory provided: " + str(self.output_dir))
         except:
             pass
@@ -334,10 +334,10 @@ class Mapper:
             self.map_layout = self.aprx.listLayouts(self.choose_ref_layout(self.map_string))[0]
             self.logger.info("    * setting legend ...")
             self.legend = self.map_layout.listElements("legend_element", "legend")[0]
-            self.legend.syncLayerOrder = False
-            self.legend.syncLayerVisibility = False
-            self.legend.syncNewLayer = False
-            self.legend.syncReferenceScale = False
+            self.legend.syncLayerOrder = True
+            self.legend.syncLayerVisibility = True
+            self.legend.syncNewLayer = True
+            self.legend.syncReferenceScale = True
             self.logger.info("    * saving updates ...")
             self.aprx.save()
 

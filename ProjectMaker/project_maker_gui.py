@@ -300,8 +300,8 @@ class MainGui(tk.Frame):
             # initial menu construction
             sys.path.append(self.dir2ra + "\\.site_packages\\riverpy\\")
             try:
-                import cFish as cf
-                self.fish = cf.Fish()
+                import cFish as cFi
+                self.fish = cFi.Fish()
             except:
                 showinfo("ERROR", "Invalid directory to RiverArchitect/.site_packages/riverpy/.")
                 return -1

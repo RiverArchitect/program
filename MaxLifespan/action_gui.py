@@ -5,7 +5,7 @@ try:
     from tkinter.filedialog import *
     import webbrowser
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
     # load function from LifespanDesign
@@ -291,8 +291,7 @@ class ActionGui(tk.Frame):
                       self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
     def show_credits(self):
-        msg = "Version info: 0.3 (May 2019)\nAuthor: Sebastian Schwindt\n     Kenny Larrieu\nInstitute: Pasternack Lab, UC Davis \n\nEmail: sschwindt[at]ucdavis.edu"
-        showinfo("Credits", msg)
+        showinfo("Credits", fG.get_credits())
 
     def unit_change(self):
         if self.unit == "si":

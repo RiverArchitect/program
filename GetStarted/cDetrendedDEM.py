@@ -14,9 +14,10 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
+
 
 class DET:
     def __init__(self, *args, **kwargs):
@@ -25,7 +26,7 @@ class DET:
 
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache2\\"  # use cache2 to enable parallel proc.
         self.reset_cache = False
-        fg.chk_dir(self.cache)
+        fGl.chk_dir(self.cache)
 
         try:
             self.out_dir = args[0]
@@ -167,9 +168,9 @@ class DET:
                     arcpy.Delete_management(str(shp))
                 except:
                     pass
-            fg.rm_dir(self.cache)
+            fGl.rm_dir(self.cache)
             if self.reset_cache:
-                fg.chk_dir(self.cache)
+                fGl.chk_dir(self.cache)
             self.logger.info("   * ok")
         except:
             self.logger.info("WARNING: .cache folder will be removed by package controls.")

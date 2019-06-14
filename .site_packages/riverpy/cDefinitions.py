@@ -60,7 +60,7 @@ class FeatureReader:
         print(dir(self))
 
 
-class Features:
+class FeatureDefinitions:
     def __init__(self, *args):
         # args[0]: BOOL - False if called from application that cannot use "Custom DEM" option
         try:
@@ -129,11 +129,11 @@ class Features:
             self.excavate_ids.append("cust")
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = Features (%s)" % os.path.dirname(__file__))
+        print("Class Info: <type> = FeatureDefinitions (%s)" % os.path.dirname(__file__))
         print(dir(self))
 
 
-class Reaches:
+class ReachDefinitions:
     def __init__(self):
         self.internal_id = ["reach_00", "reach_01", "reach_02", "reach_03", "reach_04", "reach_05", "reach_06",
                             "reach_07", "none"]
@@ -157,5 +157,5 @@ class Reaches:
         del i
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = Reaches (%s)" % os.path.dirname(__file__))
+        print("Class Info: <type> = ReachDefinitions (%s)" % os.path.dirname(__file__))
         print(dir(self))

@@ -40,7 +40,7 @@ class Info(object):
             the_line = the_line.split("#")[0]   # remove line end
             try:
                 entries = the_line.split(",")   # applies to multiple raster definitions
-                msg = "      >>> Input raster: " + str(self.type)
+                msg = "      >>> Input Raster(s): " + str(self.type)
             except:
                 entries = the_line
                 msg = "ERROR: Missing (or wrong format of) raster input definitions."

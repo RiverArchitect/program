@@ -23,7 +23,7 @@ def main(action_dir, reach, stn, unit, version):
     # unit = "us" or "si"
     # version = "v10"  # type() =  3-char str: vII
     error = False
-    features = cDef.Features(False)  # read feature IDs (required to identify plants)
+    features = cDef.FeatureDefinitions(False)  # read feature IDs (required to identify plants)
 
     if unit == "us":
         area_units = "SQUARE_FEET_US"

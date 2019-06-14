@@ -185,7 +185,7 @@ class HHSIgui(object):
     #     self.xlsx_flow_dur = askopenfilename(initialdir=self.dir2ra + "\\00_Flows\\", title="Select xlsx file containing the discharge duration curve (Q_flowdur-days)")
     #     self.b_flowdur_select.config(
     #         text="i) Selected flow duration curve: " + str(self.xlsx_flow_dur).split("/")[-1].split("\\")[-1],
-    #         fg="forest green")
+    #         fGl="forest green")
     #     self.b_c_select["state"] = "normal"
 
     def user_message(self, msg):
