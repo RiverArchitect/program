@@ -79,10 +79,11 @@ class ConditionCreator:
         except:
             self.error = True
 
-    def make_mu(self, h_ras_dir, u_ras_dir):
-        mu = cMU.MU(self.dir2condition)
+    def make_mu(self, unit, h_ras_dir, u_ras_dir):
+        # unit = STR (either "us" or "si")
+        mu = cMU.MU(unit, self.dir2condition)
         try:
-            mu.calculate_mu_baseflow(h_ras_dir, u_ras_dir)
+            mu.calculate_mu(h_ras_dir, u_ras_dir)
             self.error = mu.save_mu(self.dir2condition)
         except:
             self.error = True

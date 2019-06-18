@@ -60,6 +60,32 @@ def dict_values2list(dv):
     return out_list
 
 
+def dict2str(dictionary, **kwargs):
+    # converts a dict to a STR expression - reutrn "{e: 1, f: 2, ...}" - used in arcpy-calculatefiel mgmt
+    inverse_dict = False  # optional keyword arg: if true: dictionary keys and values will be inversed
+    try:
+        for k in kwargs.items():
+            if "inverse_dict" in k[0]:
+                inverse_dict = k[1]
+    except:
+        pass
+    dict_str = "{"
+    cc = 1
+    for k, v in dictionary.items():
+        skey = "\'%s\'" % k if type(k) == str else str(k)
+        sval = "\'%s\'" % v if type(v) == str else str(v)
+        if not inverse_dict:
+            dict_str += "{0}: {1}".format(skey, sval)
+        else:
+            dict_str += "{1}: {0}".format(skey, sval)
+        if not (cc == dictionary.__len__()):
+            dict_str += ", "
+        else:
+            dict_str += "}"
+        cc += 1
+    return dict_str
+
+
 def eliminate_nan_from_list(base_list, *args):
     # eliminates nan values from a list and all other lists provided with *args
     partner_lists = []

@@ -15,16 +15,19 @@ except:
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fGl
+    import cInputOutput as cIO
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
 
 
 class MU:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, unit_system, *args, **kwargs):
         # args[0] optional out_dir -- otherwise: out_dir = script_dir
         # kwargs
-
+        self.logger = logging.getLogger("logfile")
         self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
+        self.mu_xlsx_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\templates\\morphological_units.xlsx"
+        self.logger.info("->> Reading Morphological Units (%s)" % self.mu_xlsx_dir)
         fGl.chk_dir(self.cache)
 
         try:
@@ -32,25 +35,23 @@ class MU:
         except:
             self.out_dir = os.path.dirname(os.path.realpath(__file__)) + "\\"
 
-        try:
-            # for metric provide args[1] = 0.0304799
-            self.unit_conv = float(args[1])
-        except:
-            # default: U.S. customary (1.0)
-            self.unit_conv = 1.0
+        if unit_system == "us":
+            self.logger.info(" * converting Rasters to U.S. customary units")
+            self.uc = 3.2808399
+        else:
+            self.logger.info(" * using SI metric Raster units")
+            self.uc = 1.0
 
-        self.logger = logging.getLogger("logfile")
-        self.mu_dict = {"agriplain": 4, "backswamp": 5, "bank": 6, "chute": 8, "cutbank": 9, "fast glide": 10,
-                        "flood runner": 11, "floodplain": 12, "high floodplain": 13, "hillside": 14, "bedrock": 14,
-                        "island high floodplain": 15, "island-floodplain": 16, "lateral bar": 17, "levee": 18,
-                        "medial bar": 19, "mining pit": 20, "point bar": 21, "pond": 22, "pool": 23, "riffle": 24,
-                        "riffle transition": 25, "run": 26, "slackwater": 27, "slow glide": 28, "spur dike": 29,
-                        "swale": 30, "tailings": 31, "terrace": 32, "tributary channel": 33, "tributary delta": 34,
-                        "in-channel bar": 35}
+        self.mu_dict = {}
+        self.mu_h_lower = {}
+        self.mu_h_upper = {}
+        self.mu_u_lower = {}
+        self.mu_u_upper = {}
+        self.read_mus()
         self.raster_dict = {}
         self.ras_mu = 0
 
-    def calculate_mu_baseflow(self, path2h_ras, path2u_ras):
+    def calculate_mu(self, path2h_ras, path2u_ras):
         try:
             arcpy.CheckOutExtension('Spatial')  # check out license
             arcpy.gp.overwriteOutput = True
@@ -58,12 +59,12 @@ class MU:
             arcpy.env.extent = "MAXOF"
 
             try:
-                self.logger.info(" * Reading input rasters ...")
-                h = arcpy.Raster(path2h_ras)
-                u = arcpy.Raster(path2u_ras)
+                self.logger.info(" * Reading input Rasters ...")
+                h = Float(arcpy.Raster(path2h_ras))
+                u = Float(arcpy.Raster(path2u_ras))
                 self.logger.info(" * OK")
             except:
-                self.logger.info("ERROR: Could not find / access input rasters.")
+                self.logger.info("ERROR: Could not find / access input Rasters\n{0}\n{1}.".format(path2h_ras, path2u_ras))
                 return True
             try:
                 arcpy.env.extent = u.extent
@@ -72,26 +73,20 @@ class MU:
 
             try:
                 self.logger.info(" * Evaluating morphological units ...")
-                # CHANGE MU DELINEATION CRITERIA IF REQUIRED (ORIGINAL U.S. customary according to Wyrick and Pasternack 2014)
-                self.raster_dict.update({"slackwater": Con(((u > 0.0) & (u < 0.5) & (h > 0.0) & (h < 4.6)), 27)})
-                self.raster_dict.update({"slow glide": Con(((u >= 0.5) & (u < 1.0) & (h > 0.0) & (h < 4.6)), 28)})
-                self.raster_dict.update({"riffle transition": Con(((u >= 1.0) & (u < 2.0) & (h >= 0.0) & (h < 2.3)), 25)})
-                self.raster_dict.update({"fast glide": Con(((u >= 1.0) & (u < 2.0) & (h >= 2.3) & (h < 4.6)), 10)})
-                self.raster_dict.update({"pool": Con(((u > 0.0) & (u < 2.0) & (h >= 4.6)), 23)})
-                self.raster_dict.update({"riffle": Con(((u >= 2.0) & (h >= 0.0) & (h < 2.3)), 24)})
-                self.raster_dict.update({"run": Con(((u >= 2.0) & (u < 3.0) & (h >= 2.3)), 26)})
-                self.raster_dict.update({"chute": Con(((u >= 3.0) & (h >= 2.3)), 8)})
+                for mu, mu_id in self.mu_dict.items():
+                    self.logger.info("   - {0} (ID={1})".format(str(mu), str(mu_id)))
+                    self.raster_dict.update({mu: Con(h > 0, Con(((u >= self.mu_u_lower[mu]) & (u < self.mu_u_upper[mu]) & (h >= self.mu_h_lower[mu]) & (h < self.mu_h_upper[mu])), mu_id))})
                 self.logger.info(" * OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
             except:
-                self.logger.info("ERROR: Baseflow MU calculation failed.")
+                self.logger.info("ERROR: MU calculation failed.")
                 return True
 
             try:
-                self.logger.info(" * Updating MU raster ...")
+                self.logger.info(" * superimposing single MU Rasters ...")
                 self.ras_mu = CellStatistics(fGl.dict_values2list(self.raster_dict.values()), "MAXIMUM", "DATA")
                 self.logger.info(" * OK")
             except arcpy.ExecuteError:
@@ -99,7 +94,7 @@ class MU:
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
             except:
-                self.logger.info("ERROR: Baseflow MU update failed.")
+                self.logger.info("ERROR: MU update failed.")
                 return True
 
             # arcpy.CheckInExtension('Spatial')
@@ -110,7 +105,7 @@ class MU:
             self.logger.info("ExceptionERROR: (arcpy).")
             self.logger.info(e.args[0])
         except:
-            self.logger.info("ERROR: Baseflow MU calculation failed.")
+            self.logger.info("ERROR: MU calculation failed.")
             return True
 
     def clean_up(self):
@@ -122,6 +117,29 @@ class MU:
             self.logger.info(" * OK")
         except:
             self.logger.info(" * Failed to clean up .cache folder.")
+
+    def read_mus(self):
+        mu_xlsx = cIO.Read(self.mu_xlsx_dir)
+        for i in range(6, 44):
+            # loop over all mu-rows
+            if not (i == 23):
+                # jump over floodplain table headers
+                mu_type = str(mu_xlsx.ws["D" + str(i)].value)
+                try:
+                    mu_ID = int(mu_xlsx.ws["E" + str(i)].value)
+                except:
+                    continue
+                if not (mu_type.lower() == "none"):
+                    try:
+                        self.mu_h_lower.update({mu_type: float(mu_xlsx.ws["F" + str(i)].value) * self.uc})  # add mu name and lower depth thresh.
+                        self.mu_h_upper.update({mu_type: float(mu_xlsx.ws["G" + str(i)].value) * self.uc})  # add mu name and upper depth thresh.
+                        self.mu_u_lower.update({mu_type: float(mu_xlsx.ws["H" + str(i)].value) * self.uc})  # add mu name and lower velocity thresh.
+                        self.mu_u_upper.update({mu_type: float(mu_xlsx.ws["I" + str(i)].value) * self.uc})  # add mu name and upper velocity thresh.
+                        self.mu_dict.update({mu_type: mu_ID})  # add mu name and ID to dict
+                        self.logger.info(" * added %s." % str(mu_type))
+                    except:
+                        self.logger.info(" * omitted {0} (no depth / velocity thresholds provided in row {1}).".format(mu_type, str(i)))
+        mu_xlsx.close_wb()
 
     def save_mu(self, *args):
         # args[0] can be an optional output directory
@@ -144,14 +162,14 @@ class MU:
 
             self.logger.info("   >> Converting numbers to strings ...")
             arcpy.AddField_management(pts, "MU", "TEXT")
-            expression = "inverse_dict = {4: 'agriplain', 5: 'backswamp', 6: 'bank', 8: 'chute', 9: 'cutbank', 10: 'fast glide', 11: 'flood runner', 12: 'floodplain', 13: 'high floodplain', 14: 'bedrock', 15: 'island high floodplain', 16: 'island-floodplain', 17: 'lateral bar', 18: 'levee', 19: 'medial bar', 20: 'mining pit', 21: 'point bar', 22: 'pond', 23: 'pool', 24: 'riffle', 25: 'riffle transition', 26: 'run', 27: 'slackwater', 28: 'slow glide', 29: 'spur dike', 30: 'swale', 31: 'tailings', 32: 'terrace', 33: 'tributary channel', 34: 'tributary delta', 35: 'in-channel bar'}"
+            expression = "inverse_dict = " + fGl.dict2str(self.mu_dict, inverse_dict=True)
             arcpy.CalculateField_management(pts, "MU", "inverse_dict[!grid_code!]", "PYTHON", expression)
 
             self.logger.info("   >> OK")
             self.logger.info(" * Saving MU string raster as:")
-            self.logger.info(str(self.out_dir) + "mu_str")
+            self.logger.info(str(self.out_dir) + "\\mu_str.tif")
             arcpy.PointToRaster_conversion(in_features=pts, value_field="MU",
-                                           out_rasterdataset=self.out_dir + "mu_str",
+                                           out_rasterdataset=self.out_dir + "\\mu_str.tif",
                                            cell_assignment="MOST_FREQUENT", cellsize=5)
             self.logger.info(" * OK")
         except arcpy.ExecuteError:
@@ -166,8 +184,8 @@ class MU:
 
         try:
             self.logger.info(" * Saving mu numeric raster as:")
-            self.logger.info(str(self.out_dir) + "mu.tif")
-            self.ras_mu.save(self.out_dir + "mu.tif")
+            self.logger.info(str(self.out_dir) + "\\mu.tif")
+            self.ras_mu.save(self.out_dir + "\\mu.tif")
             self.logger.info(" * OK")
         except arcpy.ExecuteError:
             self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))

@@ -114,6 +114,8 @@ class Mapper:
             return "volume_cust_neg"
         if "fil" in map_name:
             return "volume_cust_pos"
+        # if no map_name could be identified > return lifespan layout
+        return "layout_lf"
 
     def choose_ref_map(self, map_name):
         # type(map_name) == str
@@ -154,6 +156,8 @@ class Mapper:
             return "volume_cust_neg"
         if "fil" in map_name:
             return "volume_cust_pos"
+        # if no map_name could be identified > return lifespan layer
+        return "layer_lf"
 
     def copy_template_project(self):
         try:

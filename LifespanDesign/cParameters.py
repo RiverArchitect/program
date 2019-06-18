@@ -9,9 +9,16 @@ try:
 except:
     print("ExceptionERROR: arcpy is not available (check license connection?).")
 
+try:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import cInputOutput as cIO
+except:
+    print("ExceptionERROR: Cannot find package files (riverpy).")
+
 
 class ParameterContainer:
     def __init__(self, condition, par_id):
+        self.logger = logging.getLogger("logfile")
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.raster_path = r"" + os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\"
         input_info = Info(condition, par_id)
@@ -131,13 +138,9 @@ class MU(ParameterContainer):
     # This class stores all information about Morphological Units Rasters and thresholds.
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "mu")
-        self.mu_dict = {"agriplain": 4, "backswamp": 5, "bank": 6, "chute": 8, "cutbank": 9, "fast glide": 10,
-                        "flood runner": 11, "floodplain": 12, "high floodplain": 13, "hillside": 14, "bedrock": 14,
-                        "island high floodplain": 15, "island-floodplain": 16, "lateral bar": 17, "levee": 18,
-                        "medial bar": 19, "mining pit": 20, "point bar": 21, "pond": 22, "pool": 23, "riffle": 24,
-                        "riffle transition": 25, "run": 26, "slackwater": 27, "slow glide": 28, "spur dike": 29,
-                        "swale": 30, "tailings": 31, "terrace": 32, "tributary channel": 33, "tributary delta": 34,
-                        "in-channel bar": 35}
+        self.mu_dict = {}
+        self.read_mus()
+
         self.raster_names = ["mu"]  # overwrites ParameterContainer.raster_names
         try:
             self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
@@ -146,6 +149,29 @@ class MU(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+
+    def read_mus(self):
+        mu_xlsx = cIO.Read(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\templates\\morphological_units.xlsx")
+        for i in range(6, 44):
+            # loop over all mu-rows
+            if not (i == 23):
+                # jump over floodplain table headers
+                mu_type = str(mu_xlsx.ws["D" + str(i)].value)
+                try:
+                    mu_ID = int(mu_xlsx.ws["E" + str(i)].value)
+                except:
+                    continue
+                if not (mu_type.lower() == "none"):
+                    try:
+                        float(mu_xlsx.ws["F" + str(i)].value)
+                        float(mu_xlsx.ws["G" + str(i)].value)
+                        float(mu_xlsx.ws["H" + str(i)].value)
+                        float(mu_xlsx.ws["I" + str(i)].value)
+                        self.mu_dict.update({mu_type: mu_ID})  # add mu name and ID to dict
+                        self.logger.info(" * added %s." % str(mu_type))
+                    except:
+                        self.logger.info(" * omitted {0} (no depth / velocity thresholds provided in row {1}).".format(mu_type, str(i)))
+        mu_xlsx.close_wb()
 
 
 class SideChannelDelineation(ParameterContainer):

@@ -6,7 +6,6 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
 
 try:
-    # load relevant files from ModifyTerrain
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
     import openpyxl as oxl
 except:

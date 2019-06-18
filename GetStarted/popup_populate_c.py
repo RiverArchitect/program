@@ -24,6 +24,8 @@ class PopulateCondition(object):
         self.dir2dem = ''
         self.dir2h = ''
         self.dir2u = ''
+        self.unit = "us"
+        self.unit_dict = {"us": "U.S. customary", "si": "SI (metric)"}
 
         # define analysis type identifiers (default = False)
         self.bool_var = tk.BooleanVar()
@@ -31,8 +33,8 @@ class PopulateCondition(object):
 
         # ARRANGE GEOMETRY
         # width and height of the window.
-        ww = 610
-        wh = 500
+        ww = 650
+        wh = 550
         self.xd = 5  # distance holder in x-direction (pixel)
         self.yd = 5  # distance holder in y-direction (pixel)
         # height and location
@@ -90,24 +92,54 @@ class PopulateCondition(object):
         self.l_mu = tk.Label(top, text="Create Morphological Unit Raster (mu.tif)")
         self.l_mu.grid(sticky=tk.W, row=13, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.b_smuh = tk.Button(top, width=self.col_0_width, bg="white",
-                                text="Select baseflow depth raster",
+                                text="Select depth raster",
                                 command=lambda: self.select_h())
         self.b_smuh.grid(sticky=tk.EW, row=14, column=0, padx=self.xd, pady=self.yd)
         self.b_smuu = tk.Button(top, width=self.col_0_width, bg="white",
-                                text="Select baseflow velocity raster",
+                                text="Select velocity raster",
                                 command=lambda: self.select_u())
         self.b_smuu.grid(sticky=tk.EW, row=14, column=1, padx=self.xd, pady=self.yd)
-        self.b_mu = tk.Button(top, width=self.col_0_width, bg="white", text="Run MU creation",
+        self.b_chg_mu = tk.Button(top, width=self.col_0_width * 2 + self.xd * 2, bg="white",
+                                  text="View / change MU definitions",
+                                  command=lambda: self.open_mu_xlsx())
+        self.b_chg_mu.grid(sticky=tk.EW, row=15, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_mu = tk.Button(top, width=self.col_0_width, bg="white", text="Run MU\ncreation",
                               command=lambda: self.run_mu())
-        self.b_mu.grid(sticky=tk.EW, row=14, column=2, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=15, column=0)  # dummy
+        self.b_mu.grid(sticky=tk.EW, row=14, rowspan=2, column=2, padx=self.xd, pady=self.yd)
+        self.l_mu_unit = tk.Label(top, fg="dodger blue",
+                                  text="Currently selected Raster unit system: % s" % self.unit_dict[self.unit])
+        self.l_mu_unit.grid(sticky=tk.W, row=16, column=0, columnspan=4, padx=self.xd, pady=self.yd)
+        # tk.Label(top, text="").grid(sticky=tk.W, row=15, column=0)  # dummy
 
         self.b_return = tk.Button(top, width=self.col_0_width, fg="RoyalBlue3", bg="white", text="RETURN to MAIN WINDOW",
                                   command=lambda: self.gui_quit())
-        self.b_return.grid(sticky=tk.E, row=16, column=2, padx=self.xd, pady=self.yd)
+        self.b_return.grid(sticky=tk.E, row=17, column=2, padx=self.xd, pady=self.yd)
+
+        # add units-menu
+        self.mbar = tk.Menu(self.top, foreground="dodger blue")  # create new menubar
+        self.top.config(menu=self.mbar)  # attach it to the root window
+        self.unitmenu = tk.Menu(self.mbar, tearoff=0, foreground="dodger blue")  # create new menu
+        self.mbar.add_cascade(label="Units", menu=self.unitmenu, foreground="dodger blue")  # attach it to the menubar
+        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
+        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
+
+        self.b_d2w["state"] = "disabled"
+        self.b_det["state"] = "disabled"
+        self.b_mu["state"] = "disabled"
+        self.b_sd2w["state"] = "disabled"
+        self.b_sdet["state"] = "disabled"
+        self.b_smuh["state"] = "disabled"
+        self.b_smuu["state"] = "disabled"
 
     def gui_quit(self):
         self.top.destroy()
+
+    def open_mu_xlsx(self):
+        showinfo("INFO", "Do not forget to save changes ...")
+        try:
+            webbrowser.open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\templates\\morphological_units.xlsx")
+        except:
+            showinfo("ERROR", "Could not find /.site_packages/templates/morphological_units.xlsx.")
 
     def run_d2w(self):
         condition = cCC.ConditionCreator(self.dir2condition)
@@ -137,7 +169,7 @@ class PopulateCondition(object):
 
     def run_mu(self):
         condition = cCC.ConditionCreator(self.dir2condition)
-        condition.make_det(self.dir2h, self.dir2u)
+        condition.make_mu(self.unit, self.dir2h, self.dir2u)
         self.top.bell()
         try:
             if not condition.error:
@@ -157,12 +189,18 @@ class PopulateCondition(object):
         showinfo("INFO", msg)
         self.dir2h = askopenfilename(initialdir=self.dir2condition, title="Select baseflow depth raster",
                                      filetypes=[('GeoTIFF', '*.tif;*.tiff')])
+        self.b_d2w["state"] = "normal"
+        self.b_det["state"] = "normal"
+        if self.dir2u.__len__() > 0:
+            self.b_mu["state"] = "normal"
 
     def select_u(self):
         msg = "Select the flow velocity raster corresponding to baseflow."
         showinfo("INFO", msg)
-        self.dir2h = askopenfilename(initialdir=self.dir2condition, title="Select baseflow velocity raster",
+        self.dir2u = askopenfilename(initialdir=self.dir2condition, title="Select baseflow velocity raster",
                                      filetypes=[('GeoTIFF', '*.tif;*.tiff')])
+        if self.dir2h.__len__() > 0:
+            self.b_mu["state"] = "normal"
 
     def set_condition(self):
         items = self.lb_condition.curselection()
@@ -177,6 +215,24 @@ class PopulateCondition(object):
         else:
             self.l_d2w_dem.config(fg="forest green", text="Using DEM: %s" % self.dir2dem)
             self.l_det_dem.config(fg="forest green", text="Using DEM: %s" % self.dir2dem)
+            self.b_sd2w["state"] = "normal"
+            self.b_sdet["state"] = "normal"
+            self.b_smuh["state"] = "normal"
+            self.b_smuu["state"] = "normal"
+
+    def unit_change(self):
+        self.unitmenu.delete(0, 1)
+        if self.unit == "si":
+            new_unit = "us"
+            self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
+            self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
+        else:
+            new_unit = "si"
+            self.unitmenu.add_command(label="[             ]  U.S. customary", command=lambda: self.unit_change())
+            self.unitmenu.add_command(label="[current]  SI (metric)", background="pale green")
+        self.top.bell()
+        self.unit = new_unit
+        self.l_mu_unit.config(text="Currently selected Raster unit system: % s" % self.unit_dict[self.unit])
 
     def __call__(self, *args, **kwargs):
         self.top.mainloop()
