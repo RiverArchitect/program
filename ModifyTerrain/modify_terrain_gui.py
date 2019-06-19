@@ -5,47 +5,33 @@ try:
     from tkinter.filedialog import *
     import webbrowser
     import cModifyTerrain as cMT
+    import cRiverBuilder as cRB
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, Tkinter, webbrowser).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
+    import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fG
+    import fGlobal as fGl
     import cReachManager as cRM
     import cDefinitions as cDef
 except:
-    print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/*.py).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
-class MainGui(tk.Frame):
-    def __init__(self, master=None):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
-        self.condition = ""
-        self.errors = False
-        self.features = cDef.FeatureDefinitions()
-        self.feature_id_list = []
-        self.feature_name_list = []
-        self.in_feat = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")) + "\\MaxLifespan\\Output\\Rasters\\"
-        self.in_topo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\"
+class MainGui(sg.RaModuleGui):
+    def __init__(self, from_master):
+        sg.RaModuleGui.__init__(self, from_master)
+        self.ww = 580  # window width
+        self.wh = 650  # window height
+        self.title = "Modify Terrain"
+        self.set_geometry(self.ww, self.wh, self.title)
+
+        self.in_feat = self.dir2ml + "Output\\Rasters\\"
+        self.in_topo = self.dir2ra + "01_Conditions\\"
         self.prevent_popup = False
-        self.reader = cRM.Read()
-        self.reaches = cDef.ReachDefinitions()
-        self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
-        self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
-        self.reach_lookup_needed = False
-        self.template_dir = os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\"
-        self.unit = "us"
-        self.verified = False
-
-        # Construct the Frame object.
-        tk.Frame.__init__(self, master)
-        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
-        if __name__ != '__main__':
-            self.master = self.winfo_toplevel()
-        self.pack(expand=True, fill=tk.BOTH)
-
-        self.set_geometry()
+        self.rb_inp_file = self.dir2mt + "Input.txt"
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -54,174 +40,70 @@ class MainGui(tk.Frame):
 
         # LABELS
         self.l_reach_label = tk.Label(self, fg="dark slate gray", text="Reaches:")
-        self.l_reach_label.grid(sticky=tk.W, row=0, column=0, columnspan=1, padx=self.xd, pady=self.yd * 2)
-        self.l_reaches = tk.Label(self, fg="red", text="Select from Reaches menu")
-        self.l_reaches.grid(sticky=tk.W, row=0, column=1, columnspan=5, padx=self.xd, pady=self.yd * 2)
+        self.l_reach_label.grid(sticky=tk.W, row=0, column=0, padx=self.xd, pady=self.yd)
+        self.l_reaches.config(fg="red", text="Select from Reaches menu")
+        self.l_reaches.grid(sticky=tk.W, row=0, column=1, columnspan=5, padx=self.xd, pady=self.yd)
         self.l_condition = tk.Label(self, fg="dark slate gray", text="Condition: ")
-        self.l_condition.grid(sticky=tk.W, row=2, column=0, padx=self.xd, pady=self.yd * 2)
-        self.l_s_feat = tk.Label(self, fg="dark slate gray", text="Selected features: ")
-        self.l_s_feat.grid(sticky=tk.W, row=1, column=0, padx=self.xd, pady=self.yd * 2)
-        self.l_features = tk.Label(self, fg="red",
-                                   text="Choose from \"Features\" Menu\n(requires maximum lifespan rasters)")
-        self.l_features.grid(sticky=tk.W, row=1, column=1, columnspan=7, padx=self.xd, pady=self.yd)
-        self.l_inp = tk.Label(self, fg="dark slate gray", text="Current input Raster directory:")
-        self.l_inp.grid(sticky=tk.W, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_condition.grid(sticky=tk.W, row=1, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+
+        self.l_th = tk.Label(self, fg="dark slate gray", text="Threshold value-based terraforming")
+        self.l_th.grid(sticky=tk.W, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_inp = tk.Label(self, fg="dark slate gray", text="Current DEM Raster:")
+        self.l_inp.grid(sticky=tk.W, row=7, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.l_inpath_topo = tk.Label(self, fg="dark slate gray", text=str(self.in_topo))
-        self.l_inpath_topo.grid(sticky=tk.W, row=5, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.l_inp_feat = tk.Label(self, text="Current MaxLifespan Raster directory (threshold-based modification):")
+        self.l_inpath_topo.grid(sticky=tk.W, row=8, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_inp_feat = tk.Label(self, text="Max. Lifespan Raster directory:")
         tk.Label(self, text="").grid(row=7, column=0, padx=self.xd, pady=self.yd)
         self.l_inp_feat.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.l_inpath_feat = tk.Label(self, text=str(self.in_feat))
         self.l_inpath_feat.grid(sticky=tk.W, row=10, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
-        # ENTRIES
-        self.e_condition = tk.Entry(self, bg="salmon", width=10, textvariable=self.gui_condition)
-        self.e_condition.grid(sticky=tk.EW, row=2, column=1, padx=self.xd, pady=self.yd)
+        self.l_rb = tk.Label(self, fg="dark slate gray", text="RIVER BUILDER")
+        self.l_rb.grid(sticky=tk.W, row=4, column=3, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_inp_rb = tk.Label(self, fg="dark slate gray", text="Selected Input.txt file:\n%s" % self.rb_inp_file)
+        self.l_inp_rb.grid(sticky=tk.W, row=7, rowspan=2, column=3, columnspan=2, padx=self.xd, pady=self.yd)
+
+        # List boxes and scroll bars
+        self.sb_condition = tk.Scrollbar(self, orient=tk.VERTICAL)
+        self.sb_condition.grid(sticky=tk.W, row=1, column=2, padx=0, pady=self.yd)
+        self.lb_condition = tk.Listbox(self, height=3, width=20, yscrollcommand=self.sb_condition.set)
+        for e in self.condition_list:
+            self.lb_condition.insert(tk.END, e)
+        self.lb_condition.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
+        self.sb_condition.config(command=self.lb_condition.yview)
 
         # BUTTONS
-        self.b_condition = tk.Button(self, width=5, bg="white", text="Verify",
-                                     command=lambda: self.generate_inpath())
-        self.b_condition.grid(sticky=tk.W, row=2, column=2, padx=self.xd, pady=self.yd*5)
-        self.b_in_topo = tk.Button(self, width=25, bg="white", text="Change input DEM directory (optional)",
+        self.b_s_condition = tk.Button(self, fg="red", text="Select Condition",
+                                       command=lambda: self.select_condition())
+        self.b_s_condition.grid(sticky=tk.W, row=1, column=3, columnspan=2, padx=self.xd, pady=self.yd)
+
+        self.b_in_topo = tk.Button(self, width=25, bg="white", text="Modify DEM directory (optional)",
                                    command=lambda: self.change_in_topo())
-        self.b_in_topo.grid(sticky=tk.EW, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.b_in_feat = tk.Button(self, width=25, text="Change max. lifespan Raster directory (optional)",
-                                   command=lambda: showinfo("INFO", "Check max. lifespan raster box first."))
-        self.b_in_feat.grid(sticky=tk.EW, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.make_menu()
+        self.b_in_topo.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
-    def set_geometry(self):
-        # ARRANGE GEOMETRY
-        self.ww = 580  # window width
-        self.wh = 650  # window height
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # Upper-left corner of the window.
-        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
-        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
-        # Set the height and location.
-        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
-        # Give the window a title.
-        if __name__ == '__main__':
-            self.master.title("Modify Terrain")
-            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.b_rb_inp = tk.Button(self, width=25, bg="white", text="Create RB Input.txt File", command=lambda: showinfo("INFO", "Under construction"))
+        self.b_rb_inp.grid(sticky=tk.EW, row=5, column=3, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_rb_inp_s = tk.Button(self, width=25, bg="white", text="Select RB Input.txt File",
+                                    command=lambda: self.select_rb_input_file())
+        self.b_rb_inp_s.grid(sticky=tk.EW, row=5, column=3, columnspan=2, padx=self.xd, pady=self.yd)
 
-    def make_menu(self):
-        # DROP DOWN MENU
-        # the menu does not need packing - see page 44ff
-        self.mbar = tk.Menu(self)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
+        self.b_run_grade = tk.Button(self, text="Grade",  command=lambda: self.run_modification("grade"))
+        self.b_run_grade.grid(sticky=tk.EW, row=11, column=0, padx=self.xd, pady=self.yd)
+        self.b_run_widen = tk.Button(self, text="Widen", command=lambda: self.run_modification("widen"))
+        self.b_run_widen.grid(sticky=tk.EW, row=11, column=1, padx=self.xd, pady=self.yd)
 
-        # FEATURES DROP DOWN
-        self.featmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Features", menu=self.featmenu)  # attach it to the menubar
-        self.featmenu.add_command(label="ALL", command=lambda: self.define_feature(""))
-        self.featmenu.add_command(label="Terraform: Grading (threshold-based)", command=lambda: self.define_feature("grade"))
-        self.featmenu.add_command(label="Terraform: Widen (threshold-based)", command=lambda: self.define_feature("widen"))
-        self.featmenu.add_command(label="CLEAR ALL", command=lambda: self.define_feature("clear"))
+        self.b_run_rb = tk.Button(self, text="Run River Builder", command=lambda: self.run_rb())
+        self.b_run_rb.grid(sticky=tk.EW, row=11, column=3, columnspan=2, padx=self.xd, pady=self.yd)
 
+        self.complete_menus()
+
+    def complete_menus(self):
+        # add reach menu
         # REACH  DROP DOWN
         self.reach_lookup_needed = False
         self.reachmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Reaches", menu=self.reachmenu)  # attach it to the menubar
-        self.build_reach_menu()
-
-        # UNIT SYSTEM DROP DOWN
-        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
-        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-
-        # RUN DROP DOWN
-        self.runmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Run", menu=self.runmenu)  # attach it to the menubar
-        self.runmenu.add_command(label="Verify settings", command=lambda: self.verify())
-        self.runmenu.add_command(label="Threshold-based DEM Modification")
-
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
-
-    def add_reach(self, reach):
-        if str(reach).__len__() < 1:
-            self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
-            self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
-            self.reach_names_applied.remove("Raster extents")
-            self.reach_ids_applied.remove("none")
-            if self.reach_names_applied.__len__() > 5:
-                label_text = "Many / All"
-            else:
-                label_text = ", ".join(self.reach_names_applied)
-            self.l_reaches.config(fg="dark slate gray", text=label_text)
-        else:
-            if not(reach == "clear"):
-                if not (reach == "ignore"):
-                    if not(reach in self.reach_names_applied):
-                        self.reach_names_applied.append(self.reaches.name_dict[reach])
-                        self.reach_ids_applied.append(self.reaches.id_dict[reach])
-                else:
-                    # ignore reaches
-                    self.reach_names_applied = ["Raster extents"]
-                    self.reach_ids_applied = ["none"]
-                if self.reach_names_applied.__len__() > 5:
-                    label_text = "Many / All"
-                else:
-                    label_text = ", ".join(self.reach_names_applied)
-                self.l_reaches.config(fg="dark slate gray", text=label_text)
-            else:
-                self.reach_names_applied = []
-                self.reach_ids_applied = []
-                self.l_reaches.config(fg="red", text="Select from \'Reaches\' Menu")
-
-    def build_reach_menu(self):
-        if not self.reach_lookup_needed:
-            self.reachmenu.add_command(label="DEFINE REACHES", command=lambda: self.define_reaches())
-            self.reachmenu.add_command(label="RE-BUILD MENU", command=lambda: self.build_reach_menu())
-            self.reachmenu.add_command(label="_____________________________")
-            self.reachmenu.add_command(label="ALL", command=lambda: self.add_reach(""))
-            self.reachmenu.add_command(label="IGNORE (Use Raster extents)", command=lambda: self.add_reach("ignore"))
-            self.reachmenu.add_command(label="CLEAR ALL", command=lambda: self.add_reach("clear"))
-            self.reachmenu.add_command(label="_____________________________")
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_00"], command=lambda: self.add_reach("reach_00"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_01"], command=lambda: self.add_reach("reach_01"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_02"], command=lambda: self.add_reach("reach_02"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_03"], command=lambda: self.add_reach("reach_03"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_04"], command=lambda: self.add_reach("reach_04"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_05"], command=lambda: self.add_reach("reach_05"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_06"], command=lambda: self.add_reach("reach_06"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_07"], command=lambda: self.add_reach("reach_07"))
-            self.reach_lookup_needed = True
-        else:
-            # re-build reach names if workbook was modified
-            self.reaches.names_xlsx = self.reader.get_reach_info("full_name")
-            self.reaches.name_dict = dict(zip(self.reaches.internal_id, self.reaches.names_xlsx))
-            self.reachmenu.entryconfig(7, label=self.reaches.name_dict["reach_00"])
-            self.reachmenu.entryconfig(8, label=self.reaches.name_dict["reach_01"])
-            self.reachmenu.entryconfig(9, label=self.reaches.name_dict["reach_02"])
-            self.reachmenu.entryconfig(10, label=self.reaches.name_dict["reach_03"])
-            self.reachmenu.entryconfig(11, label=self.reaches.name_dict["reach_04"])
-            self.reachmenu.entryconfig(12, label=self.reaches.name_dict["reach_05"])
-            self.reachmenu.entryconfig(13, label=self.reaches.name_dict["reach_06"])
-            self.reachmenu.entryconfig(14, label=self.reaches.name_dict["reach_07"])
-
-    def change_in_feat(self):
-        msg0 = "Make sure there is ONE raster in the directory that contains the string of a feature ID. "
-        msg1 = "Valid feature IDs are:\n"
-        msglist = []
-        try:
-            feat_dict = dict(zip(self.features.name_list, self.features.id_list))
-            for feat in feat_dict.items():
-                msglist.append(": ".join(feat))
-            showinfo("SET DIRECTORY", msg0 + msg1 + ", ".join(msglist))
-        except:
-            pass
-        self.in_feat = askdirectory(initialdir=".") + "/"
-        if str(self.in_feat).__len__() > 1:
-            self.l_inpath_feat.config(fg="dark slate gray", text=str(self.in_feat))
-        else:
-            self.l_inpath_feat.config(fg="red", text="Invalid directory")
+        self.reachmenu = self.make_reach_menu(self.reachmenu)
 
     def change_in_topo(self):
         msg0 = "Make sure there is ONE raster in the directory is named \'dem\'.\n"
@@ -232,72 +114,34 @@ class MainGui(tk.Frame):
         else:
             self.l_inpath_topo.config(fg="red", text="Invalid directory")
 
-    def define_feature(self, feature_id):
-        if feature_id.__len__() < 1:
-            # append ALL available features
-            self.feature_id_list = self.features.id_list
-            self.feature_name_list = self.features.name_list
-            self.l_features.config(fg="SteelBlue", text=", ".join(self.feature_name_list))
-        else:
-            if not(feature_id == "clear"):
-                if not(feature_id in self.feature_id_list):
-                    # append single features
-                    self.feature_id_list.append(feature_id)
-                    self.feature_name_list.append(self.features.feat_name_dict[feature_id])
-                self.l_features.config(fg="SteelBlue", text=", ".join(self.feature_name_list))
-            else:
-                # clear all features
-                self.feature_id_list = []
-                self.feature_name_list = []
-                self.l_features.config(fg="red", text="Select from \'Features\' Menu")
-
-        if ("grade" in self.feature_id_list) or ("widen" in self.feature_id_list):
-            self.runmenu.entryconfig(1, label="Threshold-based DEM Modification",
-                                     command=lambda: self.run_modification())
-
-    def define_reaches(self):
-        try:
-            webbrowser.open(self.template_dir + "computation_extents.xlsx")
-            self.reach_lookup_needed = True  # tells build_reachmenu that lookup of modified spreasheet info is needed
-        except:
-            showinfo("ERROR", "Cannot open the file\n" + self.template_dir + "computation_extents.xlsx")
-
     def enable_mterrain(self):
-        self.b_in_feat.config(command=lambda: self.change_in_feat())
         self.l_inpath_feat.config(text=str(self.in_feat))
-        self.runmenu.entryconfig(1, label="Threshold-based DEM Modification",
-                                 command=lambda: self.run_modification())
 
-    def generate_inpath(self):
-        self.condition = self.e_condition.get()
-        self.in_topo = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")) + "\\01_Conditions\\" + str(self.condition) + "\\"
-        self.in_feat = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")) + "\\MaxLifespan\\Output\\Rasters\\" + str(
-            self.condition) + "\\"
+    def select_rb_input_file(self):
+        showinfo("INFO", "The file must be located in %s ." % self.dir2mt)
+        self.rb_inp_file = askopenfilename(initialdir=self.dir2mt, title="Select RB Input.txt", filetypes=[("TXT", "*.txt")])
+        self.l_inp_rb.config(fg="dark slate gray", text="Selected Input.txt file:\n%s" % self.rb_inp_file)
 
-        self.e_condition.config(bg="pale green", width=10, textvariable=self.gui_condition)
+    def set_inpath(self):
+        self.in_topo = self.dir2ra + "01_Conditions\\" + str(self.condition) + "\\"
+        self.in_feat = self.dir2ml + "Output\\Rasters\\" + str(self.condition) + "\\"
 
         if os.path.exists(self.in_topo):
-            self.l_inpath_topo.config(fg="forest green", text=str(self.in_topo))
+            self.l_inpath_topo.config(fg="forest green", text=str(self.in_topo) + "dem.tif")
         else:
             if not os.path.isfile(self.in_topo + 'dem.tif'):
                 self.b_in_topo.config(fg="red", width=25, bg="white",
-                                      text="Change input topo (condition DEM) directory (REQUIRED)",
+                                      text="Change input DEM (condition DEM) directory (REQUIRED)",
                                       command=lambda: self.change_in_topo())
-                showinfo("WARNING", "Cannot find DEM grid:\n" + self.in_topo + "dem\nTopo (DEM) input directory required")
-            self.l_inpath_topo.config(fg="red", text="Set topo input directory")
+                showinfo("WARNING", "Cannot find DEM GeoTIFF:\n" + self.in_topo + "DEM required")
+            self.l_inpath_topo.config(fg="red", text="Set DEM input directory")
         if os.path.exists(self.in_feat):
             self.l_inpath_feat.config(fg="forest green", text=str(self.in_feat))
         else:
             self.l_inpath_feat.config(text="No alternative feature input directory provided.")
         self.enable_mterrain()
 
-    def myquit(self):
-        if askokcancel("Close", "Do you really wish to quit?"):
-            tk.Frame.quit(self)
-
-    def run_modification(self):
+    def run_modification(self, feat):
         showinfo("INFORMATION",
                  " Analysis takes a while.\nPython windows seem unresponsive in the meanwhile.\nCheck console messages.\n\nPRESS OK TO START")
         if not self.verified:
@@ -305,34 +149,38 @@ class MainGui(tk.Frame):
         if self.verified:
             modification = cMT.ModifyTerrain(condition=self.condition, unit_system=self.unit,
                                              feature_ids=self.feature_id_list, topo_in_dir=self.in_topo,
-                                             feat_in_dir=self.in_feat, reach_ids=self.reach_ids_applied)
+                                             feat_in_dir=feat, reach_ids=self.reach_ids_applied)
             modification()
             self.prevent_popup = True
 
             self.master.bell()
             tk.Button(self, width=25, bg="pale green", text="Terrain modification finished. Click to quit.",
-                      command=lambda: self.myquit()).grid(sticky=tk.EW, row=8, column=0, columnspan=5,
-                                                          padx=self.xd, pady=self.yd)
+                      command=lambda: self.quit_tab()).grid(sticky=tk.EW, row=8, column=0, columnspan=2,
+                                                            padx=self.xd, pady=self.yd)
 
-    def show_credits(self):
-        showinfo("Credits", fG.get_credits())
+    def run_rb(self):
+        rb = cRB.RiverBuilder(self.units)
+        rb.run_riverbuilder(self.rb_inp_file)
 
-    def unit_change(self):
-        if self.unit == "si":
-            new_unit = "us"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-            self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to U.S. customary.")
-        else:
-            new_unit = "si"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[             ]  U.S. customary", command=lambda: self.unit_change())
-            self.unitmenu.add_command(label="[current]  SI (metric)", background="pale green")
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to SI (metric).")
-        self.unit = new_unit
+    def select_condition(self):
+        try:
+            items = self.lb_condition.curselection()
+            self.condition = [self.condition_list[int(item)] for item in items][0]
+            input_dir = self.dir2ra + "01_Conditions\\" + str(self.condition)
+            if os.path.exists(input_dir) or self.mapping:
+                self.b_s_condition.config(fg="forest green", text="Selected:\n" + self.condition)
+                self.condition_selected = True
+                self.set_inpath()
+                return ""
+            else:
+                self.b_s_condition.config(fg="red", text="ERROR")
+                self.errors = True
+                self.verified = False
+                return "Invalid file structure (non-existent directory /01_Conditions/CONDITION/)."
+        except:
+            self.errors = True
+            self.verified = False
+            return "Invalid entry for \'Condition\'."
 
     def verify(self, *args):
         # args[0] = True limits verification to condition only
@@ -346,6 +194,7 @@ class MainGui(tk.Frame):
         if full_check:
             try:
                 import cModifyTerrain
+                import cRiverBuilder
             except:
                 error_msg.append("Check installation of modify_terrain package.")
                 self.verified = False
@@ -366,9 +215,3 @@ class MainGui(tk.Frame):
 
     def __call__(self):
         self.mainloop()
-
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    print("Loading GUI (ModifyTerrain) ...")
-    MainGui().mainloop()

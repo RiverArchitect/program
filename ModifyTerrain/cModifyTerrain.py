@@ -29,7 +29,7 @@ class ModifyTerrain:
         self.condition = condition
         self.current_reach_id = ""
         self.logger = logging.getLogger("logfile")
-        self.output_ras_dir = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Rasters\\" + str(condition) + "\\"
+        self.output_ras_dir = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\ThresholdRivers\\" + str(condition) + "\\"
         fG.chk_dir(self.output_ras_dir)
         fG.clean_dir(self.output_ras_dir)
         self.raster_dict = {}
@@ -66,15 +66,6 @@ class ModifyTerrain:
             self.units = "us"
             self.logger.info("WARNING: Invalid unit_system identifier. unit_system must be either \'us\' or \'si\'.")
             self.logger.info("         Setting unit_system default to \'us\'.")
-
-        if self.units == "us":
-            self.convert_volume_to_cy = 0.037037037037037037037037037037037  #ft3 -> cy: float((1/3)**3)
-            self.unit_info = " cubic yard"
-            self.volume_threshold = 0.99
-        else:
-            self.convert_volume_to_cy = 1.0
-            self.unit_info = " cubic meter"
-            self.volume_threshold = 0.30
 
         # get RASTERS from 01_Conditions folder
         try:

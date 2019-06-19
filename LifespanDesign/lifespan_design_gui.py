@@ -9,10 +9,11 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
+    import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import cDefinitions as cDef
-    import fGlobal as fG
+    import fGlobal as fGl
     import cReachManager as cRM
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py, RP/cDefinitions.py, RP/cReachManager).")
@@ -90,43 +91,26 @@ class RunGui:
                     pass
 
 
-class FaGui(tk.Frame):
-    def __init__(self, master=None):
+class FaGui(sg.RaModuleGui):
+    def __init__(self, from_master):
+        sg.RaModuleGui.__init__(self, from_master)
+        self.ww = 700  # window width
+        self.wh = 490  # window height
+        self.title = "Lifespan Design"
+        self.set_geometry(self.ww, self.wh, self.title)
 
-        self.path = r"" + os.path.dirname(os.path.abspath(__file__))
-        self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        self.logger = logging.getLogger("logfile")
-
-        self.condition = ""
-        self.condition_list = fG.get_subdir_names(self.path_lvl_up + "\\01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
         self.condition_selected = False
-        self.errors = False
+
         self.feature_list = []
         self.features = cDef.FeatureDefinitions(False)
         self.habitat = False
         self.manning_n = 0.0473934
         self.mapping = False
-        self.mt_template_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..')) + "\\ModifyTerrain\\.templates\\"
         self.out_lyt_dir = []
         self.out_ras_dir = []
-        self.reaches = cDef.ReachDefinitions()
-        self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
-        self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
-        self.reach_lookup_needed = False
-        self.reach_reader = cRM.Read()
-        self.unit = "us"
-        self.verified = False
+
         self.wild = False
-
-        # Construct the Frame object.
-        tk.Frame.__init__(self, master)
-        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
-        if __name__ != '__main__':
-            self.master = self.winfo_toplevel()
-        self.pack(expand=True, fill=tk.BOTH)
-
-        self.set_geometry()
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -177,7 +161,7 @@ class FaGui(tk.Frame):
         self.b_n = tk.Button(self, width=25, bg="white", text="Change / Info", command=lambda: self.set_n())
         self.b_n.grid(sticky=tk.W, row=10, column=2, columnspan=5, padx=self.xd, pady=self.yd)
 
-        self.make_menu()
+        self.complete_menus()
 
         # CHECK BOXES(CHECKBUTTONS)
         self.cb_lyt = tk.Checkbutton(self, text="Include mapping after raster preparation", command=lambda:
@@ -195,27 +179,7 @@ class FaGui(tk.Frame):
         self.cb_extent.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.cb_extent.select()
 
-    def set_geometry(self):
-        # ARRANGE GEOMETRY
-        # width and height of the window.
-        self.ww = 700
-        self.wh = 490
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # height and location
-        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
-        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
-        if __name__ == '__main__':
-            self.master.title("Lifespan Design")  # window title
-            self.master.iconbitmap(self.path_lvl_up + "\\.site_packages\\templates\\code_icon.ico")
-
-    def make_menu(self):
-        # DROP DOWN MENU
-        # menu does not need packing - see tkinter manual page 44ff
-        self.mbar = tk.Menu(self.master)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
-
+    def complete_menus(self):
         # FEATURE DROP DOWN
         self.featmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Add Features", menu=self.featmenu)  # attach it to the menubar
@@ -226,7 +190,7 @@ class FaGui(tk.Frame):
         self.reach_lookup_needed = False
         self.reachmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Reaches", menu=self.reachmenu)  # attach it to the menubar
-        self.build_reach_menu()
+        self.reachmenu = self.make_reach_menu(self.reachmenu)
 
         # RUN DROP DOWN
         self.runmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
@@ -234,50 +198,6 @@ class FaGui(tk.Frame):
         self.runmenu.add_command(label="Verify settings", command=lambda: self.verify())
         self.runmenu.add_command(label="Run: Raster Maker", command=lambda: self.run_raster_maker())
         self.runmenu.add_command(label="Run: Map Maker", command=lambda: self.run_map_maker())
-
-        # UNIT SYSTEM DROP DOWN
-        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
-        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
-
-    def add_reach(self, reach):
-        if str(reach).__len__() < 1:
-            # appends all available reaches
-            self.reach_names_applied = fG.dict_values2list(self.reaches.name_dict.values())
-            self.reach_ids_applied = fG.dict_values2list(self.reaches.id_dict.values())
-            self.reach_names_applied.remove("Raster extents")
-            self.reach_ids_applied.remove("none")
-            label_text = "All"
-            self.l_reaches.config(fg="dark slate gray", text=label_text)
-        else:
-            if not(reach == "clear"):
-                if not (reach == "ignore"):
-                    if not(reach in self.reach_names_applied):
-                        self.reach_names_applied.append(self.reaches.name_dict[reach])
-                        self.reach_ids_applied.append(self.reaches.id_dict[reach])
-                else:
-                    # ignore reaches
-                    self.reach_names_applied = ["Raster extents"]
-                    self.reach_ids_applied = ["none"]
-                if self.reach_names_applied.__len__() > 6:
-                    if self.reach_names_applied.__len__() == 8:
-                        label_text = "All"
-                    else:
-                        label_text = "Multiple (> 6)"
-                else:
-                    label_text = ", ".join(self.reach_names_applied)
-                self.l_reaches.config(fg="dark slate gray", text=label_text)
-            else:
-                self.reach_names_applied = []
-                self.reach_ids_applied = []
-                self.l_reaches.config(fg="red", text="Select from \'Reaches\' Menu")
 
     def build_feat_menu(self):
         self.featmenu.add_command(label="Add: ALL", command=lambda: self.define_feature(""))
@@ -291,37 +211,6 @@ class FaGui(tk.Frame):
         self.featmenu.add_command(label="Group layer: Bioengineering", command=lambda: self.define_feature("toolbox"))
         self.featmenu.add_command(label="Group layer: Connectivity", command=lambda: self.define_feature("complementary"))
         self.featmenu.add_command(label="CLEAR ALL", command=lambda: self.define_feature("clear"))
-
-    def build_reach_menu(self):
-        if not self.reach_lookup_needed:
-            self.reachmenu.add_command(label="DEFINE REACHES", command=lambda: self.define_reaches())
-            self.reachmenu.add_command(label="RE-BUILD MENU", command=lambda: self.build_reach_menu())
-            self.reachmenu.add_command(label="_____________________________")
-            self.reachmenu.add_command(label="ALL", command=lambda: self.add_reach(""))
-            self.reachmenu.add_command(label="IGNORE (Use Raster extents)", command=lambda: self.add_reach("ignore"))
-            self.reachmenu.add_command(label="CLEAR ALL", command=lambda: self.add_reach("clear"))
-            self.reachmenu.add_command(label="_____________________________")
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_00"], command=lambda: self.add_reach("reach_00"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_01"], command=lambda: self.add_reach("reach_01"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_02"], command=lambda: self.add_reach("reach_02"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_03"], command=lambda: self.add_reach("reach_03"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_04"], command=lambda: self.add_reach("reach_04"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_05"], command=lambda: self.add_reach("reach_05"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_06"], command=lambda: self.add_reach("reach_06"))
-            self.reachmenu.add_command(label=self.reaches.name_dict["reach_07"], command=lambda: self.add_reach("reach_07"))
-            self.reach_lookup_needed = True
-        else:
-            # re-build reach names if spreadsheet was modified
-            self.reaches.names_xlsx = self.reach_reader.get_reach_info("full_name")
-            self.reaches.name_dict = dict(zip(self.reaches.internal_id, self.reaches.names_xlsx))
-            self.reachmenu.entryconfig(7, label=self.reaches.name_dict["reach_00"])
-            self.reachmenu.entryconfig(8, label=self.reaches.name_dict["reach_01"])
-            self.reachmenu.entryconfig(9, label=self.reaches.name_dict["reach_02"])
-            self.reachmenu.entryconfig(10, label=self.reaches.name_dict["reach_03"])
-            self.reachmenu.entryconfig(11, label=self.reaches.name_dict["reach_04"])
-            self.reachmenu.entryconfig(12, label=self.reaches.name_dict["reach_05"])
-            self.reachmenu.entryconfig(13, label=self.reaches.name_dict["reach_06"])
-            self.reachmenu.entryconfig(14, label=self.reaches.name_dict["reach_07"])
 
     def define_feature(self, feature_name):
         if feature_name.__len__() < 1:
@@ -356,13 +245,6 @@ class FaGui(tk.Frame):
                 self.l_features.config(fg="red",
                                        text="Choose from \'Add Features\' Menu (required for Raster Maker only)")
 
-    def define_reaches(self):
-        try:
-            webbrowser.open(self.mt_template_dir + "computation_extents.xlsx")
-            self.reach_lookup_needed = True  # tells build_reachmenu that lookup of modified spreasheet info is needed
-        except:
-            showinfo("ERROR", "Cannot open the file\n" + self.mt_template_dir + "computation_extents.xlsx")
-
     def mod_habitat(self):
         if not self.habitat:
             self.habitat = True
@@ -381,21 +263,16 @@ class FaGui(tk.Frame):
         else:
             self.wild = False
 
-    def myquit(self):
-        if askokcancel("Close", "Do you really wish to quit?"):
-            tk.Frame.quit(self)
-
     def open_inp_file(self, filename, *args):
         # args[0] = STR indicating other modules
         try:
             if str(args[0]) == "MT":
-                _f = r'' + os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), '..')) + "\\ModifyTerrain\\.templates\\" + filename
+                _f = self.reach_template_dir + filename
             else:
-                _f = self.path_lvl_up + "\\01_Conditions\\" + self.condition + "\\" + filename
+                _f = self.dir2ra + "01_Conditions\\" + self.condition + "\\" + filename
         except:
             try:
-                _f = self.path_lvl_up + "\\01_Conditions\\" + self.condition + "\\" + filename
+                _f = self.dir2ra + "01_Conditions\\" + self.condition + "\\" + filename
             except:
                 _f = None
 
@@ -457,7 +334,7 @@ class FaGui(tk.Frame):
         run = RunGui(self)
         if self.out_ras_dir.__len__() < 1:
             showinfo("INFORMATION", "Choose folder that contains lifespan and design rasters.")
-            self.out_ras_dir = [askdirectory(initialdir=self.path + "/Output/") + "/"]
+            self.out_ras_dir = [askdirectory(initialdir=self.dir2lf + "Output/") + "/"]
         if not self.reach_ids_applied.__len__() < 1:
             self.out_lyt_dir = run.gui_map_maker(self.out_ras_dir, self.reach_ids_applied)
         else:
@@ -488,7 +365,7 @@ class FaGui(tk.Frame):
         try:
             items = self.lb_condition.curselection()
             self.condition = [self.condition_list[int(item)] for item in items][0]
-            input_dir = self.path_lvl_up + "\\01_Conditions\\" + str(self.condition)
+            input_dir = self.dir2ra + "01_Conditions\\" + str(self.condition)
             if os.path.exists(input_dir) or self.mapping:
                 self.b_v_condition.config(fg="forest green", text="Selected:\n" + self.condition)
                 self.b_mod_r["state"] = "normal"
@@ -503,26 +380,6 @@ class FaGui(tk.Frame):
             self.errors = True
             self.verified = False
             return "Invalid entry for \'Condition\'."
-
-    def show_credits(self):
-        showinfo("Credits", fG.get_credits())
-
-    def unit_change(self):
-        if self.unit == "si":
-            new_unit = "us"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-            self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to U.S. customary.")
-        else:
-            new_unit = "si"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[             ]  U.S. customary", command=lambda: self.unit_change())
-            self.unitmenu.add_command(label="[current]  SI (metric)", background="pale green")
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to SI (metric).\n\nThreshold values need separate definition in threshold_values.xlsx (click button \'Modify survival threshold values\').")
-        self.unit = new_unit
 
     def verify(self, *args):
         # args[0] = True limits verification to condition only
@@ -573,8 +430,3 @@ class FaGui(tk.Frame):
 
     def __call__(self):
         self.mainloop()
-
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    FaGui().mainloop()

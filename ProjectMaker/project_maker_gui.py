@@ -12,14 +12,23 @@ try:
     import s21_plantings_stabilization as s21
     import s40_compare_sharea as s40
 
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
+    import slave_gui as sg
+
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fG
 except:
     print("ERROR: Missing sub routines (cannot access python files in subfolder).")
 
 
-class MainGui(tk.Frame):
-    def __init__(self, master=None):
+class MainGui(sg.RaModuleGui):
+    def __init__(self, from_master):
+        sg.RaModuleGui.__init__(self, from_master)
+        self.ww = 740  # window width
+        self.wh = 990  # window height
+        self.title = "Project Maker"
+        self.set_geometry(self.ww, self.wh, self.title)
+
         self.condition_i_list = []
         self.condition_p_list = []
         self.condition_pl_list = []
@@ -28,33 +37,24 @@ class MainGui(tk.Frame):
         self.condition_proj = ""
 
         self.dir2prj = ""  #os.path.dirname(os.path.abspath(__file__)) + "\\Geodata\\"
-        self.dir = os.path.dirname(os.path.abspath(__file__)) + "\\"
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
-        self.dir2AP = self.dir2ra + "MaxLifespan\\Products\\Rasters\\"
+        self.dir2AP = self.dir2ml + "Products\\Rasters\\"
         self.fish = {}
         self.fish_applied = {}
         self.reach = ""
         self.site_name = ""
         self.stn = ""
-        self.unit = "us"
         self.vege_cr = float(0.0)
         self.version = ""
+        self.w_e = 14  # width of entries
+        self.w_lb = 20  # width of listboxes
         self.xlsx_file_name = ""
 
         self.get_condition_lists()
 
-        # Construct the Frame object.
-        tk.Frame.__init__(self, master)
-        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
-        if __name__ != '__main__':
-            self.master = self.winfo_toplevel()
-        self.pack(expand=True, fill=tk.BOTH)
         self.cover_app_pre = tk.BooleanVar()
         self.cover_app_post = tk.BooleanVar()
 
-        self.set_geometry()
-
-        self.make_menu()
+        self.complete_menus()
 
         # Create LABELS, ENTRIES and BUTTONS from LEFT to RIGHT and TOP-DOWN
         msg0 = "Welcome to the project maker GUI."
@@ -188,29 +188,7 @@ class MainGui(tk.Frame):
         self.b_s40_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s40"))
         self.b_s40_help.grid(sticky=tk.E, row=30, column=2, padx=self.xd, pady=self.yd)
 
-    def set_geometry(self):
-        # ARRANGE GEOMETRY
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # Width and height of the window
-        self.ww = 740
-        self.wh = 990
-        # Upper-left corner of the window
-        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
-        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
-        self.w_e = 14  # width of entries
-        self.w_lb = 20  # width of listboxes
-        # Set the height and location
-        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
-        # Give the window a title
-        if __name__ == '__main__':
-            self.master.title("Project Maker")
-            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
-
-    def make_menu(self):
-        # DROP DOWN MENUS
-        self.mbar = tk.Menu(self)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
+    def complete_menus(self):
         # FISH SPECIES-LIFESTAGE DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Aquatic Ambiance",
@@ -218,16 +196,6 @@ class MainGui(tk.Frame):
         self.fishmenu.add_command(label="VARIABLES REQUIRED", foreground="gray50",
                                   command=lambda: self.help_info("fish"))
         self.rebuild_fish_menu = False
-        # UNIT SYSTEM DROP DOWN
-        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
-        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def get_condition_lists(self):
         self.condition_i_list = []  # reset pre-project condition list
@@ -235,13 +203,13 @@ class MainGui(tk.Frame):
         self.condition_pl_list = []  # reset plant condition list
         self.condition_tbx_list = []  # reset tbx condition list
 
-        dir2HE = self.dir2ra + "SHArC\\CHSI\\"
+        dir2HE = self.dir2sh + "CHSI\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
         for f in full_list:
             self.condition_i_list.append(str(f))  # pre-project propositions
             self.condition_p_list.append(str(f))  # post-project propositions
 
-        dir2AP = self.dir2ra + "MaxLifespan\\Products\\Rasters\\"
+        dir2AP = self.dir2ml + "Products\\Rasters\\"
         ap_list = [d for d in os.listdir(dir2AP) if os.path.isdir(os.path.join(dir2AP, d))]
         for f in ap_list:
             if ("plant" in str(f).lower()) or ("lyr20" in str(f).lower()):
@@ -333,7 +301,7 @@ class MainGui(tk.Frame):
         # requires that self.dir2prj was updated before
         self.xlsx_file_name = self.reach + "_" + self.stn + "_assessment_" + self.version + ".xlsx"
         if not(os.path.exists(self.dir2prj)):
-            shutil.copytree(self.dir + ".templates\\REACH_stn_vii_TEMPLATE\\", self.dir2prj)
+            shutil.copytree(self.dir2pm + ".templates\\REACH_stn_vii_TEMPLATE\\", self.dir2prj)
             os.rename(self.dir2prj + "REACH_stn_assessment_vii.xlsx", self.dir2prj + self.xlsx_file_name)
             return "New project assessment folder created."
         else:
@@ -348,9 +316,6 @@ class MainGui(tk.Frame):
                     return "Project assessment workbook created."
                 except:
                     return "A PROBLEM OCCURRED: Ensure that " + self.dir2prj + self.xlsx_file_name + " exists."
-
-    def myquit(self):
-        tk.Frame.quit(self)
 
     def select_condition(self, condition_type):
         if condition_type == "chsi_initial":
@@ -388,9 +353,6 @@ class MainGui(tk.Frame):
             self.b_show_fish.config(fg="forest green")
             showinfo("Fish added", "All available species added.")
 
-    def show_credits(self):
-        showinfo("Credits", fG.get_credits())
-
     def start_app(self, app_name):
         # app_name = STR
         c_msg1 = "Background calcluation (check console window).\n\n"
@@ -404,7 +366,7 @@ class MainGui(tk.Frame):
                 if (condition_pl.__len__() < 1) or (str(condition_pl) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_pl = self.dir2ra + "MaxLifespan\\Products\\Rasters\\" + condition_pl + "\\"
+                dir2AP_pl = self.dir2ml + "Products\\Rasters\\" + condition_pl + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s20.main(dir2AP_pl, self.reach, self.stn, self.unit, self.version)
                 self.b_s20.config(text="Delineate plantings OK", fg="forest green")
@@ -418,7 +380,7 @@ class MainGui(tk.Frame):
                 if (condition_tbx.__len__() < 1) or (str(condition_tbx) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_tbx = self.dir2ra + "MaxLifespan\\Products\\Rasters\\" + condition_tbx + "\\"
+                dir2AP_tbx = self.dir2ml + "Products\\Rasters\\" + condition_tbx + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s21.main(dir2AP_tbx, self.vege_cr, self.reach, self.stn, self.unit, self.version)
                 self.b_s21.config(text="Stabilize plantings OK", fg="forest green")
@@ -462,7 +424,7 @@ class MainGui(tk.Frame):
             error_msges.append("Site short name must consist of three small letters (letter1 + letter2 + letter3).")
         if self.vege_cr == 0.01:
             error_msges.append("Minimum survival threshold for plants must be a float number in years.")
-        if not os.path.isdir(self.dir2ra + "MaxLifespan\\Products\\"):
+        if not os.path.isdir(self.dir2ml + "Products\\"):
             error_msges.append("Check path to RiverArchitect package and its subdirectory MaxLifespan/Products.")
 
         if error_msges.__len__() > 0:
@@ -496,23 +458,6 @@ class MainGui(tk.Frame):
                 sol1 = "\n\n >> Verify that the workbook exists in " + self.dir2prj
                 sol2 = "\n\n >> Ensure that a standard application is defined for opening workbooks."
                 showinfo("ERROR", "Could not open " + self.xlsx_file_name + "." + sol1 + sol2)
-
-    def unit_change(self):
-        if self.unit == "si":
-            new_unit = "us"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-            self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to U.S. customary.")
-        else:
-            new_unit = "si"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[             ]  U.S. customary", command=lambda: self.unit_change())
-            self.unitmenu.add_command(label="[current]  SI (metric)", background="pale green")
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to SI (metric).")
-        self.unit = new_unit
 
     def update_condition_lb(self, condition_type):
         if condition_type == "init":
@@ -557,8 +502,3 @@ class MainGui(tk.Frame):
 
     def __call__(self):
         self.mainloop()
-
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    MainGui().mainloop()

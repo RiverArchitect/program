@@ -675,7 +675,7 @@ class CovHSI(HHSI):
             if not self.error:
                 self.logger.info(" >> " + self.cover_type + " cover HSI raster creation " + str(species).upper() + " complete.")
             else:
-                self.logger.info(" >> Could not create cover HSI raster. Check error messages.")
+                self.logger.info(" >> Could not create cover HSI raster. Check errors messages.")
 
         arcpy.CheckInExtension('Spatial')
 

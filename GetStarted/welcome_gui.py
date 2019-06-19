@@ -8,26 +8,21 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
+    import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
 
-class MainGui(tk.Frame):
-    def __init__(self, master=None):
-
-        self.path = r"" + os.path.dirname(os.path.abspath(__file__))
-        self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-        # Construct the Frame object
-        tk.Frame.__init__(self, master)
-        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
-        if __name__ != '__main__':
-            self.master = self.winfo_toplevel()
-        self.pack(expand=True, fill=tk.BOTH)
-        self.set_geometry()
+class MainGui(sg.RaModuleGui):
+    def __init__(self, from_master):
+        sg.RaModuleGui.__init__(self, from_master)
+        self.ww = 700
+        self.wh = 490
+        self.title = "Get Started"
+        self.set_geometry(self.ww, self.wh, self.title)
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -52,7 +47,6 @@ class MainGui(tk.Frame):
         self.b_make_inp = tk.Button(self, width=30, bg="white", text="Make Input File", command=lambda: self.make_inp())
         self.b_make_inp.grid(sticky=tk.EW, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
-        self.make_menu()
 
         # MAKE PLACEHOLDER FILL
         logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\welcome.gif")
@@ -64,33 +58,6 @@ class MainGui(tk.Frame):
         # Add credits
         self.l_credits = tk.Label(self, fg="gray50", text=fGl.get_credits(), justify=LEFT)
         self.l_credits.grid(sticky=tk.E, row=8, column=0, rowspan=3, columnspan=2, padx=self.xd, pady=self.yd)
-
-    def set_geometry(self):
-        # ARRANGE GEOMETRY
-        # width and height of the window.
-        self.ww = 700
-        self.wh = 490
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # height and location
-        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
-        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
-        if __name__ == '__main__':
-            self.master.title("Lifespan Design")  # window title
-            self.master.iconbitmap(self.path_lvl_up + "\\.site_packages\\templates\\code_icon.ico")
-
-    def make_menu(self):
-        # DROP DOWN MENU
-        # menu does not need packing - see tkinter manual page 44ff
-        self.mbar = tk.Menu(self.master)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
-
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def analyze_Q(self):
         try:
@@ -124,9 +91,6 @@ class MainGui(tk.Frame):
         self.b_create_sub_c["state"] = "disabled"
         self.master.wait_window(new_window.top)
         self.b_create_sub_c["state"] = "normal"
-
-    def create_Q(self):
-        pass
 
     def make_inp(self):
         try:

@@ -1,0 +1,292 @@
+# Please provide input for the following parameters.
+
+
+
+###############
+
+#### NOTES ####
+
+###############
+
+
+
+# - All dimensional numbers are in units of meters.
+
+# - User-defined functions may be used for sub-reach variability parameters only.
+
+
+
+####################
+
+#### GUIDELINES ####
+
+####################
+
+
+
+# To ensure the program functions correctly, please abide by the following:
+
+
+
+# - Do not leave any parameters blank.
+
+
+
+# - Do not produce spaces between:
+
+# (1) the parameter/function name and '='
+
+# (2) '=' and the input.
+
+
+
+# - Do not change the ordering of the domain, dimensionless, channel, and floodplain sections and parameters.
+
+
+
+# - When providing an input involving PI, do so in the form of (a*)PI(/b), where a and b are constants, and the parenthesized fragments are optional. (EX: 2*PI, PI, PI/6, 3*PI/4)
+
+
+
+# - If the cross sectional shape is the asymmetric U, the first channel alignment function parameter MUST be a sine function.
+
+
+
+# - Bankfull depth can either be (A) user-defined or (B) calculated from the Critical Shields Stress and Median Sediment Size.
+
+
+####################################
+
+#### DOMAIN PARAMETERS (METERS) ####
+
+####################################
+
+
+
+Datum=65.7
+
+
+
+Length=350
+
+
+
+X Resolution=0.5
+
+
+
+Channel XS Points=25
+
+
+
+##################################
+
+#### DIMENSIONLESS PARAMETERS ####
+
+##################################
+
+
+
+Valley Slope (Sv)=0.005
+
+
+
+Critical Shields Stress (t*50)=0.047
+
+
+
+
+#####################################
+
+#### CHANNEL PARAMETERS (METERS) ####
+
+#####################################
+
+
+
+Bankfull Width (Wbf)=20
+
+
+
+Bankfull Width Minimum=10
+
+
+
+Bankfull Depth (Hbf, A)=7
+
+
+
+Median Sediment Size (D50)=0.0965
+
+
+
+########################################
+
+#### FLOODPLAIN PARAMETERS (METERS) ####
+
+########################################
+
+
+Floodplain Width=0
+
+
+
+Outer Floodplain Edge Height=0
+
+
+
+Terrace Width=0
+
+
+
+Outer Terrace Edge Height=0
+
+
+
+Boundary Width=0
+
+
+
+###############################
+
+#### CROSS SECTIONAL SHAPE ####
+
+###############################
+
+
+
+# AU = asymmetric U
+
+# SU = symmetric U
+
+# TZ(n) = triangle, trapezoid, rectangle
+
+#	n is the number of edges along the
+
+#	trapezoidal base of the cross section
+
+#	such that 0 <= n <= Channel XS Points
+
+#
+
+# Triangle: n = 0
+
+# Trapezoid: 1 <= n <= (Channel XS Points - 2)
+
+# Rectangle: (Channel XS Points - 3) <= n <= (Channel XS Points) 
+
+
+
+Cross-Sectional Shape=SU
+
+
+
+################################
+
+#### USER-DEFINED FUNCTIONS ####
+
+################################
+
+
+
+# a = amplitude
+
+# f = frequency
+
+# ps = phase shift
+
+# w = wavelength
+
+#
+
+# Users may define their own functions to be any of the following: 
+
+# Sine function: SIN#=SIN(a, f, ps)
+
+# Cosine function: COS#=COS(a, f, ps)
+
+# Sine^2 function: SIN_SQ#=SIN_SQ(a, f, ps)
+
+# Linear function: LINE#=(slope, y-intercept)
+
+# Perlin function: PERL#=(a, w)
+
+
+
+SIN1=SIN(0, 1, 0)
+
+
+
+##########################################
+
+#### SUB-REACH VARIABILITY PARAMETERS ####
+
+##########################################
+
+
+
+# Meandering Centerline (Mc) Properties
+
+
+
+Meandering Centerline Function=SIN1
+
+
+
+
+
+
+
+# Centerline Curvature (Cs) Properties
+
+
+
+Centerline Curvature Function=SIN1
+
+
+
+
+
+
+
+# Bankfull Width (Wbf) Properties
+
+
+
+Bankfull Width Function=SIN1
+
+
+
+
+
+
+
+# Thalweg Elevation (Zt) Properties
+
+
+
+Thalweg Elevation Function=SIN1
+
+
+
+
+
+
+
+# Left Floodplain Properties
+
+
+
+Left Floodplain Function=SIN1
+
+
+
+
+
+
+
+# Right Floodplain Properties
+
+
+
+Right Floodplain Function=SIN1

@@ -10,8 +10,11 @@ except:
 try:
     sys.path.append(os.path.dirname(__file__) + "\\.site_packages\\riverpy\\")
     from cLogger import Logger
+    import cDefinitions as cDef
+    import cReachManager as cRM
+    import fGlobal as fGl
 except:
-    print("ERROR: Could not import Logger (riverpy).")
+    print("ERROR: Could not import riverpy.")
 try:
     import GetStarted
 except:
@@ -92,6 +95,7 @@ class RaGui(tk.Frame):
 
         self.tab_dirs = dict(zip(self.tab_names, self.tab_dir_names))
         self.tabs = dict(zip(self.tab_names, self.tab_list))
+        self.title = "River Architect"
 
         # sub tabs initialized, with parents being associated top-level tabs
         self.sub_tab_list = [[LifespanDesign.lifespan_design_gui.FaGui(self.tabs['Lifespan']),
@@ -131,8 +135,9 @@ class RaGui(tk.Frame):
         else:
             selected_tab = self.tabs[selected_tab_name]
             os.chdir(os.path.dirname(os.path.abspath(__file__)) + self.tab_dirs[selected_tab_name])
-        selected_tab.set_geometry()
-        selected_tab.make_menu()
+        selected_tab.set_geometry(selected_tab.ww, selected_tab.wh, selected_tab.title)
+        selected_tab.make_standard_menus()
+        selected_tab.complete_menus()
 
 
 if __name__ == '__main__':

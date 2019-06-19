@@ -10,13 +10,13 @@ except:
 
 try:
     # import own routines
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import cHSI as chsi
-    # load routines from LifespanDesign
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
+    import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import cFlows as cFl
     import cFish as cFi
-    import fGlobal as fG
+    import fGlobal as fGl
     import cInputOutput as cIO
     import cInterpolator as cIp
 except:
@@ -40,42 +40,33 @@ class PopUpWindow(object):
         self.top.destroy()
 
 
-class MainGui(tk.Frame):
-    def __init__(self, master=None):
-        self.logger = logging.getLogger("logfile")
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
+class MainGui(sg.RaModuleGui):
+    def __init__(self, from_master):
+        sg.RaModuleGui.__init__(self, from_master)
+        self.ww = 800  # window width
+        self.wh = 840  # window height
+        self.title = "SHArC"
+        self.set_geometry(self.ww, self.wh, self.title)
 
         self.bound_shp = ""  # full path of a boundary shapefile
         self.combine_method = "geometric_mean"
-        self.dir = os.path.dirname(os.path.abspath(__file__)) + "\\"
-        self.dir_conditions = self.dir + "HSI\\"
+        self.dir_conditions = self.dir2sh + "HSI\\"
         self.dir_inp_hsi_hy = ""
         self.dir_inp_hsi_cov = ""
         self.chsi_condition_hy = ""
         self.chsi_condition_cov = ""
-        self.condition_list = fG.get_subdir_names(self.dir_conditions)
+        self.condition_list = fGl.get_subdir_names(self.dir_conditions)
         self.cover_applies = False
-        self.error = False
         self.fish = cFi.Fish()
         self.fish_applied = {}
         self.max_columnspan = 5
-        self.unit = "us"
         self.sharea_threshold = 0.5
         self.side_pnl_width = 15
         self.xlsx_condition = []
 
-        # Construct the Frame object.
-        tk.Frame.__init__(self, master)
-        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
-        if __name__ != '__main__':
-            self.master = self.winfo_toplevel()
-
         self.apply_boundary = tk.BooleanVar()
         self.external_flow_series = tk.BooleanVar()
         self.cover_applies_sharea = tk.BooleanVar()
-        self.pack(expand=True, fill=tk.BOTH)
-
-        self.set_geometry()
 
         # LABELS
         self.l_side_bar = tk.Label(self, text="", bg="white", height=55, width=self.side_pnl_width + self.xd)
@@ -187,27 +178,9 @@ class MainGui(tk.Frame):
         self.b_qua["state"] = "disabled"
         self.b_quat["state"] = "disabled"
 
-        self.make_menu()
+        self.complete_menus()
 
-    def set_geometry(self):
-        # ARRANGE GEOMETRY
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # width and height of the window
-        self.ww = 800
-        self.wh = 840  # must be multiple of 10
-        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
-        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
-        if __name__ == '__main__':
-            self.master.title("Seasonal Habitat Area Calculator (SHArC)")  # window title
-            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
-
-    def make_menu(self):
-        # DROP DOWN MENU
-        self.mbar = tk.Menu(self)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
-
+    def complete_menus(self):
         # MAKE FISH SPECIES DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Select Aquatic Ambiance", menu=self.fishmenu)  # attach it to the menubar
@@ -229,19 +202,6 @@ class MainGui(tk.Frame):
         self.hsimenu.add_command(label="OTHER (COVER)", foreground="gray60")  # POTENTIAL ERROR SOURCE: "foreground"
         label_text = "> Substrate - Boulder - Cobble - Streamwood - Vegetation HSIs"
         self.hsimenu.add_command(label=label_text, foreground="gold4", command=lambda: self.start_app("mhsi_gui"))
-
-        # UNIT SYSTEM DROP DOWN
-        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
-        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Open logfile", command=lambda: self.open_log_file())
-        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
 
     def activate_shape_selection(self, button):
         if self.apply_boundary.get():
@@ -280,7 +240,7 @@ class MainGui(tk.Frame):
 
     def list_habitat_conditions(self):
         # update habitat conditions listbox
-        self.condition_list = fG.get_subdir_names(self.dir_conditions)
+        self.condition_list = fGl.get_subdir_names(self.dir_conditions)
         try:
             self.lb_condition_hy.delete(0, tk.END)
             self.lb_condition_cov.delete(0, tk.END)
@@ -335,7 +295,7 @@ class MainGui(tk.Frame):
     def make_qua(self, input_type):
         # input_type = STR either "statistic" or "time_series"
         xlsx_template = ""
-        self.error = False
+        self.errors = False
         interpolation_mger = cIp.Interpolator()
         if input_type == "time_series":
             xlsx_template = askopenfilename(initialdir=self.dir2ra + "00_Flows\\InputFlowSeries",
@@ -356,7 +316,7 @@ class MainGui(tk.Frame):
                 try:
                     self.logger.info(" > Creating Q - Area workbook for {0} - {1}".format(f_spec, ls))
                     fsn = str(f_spec).lower()[0:2] + str(ls).lower()[0:2]
-                    cxlsx = self.dir + "SHArea\\{0}_sharea_{1}.xlsx".format(condition, fsn)
+                    cxlsx = self.dir2sh + "SHArea\\{0}_sharea_{1}.xlsx".format(condition, fsn)
                     xlsx_tar_data = cIO.Read(cxlsx)
                     if input_type == "statistic":
                         Q_template = cFl.FlowAssessment()
@@ -370,18 +330,18 @@ class MainGui(tk.Frame):
                         Q_template.get_flow_duration_data_from_xlsx(xlsx_template)
                         dates = Q_template.exceedance_rel
                         flows = Q_template.Q_flowdur
-                        xlsx_out = self.dir + "SHArea\\{0}_QvsA_{1}_stats.xlsx".format(condition, fsn)
+                        xlsx_out = self.dir2sh + "SHArea\\{0}_QvsA_{1}_stats.xlsx".format(condition, fsn)
                     else:
                         self.logger.info("   * using flow time series (%s)" % xlsx_template)
                         Q_template = cFl.SeasonalFlowProcessor(xlsx_template)
                         dates = Q_template.date_column
                         flows = Q_template.flow_column
-                        xlsx_out = self.dir + "SHArea\\{0}_QvsA_{1}_time.xlsx".format(condition, fsn)
+                        xlsx_out = self.dir2sh + "SHArea\\{0}_QvsA_{1}_time.xlsx".format(condition, fsn)
                     self.logger.info("   * interpolating SHArea ...")
                     interpolation_mger.assign_targets(xlsx_tar_data.read_float_column_short(col_Q, start_row),
                                                       xlsx_tar_data.read_float_column_short(col_UA, start_row))
                     UA_interp = interpolation_mger.linear_central(flows)
-                    writer = cIO.Write(self.dir + ".templates\\CONDITION_QvsA_template_{0}.xlsx".format(self.unit))
+                    writer = cIO.Write(self.dir2sh + ".templates\\CONDITION_QvsA_template_{0}.xlsx".format(self.unit))
                     self.logger.info("   * writing workbook %s ..." % xlsx_out)
                     writer.write_column("A", 3, flows)
                     writer.write_column("B", 3, UA_interp)
@@ -400,17 +360,13 @@ class MainGui(tk.Frame):
                         pass
                 except:
                     showinfo("ERROR", "Could not create Area analyses for{0} - {1}. \nRead console Error and Warning messages.".format(f_spec, ls))
-                    self.error = True
+                    self.errors = True
 
-        if not self.error:
-            webbrowser.open(self.dir + "SHArea\\")
-
-    def myquit(self):
-        self.open_log_file()
-        tk.Frame.quit(self)
+        if not self.errors:
+            webbrowser.open(self.dir2sh + "SHArea\\")
 
     def open_log_file(self):
-        logfilenames = ["error.log", "habitat_evaluation.log", "logfile.log", "map_logfile.log", "mxd_logfile.log"]
+        logfilenames = ["errors.log", "logfile.log"]
         for filename in logfilenames:
             _f = r'' + os.path.dirname(os.path.abspath(__file__)) + "\\" + filename
             if os.path.isfile(_f):
@@ -420,7 +376,7 @@ class MainGui(tk.Frame):
                     pass
 
     def select_boundary_shp(self):
-        self.bound_shp = askopenfilename(initialdir=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\",
+        self.bound_shp = askopenfilename(initialdir=self.dir2ra + "01_Conditions\\",
                                          title="Select boundary shapefile containing a rectangular polygon",
                                          filetypes=[("Shapefiles", "*.shp")])
         if os.path.isfile(self.bound_shp):
@@ -434,14 +390,14 @@ class MainGui(tk.Frame):
         msg1 = ".\n\n Flow data must be in Col. B (start at row 4).\n"
         msg2 = "Area data must be in Col. F (start at row 4)."
         showinfo("INFO", msg0 + msg1 + msg2)
-        self.xlsx_condition = [askopenfilename(initialdir=self.dir + "SHArea\\", title=msg0)]
+        self.xlsx_condition = [askopenfilename(initialdir=self.dir2sh + "SHArea\\", title=msg0)]
         self.cb_extq.config(text="Use external flow series (selected: %s)" % ", ".join(self.xlsx_condition))
 
     def select_HSIcondition(self, *args):
         if args[0] == "hy":
             items = self.lb_condition_hy.curselection()
             self.chsi_condition_hy = [self.condition_list[int(item)] for item in items][0]
-            self.dir_inp_hsi_hy = self.dir + "HSI\\" + str(self.chsi_condition_hy) + "\\"
+            self.dir_inp_hsi_hy = self.dir2sh + "HSI\\" + str(self.chsi_condition_hy) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_hy):
                 self.l_inpath_hy.config(fg="cyan4", text="Selected: " + str(self.dir_inp_hsi_hy))
@@ -450,15 +406,15 @@ class MainGui(tk.Frame):
 
             self.b_csi_nc["state"] = "normal"
             # update SHArea buttons
-            if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_hy + "\\"):
+            if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\"):
                 self.b_sha_th["state"] = "normal"
-                if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
+                if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
                     self.b_sharc["state"] = "normal"
 
         if args[0] == "cov":
             items = self.lb_condition_cov.curselection()
             self.chsi_condition_cov = [self.condition_list[int(item)] for item in items][0]
-            self.dir_inp_hsi_cov = self.dir + "HSI\\" + str(self.chsi_condition_cov) + "\\"
+            self.dir_inp_hsi_cov = self.dir2sh + "HSI\\" + str(self.chsi_condition_cov) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_cov):
                 self.l_inpath_cov.config(fg="gold4", text="Selected: " + str(self.dir_inp_hsi_cov))
@@ -466,9 +422,9 @@ class MainGui(tk.Frame):
                 self.l_inpath_cov.config(fg="red", text="SELECTION ERROR                                       ")
             self.b_csi_c["state"] = "normal"
             # update SHArea buttons
-            if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_cov + "\\"):
+            if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\"):
                 self.b_sha_th["state"] = "normal"
-                if os.path.isdir(self.dir + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
+                if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
                     self.b_sharc["state"] = "normal"
                     self.cb_use_cov["state"] = "normal"
 
@@ -595,7 +551,7 @@ class MainGui(tk.Frame):
                 sharea.clear_cache()
 
                 if self.xlsx_condition.__len__() > 0:
-                    webbrowser.open(self.dir + "SHArea\\")
+                    webbrowser.open(self.dir2sh + "SHArea\\")
                     self.b_qua["state"] = "normal"
                     self.b_quat["state"] = "normal"
                 else:
@@ -607,30 +563,5 @@ class MainGui(tk.Frame):
             msg = "CONFIRM HABITAT CONDITION !"
             showinfo("ERROR", msg)
 
-    def show_credits(self):
-        showinfo("Credits", fG.get_credits())
-
-    def unit_change(self):
-        if self.unit == "si":
-            new_unit = "us"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-            self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to U.S. customary.")
-        else:
-            new_unit = "si"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[             ]  U.S. customary", command=lambda: self.unit_change())
-            self.unitmenu.add_command(label="[current]  SI (metric)", background="pale green")
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to SI (metric).")
-        self.unit = new_unit
-
     def __call__(self):
         self.mainloop()
-
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    MainGui().mainloop()

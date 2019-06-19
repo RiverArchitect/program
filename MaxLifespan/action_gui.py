@@ -8,17 +8,16 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 
 try:
-    # load function from LifespanDesign
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
+    import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fG
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py).")
 
 
 class RunGui:
     def __init__(self, master):
-        self.path = r"" + os.path.dirname(os.path.abspath(__file__))
-
         # Construct the Frame object.
         self.master = tk.Toplevel(master)
         self.master.wm_title("RUNNING ... (console messages)")
@@ -54,35 +53,23 @@ class RunGui:
                 except:
                     pass
 
-
-class ActionGui(tk.Frame):
-    def __init__(self, master=None):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
+class ActionGui(sg.RaModuleGui):
+    def __init__(self, from_master):
+        sg.RaModuleGui.__init__(self, from_master)
+        self.ww = 570  # window width
+        self.wh = 400  # window height
+        self.title = "Max Lifespan"
+        self.set_geometry(self.ww, self.wh, self.title)
+        
         self.dir_base_ras = "None (Geofile Maker only)"
-        self.path = r"" + os.path.dirname(os.path.abspath(__file__))
-        self.path2conditions = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\"
-        self.path2fa_rasters = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\Products\\Rasters\\"
+        self.dir2conditions = self.dir2ra + "01_Conditions\\"
+        self.dir2lf_rasters = self.dir2lf + "Products\\Rasters\\"
         self.feature_text = []
         self.feature_type = []
         self.condition = "set condition"
-        self.condition_list = fG.get_subdir_names(self.path2fa_rasters)
-        self.inpath = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\Products\\Rasters\\" + str(
-            self.condition) + "\\"
-        self.verified = False
-        self.errors = False
+        self.condition_list = fGl.get_subdir_names(self.dir2lf_rasters)
+        self.inpath = self.dir2lf + "Products\\Rasters\\" + str(self.condition) + "\\"
         self.mod_dir = False    # if user-defined input directory: True
-        self.unit = "us"
-        self.wild = False
-
-        # Construct the Frame object.
-        tk.Frame.__init__(self, master)
-        # if imported from master GUI, redefine master as highest level (ttk.Notebook tab container)
-        if __name__ != '__main__':
-            self.master = self.winfo_toplevel()
-        self.pack(expand=True, fill=tk.BOTH)
-        self.set_geometry()
 
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
@@ -110,7 +97,7 @@ class ActionGui(tk.Frame):
         self.sb_condition.config(command=self.lb_condition.yview)
 
         # ENTRIES
-        self.l_inpath_curr = tk.Label(self, fg="dark slate gray", text="Source: "+str(self.path2fa_rasters))
+        self.l_inpath_curr = tk.Label(self, fg="dark slate gray", text="Source: "+str(self.dir2lf_rasters))
         self.l_inpath_curr.grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
         # BUTTONS
@@ -127,11 +114,7 @@ class ActionGui(tk.Frame):
                                     command=lambda: self.set_base_ras())
         self.b_set_base.grid(sticky=tk.W, row=4, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
-        # # dummy label for arrangement
-        # self.l_dummy = tk.Label(self, text="                          ")
-        # self.l_dummy.grid(sticky=tk.W, row=2, column=4, padx=self.xd, pady=self.yd)
-
-        self.make_menu()
+        self.complete_menus()
 
         # CHECK BOXES (CHECKBUTTONS)
         self.cb_lyt = tk.Checkbutton(self, fg="SteelBlue", text="Create maps and layouts after making geofiles",
@@ -140,31 +123,12 @@ class ActionGui(tk.Frame):
         self.cb_lyt.select()  # select by default
 
     def set_base_ras(self):
-        self.dir_base_ras = askopenfilename(defaultextension=".tif", initialdir=self.path2conditions,
+        self.dir_base_ras = askopenfilename(defaultextension=".tif", initialdir=self.dir2conditions,
                                             filetypes=[("GeoTIFF files", "*.tif")])
         self.l_base_ras.config(fg="green4", text="Base raster: " + self.dir_base_ras)
         self.b_set_base.config(fg="green4")
 
-    def set_geometry(self):
-        # ARRANGE GEOMETRY
-        self.xd = 5  # distance holder in x-direction (pixel)
-        self.yd = 5  # distance holder in y-direction (pixel)
-        # width and height of the window
-        self.ww = 570
-        self.wh = 400
-        self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
-        self.wy = (self.master.winfo_screenheight() - self.wh) / 2
-        self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))  # set height and location
-        if __name__ == '__main__':
-            self.master.title("Max Lifespan")  # window title
-            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
-
-    def make_menu(self):
-        # DROP DOWN MENU
-        # menu does not need packing - see slide 44ff
-        self.mbar = tk.Menu(self)  # create new menubar
-        self.master.config(menu=self.mbar)  # attach it to the root window
-
+    def complete_menus(self):
         # FEATURE DROP DOWN
         self.featmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
         self.mbar.add_cascade(label="Feature layer", menu=self.featmenu)  # attach it to the menubar
@@ -172,7 +136,7 @@ class ActionGui(tk.Frame):
         self.featmenu.add_command(label="Group layer: Terraforming", command=lambda: self.define_feature("Terraforming"))
         self.featmenu.add_command(label="Group layer: Plantings", command=lambda: self.define_feature("Plantings"))
         self.featmenu.add_command(label="Group layer: Bioengineering", command=lambda: self.define_feature("Bioengineering"))
-        self.featmenu.add_command(label="Group layer: Maintenance", command=lambda: self.define_feature("Maintenance"))
+        self.featmenu.add_command(label="Group layer: Connectivity", command=lambda: self.define_feature("Maintenance"))
         self.featmenu.add_command(label="CLEAR", command=lambda: self.define_feature("clear"))
 
         # RUN DROP DOWN
@@ -182,20 +146,8 @@ class ActionGui(tk.Frame):
         self.runmenu.add_command(label="Run: Geofile Maker", command=lambda: self.run_geo_maker())
         self.runmenu.add_command(label="Run: Map Maker", command=lambda: self.run_map_maker())
 
-        # UNIT SYSTEM DROP DOWN
-        self.unitmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
-        self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-        self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-
-        # CLOSE DROP DOWN
-        self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Close", menu=self.closemenu)  # attach it to the menubar
-        self.closemenu.add_command(label="Credits", command=lambda: self.show_credits())
-        self.closemenu.add_command(label="Quit program", command=lambda: self.myquit())
-
     def condition_info(self):
-        msg = "The condition list refers to available rasters in\n" + self.path2fa_rasters + \
+        msg = "The condition list refers to available rasters in\n" + self.dir2lf_rasters + \
               "\n\nThe selected condition will be used for the maximum lifespan map generation."
         showinfo("CONDITION INFO", msg)
 
@@ -215,10 +167,6 @@ class ActionGui(tk.Frame):
             self.feature_type = []
             self.l_features.config(fg="red",
                                    text="Select from \'Feature layer\' Menu (Geofile Maker only)")
-
-    def myquit(self):
-        if askokcancel("Close", "Do you really wish to quit?"):
-            tk.Frame.quit(self)
 
     def open_inp_file(self, filename):
         _f = r'' + os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\" + filename
@@ -290,26 +238,6 @@ class ActionGui(tk.Frame):
             tk.Button(self, bg="pale green", width=50, text="IMPORTANT\n Read logfile(s)", command=lambda:
                       self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
-    def show_credits(self):
-        showinfo("Credits", fG.get_credits())
-
-    def unit_change(self):
-        if self.unit == "si":
-            new_unit = "us"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
-            self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to U.S. customary.")
-        else:
-            new_unit = "si"
-            self.unitmenu.delete(0, 1)
-            self.unitmenu.add_command(label="[             ]  U.S. customary", command=lambda: self.unit_change())
-            self.unitmenu.add_command(label="[current]  SI (metric)", background="pale green")
-            self.master.bell()
-            showinfo("UNIT CHANGE", "Unit system changed to SI (metric).")
-        self.unit = new_unit
-
     def verify(self, *args):
         # args[0] = True limits verification to condition only
         try:
@@ -347,7 +275,7 @@ class ActionGui(tk.Frame):
             items = self.lb_condition.curselection()
             self.condition = [self.condition_list[int(item)] for item in items][0]
             if not self.mod_dir:
-                self.inpath = r"" + self.path2fa_rasters + str(self.condition) + "\\"
+                self.inpath = r"" + self.dir2lf_rasters + str(self.condition) + "\\"
 
             self.l_inpath_curr.config(fg="forest green", text="Apply: " + str(self.inpath))
 
@@ -365,8 +293,3 @@ class ActionGui(tk.Frame):
 
     def __call__(self):
         self.mainloop()
-
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    ActionGui().mainloop()
