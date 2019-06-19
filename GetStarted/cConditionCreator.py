@@ -96,7 +96,7 @@ class ConditionCreator:
         if type_id == "fill":
             return "fill.tif"
         if (type_id == "h") or (type_id == "u"):
-            return input_raster_name + ".tif"
+            return os.path.splitext(input_raster_name)[0] + ".tif"
         if type_id == "dmean":
             return "dmean.tif"
         if type_id == "scour":
