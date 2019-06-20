@@ -1,0 +1,1 @@
+y-intercept must be defined for LINE user function: LINE=LINE#(s, y-intercept).

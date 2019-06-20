@@ -10,23 +10,23 @@ except:
 try:
     import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import cFish as cF
-    import fGlobal as fG
+    import config
+    import cFish as cFi
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
 
 class FlowAnalysis(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
         self.condition = ""
-        self.condition_list = fG.get_subdir_names(self.dir2ra + "01_Conditions\\")
-        self.dir2condition = '.'
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
+        self.dir2condition_act = '.'
         self.dir2dem = ''
         self.dir2h = ''
         self.dir2u = ''
-        self.eco_flow_type = cF.Fish()
+        self.eco_flow_type = cFi.Fish()
         self.eco_flow_type_applied = {}
         self.eco_flow_type_list = []
         self.flows_xlsx = ''
@@ -35,7 +35,7 @@ class FlowAnalysis(object):
 
         # define analysis type identifiers (default = False)
         self.bool_var = tk.BooleanVar()
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
         # width and height of the window.
@@ -74,7 +74,7 @@ class FlowAnalysis(object):
         self.l_1 = tk.Label(top, text="2) Generate Flow Duration Curves")
         self.l_1.grid(sticky=tk.W, row=6, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod = tk.Button(top, bg="white", text="Modify Source",
-                               command=lambda: self.modify_eco_flow_source)
+                               command=lambda: self.modify_eco_flow_source())
         self.b_mod.grid(sticky=tk.E, row=6, column=2, padx=self.xd, pady=self.yd)
         self.l_s_type = tk.Label(top, text="Add season / target species: ")
         self.l_s_type.grid(sticky=tk.W, row=7, rowspan=3, column=0, padx=self.xd, pady=self.yd)
@@ -86,7 +86,7 @@ class FlowAnalysis(object):
         self.b_sct = tk.Button(top, fg="firebrick3", width=self.col_0_width - 5, bg="white", text="Add",
                                command=lambda: self.select_eco_type())
         self.b_sct.grid(sticky=tk.E, row=7, rowspan=3, column=2, padx=self.xd, pady=self.yd)
-        self.l_ct_dir = tk.Label(top, text="Current selection: {0}".format(fG.print_dict(self.eco_flow_type_applied)))
+        self.l_ct_dir = tk.Label(top, text="Current selection: {0}".format(fGl.print_dict(self.eco_flow_type_applied)))
         self.l_ct_dir.grid(sticky=tk.W, row=10, column=0, columnspan=4, padx=self.xd, pady=self.yd)
 
         self.b_q_inp = tk.Button(top, width=self.col_0_width * 2, fg="firebrick3", bg="white",
@@ -110,14 +110,14 @@ class FlowAnalysis(object):
         self.top.destroy()
 
     def make_flow_duration(self):        
-        condition4input = cCC.ConditionCreator(self.dir2condition)
+        condition4input = cCC.ConditionCreator(self.dir2condition_act)
         if not self.flow_series_xlsx:
             self.select_flow_series_xlsx()
 
         flow_duration_xlsx = condition4input.create_flow_duration_table(self.flow_series_xlsx, self.eco_flow_type_applied)
         try:
             if not condition4input.error:
-                fG.open_file(flow_duration_xlsx)
+                fGl.open_file(flow_duration_xlsx)
                 self.b_q_dur.config(fg="forest green")
             else:
                 showinfo("ERROR", "Review error messages (console / logfile.log).")
@@ -149,17 +149,17 @@ class FlowAnalysis(object):
     def scan_condition(self):
         items = self.lb_condition.curselection()
         self.condition = str([self.condition_list[int(item)] for item in items][0])
-        self.dir2condition = self.dir2ra + "01_Conditions\\" + self.condition  # INFO: dir2condition may not end with "\\"!
-        if os.path.isfile(self.dir2condition + "\\flow_definitions.xlsx"):
+        self.dir2condition_act = config.dir2conditions + self.condition  # INFO: dir2new_condition may not end with "\\"!
+        if os.path.isfile(self.dir2condition_act + "\\flow_definitions.xlsx"):
             run = tk.messagebox.askyesno("Create new?",
-                                         "%s already exists.\nDo you want to create another flow_definitions.xlsx?" % self.dir2condition)
+                                         "%s already exists.\nDo you want to create another flow_definitions.xlsx?" % self.dir2condition_act)
         else:
             run = True
         if run:
-            condition4flows = cCC.ConditionCreator(self.dir2condition)
+            condition4flows = cCC.ConditionCreator(self.dir2condition_act)
             self.flows_xlsx = condition4flows.create_discharge_table()
 
-        self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2condition)
+        self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2condition_act)
         self.b_sc.config(fg="forest green", text="Analyzed")
         self.b_sct["state"] = "normal"
 
@@ -168,7 +168,7 @@ class FlowAnalysis(object):
                 msg0 = "Analysis complete.\n"
                 msg1 = "Complete discharge (flood) return periods in the discharges workbook."
                 showinfo("INFO", msg0 + msg1)
-                fG.open_file(self.flows_xlsx)
+                fGl.open_file(self.flows_xlsx)
             if run and condition4flows.error:
                 self.b_sc.config(fg="firebrick3", text="Analysis failed")
         except:
@@ -184,13 +184,13 @@ class FlowAnalysis(object):
             self.eco_flow_type_applied.update({f_spec: []})
         self.eco_flow_type_applied[f_spec].append(lfs)
         self.logger.info(" > Added: " + str(f_spec) + " - " + str(lfs))
-        self.l_ct_dir.config(text="Current selection: {0}".format(fG.print_dict(self.eco_flow_type_applied)),
+        self.l_ct_dir.config(text="Current selection: {0}".format(fGl.print_dict(self.eco_flow_type_applied)),
                              fg="forest green")
         self.b_sct.config(fg="forest green")
         self.b_q_inp["state"] = "normal"
 
     def select_flow_series_xlsx(self):
-        self.flow_series_xlsx = askopenfilename(initialdir=self.dir2ra + "00_Flows\\InputFlowSeries",
+        self.flow_series_xlsx = askopenfilename(initialdir=config.dir2flows + "\\InputFlowSeries",
                                                 title="Select flow series workbook (xlsx)",
                                                 filetypes=[("Workbooks", "*.xlsx")])
         b_text = str(self.flow_series_xlsx)

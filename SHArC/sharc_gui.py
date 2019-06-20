@@ -14,6 +14,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cFlows as cFl
     import cFish as cFi
     import fGlobal as fGl
@@ -25,7 +26,7 @@ except:
 
 class PopUpWindow(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
+        config.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
         self.l = tk.Label(top, text="Enter value:")
         self.l.pack()
@@ -33,7 +34,7 @@ class PopUpWindow(object):
         self.e.pack()
         self.b = tk.Button(top, text='OK', command=self.cleanup)
         self.b.pack()
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
     def cleanup(self):
         self.value = self.e.get()
@@ -50,7 +51,7 @@ class MainGui(sg.RaModuleGui):
 
         self.bound_shp = ""  # full path of a boundary shapefile
         self.combine_method = "geometric_mean"
-        self.dir_conditions = self.dir2sh + "HSI\\"
+        self.dir_conditions = config.dir2sh + "HSI\\"
         self.dir_inp_hsi_hy = ""
         self.dir_inp_hsi_cov = ""
         self.chsi_condition_hy = ""
@@ -298,7 +299,7 @@ class MainGui(sg.RaModuleGui):
         self.errors = False
         interpolation_mger = cIp.Interpolator()
         if input_type == "time_series":
-            xlsx_template = askopenfilename(initialdir=self.dir2ra + "00_Flows\\InputFlowSeries",
+            xlsx_template = askopenfilename(initialdir=config.dir2flows + "\\InputFlowSeries",
                                             title="Select flow series workbook (xlsx)",
                                             filetypes=[("Workbooks", "*.xlsx")])
 
@@ -316,7 +317,7 @@ class MainGui(sg.RaModuleGui):
                 try:
                     self.logger.info(" > Creating Q - Area workbook for {0} - {1}".format(f_spec, ls))
                     fsn = str(f_spec).lower()[0:2] + str(ls).lower()[0:2]
-                    cxlsx = self.dir2sh + "SHArea\\{0}_sharea_{1}.xlsx".format(condition, fsn)
+                    cxlsx = config.dir2sh + "SHArea\\{0}_sharea_{1}.xlsx".format(condition, fsn)
                     xlsx_tar_data = cIO.Read(cxlsx)
                     if input_type == "statistic":
                         Q_template = cFl.FlowAssessment()
@@ -325,23 +326,23 @@ class MainGui(sg.RaModuleGui):
                             cstr = "_cov.xlsx"
                         else:
                             cstr = ".xlsx"
-                        xlsx_template = self.dir2ra + "00_Flows\\" + condition + "\\flow_duration_" + fsn + cstr
+                        xlsx_template = config.dir2flows + condition + "\\flow_duration_" + fsn + cstr
                         self.logger.info("   * using flow duration curve (%s)" % xlsx_template)
                         Q_template.get_flow_duration_data_from_xlsx(xlsx_template)
                         dates = Q_template.exceedance_rel
                         flows = Q_template.Q_flowdur
-                        xlsx_out = self.dir2sh + "SHArea\\{0}_QvsA_{1}_stats.xlsx".format(condition, fsn)
+                        xlsx_out = config.dir2sh + "SHArea\\{0}_QvsA_{1}_stats.xlsx".format(condition, fsn)
                     else:
                         self.logger.info("   * using flow time series (%s)" % xlsx_template)
                         Q_template = cFl.SeasonalFlowProcessor(xlsx_template)
                         dates = Q_template.date_column
                         flows = Q_template.flow_column
-                        xlsx_out = self.dir2sh + "SHArea\\{0}_QvsA_{1}_time.xlsx".format(condition, fsn)
+                        xlsx_out = config.dir2sh + "SHArea\\{0}_QvsA_{1}_time.xlsx".format(condition, fsn)
                     self.logger.info("   * interpolating SHArea ...")
                     interpolation_mger.assign_targets(xlsx_tar_data.read_float_column_short(col_Q, start_row),
                                                       xlsx_tar_data.read_float_column_short(col_UA, start_row))
                     UA_interp = interpolation_mger.linear_central(flows)
-                    writer = cIO.Write(self.dir2sh + ".templates\\CONDITION_QvsA_template_{0}.xlsx".format(self.unit))
+                    writer = cIO.Write(config.dir2sh + ".templates\\CONDITION_QvsA_template_{0}.xlsx".format(self.unit))
                     self.logger.info("   * writing workbook %s ..." % xlsx_out)
                     writer.write_column("A", 3, flows)
                     writer.write_column("B", 3, UA_interp)
@@ -363,7 +364,7 @@ class MainGui(sg.RaModuleGui):
                     self.errors = True
 
         if not self.errors:
-            webbrowser.open(self.dir2sh + "SHArea\\")
+            webbrowser.open(config.dir2sh + "SHArea\\")
 
     def open_log_file(self):
         logfilenames = ["errors.log", "logfile.log"]
@@ -376,7 +377,7 @@ class MainGui(sg.RaModuleGui):
                     pass
 
     def select_boundary_shp(self):
-        self.bound_shp = askopenfilename(initialdir=self.dir2ra + "01_Conditions\\",
+        self.bound_shp = askopenfilename(initialdir=config.dir2conditions,
                                          title="Select boundary shapefile containing a rectangular polygon",
                                          filetypes=[("Shapefiles", "*.shp")])
         if os.path.isfile(self.bound_shp):
@@ -390,14 +391,14 @@ class MainGui(sg.RaModuleGui):
         msg1 = ".\n\n Flow data must be in Col. B (start at row 4).\n"
         msg2 = "Area data must be in Col. F (start at row 4)."
         showinfo("INFO", msg0 + msg1 + msg2)
-        self.xlsx_condition = [askopenfilename(initialdir=self.dir2sh + "SHArea\\", title=msg0)]
+        self.xlsx_condition = [askopenfilename(initialdir=config.dir2sh + "SHArea\\", title=msg0)]
         self.cb_extq.config(text="Use external flow series (selected: %s)" % ", ".join(self.xlsx_condition))
 
     def select_HSIcondition(self, *args):
         if args[0] == "hy":
             items = self.lb_condition_hy.curselection()
             self.chsi_condition_hy = [self.condition_list[int(item)] for item in items][0]
-            self.dir_inp_hsi_hy = self.dir2sh + "HSI\\" + str(self.chsi_condition_hy) + "\\"
+            self.dir_inp_hsi_hy = config.dir2sh + "HSI\\" + str(self.chsi_condition_hy) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_hy):
                 self.l_inpath_hy.config(fg="cyan4", text="Selected: " + str(self.dir_inp_hsi_hy))
@@ -406,15 +407,15 @@ class MainGui(sg.RaModuleGui):
 
             self.b_csi_nc["state"] = "normal"
             # update SHArea buttons
-            if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\"):
+            if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\"):
                 self.b_sha_th["state"] = "normal"
-                if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
+                if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
                     self.b_sharc["state"] = "normal"
 
         if args[0] == "cov":
             items = self.lb_condition_cov.curselection()
             self.chsi_condition_cov = [self.condition_list[int(item)] for item in items][0]
-            self.dir_inp_hsi_cov = self.dir2sh + "HSI\\" + str(self.chsi_condition_cov) + "\\"
+            self.dir_inp_hsi_cov = config.dir2sh + "HSI\\" + str(self.chsi_condition_cov) + "\\"
 
             if os.path.exists(self.dir_inp_hsi_cov):
                 self.l_inpath_cov.config(fg="gold4", text="Selected: " + str(self.dir_inp_hsi_cov))
@@ -422,9 +423,9 @@ class MainGui(sg.RaModuleGui):
                 self.l_inpath_cov.config(fg="red", text="SELECTION ERROR                                       ")
             self.b_csi_c["state"] = "normal"
             # update SHArea buttons
-            if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\"):
+            if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\"):
                 self.b_sha_th["state"] = "normal"
-                if os.path.isdir(self.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
+                if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
                     self.b_sharc["state"] = "normal"
                     self.cb_use_cov["state"] = "normal"
 
@@ -551,7 +552,7 @@ class MainGui(sg.RaModuleGui):
                 sharea.clear_cache()
 
                 if self.xlsx_condition.__len__() > 0:
-                    webbrowser.open(self.dir2sh + "SHArea\\")
+                    webbrowser.open(config.dir2sh + "SHArea\\")
                     self.b_qua["state"] = "normal"
                     self.b_quat["state"] = "normal"
                 else:

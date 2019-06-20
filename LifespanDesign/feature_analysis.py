@@ -10,10 +10,11 @@ try:
     import cLifespanDesignAnalysis as cLDA
     # add riverpy routines
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cMapper as cMp
     import cDefinitions as cDef
     import cReachManager as cRM
-    import fGlobal as fG
+    import fGlobal as fGl
     import cFeatures as cFe
 except:
     print("ExceptionERROR: Cannot find RiverArchitect/.site_packages/riverpy.")
@@ -123,7 +124,7 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
     pot_err_msg = "FUNDAMENTAL APPLICATION ERROR - Revise River Architect usage instructions"
     try:
         try:
-            fG.clean_dir(os.getcwd() + "\\.cache\\")  # ensure that the cache is empty
+            fGl.clean_dir(os.getcwd() + "\\.cache\\")  # ensure that the cache is empty
             pass
         except:
             logger.info("ERROR: .cache folder in use.")
@@ -188,7 +189,7 @@ def map_maker(*args, **kwargs):
         logger.info("Raster input directories provided:")
         logger.info("\n ".join(raster_dirs))
     except:
-        raster_dirs = [os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\02_Maps\\templates\\rasters\\"]
+        raster_dirs = [config.dir2map_templates + "rasters\\"]
     reaches = None
     try:
         for k in kwargs.items():
@@ -229,11 +230,11 @@ def map_maker(*args, **kwargs):
 
     try:
         if not mapper.error:
-            fG.open_folder(mapper.output_dir)
+            fGl.open_folder(mapper.output_dir)
     except:
         pass
 
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\02_Maps\\" + condition_new + "\\"
+    return config.dir2map + condition_new + "\\"
 
 
 def raster_maker(condition, reach_ids, *args):
@@ -294,8 +295,8 @@ def raster_maker(condition, reach_ids, *args):
                 str(unit_system))
 
     # set environment settings
-    temp_path = os.getcwd()+"\\.cache\\"
-    fG.chk_dir(temp_path)
+    temp_path = os.getcwd() + "\\.cache\\"
+    fGl.chk_dir(temp_path)
 
     reach_reader = cRM.Read()
     reaches = cDef.ReachDefinitions()
@@ -308,7 +309,7 @@ def raster_maker(condition, reach_ids, *args):
         else:
             reach_extents = "MAXOF"
         if r == reach_ids[0]:
-            output_dir = fG.make_output_dir(condition, reach_ids, habitat_analysis, feature_list)
+            output_dir = fGl.make_output_dir(condition, reach_ids, habitat_analysis, feature_list)
             outputs.append(output_dir)
         # fGl.clean_dir(output_dir)
         for f in feature_list:
@@ -331,7 +332,7 @@ def raster_maker(condition, reach_ids, *args):
             break
 
     try:
-        fG.rm_dir(temp_path)  # dump cache after feature analysis
+        fGl.rm_dir(temp_path)  # dump cache after feature analysis
     except:
         logger.info("WARNING: Package could not remove .cache folder.")
     logger.info("RASTERS FINISHED.")

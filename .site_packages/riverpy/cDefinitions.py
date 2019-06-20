@@ -1,8 +1,9 @@
 # !/usr/bin/python
 import sys, os
 try:
+    import config
     import cReachManager as cRM
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
+    sys.path.append(config.dir2oxl)
     import openpyxl as oxl
 except:
     print("ExceptionERROR: Cannot find package files (cReachManager.py/openpyxl/openpyxl).")

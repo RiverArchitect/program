@@ -11,9 +11,10 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
 except:
-    print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class RunGui:
@@ -30,7 +31,7 @@ class RunGui:
         self.wx = (self.master.winfo_screenwidth() - self.ww) / 2
         self.wy = (self.master.winfo_screenheight() - self.wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\code_icon.ico")
+        self.master.iconbitmap(config.code_icon)
 
     def gui_geo_maker(self, condition, feature_type, units, inpath, dir_base_ras):
         import action_planner as ap
@@ -53,6 +54,7 @@ class RunGui:
                 except:
                     pass
 
+
 class ActionGui(sg.RaModuleGui):
     def __init__(self, from_master):
         sg.RaModuleGui.__init__(self, from_master)
@@ -62,13 +64,12 @@ class ActionGui(sg.RaModuleGui):
         self.set_geometry(self.ww, self.wh, self.title)
         
         self.dir_base_ras = "None (Geofile Maker only)"
-        self.dir2conditions = self.dir2ra + "01_Conditions\\"
-        self.dir2lf_rasters = self.dir2lf + "Products\\Rasters\\"
+        self.dir2lf_rasters = config.dir2lf + "Products\\Rasters\\"
         self.feature_text = []
         self.feature_type = []
         self.condition = "set condition"
         self.condition_list = fGl.get_subdir_names(self.dir2lf_rasters)
-        self.inpath = self.dir2lf + "Products\\Rasters\\" + str(self.condition) + "\\"
+        self.inpath = config.dir2lf + "Products\\Rasters\\" + str(self.condition) + "\\"
         self.mod_dir = False    # if user-defined input directory: True
 
         # GUI OBJECT VARIABLES
@@ -123,7 +124,7 @@ class ActionGui(sg.RaModuleGui):
         self.cb_lyt.select()  # select by default
 
     def set_base_ras(self):
-        self.dir_base_ras = askopenfilename(defaultextension=".tif", initialdir=self.dir2conditions,
+        self.dir_base_ras = askopenfilename(defaultextension=".tif", initialdir=config.dir2conditions,
                                             filetypes=[("GeoTIFF files", "*.tif")])
         self.l_base_ras.config(fg="green4", text="Base raster: " + self.dir_base_ras)
         self.b_set_base.config(fg="green4")

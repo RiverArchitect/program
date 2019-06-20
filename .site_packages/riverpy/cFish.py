@@ -6,8 +6,9 @@ except:
 
 
 try:
+    import config
     import cInputOutput as cIO
-    import fGlobal as fG
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: /.site_packages/riverpy/).")
 
@@ -21,7 +22,6 @@ class Fish:
                            "season": 3, "depth > x": 5, "velocity > x": 7}
         self.parameter_rows = {"u": 9, "h": 38, "substrate": 72, "cobbles": 81, "boulders": 82, "plants": 84,
                                "wood": 85, "start_date": 6, "end_date": 7, "h_min": 87}
-        self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         self.reader = None
         self.species = []
         self.species_col = {}
@@ -59,9 +59,9 @@ class Fish:
                 self.reader.close_wb()
             except:
                 pass
-            webbrowser.open(self.path_lvl_up + "templates\\Fish.xlsx")
+            webbrowser.open(config.xlsx_aqua)
         except:
-            self.logger.info("ERROR: Failed to open Fish.xlsx. Ensure that the workbook is not open.")
+            self.logger.info("ERROR: Failed to open %s. Ensure that the workbook is not open." % config.xlsx_aqua)
 
     def get_hsi_curve(self, species, lifestage, par):
         # par is either "u" (velocity), "h" (depth), "substrate", "cobble", "boulder", "plants" or "wood" (see init)
@@ -130,7 +130,7 @@ class Fish:
             self.logger.info("ERROR: Invalid date assignment (Fish.xlsx).")
 
     def open_fish_wb(self):
-        self.reader = cIO.Read(self.path_lvl_up + "templates\\Fish.xlsx")
+        self.reader = cIO.Read(config.xlsx_aqua)
 
     def close_fish_wb(self):
         self.reader.close_wb()

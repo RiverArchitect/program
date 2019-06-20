@@ -4,9 +4,10 @@ try:
     import sys, os, arcpy, logging
     from arcpy.sa import *
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cReachManager as cRM
     import cDefinitions as cDef
-    import fGlobal as fG
+    import fGlobal as fGl
     import cFeatures as cFe
 except:
     print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
@@ -22,16 +23,16 @@ class ModifyTerrain:
 
         # general directories and parameters
         self.all_rasters = []  # will get assigned an arcpy.ListRasters() list
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
-        fG.chk_dir(self.cache)
-        fG.clean_dir(self.cache)
+        self.cache = config.dir2mt + ".cache\\"
+        fGl.chk_dir(self.cache)
+        fGl.clean_dir(self.cache)
         self.features = cDef.FeatureDefinitions()
         self.condition = condition
         self.current_reach_id = ""
         self.logger = logging.getLogger("logfile")
-        self.output_ras_dir = os.path.dirname(os.path.realpath(__file__)) + "\\Output\\ThresholdRivers\\" + str(condition) + "\\"
-        fG.chk_dir(self.output_ras_dir)
-        fG.clean_dir(self.output_ras_dir)
+        self.output_ras_dir = config.dir2mt + "Output\\ThresholdRivers\\" + str(condition) + "\\"
+        fGl.chk_dir(self.output_ras_dir)
+        fGl.clean_dir(self.output_ras_dir)
         self.raster_dict = {}
         self.raster_info = ""
         self.reader = cRM.Read()
@@ -71,8 +72,7 @@ class ModifyTerrain:
         try:
             self.input_dir_fa = topo_in_dir
         except:
-            self.input_dir_fa = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + str(condition) + "\\"
+            self.input_dir_fa = config.dir2conditions + str(condition) + "\\"
 
         try:
             self.ras_dem = arcpy.Raster(self.input_dir_fa + "dem.tif")
@@ -94,9 +94,7 @@ class ModifyTerrain:
         try:
             self.input_dir_ap = feat_in_dir
         except:
-            self.input_dir_ap = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..')) + "\\MaxLifespan\\Output\\Rasters\\" + str(
-                condition) + "\\"
+            self.input_dir_ap = config.dir2ml + "Output\\Rasters\\" + str(condition) + "\\"
 
         try:
             self.make_zero_ras()
@@ -185,7 +183,7 @@ class ModifyTerrain:
         arcpy.CheckOutExtension('Spatial')  # check out license
         zero_ras_str = self.cache + "zeros.tif"
         if os.path.isfile(zero_ras_str):
-            fG.rm_file(zero_ras_str)
+            fGl.rm_file(zero_ras_str)
         try:
             try:
                 base_dem = arcpy.Raster(self.input_dir_fa + "dem.tif")
@@ -194,8 +192,7 @@ class ModifyTerrain:
 
             print("Preparing zero raster based on DEM extents ...")
             arcpy.env.extent = base_dem.extent
-            arcpy.env.workspace = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
+            arcpy.env.workspace = config.dir2conditions + self.condition + "\\"
             zero_ras = Con(IsNull(base_dem), 0, 0)
             zero_ras.save(zero_ras_str)
             arcpy.env.workspace = self.cache
@@ -279,7 +276,7 @@ class ModifyTerrain:
                 except:
                     self.logger.info("WARNING: Could not delete " + str(ras) + " from .cache folder.")
             self.logger.info("  >> Done.")
-            fG.rm_dir(self.cache)  # dump cache after feature analysis
+            fGl.rm_dir(self.cache)  # dump cache after feature analysis
         except:
             self.logger.info("WARNING: Could not clear .cache folder.")
         self.logger.info("FINISHED.")

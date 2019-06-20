@@ -10,22 +10,22 @@ except:
 try:
     import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class CreateSubCondition(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
         self.dir2src_condition = '.'
         self.dir2sub_condition = '.'
         self.dir2bound = '.'
 
         self.sub_condition_name = tk.StringVar()
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
         # width and height of the window.
@@ -88,7 +88,7 @@ class CreateSubCondition(object):
         self.top.destroy()
 
     def run_sub_c(self):
-        self.dir2sub_condition = self.dir2ra + "01_Conditions\\" + str(self.sub_condition_name.get()) + "\\"
+        self.dir2sub_condition = config.dir2conditions + str(self.sub_condition_name.get()) + "\\"
         if not os.path.exists(self.dir2sub_condition):
             os.makedirs(self.dir2sub_condition)
         else:
@@ -116,7 +116,7 @@ class CreateSubCondition(object):
 
     def select_src_condition(self):
         items = self.lb_condition.curselection()
-        self.dir2src_condition = self.dir2ra + "01_Conditions\\" + str([self.condition_list[int(item)] for item in items][0]) + "\\"
+        self.dir2src_condition = config.dir2conditions + str([self.condition_list[int(item)] for item in items][0]) + "\\"
         self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2src_condition)
         self.b_sc.config(fg="forest green")
 

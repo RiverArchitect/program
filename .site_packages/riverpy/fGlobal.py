@@ -6,6 +6,7 @@ except:
 
 
 try:
+    import config
     import cDefinitions as cDef
 except:
     print("ExceptionERROR: Cannot find package files (cDefinitions.py).")
@@ -122,7 +123,7 @@ def flatten(lis):
 
 
 def get_credits():
-    c_file = open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\credits.txt", "r")
+    c_file = open(config.dir2templates + "credits.txt", "r")
     credits_str = "\n".join(c_file.read().splitlines())
     c_file.close()
     return credits_str
@@ -157,7 +158,6 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     [feat_id_list.append(features.name_dict[item]) for item in relevant_feat_names]
     feat_col_list = []
     [feat_col_list.append(features.col_name_dict[item]) for item in relevant_feat_names]
-    dir2LD = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
 
     if reach_ids.__len__() == 1:
         if not str(reach_ids[0]) == "none":
@@ -187,7 +187,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
         if feat_lyr_type > 0:
             for i in range(0, 9):
                 test_folder = str(condition) + reach_name + "_lyr" + str(feat_lyr_type) + str(i)
-                test_dir = dir2LD + "Output\\Rasters\\" + test_folder + "\\"
+                test_dir = config.dir2lf + "Output\\Rasters\\" + test_folder + "\\"
                 if not os.path.exists(test_dir):
                     os.makedirs(test_dir)
                     output_dir = test_dir
@@ -215,17 +215,17 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
                             print("Maximum folder size for this layer reached -- restarting at lyrX0.")
                             print("Consider better file structure; this time, old files are deleted.")
                             test_folder = str(condition) + "_lyr" + str(feat_lyr_type) + str(0)
-                            output_dir = dir2LD + "Output\\Rasters\\" + test_folder + "\\"
+                            output_dir = config.dir2lf + "Output\\Rasters\\" + test_folder + "\\"
                             break
         else:
-            output_dir = dir2LD + "Output\\Rasters\\" + str(condition) + reach_name + "lyr00\\"
+            output_dir = config.dir2lf + "Output\\Rasters\\" + str(condition) + reach_name + "lyr00\\"
     else:
-        output_dir = dir2LD + "Output\\Rasters\\" + str(condition) + reach_name + "_hab\\"
+        output_dir = config.dir2lf + "Output\\Rasters\\" + str(condition) + reach_name + "_hab\\"
 
     if not("output_dir" in locals()):
         print("No reach or feature layer or habitat_analysis information.")
         print("--> Output folder name corresponds to input condition.")
-        output_dir = dir2LD + "Output\\Rasters\\" + str(condition) + "\\"
+        output_dir = config.dir2lf + "Output\\Rasters\\" + str(condition) + "\\"
 
     chk_dir(output_dir)
 

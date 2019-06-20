@@ -4,7 +4,8 @@ try:
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, datetime).")
 try:
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
+    import config
+    sys.path.append(config.dir2oxl)
     import openpyxl as oxl  # modified package
 except:
     print("ERROR: Could not load openpyxl.")
