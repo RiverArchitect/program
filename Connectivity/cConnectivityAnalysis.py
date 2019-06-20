@@ -31,6 +31,7 @@ class ConnectivityAnalysis:
         arcpy.env.workspace = self.cache
         arcpy.env.overwriteOutput = True
         self.condition = condition
+        self.dir2condition = config.dir2conditions + self.condition + "\\"
         self.species = species
         self.lifestage = lifestage
         self.units = units
@@ -39,73 +40,89 @@ class ConnectivityAnalysis:
         except:
             self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
             fG.chk_dir(self.out_dir)
+
+        self.discharges = []
+        self.Q_h_ras_dict = {}
+        self.Q_u_ras_dict = {}
+        self.get_hydraulic_rasters()
         self.connectivity_analysis()
 
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
+
+        for Q in sorted(self.discharges):
+            self.analyze_flow(Q)
+
+        self.clean_up()
+
+    def get_hydraulic_rasters(self):
         self.logger.info("Retrieving hydraulic rasters...")
         try:
             mkt = cMkT.MakeFlowTable(self.condition, "", unit=self.units)
+            self.discharges = sorted(mkt.discharges)
+            self.Q_h_ras_dict = {Q: Raster(self.dir2condition + mkt.dict_Q_h_ras[Q]) for Q in self.discharges}
+            self.Q_u_ras_dict = {Q: Raster(self.dir2condition + mkt.dict_Q_u_ras[Q]) for Q in self.discharges}
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
 
-        for Q in sorted(cMkT.discharges):
-            self.logger.info("\n>>> Analyzing discharge: %i" % Q)
+    def analyze_flow(self, Q):
+        self.logger.info("\n>>> Analyzing discharge: %i" % Q)
 
-            # *** get/create interpolated depth and velocity rasters
-            # use interpolated h from cWaterLevel, in new interpolated area set velocity = 0
+        # *** get/create interpolated depth and velocity rasters
+        # use interpolated h from cWaterLevel, in new interpolated area set velocity = 0
+        if "h%i_interp.tif" % Q in os.listdir(self.dir2condition):
+            h_ras = Raster(os.path.join(self.dir2condition, "h%i_interp.tif" % Q))
+            u_ras = self.Q_u_ras_dict[Q]
+            u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
+        else:
+            # *** interpolate h first
+            h_ras = self.Q_h_ras_dict[Q]
+            u_ras = self.Q_u_ras_dict[Q]
 
-            h_ras = Raster(config.dir2condition + cMkT.dict_Q_h_ras[Q])
-            u_ras = Raster(config.dir2condition + cMkT.dict_Q_u_ras[Q])
+        # read in fish data (minimum depth needed, max swimming speed, ...)
+        h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
+        self.logger.info("minimum depth = %s" % h_min)
 
-            # read in fish data (minimum depth needed, max swimming speed, ...)
-            h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
-            self.logger.info("minimum depth = %s" % h_min)
+        self.logger.info("Masking rasters with thresholds...")
+        # mask according to fish data
+        mask_h = Con(h_ras > h_min, h_ras)
+        # also make integer type raster for polygon conversion
+        bin_h = Con(h_ras > h_min, 1)
+        self.logger.info("OK")
 
-            self.logger.info("Masking rasters with thresholds...")
-            # mask according to fish data
-            mask_h = Con(h_ras > h_min, h_ras)
-            # also make integer type raster for polygon conversion
-            bin_h = Con(h_ras > h_min, 1)
-            self.logger.info("OK")
+        # raster to polygon conversion
+        self.logger.info("Converting raster to polygon...")
+        arcpy.RasterToPolygon_conversion(bin_h,
+                                         self.cache + "masked_h.shp",
+                                         "NO_SIMPLIFY"
+                                         )
+        wetted_shp = self.cache + "masked_h.shp"
+        self.logger.info("OK")
 
-            # raster to polygon conversion
-            self.logger.info("Converting raster to polygon...")
-            arcpy.RasterToPolygon_conversion(bin_h,
-                                             self.cache + "masked_h.shp",
-                                             "NO_SIMPLIFY"
-                                             )
-            wetted_shp = self.cache + "masked_h.shp"
-            self.logger.info("OK")
+        # compute fraction of area that is disconnected/not navigable
+        arcpy.AddField_management(wetted_shp, "Area", "DOUBLE")
+        if self.units == "us":
+            exp = "!SHAPE.AREA@SQUAREFEET!"
+        elif self.units == "si":
+            exp = "!SHAPE.AREA@SQUAREMETERS!"
 
-            # compute fraction of area that is disconnected/not navigable
-            arcpy.AddField_management(wetted_shp, "Area", "DOUBLE")
-            if self.units == "us":
-                exp = "!SHAPE.AREA@SQUAREFEET!"
-            elif self.units == "si":
-                exp = "!SHAPE.AREA@SQUAREMETERS!"
+        arcpy.CalculateField_management(wetted_shp, "Area", exp)
 
-            arcpy.CalculateField_management(wetted_shp, "Area", exp)
+        areas = arcpy.da.TableToNumPyArray(wetted_shp, ("Area"))
+        areas = [area[0] for area in areas]
+        # sort highest to lowest
+        areas = sorted(areas, reverse=True)
 
-            areas = arcpy.da.TableToNumPyArray(wetted_shp, ("Area"))
-            areas = [area[0] for area in areas]
-            # sort highest to lowest
-            areas = sorted(areas, reverse=True)
+        total_area = sum(areas)
+        self.logger.info("Total navigable wetted area: %.2f" % total_area)
+        disconnected_area = sum(areas[1:])
+        self.logger.info("Disconnected wetted area: %.2f" % disconnected_area)
+        percent_disconnected = disconnected_area / total_area * 100
+        self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
 
-            total_area = sum(areas)
-            self.logger.info("Total navigable wetted area: %.2f" % total_area)
-            disconnected_area = sum(areas[1:])
-            self.logger.info("Disconnected wetted area: %.2f" % disconnected_area)
-            percent_disconnected = disconnected_area/total_area * 100
-            self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
-
-            # *** save data to a table in Connectivity/Output, open table when finished
-
-        self.clean_up()
-
+        # *** save data to a table in Connectivity/Output, open table when finished
         # graph theory metrics...
-
         # particle tracking...
 
     def clean_up(self):
