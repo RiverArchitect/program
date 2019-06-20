@@ -11,16 +11,15 @@ try:
     import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fGl
+    import config
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class InpFrame(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
-        self.dir2condition = '.'
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
         self.dir2dem = ''
         self.dir2h = ''
         self.dir2u = ''
@@ -28,7 +27,7 @@ class InpFrame(object):
 
         # define analysis type identifiers (default = False)
         self.bool_var = tk.BooleanVar()
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
         # width and height of the window.
@@ -72,15 +71,15 @@ class InpFrame(object):
 
     def make_input_file(self):
         items = self.lb_condition.curselection()
-        # INFO: dir2condition may not end with "\\"!
+        # INFO: dir2new_condition may not end with "\\"!
         condition = str([self.condition_list[int(item)] for item in items][0])
-        condition4input = cCC.ConditionCreator(self.dir2ra + "01_Conditions\\" + condition)
-        condition4input.generate_input_file(self.dir2ra + "01_Conditions\\" + condition + "\\flow_definitions.xlsx")
+        condition4input = cCC.ConditionCreator(config.dir2conditions + condition)
+        condition4input.generate_input_file(config.dir2conditions + condition + "\\flow_definitions.xlsx")
         try:
             if not condition4input.error:
-                fGl.open_file(self.dir2condition + "\\input_definition.inp")
+                fGl.open_file(config.dir2conditions + condition + "\\input_definition.inp")
                 self.b_sc.config(fg="forest green")
-                self.l_c_dir.config(fg="forest green", text=self.dir2condition + "\\input_definition.inp")
+                self.l_c_dir.config(fg="forest green", text=config.dir2conditions + condition + "\\input_definition.inp")
             else:
                 showinfo("INFO", "Make sure that the flow return periods are defined.")
                 self.b_sc.config(fg="red", text="failed - try again")

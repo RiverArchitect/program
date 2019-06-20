@@ -6,26 +6,25 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cDefinitions as cDef
 except:
-    print("ExceptionERROR: Cannot find package files (riverpy).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class Director:
     def __init__(self, condition, *args):
         # args[0] is an optional input path
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
-        self.path = os.path.dirname(os.path.abspath(__file__))
         self.logger = logging.getLogger("logfile")
         try:
             self.raster_input_path = args[0]
         except:
-            self.path2fa = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\"
-            self.raster_input_path = r"" + self.path2fa + "Products\\Rasters\\" + str(self.condition) + "\\"
+            self.raster_input_path = config.dir2lf + "Products\\Rasters\\" + str(self.condition) + "\\"
 
         arcpy.env.workspace = self.raster_input_path
         self.all_rasters = arcpy.ListRasters()
-        arcpy.env.workspace = self.path
+        arcpy.env.workspace = config.dir2ml
 
     def append_ds_rasters(self, feature_list):
         raster_list = []

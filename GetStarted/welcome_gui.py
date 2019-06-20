@@ -12,6 +12,7 @@ try:
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fGl
+    import config
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
@@ -114,17 +115,5 @@ class MainGui(sg.RaModuleGui):
         self.master.wait_window(new_window.top)
         self.b_populate_c["state"] = "normal"
 
-    def myquit(self):
-        if askokcancel("Close", "Do you really wish to quit?"):
-            tk.Frame.quit(self)
-
-    def show_credits(self):
-        showinfo("Credits", fGl.get_credits())
-
     def __call__(self):
         self.mainloop()
-
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    MainGui().mainloop()

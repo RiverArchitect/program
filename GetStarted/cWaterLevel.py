@@ -14,9 +14,10 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fg
+    import config
+    import fGlobal as fGl
 except:
-    print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
+    print("ExceptionERROR: Missing RiverArchitect packages (riverpy).")
 
 
 class WLE:
@@ -26,8 +27,8 @@ class WLE:
         # args[0] optional out_dir -- otherwise: out_dir = script_dir
         # kwargs["unique_id"] (Boolean): determines if output files have integer discharge value in output file name
 
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
-        fg.chk_dir(self.cache)
+        self.cache = config.dir2gs + ".cache\\"
+        fGl.chk_dir(self.cache)
 
         self.path2h_ras = path2h_ras
         self.path2dem_ras = path2dem_ras
@@ -35,7 +36,7 @@ class WLE:
         try:
             self.out_dir = args[0]
         except:
-            self.out_dir = os.path.dirname(os.path.realpath(__file__)) + "\\"
+            self.out_dir = config.dir2gs
 
         try:
             self.unique_id = kwargs["unique_id"]
@@ -54,7 +55,7 @@ class WLE:
             self.out_h_interp = "h_interp.tif"
             self.out_d2w = "d2w.tif"
 
-        self.logger = fg.initialize_logger(os.path.dirname(os.path.realpath(__file__)), "depth2groundwater")
+        self.logger = logging.getLogger("logfile")
 
     def interpolate_wle(self, method="Kriging"):
         """
@@ -313,8 +314,8 @@ class WLE:
     def clean_up(self):
         try:
             self.logger.info("Cleaning up ...")
-            fg.clean_dir(self.cache)
-            fg.rm_dir(self.cache)
+            fGl.clean_dir(self.cache)
+            fGl.rm_dir(self.cache)
             self.logger.info("OK")
         except:
             self.logger.info("Failed to clean up .cache folder.")

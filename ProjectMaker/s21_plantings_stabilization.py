@@ -3,6 +3,9 @@ import arcpy
 import webbrowser
 from fFunctions import *
 logger = logging.getLogger("logfile")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+import config
+
 try:
     from arcpy.sa import *
 except:
@@ -18,7 +21,7 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     error = False
     if unit == "us":
         area_units = "SQUARE_FEET_US"
-        ft2_to_acres = float(1 / (3 * 3 * 4840))  # 3*3 is ft2 to yd2 and 4840 yd2 to ac
+        ft2_to_acres = config.ft2ac 
     else:
         area_units = "SQUARE_METERS"
         ft2_to_acres = 1.0
@@ -26,7 +29,7 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     arcpy.CheckOutExtension('Spatial')
     arcpy.gp.overwriteOutput = True
 
-    path2PP = os.path.dirname(os.path.realpath(__file__)) + "\\" + reach + "_" + stn + "_" + version + "\\"
+    path2PP = config.dir2pm + reach + "_" + stn + "_" + version + "\\"
 
     # folder settings
     ras_dir = path2PP + "Geodata\\Rasters\\"

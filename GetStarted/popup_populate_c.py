@@ -10,17 +10,17 @@ except:
 try:
     import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class PopulateCondition(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
-        self.dir2condition = '.'
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
+        self.dir2condition_act = '.'
         self.dir2dem = ''
         self.dir2h = ''
         self.dir2u = ''
@@ -29,7 +29,7 @@ class PopulateCondition(object):
 
         # define analysis type identifiers (default = False)
         self.bool_var = tk.BooleanVar()
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
         # width and height of the window.
@@ -137,17 +137,17 @@ class PopulateCondition(object):
     def open_mu_xlsx(self):
         showinfo("INFO", "Do not forget to save changes ...")
         try:
-            webbrowser.open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\templates\\morphological_units.xlsx")
+            webbrowser.open(config.xlsx_mu)
         except:
-            showinfo("ERROR", "Could not find /.site_packages/templates/morphological_units.xlsx.")
+            showinfo("ERROR", "Could not find %s." % config.xlsx_mu)
 
     def run_d2w(self):
-        condition = cCC.ConditionCreator(self.dir2condition)
+        condition = cCC.ConditionCreator(self.dir2condition_act)
         condition.make_d2w(self.dir2h, self.dir2dem)
         self.top.bell()
         try:
             if not condition.error:
-                fGl.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition_act)
                 self.b_d2w.config(fg="forest green", text="d2w.tif created.")
             else:
                 self.b_d2w.config(fg="red", text="d2w.tif creation failed.")
@@ -155,12 +155,12 @@ class PopulateCondition(object):
             pass
 
     def run_det(self):
-        condition = cCC.ConditionCreator(self.dir2condition)
+        condition = cCC.ConditionCreator(self.dir2condition_act)
         condition.make_det(self.dir2h, self.dir2dem)
         self.top.bell()
         try:
             if not condition.error:
-                fGl.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition_act)
                 self.b_det.config(fg="forest green", text="dem_detrend.tif created.")
             else:
                 self.b_det.config(fg="red", text="dem_detrend.tif creation failed.")
@@ -168,12 +168,12 @@ class PopulateCondition(object):
             pass
 
     def run_mu(self):
-        condition = cCC.ConditionCreator(self.dir2condition)
+        condition = cCC.ConditionCreator(self.dir2condition_act)
         condition.make_mu(self.unit, self.dir2h, self.dir2u)
         self.top.bell()
         try:
             if not condition.error:
-                fGl.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2condition_act)
                 self.b_mu.config(fg="forest green", text="mu.tif created.")
             else:
                 self.b_mu.config(fg="red", text="mu.tif creation failed.")
@@ -187,7 +187,7 @@ class PopulateCondition(object):
     def select_h(self):
         msg = "Select the flow depth raster corresponding to the required discharge / baseflow (?)."
         showinfo("INFO", msg)
-        self.dir2h = askopenfilename(initialdir=self.dir2condition, title="Select baseflow depth raster",
+        self.dir2h = askopenfilename(initialdir=self.dir2condition_act, title="Select baseflow depth raster",
                                      filetypes=[('GeoTIFF', '*.tif;*.tiff')])
         self.b_d2w["state"] = "normal"
         self.b_det["state"] = "normal"
@@ -197,17 +197,17 @@ class PopulateCondition(object):
     def select_u(self):
         msg = "Select the flow velocity raster corresponding to baseflow."
         showinfo("INFO", msg)
-        self.dir2u = askopenfilename(initialdir=self.dir2condition, title="Select baseflow velocity raster",
+        self.dir2u = askopenfilename(initialdir=self.dir2condition_act, title="Select baseflow velocity raster",
                                      filetypes=[('GeoTIFF', '*.tif;*.tiff')])
         if self.dir2h.__len__() > 0:
             self.b_mu["state"] = "normal"
 
     def set_condition(self):
         items = self.lb_condition.curselection()
-        self.dir2condition = self.dir2ra + "01_Conditions\\" + str([self.condition_list[int(item)] for item in items][0])
-        self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2condition)
+        self.dir2condition_act = config.dir2conditions + str([self.condition_list[int(item)] for item in items][0])
+        self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2condition_act)
         self.b_sc.config(fg="forest green")
-        self.dir2dem = self.dir2condition + "\\dem.tif"
+        self.dir2dem = self.dir2condition_act + "\\dem.tif"
         if not os.path.isfile(self.dir2dem):
             showinfo("WARNING", self.dir2dem + " does not exist.")
             self.l_d2w_dem.config(fg="firebrick3", text=self.dir2dem + " does not exist.")

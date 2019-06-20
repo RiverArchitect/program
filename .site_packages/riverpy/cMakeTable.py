@@ -3,8 +3,9 @@ try:
     import os, sys, logging, shutil
     # load other RA routines
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
-    import fGlobal as fG
+    import config
+    sys.path.append(config.dir2oxl)
+    import fGlobal as fGl
     import openpyxl as oxl  # modified package
     import datetime, random
 except:
@@ -29,9 +30,7 @@ class MakeFlowTable:
         self.dict_Q_h_ras = {}
         self.dict_Q_u_ras = {}
 
-        self.dir_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
-        self.dir_2lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\"
-        self.dir_in_ras = self.dir_2lvl_up + "01_Conditions\\" + str(self.condition) + "\\"
+        self.dir_in_ras = config.dir2conditions + str(self.condition) + "\\"
         self.dir_xlsx_out = ""
 
         self.logger = logging.getLogger("logfile")
@@ -41,7 +40,7 @@ class MakeFlowTable:
 
 
         # dummy workbook variable instantiations
-        self.xlsx_template = self.dir_lvl_up + "templates\\empty.xlsx"
+        self.xlsx_template = config.xlsx_dummy
         self.wb = oxl.load_workbook(filename=self.xlsx_template)
         self.wb_out_name = ""
         self.ws = self.wb.worksheets[0]
@@ -54,7 +53,7 @@ class MakeFlowTable:
         self.set_directories(purpose)  # sets purpose-specific workbook ranges
         self.get_condition_discharges()
         try:
-            fG.chk_dir(self.dir_xlsx_out)
+            fGl.chk_dir(self.dir_xlsx_out)
         except:
             pass
 
@@ -142,7 +141,7 @@ class MakeFlowTable:
                 self.logger.info("   * creating safety copy of existing workbook ...")
                 rnd_ext = str(random.randint(1000000, 9999999))
                 shutil.copy2(self.wb_out_name, self.wb_out_name.split(".xlsx")[0] + "_old" + rnd_ext + ".xlsx")
-                fG.rm_file(self.wb_out_name)
+                fGl.rm_file(self.wb_out_name)
             except:
                 self.logger.info("ERROR: Failed to access " + str(self.wb_out_name) + ".")
                 return -1
@@ -200,8 +199,8 @@ class MakeFlowTable:
 
         if purpose.lower() == "sharc":
             self.logger.info("   * scan %s for ecohydraulically relevant flows" % self.condition)
-            self.xlsx_template = "{0}\\SHArC\\.templates\\CONDITION_sharea_template_{1}.xlsx".format(self.dir_2lvl_up, str(self.unit))
-            self.dir_xlsx_out = self.dir_2lvl_up + "SHArC\\SHArea\\"
+            self.xlsx_template = "{0}.templates\\CONDITION_sharea_template_{1}.xlsx".format(config.dir2sh, str(self.unit))
+            self.dir_xlsx_out = config.dir2sh + "SHArea\\"
             self.col_Q = "B"
             self.col_ras_h = "C"
             self.col_ras_u = "D"
@@ -209,7 +208,7 @@ class MakeFlowTable:
 
         if purpose.lower() == "q_return":
             self.logger.info("   * scan %s for available flows" % self.condition)
-            self.xlsx_template = self.dir_2lvl_up + "\\00_Flows\\templates\\flow_return_period_template.xlsx"
+            self.xlsx_template = config.dir2flows + "templates\\flow_return_period_template.xlsx"
             self.dir_xlsx_out = self.dir_in_ras
             self.col_Q = "B"
             self.col_ras_h = "D"

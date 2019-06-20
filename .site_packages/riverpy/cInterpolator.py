@@ -5,7 +5,8 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, datetime, logging, numpy).")
 
 try:
-    import fGlobal as fG
+    import fGlobal as fGl
+    import config
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: fGlobal).")
 
@@ -24,7 +25,7 @@ class Interpolator:
         # x_input and y_input should be ordered lists (from smallest to largest)
         self.x_input = x_data_list
         self.y_target = y_data_list
-        [self.x_input, self.y_target] = fG.eliminate_nan_from_list(self.x_input, self.y_target)
+        [self.x_input, self.y_target] = fGl.eliminate_nan_from_list(self.x_input, self.y_target)
         if self.x_input[0] > self.x_input[-1]:
             self.logger.info("     - reordering interpolation target lists (smallest to largest)")
             self.x_input.reverse()
@@ -52,7 +53,7 @@ class Interpolator:
         for x in x_data:
             x_lower, x_upper, y_lower, y_upper = self.get_closest_values(x)
             try:
-                interpolated_y.append(fG.interpolate_linear(x_lower, x_upper, y_lower, y_upper, x))
+                interpolated_y.append(fGl.interpolate_linear(x_lower, x_upper, y_lower, y_upper, x))
             except:
                 interpolated_y.append("NaN")
                 self.logger.info("WARNING: Non-numeric values in data.")

@@ -3,8 +3,8 @@ try:
     import os, sys, logging
     import datetime as dt
     sys.path.append(os.path.dirname(__file__))
-    # import own functions -- make sure that all *.py files are in the same folder
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
+    import config
+    sys.path.append(config.dir2oxl)
     import openpyxl as oxl  # modified package
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
@@ -13,8 +13,7 @@ except:
 class Read:
     def __init__(self):
         # type defines lines to read in .inp file
-        self.path2mt = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\"
-        self.xlsx_coord = self.path2mt + ".templates\\computation_extents.xlsx"
+        self.xlsx_coord = config.xlsx_reaches
         self.logger = logging.getLogger("logfile")
 
         # define columns
@@ -104,7 +103,7 @@ class Write:
     def __init__(self, output_dir):
         # ozutput_dir = STR of directory for output files (must end with \\ )
         self.xlsx_output_dir = output_dir
-        self.vol_xlsx_template = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\.templates\\volumes_template.xlsx"
+        self.vol_xlsx_template = config.xlsx_volumes
         self.logger = logging.getLogger("logfile")
 
         # define columns

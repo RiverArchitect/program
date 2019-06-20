@@ -1,5 +1,5 @@
 try:
-    import os, logging
+    import os, sys, logging
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, logging).")
 
@@ -11,6 +11,11 @@ try:
     from arcpy.sa import *
 except:
     print("ExceptionERROR: Spatial Analyst (arcpy.sa) is not available (check license?)")
+try:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
+except:
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 def make_sub_condition(source_condition, target_condition, base_ras_name):
@@ -18,14 +23,13 @@ def make_sub_condition(source_condition, target_condition, base_ras_name):
     # target_condition = STR of a target condition ("D:\\...\\RiverArchitect\\01_Conditions\\2017_confinement\\")
     # base_ras_name = STR of a full path and name of a raster that is used for limiting raster extents ("D:\\...\\Rasters\\projectarea")
 
-    script_dir = os.path.dirname(os.path.realpath(__file__)) + "\\"
     logger = logging.getLogger('logfile.log')
     logger.info(" * Setting arcpy environment ...")
     
     try:
         arcpy.CheckOutExtension('Spatial')
         arcpy.env.overwriteOutput = True
-        arcpy.env.workspace = script_dir        
+        arcpy.env.workspace = config.dir2ra
     except:
         logger.info("ERROR: Could not set arcpy environment (permissions and licenses?).")
         return True
