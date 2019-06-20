@@ -13,6 +13,11 @@ except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 
 try:
+    sys.path.append(config.dir2gs)
+    import cWaterLevel as cWL
+except:
+    print("ExceptionERROR: Cannot import cWaterLevel (check GetStarted directory).")
+try:
     import arcpy
 except:
     print("ExceptionERROR: arcpy is not available (check license connection?)")
@@ -42,16 +47,24 @@ class ConnectivityAnalysis:
             fG.chk_dir(self.out_dir)
 
         self.discharges = []
-        self.Q_h_ras_dict = {}
-        self.Q_u_ras_dict = {}
+        self.Q_h_dict = {}
+        self.Q_u_dict = {}
         self.get_hydraulic_rasters()
         self.connectivity_analysis()
 
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
 
-        for Q in sorted(self.discharges):
-            self.analyze_flow(Q)
+        self.logger.info("Attempting CPU multiprocessing of analysis...")
+        try:
+            import multiprocessing as mp
+            thread_num = min(len(self.discharges), mp.cpu_count())
+            p = mp.Pool(thread_num)
+            p.map(self.analyze_flow, sorted(self.discharges))
+        except:
+            self.logger.info("ERROR: Multiprocessing failed, proceeding with serial processing.")
+            for Q in sorted(self.discharges):
+                self.analyze_flow(Q)
 
         self.clean_up()
 
@@ -60,8 +73,8 @@ class ConnectivityAnalysis:
         try:
             mkt = cMkT.MakeFlowTable(self.condition, "", unit=self.units)
             self.discharges = sorted(mkt.discharges)
-            self.Q_h_ras_dict = {Q: Raster(self.dir2condition + mkt.dict_Q_h_ras[Q]) for Q in self.discharges}
-            self.Q_u_ras_dict = {Q: Raster(self.dir2condition + mkt.dict_Q_u_ras[Q]) for Q in self.discharges}
+            self.Q_h_dict = {Q: self.dir2condition + mkt.dict_Q_h_ras[Q] for Q in self.discharges}
+            self.Q_u_dict = {Q: self.dir2condition + mkt.dict_Q_u_ras[Q] for Q in self.discharges}
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -69,16 +82,21 @@ class ConnectivityAnalysis:
     def analyze_flow(self, Q):
         self.logger.info("\n>>> Analyzing discharge: %i" % Q)
 
-        # *** get/create interpolated depth and velocity rasters
-        # use interpolated h from cWaterLevel, in new interpolated area set velocity = 0
+        # use interpolated h from cWaterLevel
         if "h%i_interp.tif" % Q in os.listdir(self.dir2condition):
             h_ras = Raster(os.path.join(self.dir2condition, "h%i_interp.tif" % Q))
-            u_ras = self.Q_u_ras_dict[Q]
-            u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
+        elif "h%i_interp.tif" % Q in os.listdir(self.out_dir):
+            h_ras = Raster(os.path.join(self.out_dir, "h%i_interp.tif" % Q))
         else:
-            # *** interpolate h first
-            h_ras = self.Q_h_ras_dict[Q]
-            u_ras = self.Q_u_ras_dict[Q]
+            # if interpolated depth raster does not already exist, create one
+            h_path = self.Q_h_dict[Q]
+            dem_path = self.dir2condition + "dem.tif"
+            wle = cWL.WLE(h_path, dem_path, self.out_dir, unique_id=True)
+            wle.calculate_h()
+            h_ras = Raster(self.out_dir + "h%i_interp.tif" % Q)
+        # in new interpolated area set velocity = 0
+        u_ras = Raster(self.Q_u_dict[Q])
+        u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
 
         # read in fish data (minimum depth needed, max swimming speed, ...)
         h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
