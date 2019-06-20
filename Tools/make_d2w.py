@@ -8,8 +8,8 @@ def make_d2w():
     path2ras_h_low = "D:\\temp\\h530"  # Must not contain zero-pixels (0 = NoData)
     path2ras_dem = "D:\\temp\\dem"
     out_dir = "D:\\temp\\"
-    wle = cWL.WLE(out_dir)
-    wle.calculate_d2w(path2ras_h_low, path2ras_dem)
+    wle = cWL.WLE(path2ras_h_low, path2ras_dem, out_dir)
+    wle.calculate_d2w()
 
 
 if __name__ == "__main__":

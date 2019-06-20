@@ -10,6 +10,7 @@ except:
 try:
     import cConditionCreator as cCC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
@@ -17,11 +18,9 @@ except:
 
 class CreateCondition(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
+        config.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.path = os.path.dirname(os.path.abspath(__file__))
-        self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        self.dir2condition = '.'
+        self.dir2new_condition = '.'
         self.dir2dem = '.'
         self.dir2back = '.'
         self.dir2fill = '.'
@@ -33,7 +32,7 @@ class CreateCondition(object):
         self.new_condition_name = tk.StringVar()
         self.str_h = tk.StringVar()
         self.str_u = tk.StringVar()
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
         # width and height of the window.
@@ -144,12 +143,12 @@ class CreateCondition(object):
         self.top.destroy()
 
     def run_creation(self):
-        self.dir2condition = self.dir2ra + "01_Conditions\\" + str(self.new_condition_name.get()) + "\\"
-        if not os.path.exists(self.dir2condition):
-            os.makedirs(self.dir2condition)
+        self.dir2new_condition = config.dir2conditions + str(self.new_condition_name.get()) + "\\"
+        if not os.path.exists(self.dir2new_condition):
+            os.makedirs(self.dir2new_condition)
         else:
             showinfo("WARNING", "The defined condition already exists and files may be overwritten. Make sure to SAVE IMPORTANT FILE from the existing condition BEFORE CLICKING OK.")
-        new_condition = cCC.ConditionCreator(self.dir2condition)
+        new_condition = cCC.ConditionCreator(self.dir2new_condition)
         new_condition.transfer_rasters_from_folder(self.dir2h, "h", str(self.str_h.get()))
         new_condition.transfer_rasters_from_folder(self.dir2u, "u", str(self.str_u.get()))
         new_condition.save_tif(self.dir2dem, "dem")
@@ -160,7 +159,7 @@ class CreateCondition(object):
         self.top.bell()
         try:
             if not new_condition.error:
-                fGl.open_folder(self.dir2condition)
+                fGl.open_folder(self.dir2new_condition)
                 self.l_run_info.config(fg="forest green", text="Condition successfully created.")
             else:
                 self.l_run_info.config(fg="red", text="Condition creation failed.")

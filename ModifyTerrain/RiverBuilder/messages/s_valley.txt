@@ -1,0 +1,1 @@
+Valley Slope – the slope of the valley floor along the X-Z plane. It is used to calculate the overall channel slope with a given sinuosity and govern the incline/decline of the surrounding valley. Input must be a real number.

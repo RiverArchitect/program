@@ -1,0 +1,1 @@
+Boundary Width (meters) – double the horizontal distance from the outer edge of the terrace on one side of the river to an arbitrary point out on the valley floor on the same side of the river. This allows for a flat, wide domain that could be another terrace or just the open landscape beyond the alluvial river valley. Input must be a real number, zero or larger.

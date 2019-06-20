@@ -5,6 +5,7 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cFish as cFi
     import fGlobal as fG
     import cMakeTable as cMkT
@@ -25,19 +26,19 @@ class ConnectivityAnalysis:
 
     def __init__(self, condition, species, lifestage, units, *args):
         self.logger = logging.getLogger("logfile")
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
+        self.cache = config.dir2co + ".cache\\"
         fG.chk_dir(self.cache)
         arcpy.env.workspace = self.cache
         arcpy.env.overwriteOutput = True
         self.condition = condition
+        self.dir2condition = config.dir2conditions + self.condition + "\\"
         self.species = species
         self.lifestage = lifestage
         self.units = units
-        self.dir2condition = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
         try:
             self.out_dir = args[0]
         except:
-            self.out_dir = os.path.dirname(__file__) + "\\Output\\" + self.condition + "\\"
+            self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
             fG.chk_dir(self.out_dir)
 
         self.discharges = []
@@ -70,11 +71,12 @@ class ConnectivityAnalysis:
 
         # *** get/create interpolated depth and velocity rasters
         # use interpolated h from cWaterLevel, in new interpolated area set velocity = 0
-        if "wle%i.tif" % Q in os.listdir(self.dir2condition):
-            h_ras = Raster(os.path.join(self.dir2condition, "wle%i.tif" % Q))
+        if "h%i_interp.tif" % Q in os.listdir(self.dir2condition):
+            h_ras = Raster(os.path.join(self.dir2condition, "h%i_interp.tif" % Q))
             u_ras = self.Q_u_ras_dict[Q]
             u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
         else:
+            # *** interpolate h first
             h_ras = self.Q_h_ras_dict[Q]
             u_ras = self.Q_u_ras_dict[Q]
 

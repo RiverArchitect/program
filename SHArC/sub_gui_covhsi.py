@@ -12,27 +12,24 @@ try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import cHSI as chsi
 
-    # load routines from LifespanDesign
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
+    import fGlobal as fGl
+
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\")
     import cParameters as cPa
 
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fG
 except:
     print("ExceptionERROR: Cannot find package files (riverpy/fGlobal.py).")
 
 
 class CovHSIgui(object):
     def __init__(self, master, unit, fish_applied):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.path = os.path.dirname(os.path.abspath(__file__))
-        self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         self.cover_applies = False
-        self.dir_conditions = self.path_lvl_up + "\\01_Conditions\\"
         self.dir_input_ras = ""
         self.condition = ""
-        self.condition_list = fG.get_subdir_names(self.dir_conditions)
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
         self.flow_path = ""     # full path to whetted-region defining raster
         self.h_list = ["all terrain"]
         self.h_ras_path = ""
@@ -49,7 +46,7 @@ class CovHSIgui(object):
         self.hsi_types = {"substrate": self.substrate, "boulders": self.boulders, "cobbles": self.cobbles,
                           "wood": self.wood, "plants": self.plants}
 
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
         # width and height of the window.
@@ -84,7 +81,7 @@ class CovHSIgui(object):
         self.b_h_con = tk.Button(top, fg="RoyalBlue3", bg="white", text="Help", command=lambda: self.user_message(msg_hc1))
         self.b_h_con.grid(sticky=tk.W, row=act_row, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         act_row += 3
-        self.l_inpath_curr = tk.Label(top, fg="gray60", text="Source: " + str(self.dir_conditions))
+        self.l_inpath_curr = tk.Label(top, fg="gray60", text="Source: " + str(config.dir2conditions))
         self.l_inpath_curr.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan + 1,
                                 padx=self.xd, pady=self.yd)
         act_row += 1
@@ -121,7 +118,7 @@ class CovHSIgui(object):
         self.l_select_msg = tk.Label(top, text="3) Select (cover) type(s) ")
         self.l_select_msg.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan - 1, padx=self.xd, pady=self.yd)
         self.b_edit_hsc = tk.Button(top, fg="RoyalBlue3", bg="white", text="Edit HSCs",
-                                    command=lambda: self.open_files([self.path + "\\.templates\\Fish.xlsx"]))
+                                    command=lambda: self.open_files([config.xlsx_aqua]))
         self.b_edit_hsc.grid(sticky=tk.EW, row=act_row, column=self.max_columnspan - 1, padx=self.xd, pady=self.yd)
         act_row += 1
 
@@ -133,7 +130,7 @@ class CovHSIgui(object):
                                            command=lambda: self.print_msg("Substrate: " + str(self.substrate.get())))
         self.cb_substrate.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan - 1,
                                padx=self.xd, pady=self.yd)
-        msg_s1 = "If this box is checked, a substrate_hsi raster is created in the HabitatEvaluation/HSI/" + self.condition + "folder.\n"
+        msg_s1 = "If this box is checked, a substrate_hsi raster is created in the SHArC/HSI/" + self.condition + "folder.\n"
         msg_s2 = "A dmean raster is needed in the 01_Conditions/" + self.condition + " folder.\n"
         self.b_h_subs = tk.Button(top, fg="RoyalBlue3", bg="white", text="Help",
                                   command=lambda: self.user_message(msg_s1 + msg_s2 + msg_0))
@@ -146,7 +143,7 @@ class CovHSIgui(object):
                                      command=lambda: self.print_msg("Boulders: " + str(self.boulders.get())))
         self.cb_bou.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan - 1,
                          padx=self.xd, pady=self.yd)
-        msg_b1 = "If this box is checked, a boulder_hsi raster is created in the HabitatEvaluation/HSI/" + self.condition + "folder.\n"
+        msg_b1 = "If this box is checked, a boulder_hsi raster is created in the SHArC/HSI/" + self.condition + "folder.\n"
         msg_b2 = "A boulders.shp delineation shapefile (polygon) is needed in the 01_Conditions/" + self.condition + " folder.\n"
         self.b_h_bou = tk.Button(top, fg="RoyalBlue3", bg="white", text="Help",
                                  command=lambda: self.user_message(msg_b1 + msg_b2 + msg_0))
@@ -159,7 +156,7 @@ class CovHSIgui(object):
                                      command=lambda: self.print_msg("Cobbles: " + str(self.cobbles.get())))
         self.cb_cob.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan - 1,
                          padx=self.xd, pady=self.yd)
-        msg_c1 = "If this box is checked, a cobble_hsi raster is created in the HabitatEvaluation/HSI/" + self.condition + "folder.\n"
+        msg_c1 = "If this box is checked, a cobble_hsi raster is created in the SHArC/HSI/" + self.condition + "folder.\n"
         msg_c2 = "A dmean raster is needed in the 01_Conditions/" + self.condition + " folder.\n"
         self.b_h_cob = tk.Button(top, fg="RoyalBlue3", bg="white", text="Help",
                                  command=lambda: self.user_message(msg_c1 + msg_c2 + msg_0))
@@ -172,7 +169,7 @@ class CovHSIgui(object):
                                       command=lambda: self.print_msg("Streamwood: " + str(self.wood.get())))
         self.cb_wood.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan - 1,
                           padx=self.xd, pady=self.yd)
-        msg_w1 = "If this box is checked, a cobble_hsi raster is created in the HabitatEvaluation/HSI/" + self.condition + "folder.\n"
+        msg_w1 = "If this box is checked, a cobble_hsi raster is created in the SHArC/HSI/" + self.condition + "folder.\n"
         msg_w2 = "A wood.shp delineation shapefile (polygon) is needed in the 01_Conditions/" + self.condition + " folder.\n"
         self.b_h_wood = tk.Button(top, fg="RoyalBlue3", bg="white", text="Help",
                                   command=lambda: self.user_message(msg_w1 + msg_w2 + msg_0))
@@ -185,7 +182,7 @@ class CovHSIgui(object):
                                      command=lambda: self.print_msg("Plants: " + str(self.plants.get())))
         self.cb_veg.grid(sticky=tk.W, row=act_row, column=0, columnspan=self.max_columnspan - 1,
                          padx=self.xd, pady=self.yd)
-        msg_v1 = "If this box is checked, a plants_hsi raster is created in the HabitatEvaluation/HSI/" + self.condition + "folder.\n"
+        msg_v1 = "If this box is checked, a plants_hsi raster is created in the SHArC/HSI/" + self.condition + "folder.\n"
         msg_v2 = "A plants.shp delineation shapefile (polygon) is needed in the 01_Conditions/" + self.condition + " folder.\n"
         self.b_h_veg = tk.Button(top, fg="RoyalBlue3", bg="white", text="Help",
                                  command=lambda: self.user_message(msg_v1 + msg_v2 + msg_0))
@@ -212,7 +209,7 @@ class CovHSIgui(object):
         for _f in f_list:
             print(str(_f))
             self.user_message("Do not forget to save files after editing ...")
-            fG.open_file(_f)
+            fGl.open_file(_f)
 
     def print_msg(self, msg):
         print(str(msg))
@@ -237,13 +234,13 @@ class CovHSIgui(object):
                 dir_out = cov_hsi.path_hsi
             del cov_hsi
             try:
-                fG.clean_dir(os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\")
+                fGl.clean_dir(os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\")
             except:
                 print("WARNING: Could not clean up cache.")
         self.top.bell()
         try:
             if not error_occurred:
-                fG.open_folder(dir_out)
+                fGl.open_folder(dir_out)
                 self.l_run_info.config(fg="forest green", text="HSI RASTERS SUCCESSFULLY CREATED")
                 self.b_run.config(width=30, bg="pale green", text="RE-run (generate habitat condition)",
                                   command=lambda: self.run_raster_calc())
@@ -259,7 +256,7 @@ class CovHSIgui(object):
     def select_condition(self):
         items = self.lb_condition.curselection()
         self.condition = [self.condition_list[int(item)] for item in items][0]
-        self.dir_input_ras = self.path_lvl_up + "\\01_Conditions\\" + self.condition + "\\"
+        self.dir_input_ras = config.dir2conditions + self.condition + "\\"
 
         if os.path.exists(self.dir_input_ras):
             self.l_inpath_curr.config(fg="forest green", text="Selected: " + str(self.dir_input_ras))
@@ -271,7 +268,7 @@ class CovHSIgui(object):
         items = self.lb_flow.curselection()
         __ras_name__ = [self.h_list[int(item)] for item in items][0]
         if not (__ras_name__ == "all terrain"):
-            self.h_ras_path = self.path_lvl_up + "\\01_Conditions\\" + self.condition + "\\" + __ras_name__
+            self.h_ras_path = config.dir2conditions + self.condition + "\\" + __ras_name__
             if os.path.exists(self.dir_input_ras):
                 self.l_inflow_curr.config(fg="forest green", text="Current: " + str(self.h_ras_path))
             else:
@@ -288,7 +285,7 @@ class CovHSIgui(object):
 
         # update depth raster file list from condition folder contents (raster has .aux.xml?)
         self.h_list = ["all terrain"]
-        folder_names = fG.get_subdir_names(self.dir_input_ras)
+        folder_names = fGl.get_subdir_names(self.dir_input_ras)
         if folder_names.__len__() < 1:
             folder_names = [i for i in os.listdir(self.dir_input_ras) if i.endswith('.tif')]
         for fn in folder_names:

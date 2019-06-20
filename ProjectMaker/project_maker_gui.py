@@ -16,7 +16,8 @@ try:
     import slave_gui as sg
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fG
+    import config
+    import fGlobal as fGl
 except:
     print("ERROR: Missing sub routines (cannot access python files in subfolder).")
 
@@ -37,7 +38,7 @@ class MainGui(sg.RaModuleGui):
         self.condition_proj = ""
 
         self.dir2prj = ""  #os.path.dirname(os.path.abspath(__file__)) + "\\Geodata\\"
-        self.dir2AP = self.dir2ml + "Products\\Rasters\\"
+        self.dir2AP = config.dir2ml + "Products\\Rasters\\"
         self.fish = {}
         self.fish_applied = {}
         self.reach = ""
@@ -102,7 +103,7 @@ class MainGui(sg.RaModuleGui):
         self.b_dir2SR = tk.Button(self, text="Change path to RiverArchitect package (skip this if current is ok)",
                                   command=lambda: self.set_dir2SR())
         self.b_dir2SR.grid(sticky=tk.EW, row=8, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.l_dir2SR = tk.Label(self, fg="gray26", text="Current: " + str(self.dir2ra))
+        self.l_dir2SR = tk.Label(self, fg="gray26", text="Current: " + str(config.dir2ra))
         self.l_dir2SR.grid(sticky=tk.W, row=9, column=0, columnspan=3, padx=self.xd, pady=self.yd - 3)
 
         self.b_val_var = tk.Button(self, text="VALIDATE VARIABLES", command=lambda: self.verify_variables())
@@ -203,13 +204,13 @@ class MainGui(sg.RaModuleGui):
         self.condition_pl_list = []  # reset plant condition list
         self.condition_tbx_list = []  # reset tbx condition list
 
-        dir2HE = self.dir2sh + "CHSI\\"
+        dir2HE = config.dir2sh + "CHSI\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
         for f in full_list:
             self.condition_i_list.append(str(f))  # pre-project propositions
             self.condition_p_list.append(str(f))  # post-project propositions
 
-        dir2AP = self.dir2ml + "Products\\Rasters\\"
+        dir2AP = config.dir2ml + "Products\\Rasters\\"
         ap_list = [d for d in os.listdir(dir2AP) if os.path.isdir(os.path.join(dir2AP, d))]
         for f in ap_list:
             if ("plant" in str(f).lower()) or ("lyr20" in str(f).lower()):
@@ -266,7 +267,7 @@ class MainGui(sg.RaModuleGui):
         # rebuild = True -> rebuilt menu mode
         if not self.rebuild_fish_menu:
             # initial menu construction
-            sys.path.append(self.dir2ra + "\\.site_packages\\riverpy\\")
+            sys.path.append(config.dir2ripy)
             try:
                 import cFish as cFi
                 self.fish = cFi.Fish()
@@ -301,7 +302,7 @@ class MainGui(sg.RaModuleGui):
         # requires that self.dir2prj was updated before
         self.xlsx_file_name = self.reach + "_" + self.stn + "_assessment_" + self.version + ".xlsx"
         if not(os.path.exists(self.dir2prj)):
-            shutil.copytree(self.dir2pm + ".templates\\REACH_stn_vii_TEMPLATE\\", self.dir2prj)
+            shutil.copytree(config.dir2pm + ".templates\\REACH_stn_vii_TEMPLATE\\", self.dir2prj)
             os.rename(self.dir2prj + "REACH_stn_assessment_vii.xlsx", self.dir2prj + self.xlsx_file_name)
             return "New project assessment folder created."
         else:
@@ -328,8 +329,8 @@ class MainGui(sg.RaModuleGui):
             self.b_select_c_p.config(fg="forest green", text="Selection OK")
 
     def set_dir2SR(self):
-        self.dir2ra = askdirectory(initialdir=".") + "/"
-        self.l_dir2SR.config(text="Current: " + str(self.dir2ra))
+        config.dir2ra = askdirectory(initialdir=".") + "/"
+        self.l_dir2SR.config(text="Current: " + str(config.dir2ra))
 
     def set_fish(self, species, *lifestage):
         try:
@@ -366,7 +367,7 @@ class MainGui(sg.RaModuleGui):
                 if (condition_pl.__len__() < 1) or (str(condition_pl) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_pl = self.dir2ml + "Products\\Rasters\\" + condition_pl + "\\"
+                dir2AP_pl = config.dir2ml + "Products\\Rasters\\" + condition_pl + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s20.main(dir2AP_pl, self.reach, self.stn, self.unit, self.version)
                 self.b_s20.config(text="Delineate plantings OK", fg="forest green")
@@ -380,7 +381,7 @@ class MainGui(sg.RaModuleGui):
                 if (condition_tbx.__len__() < 1) or (str(condition_tbx) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_tbx = self.dir2ml + "Products\\Rasters\\" + condition_tbx + "\\"
+                dir2AP_tbx = config.dir2ml + "Products\\Rasters\\" + condition_tbx + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s21.main(dir2AP_tbx, self.vege_cr, self.reach, self.stn, self.unit, self.version)
                 self.b_s21.config(text="Stabilize plantings OK", fg="forest green")
@@ -404,7 +405,7 @@ class MainGui(sg.RaModuleGui):
                     showinfo("ERROR", "Select condition after terraforming.")
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.dir2ra, self.fish_applied, self.reach, self.stn, self.unit, self.version)
+                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), config.dir2ra, self.fish_applied, self.reach, self.stn, self.unit, self.version)
                 self.b_s40.config(text="Net gain in AUA calculation OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
@@ -424,7 +425,7 @@ class MainGui(sg.RaModuleGui):
             error_msges.append("Site short name must consist of three small letters (letter1 + letter2 + letter3).")
         if self.vege_cr == 0.01:
             error_msges.append("Minimum survival threshold for plants must be a float number in years.")
-        if not os.path.isdir(self.dir2ml + "Products\\"):
+        if not os.path.isdir(config.dir2ml + "Products\\"):
             error_msges.append("Check path to RiverArchitect package and its subdirectory MaxLifespan/Products.")
 
         if error_msges.__len__() > 0:

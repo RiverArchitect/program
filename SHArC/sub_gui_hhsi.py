@@ -14,6 +14,7 @@ try:
 
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cMakeTable as cMkT
     import cFlows as cFl
     import cInputOutput as cIO
@@ -24,18 +25,16 @@ except:
 
 class HHSIgui(object):
     def __init__(self, master, unit, fish_applied, *args):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
-        self.dir_conditions = self.dir2ra + "01_Conditions\\"
         self.dir_input_ras = ""
         self.condition = ""
-        self.condition_list = fG.get_subdir_names(self.dir_conditions)
+        self.condition_list = fG.get_subdir_names(config.dir2conditions)
         self.max_columnspan = 5
         self.discharge_xlsx = []
         self.unit = unit
         self.fish_applied = fish_applied
 
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
         try:
             # test if a boundary shapefile was provided
@@ -57,7 +56,7 @@ class HHSIgui(object):
 
         self.l_condition = tk.Label(top, text="Select a hydraulic Condition:")
         self.l_condition.grid(sticky=tk.W, row=2, rowspan=3, column=0, padx=self.xd, pady=self.yd)
-        self.l_inpath_curr = tk.Label(top, fg="gray60", text="Source: "+str(self.dir_conditions))
+        self.l_inpath_curr = tk.Label(top, fg="gray60", text="Source: "+str(config.dir2conditions))
         self.l_inpath_curr.grid(sticky=tk.W, row=5, column=0, columnspan=self.max_columnspan + 1, padx=self.xd, pady=self.yd)
 
         self.l_dummy = tk.Label(top, text="                                                                          ")
@@ -91,7 +90,7 @@ class HHSIgui(object):
 
         self.b_HSC = tk.Button(top, width=30, bg="white",
                                text="    Optional: Edit Habitat Suitability Curves", anchor='w',
-                               command=lambda: self.open_files([self.dir2ra + ".site_packages\\templates\\Fish.xlsx"]))
+                               command=lambda: self.open_files([config.xlsx_aqua]))
         self.b_HSC.grid(sticky=tk.EW, row=7, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
 
         self.b_run = tk.Button(top, width=30, bg="white", text="Run (generate habitat condition)",
@@ -118,7 +117,7 @@ class HHSIgui(object):
                 spreadsheet_handle = cMkT.MakeFlowTable(self.condition, "sharc", unit=self.unit)
                 self.discharge_xlsx.append(spreadsheet_handle.make_aquatic_condition_xlsx(fsn))
                 # get discharge statistics and write them to workbook
-                xlsx_flow_dur = self.dir2ra + "00_Flows\\" + self.condition + "\\flow_duration_" + str(fsn) + ".xlsx"
+                xlsx_flow_dur = config.dir2flows + self.condition + "\\flow_duration_" + str(fsn) + ".xlsx"
                 Q_stats = cFl.FlowAssessment()
                 Q_stats.get_flow_duration_data_from_xlsx(xlsx_flow_dur)
                 exceedances = []
@@ -172,7 +171,7 @@ class HHSIgui(object):
     def select_condition(self):
         items = self.lb_condition.curselection()
         self.condition = [self.condition_list[int(item)] for item in items][0]
-        self.dir_input_ras = self.dir2ra + "01_Conditions\\" + self.condition + "\\"
+        self.dir_input_ras = config.dir2conditions + self.condition + "\\"
 
         if os.path.exists(self.dir_input_ras):
             self.l_inpath_curr.config(fg="forest green", text="Selected: " + str(self.dir_input_ras))
@@ -181,12 +180,6 @@ class HHSIgui(object):
         self.prepare_discharge_file()
         self.remake_buttons()
 
-    # def select_flowdur_xlsx(self):
-    #     self.xlsx_flow_dur = askopenfilename(initialdir=self.dir2ra + "\\00_Flows\\", title="Select xlsx file containing the discharge duration curve (Q_flowdur-days)")
-    #     self.b_flowdur_select.config(
-    #         text="i) Selected flow duration curve: " + str(self.xlsx_flow_dur).split("/")[-1].split("\\")[-1],
-    #         fGl="forest green")
-    #     self.b_c_select["state"] = "normal"
 
     def user_message(self, msg):
         showinfo("INFO", msg)

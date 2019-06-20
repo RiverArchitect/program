@@ -1,9 +1,10 @@
 # !/usr/bin/python
 import os, sys, logging
 try:
+    import config
     import fGlobal as fGl
     from shutil import copyfile
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\")
+    sys.path.append(config.dir2lf)
     from cReadInpLifespan import Info
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/fGlobal.py, cReadInpLifespan.py).")
@@ -36,7 +37,6 @@ class Mapper:
         self.map_list = []
         self.ras4map_list = []
         self.resolution = 96  # dpi
-        self.template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..\\..")) + "\\02_Maps\\templates\\"
         self.xy_center_points = []
 
         try:
@@ -50,20 +50,19 @@ class Mapper:
                 self.dir_map_ras = str(self.get_input_ras_dir(map_type))
             except:
                 self.logger.info("WARNING: The provided path to rasters for mapping is invalid. Using templates instead.")
-                self.dir_map_ras = self.template_dir + "rasters"
+                self.dir_map_ras = config.dir2map_templates + "rasters"
 
         try:
             self.output_dir = args[1]
         except:
-            self.output_dir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..\\..')) + "\\02_Maps\\" + self.condition + "\\"
+            self.output_dir = config.dir2map + self.condition + "\\"
         fGl.chk_dir(self.output_dir)
         fGl.chk_dir(self.output_dir + "layers\\")
 
         try:
             self.aprx = self.copy_template_project()  # returns an arcpy.mp.ArcGISProject() object
         except:
-            self.logger.info("ERROR: Could read source project (ensure that " + self.template_dir + "river_template.aprx exists).")
+            self.logger.info("ERROR: Could read source project (ensure that " + config.dir2map_templates + "river_template.aprx exists).")
 
     def choose_ref_layer(self, raster_type):
         # raster_type =  STR of mxd or raster name
@@ -162,7 +161,7 @@ class Mapper:
     def copy_template_project(self):
         try:
             if not os.path.isfile(self.output_dir + "maps_" + self.condition + "_design.aprx"):
-                arcpy.mp.ArcGISProject(self.template_dir + "river_template.aprx").saveACopy(self.output_dir + "maps_" + self.condition + "_design.aprx")
+                arcpy.mp.ArcGISProject(config.dir2map_templates + "river_template.aprx").saveACopy(self.output_dir + "maps_" + self.condition + "_design.aprx")
         except:
             self.logger.info(" >> Using existing project: " + self.output_dir + "maps_" + self.condition + "_design.aprx")
         try:
@@ -174,16 +173,12 @@ class Mapper:
 
     def get_input_ras_dir(self, map_type):
         if (map_type == "lf") or (map_type == "ds"):
-            return os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                '..\\..')) + "\\LifespanDesign\\Output\\Rasters\\" + self.condition + "\\"
+            return config.dir2lf + "Output\\Rasters\\" + self.condition + "\\"
         if map_type == "mlf":
-            self.dir_map_shp = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                               '..\\..')) + "\\MaxLifespan\\Output\\Shapefiles\\" + self.condition + "\\"
-            return os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                '..\\..')) + "\\MaxLifespan\\Output\\Rasters\\" + self.condition + "\\"
+            self.dir_map_shp = config.dir2ml + "Output\\Shapefiles\\" + self.condition + "\\"
+            return config.dir2ml + "Output\\Rasters\\" + self.condition + "\\"
         if map_type == "mt":
-            return os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                '..\\..')) + "\\ModifyTerrain\\Output\\Rasters\\" + self.condition + "\\"
+            return config.dir2mt + "Output\\Rasters\\" + self.condition + "\\"
 
     def get_raster_extent(self, path2raster):
         # path2raster = STR of full raster directory (e.g., D:/temp/raster.tif)
@@ -365,10 +360,10 @@ class Mapper:
                 if self.map_type == "mlf":
                     self.logger.info("    * retrieving symbology ...")
                     try:
-                        sym_lyr_f = arcpy.mp.LayerFile(self.template_dir + "symbology\\LifespanRasterSymbology.lyrx")
+                        sym_lyr_f = arcpy.mp.LayerFile(config.dir2map_templates + "symbology\\LifespanRasterSymbology.lyrx")
                         sym_lyr = sym_lyr_f.listLayers()[0]
                     except:
-                        self.logger.info("WARNING: Cannot load " + self.template_dir + "symbology\\LifespanRasterSymbology.lyrx")
+                        self.logger.info("WARNING: Cannot load " + config.dir2map_templates + "symbology\\LifespanRasterSymbology.lyrx")
                     self.logger.info("    * updating layer sources ...")
                     for lyr in self.m.listLayers():
                         visibility = True

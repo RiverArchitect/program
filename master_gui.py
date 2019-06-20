@@ -9,6 +9,7 @@ except:
     print("ERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 try:
     sys.path.append(os.path.dirname(__file__) + "\\.site_packages\\riverpy\\")
+    import config
     from cLogger import Logger
     import cDefinitions as cDef
     import cReachManager as cRM
@@ -44,10 +45,6 @@ try:
 except:
     print("ERROR: Could not import SHArC.")
 try:
-    import EcoMorphology
-except:
-    print("ERROR: Could not import EcoMorphology.")
-try:
     import Connectivity
 except:
     print("ERROR: Could not import Connectivity.")
@@ -61,7 +58,7 @@ class RaGui(tk.Frame):
         self.pack()
 
         self.master.title("River Architect")
-        self.master.iconbitmap(os.path.dirname(os.path.abspath(__file__)) + "\\.site_packages\\templates\\code_icon.ico")
+        self.master.iconbitmap(config.code_icon)
 
         self.tab_container = ttk.Notebook(master)
 
