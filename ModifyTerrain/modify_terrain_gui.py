@@ -1,6 +1,7 @@
 try:
     import os, sys
     import tkinter as tk
+    from tkinter import ttk
     from tkinter.messagebox import askokcancel, showinfo
     from tkinter.filedialog import *
     import webbrowser
@@ -83,7 +84,7 @@ class RiverBuilderFrame(tk.Frame):
         self.l_rb.grid(sticky=tk.EW, row=0, column=0, columnspan=2, padx=self.px, pady=self.py)
 
         self.b_rb_inp = tk.Button(self, bg="white", width=b_width, text="Create RB Input.txt File",
-                                  command=lambda: showinfo("INFO", "Under construction"))
+                                  command=lambda: self.start_app("create_rb_input"))
         self.b_rb_inp.grid(sticky=tk.EW, row=1, column=0, columnspan=2, padx=self.px, pady=self.py)
         self.b_rb_inp_s = tk.Button(self, bg="white", text="Select RB Input.txt File",
                                     command=lambda: self.select_input_file())
@@ -91,20 +92,31 @@ class RiverBuilderFrame(tk.Frame):
         self.l_inp_rb = tk.Label(self, text="Selected Input.txt file:\n%s" % "None")
         self.l_inp_rb.grid(sticky=tk.W, row=3, rowspan=2, column=0, columnspan=2, padx=self.px, pady=self.py)
 
-        self.b_run_rb = tk.Button(self, text="Run River Builder", command=lambda: self.run_rb())
+        self.b_run_rb = tk.Button(self, text="Run River Builder", command=lambda: self.start_app("rb"))
         self.b_run_rb.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.px, pady=self.py)
 
         self.set_widget_state("disabled")
-
-    def run_rb(self):
-        # units = STR (either "us" or "si")
-        rb = cRB.RiverBuilder(self.unit)
-        rb.run_riverbuilder(self.rb_inp_file)
 
     def select_input_file(self):
         showinfo("INFO", "The file must be located in %s ." % config.dir2mt)
         self.rb_inp_file = askopenfilename(initialdir=config.dir2mt, title="Select RB Input.txt", filetypes=[("TXT", "*.txt")])
         self.l_inp_rb.config(fg="dark slate gray", text="Selected Input.txt file:\n%s" % self.rb_inp_file)
+
+    def start_app(self, app_name):
+        # instantiate app
+        if app_name == "create_rb_input":
+            try:
+                import sub_gui_rb as sgr
+                sub_gui = sgr.CreateInput(self.master)
+                self.b_rb_inp["state"] = "disabled"
+                self.master.wait_window(sub_gui.top)
+                self.b_rb_inp["state"] = "normal"
+            except:
+                showinfo("ERROR", "Could not launch River Builder Input File Creator.")
+
+        if app_name == "rb":
+            rb = cRB.RiverBuilder(self.unit)
+            rb.run_riverbuilder(self.rb_inp_file)
 
     def set_widget_state(self, state):
         # mode = STR (either "normal" or "disabled")
@@ -133,25 +145,22 @@ class MainGui(sg.RaModuleGui):
         self.l_reach_label.grid(sticky=tk.W, row=0, column=0, padx=self.xd, pady=self.yd)
         self.l_reaches.config(fg="red", text="Select from Reaches menu")
         self.l_reaches.grid(sticky=tk.W, row=0, column=1, columnspan=5, padx=self.xd, pady=self.yd)
-        self.l_condition = tk.Label(self, fg="dark slate gray", text="Condition: ")
-        self.l_condition.grid(sticky=tk.W, row=1, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        # List boxes and scroll bars
-        self.sb_condition = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.sb_condition.grid(sticky=tk.W, row=1, column=2, padx=0, pady=self.yd)
-        self.lb_condition = tk.Listbox(self, height=3, width=30, yscrollcommand=self.sb_condition.set)
-        for e in self.condition_list:
-            self.lb_condition.insert(tk.END, e)
-        self.lb_condition.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
-        self.sb_condition.config(command=self.lb_condition.yview)
+        self.l_condition = tk.Label(self, text="Select condition:")
+        self.l_condition.grid(sticky=tk.W, row=0, column=0, padx=self.xd, pady=self.yd)
+        self.l_inpath_curr = tk.Label(self, fg="gray60", text="Source: " + config.dir2conditions)
+        self.l_inpath_curr.grid(sticky=tk.W, row=1, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.combo_c = ttk.Combobox(self)
+        self.combo_c.grid(sticky=tk.W, row=0, column=1, padx=self.xd, pady=self.yd)
+        self.combo_c['values'] = tuple(fGl.get_subdir_names(config.dir2conditions))
 
         # BUTTONS
         self.b_s_condition = tk.Button(self, fg="red", text="Select Condition",
                                        command=lambda: self.select_condition())
-        self.b_s_condition.grid(sticky=tk.W, row=1, column=3, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_s_condition.grid(sticky=tk.W, row=0, column=3, columnspan=2, padx=self.xd, pady=self.yd)
 
         # THRESHOLD-MOD FRAME
         self.th_mod = ThresholdFrame(self, relief=tk.RAISED)
-        self.set_bg_color(self.th_mod, "white")
+        self.set_bg_color(self.th_mod, "light grey")
         self.th_mod.grid(row=4, column=0, columnspan=2)
         self.th_mod.l_inpath_feat.config(text=str(self.in_feat))
         self.th_mod.b_run_grade.config(command=lambda: self.run_modification("grade"))
@@ -159,7 +168,7 @@ class MainGui(sg.RaModuleGui):
 
         # RIVERBUILDER FRAME
         self.rb = RiverBuilderFrame(self, self.unit, relief=tk.RAISED)
-        self.set_bg_color(self.rb, "white")
+        self.set_bg_color(self.rb, "LightBlue1")
         self.rb.grid(row=4, column=3, columnspan=2)
 
         self.complete_menus()
@@ -176,29 +185,30 @@ class MainGui(sg.RaModuleGui):
     def set_inpath(self):
         self.th_mod.in_topo = config.dir2conditions + str(self.condition) + "\\"
         self.in_feat = config.dir2ml + "Output\\Rasters\\" + str(self.condition) + "\\"
-        if self.th_mod.in_topo.__len__() <= 52:
-            show_topo_dir = self.th_mod.in_topo + "dem.tif"
-        else:
-            show_topo_dir = self.th_mod.in_topo[0:25] + self.th_mod.in_topo[-25:-1] + "dem.tif"
-        if self.in_feat.__len__() <= 59:
-            show_feat_dir = self.in_feat
-        else:
-            show_feat_dir = self.in_feat[0:25] + self.in_feat[-32:-1]
+        if not self.condition.lower() == "none":
+            if self.th_mod.in_topo.__len__() <= 52:
+                show_topo_dir = self.th_mod.in_topo + "dem.tif"
+            else:
+                show_topo_dir = self.th_mod.in_topo[0:25] + self.th_mod.in_topo[-25:-1] + "dem.tif"
+            if self.in_feat.__len__() <= 59:
+                show_feat_dir = self.in_feat
+            else:
+                show_feat_dir = self.in_feat[0:25] + self.in_feat[-32:-1]
 
-        if os.path.exists(self.th_mod.in_topo):
-            self.th_mod.l_inpath_topo.config(text=show_topo_dir)
-        else:
-            if not os.path.isfile(self.th_mod.in_topo + 'dem.tif'):
-                self.th_mod.b_in_topo.config(fg="red", width=25, bg="white",
-                                             text="Change input DEM (condition DEM) directory (REQUIRED)",
-                                             command=lambda: self.change_in_topo())
-                showinfo("WARNING", "Cannot find DEM GeoTIFF:\n" + self.th_mod.in_topo + " (DEM required)")
-            self.th_mod.l_inpath_topo.config(fg="red", text="Set DEM input directory")
-        if os.path.exists(self.in_feat):
-            self.th_mod.l_inpath_feat.config(text=show_feat_dir)
-        else:
-            self.th_mod.l_inpath_feat.config(text="No alternative feature input directory provided.")
-        self.th_mod.set_widget_state("normal")
+            if os.path.exists(self.th_mod.in_topo):
+                self.th_mod.l_inpath_topo.config(text=show_topo_dir)
+            else:
+                if not os.path.isfile(self.th_mod.in_topo + 'dem.tif'):
+                    self.th_mod.b_in_topo.config(fg="red", width=25, bg="white",
+                                                 text="Change input DEM (condition DEM) directory (REQUIRED)",
+                                                 command=lambda: self.change_in_topo())
+                    showinfo("WARNING", "Cannot find DEM GeoTIFF:\n" + self.th_mod.in_topo + " (DEM required)")
+                self.th_mod.l_inpath_topo.config(fg="red", text="Set DEM input directory")
+            if os.path.exists(self.in_feat):
+                self.th_mod.l_inpath_feat.config(text=show_feat_dir)
+            else:
+                self.th_mod.l_inpath_feat.config(text="No alternative feature input directory provided.")
+            self.th_mod.set_widget_state("normal")
         self.rb.set_widget_state("normal")
 
     def run_modification(self, feat):
@@ -220,11 +230,10 @@ class MainGui(sg.RaModuleGui):
 
     def select_condition(self):
         try:
-            items = self.lb_condition.curselection()
-            self.condition = [self.condition_list[int(item)] for item in items][0]
+            self.condition = self.combo_c.get()
             input_dir = config.dir2conditions + str(self.condition)
             if os.path.exists(input_dir) or self.mapping:
-                self.b_s_condition.config(fg="forest green", text="Selected:\n" + self.condition)
+                self.b_s_condition.config(fg="forest green", text="Selected: " + self.condition)
                 self.condition_selected = True
                 self.set_inpath()
                 return ""
