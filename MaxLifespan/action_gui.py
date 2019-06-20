@@ -64,12 +64,12 @@ class ActionGui(sg.RaModuleGui):
         self.set_geometry(self.ww, self.wh, self.title)
         
         self.dir_base_ras = "None (Geofile Maker only)"
-        self.dir2lf_rasters = config.dir2lf + "Products\\Rasters\\"
+        self.dir2lf_rasters = config.dir2lf + "Output\\Rasters\\"
         self.feature_text = []
         self.feature_type = []
         self.condition = "set condition"
         self.condition_list = fGl.get_subdir_names(self.dir2lf_rasters)
-        self.inpath = config.dir2lf + "Products\\Rasters\\" + str(self.condition) + "\\"
+        self.inpath = config.dir2lf + "Output\\Rasters\\" + str(self.condition) + "\\"
         self.mod_dir = False    # if user-defined input directory: True
 
         # GUI OBJECT VARIABLES
