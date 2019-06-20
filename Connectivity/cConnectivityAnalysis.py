@@ -55,8 +55,16 @@ class ConnectivityAnalysis:
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
 
-        for Q in sorted(self.discharges):
-            self.analyze_flow(Q)
+        self.logger.info("Attempting CPU multiprocessing of analysis...")
+        try:
+            import multiprocessing as mp
+            thread_num = min(len(self.discharges), mp.cpu_count())
+            p = mp.Pool(thread_num)
+            p.map(self.analyze_flow, sorted(self.discharges))
+        except:
+            self.logger.info("ERROR: Multiprocessing failed, proceeding with serial processing.")
+            for Q in sorted(self.discharges):
+                self.analyze_flow(Q)
 
         self.clean_up()
 
