@@ -210,7 +210,7 @@ class MainGui(sg.RaModuleGui):
             self.condition_i_list.append(str(f))  # pre-project propositions
             self.condition_p_list.append(str(f))  # post-project propositions
 
-        dir2AP = config.dir2ml + "Products\\Rasters\\"
+        dir2AP = config.dir2ml + "Output\\Rasters\\"
         ap_list = [d for d in os.listdir(dir2AP) if os.path.isdir(os.path.join(dir2AP, d))]
         for f in ap_list:
             if ("plant" in str(f).lower()) or ("lyr20" in str(f).lower()):
