@@ -12,16 +12,16 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cDefinitions as cDef
     import fGlobal as fGl
     import cReachManager as cRM
 except:
-    print("ExceptionERROR: Cannot find package files (RP/fGlobal.py, RP/cDefinitions.py, RP/cReachManager).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class PopUpWindow(object):
     def __init__(self, master):
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         top = self.top = tk.Toplevel(master)
         msg0 = "Manning\'s n is used in the calculation of grain mobility for shear velocity.\n"
         msg1 = "Please refer to the manual (Lifespan mapping section about angular boulders and grain mobility) for more details.\n"
@@ -38,7 +38,7 @@ class PopUpWindow(object):
         self.b.pack(padx=5, pady=5)
         self.l_3 = tk.Label(top, text=msg3)
         self.l_3.pack(padx=5, pady=5)
-        self.top.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.top.iconbitmap(config.code_icon)
 
     def cleanup(self):
         self.value = self.e.get()
@@ -48,7 +48,6 @@ class PopUpWindow(object):
 class RunGui:
     def __init__(self, master):
         # Construct the Frame object
-        self.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         self.master = tk.Toplevel(master)
         self.master.wm_title("CHECK CONSOLE MESSAGES")
         self.master.bell()
@@ -64,14 +63,14 @@ class RunGui:
     def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n, ext_type):
         import feature_analysis as fa
         out_dir = fa.raster_maker(condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n, ext_type)
-        self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.master.iconbitmap(config.code_icon)
         return out_dir
 
     def gui_map_maker(self, raster_directories, reach_ids_applied):
         # raster_directories = LIST
         # reach_ids_applied = LIST
         import feature_analysis as fa
-        self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+        self.master.iconbitmap(config.code_icon)
         if not reach_ids_applied or any(str(rid) == "none" for rid in reach_ids_applied):
             return fa.map_maker(raster_directories)
         else:
@@ -99,7 +98,7 @@ class FaGui(sg.RaModuleGui):
         self.title = "Lifespan Design"
         self.set_geometry(self.ww, self.wh, self.title)
 
-        self.condition_list = fGl.get_subdir_names(self.dir2ra + "01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
         self.condition_selected = False
 
         self.feature_list = []
@@ -269,10 +268,10 @@ class FaGui(sg.RaModuleGui):
             if str(args[0]) == "MT":
                 _f = self.reach_template_dir + filename
             else:
-                _f = self.dir2ra + "01_Conditions\\" + self.condition + "\\" + filename
+                _f = config.dir2conditions + self.condition + "\\" + filename
         except:
             try:
-                _f = self.dir2ra + "01_Conditions\\" + self.condition + "\\" + filename
+                _f = config.dir2conditions + self.condition + "\\" + filename
             except:
                 _f = None
 
@@ -334,7 +333,7 @@ class FaGui(sg.RaModuleGui):
         run = RunGui(self)
         if self.out_ras_dir.__len__() < 1:
             showinfo("INFORMATION", "Choose folder that contains lifespan and design rasters.")
-            self.out_ras_dir = [askdirectory(initialdir=self.dir2lf + "Output/") + "/"]
+            self.out_ras_dir = [askdirectory(initialdir=config.dir2lf + "Output/") + "/"]
         if not self.reach_ids_applied.__len__() < 1:
             self.out_lyt_dir = run.gui_map_maker(self.out_ras_dir, self.reach_ids_applied)
         else:
@@ -365,7 +364,7 @@ class FaGui(sg.RaModuleGui):
         try:
             items = self.lb_condition.curselection()
             self.condition = [self.condition_list[int(item)] for item in items][0]
-            input_dir = self.dir2ra + "01_Conditions\\" + str(self.condition)
+            input_dir = config.dir2conditions + str(self.condition)
             if os.path.exists(input_dir) or self.mapping:
                 self.b_v_condition.config(fg="forest green", text="Selected:\n" + self.condition)
                 self.b_mod_r["state"] = "normal"

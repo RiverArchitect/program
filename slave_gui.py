@@ -9,6 +9,7 @@ except:
     print("ERROR: Missing fundamental packages (required: os, sys, tkinter, webbrowser).")
 try:
     sys.path.append(os.path.dirname(__file__) + "\\.site_packages\\riverpy\\")
+    import config
     import cDefinitions as cDef
     import cReachManager as cRM
     import fGlobal as fGl
@@ -18,15 +19,7 @@ except:
 
 class RaModuleGui(tk.Frame):
     def __init__(self, master=None):
-        self.dir2ra = os.path.dirname(os.path.abspath(__file__)) + "\\"
-        self.dir2co = os.path.dirname(os.path.abspath(__file__)) + "\\Connectivity\\"
-        self.dir2lf = os.path.dirname(os.path.abspath(__file__)) + "\\LifespanDesign\\"
-        self.dir2ml = os.path.dirname(os.path.abspath(__file__)) + "\\MaxLifespan\\"
-        self.dir2mt = os.path.dirname(os.path.abspath(__file__)) + "\\ModifyTerrain\\"
-        self.dir2pm = os.path.dirname(os.path.abspath(__file__)) + "\\ProjectMaker\\"
-        self.dir2sh = os.path.dirname(os.path.abspath(__file__)) + "\\SHArC\\"
-        self.dir2va = os.path.dirname(os.path.abspath(__file__)) + "\\VolumeAssessment\\"
-        self.condition_list = fGl.get_subdir_names(self.dir2ra + "\\01_Conditions\\")
+        self.condition_list = fGl.get_subdir_names(config.dir2ra + "01_Conditions\\")
         self.condition = ""
         self.errors = False
         self.features = cDef.FeatureDefinitions()
@@ -37,7 +30,7 @@ class RaModuleGui(tk.Frame):
         self.reach_ids_applied = []  # self.reaches.id_xlsx ## initial: all reaches (IDs)
         self.reach_lookup_needed = False
         self.reach_names_applied = []  # self.reaches.names_xlsx ## initial: all reaches (full names)
-        self.reach_template_dir = self.dir2mt + ".templates\\"
+        self.reach_template_dir = config.dir2mt + ".templates\\"
         self.reader = cRM.Read()
         self.unit = "us"
         self.verified = False
@@ -97,10 +90,10 @@ class RaModuleGui(tk.Frame):
 
     def define_reaches(self):
         try:
-            webbrowser.open(self.dir2mt + ".templates\\computation_extents.xlsx")
+            webbrowser.open(config.dir2mt + ".templates\\computation_extents.xlsx")
             self.reach_lookup_needed = True  # tells build_reachmenu that lookup of modified spreasheet info is needed
         except:
-            showinfo("ERROR", "Cannot open the file\n" + self.dir2mt + ".templates\\computation_extents.xlsx")
+            showinfo("ERROR", "Cannot open the file\n" + config.dir2mt + ".templates\\computation_extents.xlsx")
 
     def make_reach_menu(self, reachmenu):
         # reachmenu = tk.Menu object
@@ -159,6 +152,11 @@ class RaModuleGui(tk.Frame):
         if askokcancel("Close", "Do you really want to quit?"):
             tk.Frame.quit(self)
 
+    def set_bg_color(self, master_frame, bg_color):
+        master_frame.config(bg=bg_color)
+        for wid in master_frame.winfo_children():
+            wid.configure(bg=bg_color)
+
     def set_geometry(self, ww, wh, tab_title):
         # ww and wh = INT of window width and window height
         # Upper-left corner of the window.
@@ -169,7 +167,7 @@ class RaModuleGui(tk.Frame):
         # Give the window a title.
         if __name__ == '__main__':
             self.master.title(tab_title)
-            self.master.iconbitmap(self.dir2ra + ".site_packages\\templates\\code_icon.ico")
+            self.master.iconbitmap(config.dir2ra + ".site_packages\\templates\\code_icon.ico")
 
     def show_credits(self):
         showinfo("Credits", fGl.get_credits())

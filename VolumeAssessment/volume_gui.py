@@ -12,6 +12,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
     import cReachManager as cRM
     import cDefinitions as cDef
@@ -30,10 +31,10 @@ class MainGui(sg.RaModuleGui):
 
         self.dir_ras_vol = ""
 
-        self.org_dem_dir = self.dir2ra + "01_Conditions\\"
-        self.mod_dem_dir = self.dir2ra + "01_Conditions\\"
+        self.org_dem_dir = config.dir2conditions
+        self.mod_dem_dir = config.dir2conditions
         self.raster4mapping = []
-        self.template_dir = self.dir2va + ".templates\\"
+        self.template_dir = config.dir2va + ".templates\\"
         self.vol_name = ""
 
         # GUI OBJECT VARIABLES
@@ -126,7 +127,7 @@ class MainGui(sg.RaModuleGui):
                                     mod_ras_dir=self.mod_dem_dir, reach_ids=self.reach_ids_applied)
         self.vol_name, self.dir_ras_vol = vola.get_volumes()
         self.raster4mapping = vola.rasters
-        fGl.rm_dir(self.dir2va + ".cache\\")
+        fGl.rm_dir(config.dir2va + ".cache\\")
 
         self.runmenu.entryconfig(1, command=lambda: self.run_map_maker())
         if self.mapping.get():

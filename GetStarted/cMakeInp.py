@@ -5,17 +5,18 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
     import cInputOutput as cIO
 except:
-    print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
+    print("ExceptionERROR: Missing RiverArchitect packages (riverpy).")
 
 
 class MakeInputFile:
     def __init__(self, dir2condition):
-        self.dir2condition = dir2condition
+        self.dir2condition_act = dir2condition
         self.logger = logging.getLogger("logfile")
-        self.inp_file_name = self.dir2condition + "\\input_definitions.inp"
+        self.inp_file_name = self.dir2condition_act + "\\input_definitions.inp"
         self.return_periods = []
         self.dod = []
         self.dmean = ""
@@ -49,7 +50,7 @@ class MakeInputFile:
 
         # DOD  and dmean
         self.logger.info("   * Reading dod and dmean info")
-        ras_name_list = [i for i in os.listdir(self.dir2condition) if i.endswith('.tif')]
+        ras_name_list = [i for i in os.listdir(self.dir2condition_act) if i.endswith('.tif')]
         for ras in ras_name_list:
             if ("scour" in str(ras)) or ("fill" in str(ras)):
                 self.dod.append(str(ras).split(".tif")[0])

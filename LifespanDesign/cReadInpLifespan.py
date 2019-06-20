@@ -6,7 +6,9 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
 
 try:
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
+    sys.path.append(config.dir2oxl)
     import openpyxl as oxl
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/openpyxl/openpyxl.py).")
@@ -16,8 +18,7 @@ class Info(object):
     def __init__(self, condition, *args):
         # type defines lines to read in .inp file
         self.alt_path = str()
-        self.dir2condition = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + condition
-        self.inp_file = self.dir2condition + "\\input_definitions.inp"
+        self.inp_file = config.dir2condition + condition + "\\input_definitions.inp"
         self.inp_coord = r'' + os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\mapping.inp"
         self.ras_names = []
         try:

@@ -4,7 +4,9 @@ try:
     import sys, os, arcpy, logging
     import arcpy
     from arcpy.sa import *
+    import cRiverBuilderConstruct as cRBC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
 except:
     print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
@@ -21,9 +23,8 @@ class RiverBuilder:
         # units = STR (either "us" or "si")
         self.logger = logging.getLogger("logfile")
 
-        self.dir = os.path.dirname(__file__) + "/"
-        self.dir2ra = self.input_dir_fa = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "/"
-        self.dir_out = self.dir + "Output/RiverBuilder"
+        self.dir2rb = config.dir2mt + "/RiverBuilder/"
+        self.dir_out = config.dir2mt + "Output/RiverBuilder"
 
         self.R = robjects.r
 
@@ -40,17 +41,22 @@ class RiverBuilder:
         else:
             self.m2ft = 1.0
 
+    def make_inp_file(self, txt_file_name):
+        # txt_file_name = STR of Input.txt to be stored in self.dir/RiverBuilder (file name only!)
+        self.logger.info(" * Writing River Builder Input file (%s)." % txt_file_name)
+        new_inp_file = cRBC.InputFile(txt_file_name)
+
 
     def run_riverbuilder(self, input_file_name):
         # input_file_name = STR of RiverBuilder Input.txt file that must be stored in self.dir
-        self.R.setwd(self.dir)
+        self.R.setwd(self.dir2rb)
         self.R.source('riverbuilder.r')
         # self.R.get("riverbuilder")  # uncomment if next command doesn't work
         self.R.riverbuilder(input_file_name, self.dir_out, overwrite='TRUE')  # difference to R: TRUE as STR
 
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = MU (%s)" % os.path.dirname(__file__))
+        print("Class Info: <type> = RiverBuilder (%s)" % os.path.dirname(__file__))
         print(dir(self))
 
 

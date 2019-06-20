@@ -11,6 +11,7 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cInputOutput as cIO
 except:
     print("ExceptionERROR: Cannot find package files (riverpy).")
@@ -20,7 +21,7 @@ class ParameterContainer:
     def __init__(self, condition, par_id):
         self.logger = logging.getLogger("logfile")
         self.condition = condition  # [str] state of planning situation, .e.g., "2008"
-        self.raster_path = r"" + os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\"
+        self.raster_path = config.dir2conditions
         input_info = Info(condition, par_id)
         self.raster_names = input_info.raster_read()
         self.flood_dependency_dict = {"chsi": False, "d2w": False, "dem": False, "det": False, "dod": False, "grains": False,
@@ -151,7 +152,7 @@ class MU(ParameterContainer):
                 self.raster = ""
 
     def read_mus(self):
-        mu_xlsx = cIO.Read(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\templates\\morphological_units.xlsx")
+        mu_xlsx = cIO.Read(config.xlsx_mu)
         for i in range(6, 44):
             # loop over all mu-rows
             if not (i == 23):

@@ -1,0 +1,1 @@
+Outer Floodplain Edge Height (meters) – the incremental increase in elevation from the bank top to the outer edge of the floodplain on the Y-Z plane. Input must be a real number, zero or larger. If this number is close to zero, then the floodplain is essentially flat. If it is high, then the floodplain is sloped.

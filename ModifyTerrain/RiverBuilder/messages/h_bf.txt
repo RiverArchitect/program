@@ -1,0 +1,1 @@
+Bankfull Depth – the height between the thalweg elevation and then bank top and thalweg on the X-Z plane, not counting any sub-reach variability functions. Input must be a positive real number. Depending on channel slope and variability functions, the local bankfull depth can differ from this value.

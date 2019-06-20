@@ -4,6 +4,7 @@ from operator import itemgetter
 from fFunctions import *
 logger = logging.getLogger("logfile")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+import config
 import cInputOutput as cIO
 import cSHArC
 

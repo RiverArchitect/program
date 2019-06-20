@@ -15,6 +15,7 @@ except:
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fGl
+    import config
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
 
@@ -24,14 +25,14 @@ class DET:
         # args[0] optional out_dir -- otherwise: out_dir = script_dir
         # kwargs
 
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache2\\"  # use cache2 to enable parallel proc.
+        self.cache = config.dir2gs + ".cache2\\"  # use cache2 to enable parallel proc.
         self.reset_cache = False
         fGl.chk_dir(self.cache)
 
         try:
             self.out_dir = args[0]
         except:
-            self.out_dir = os.path.dirname(os.path.realpath(__file__)) + "\\"
+            self.out_dir = config.dir2gs
 
         self.logger = logging.getLogger("logfile")
 

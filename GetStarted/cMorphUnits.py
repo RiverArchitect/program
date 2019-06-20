@@ -14,10 +14,11 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fGlobal as fGl
     import cInputOutput as cIO
 except:
-    print("ExceptionERROR: Missing RiverArchitect packages (required: RP/fGlobal).")
+    print("ExceptionERROR: Cannot find riverpy.")
 
 
 class MU:
@@ -25,15 +26,15 @@ class MU:
         # args[0] optional out_dir -- otherwise: out_dir = script_dir
         # kwargs
         self.logger = logging.getLogger("logfile")
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
-        self.mu_xlsx_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\templates\\morphological_units.xlsx"
+        self.cache = config.dir2gs + ".cache\\"
+        self.mu_xlsx_dir = config.xlsx_mu
         self.logger.info("->> Reading Morphological Units (%s)" % self.mu_xlsx_dir)
         fGl.chk_dir(self.cache)
 
         try:
             self.out_dir = args[0]
         except:
-            self.out_dir = os.path.dirname(os.path.realpath(__file__)) + "\\"
+            self.out_dir = config.dir2gs
 
         if unit_system == "us":
             self.logger.info(" * converting Rasters to U.S. customary units")

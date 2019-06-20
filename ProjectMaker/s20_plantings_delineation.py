@@ -3,6 +3,8 @@ import arcpy
 import webbrowser
 from fFunctions import *
 logger = logging.getLogger("logfile")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+import config
 try:
     from arcpy.sa import *
 except:
@@ -34,7 +36,7 @@ def main(action_dir, reach, stn, unit, version):
     arcpy.CheckOutExtension('Spatial')
     arcpy.gp.overwriteOutput = True
 
-    path2PP = os.path.dirname(os.path.realpath(__file__)) + "\\" + reach + "_" + stn + "_" + version + "\\"
+    path2PP = config.dir2pm + reach + "_" + stn + "_" + version + "\\"
 
     # folder settings 
     ras_dir = path2PP + "Geodata\\Rasters\\"

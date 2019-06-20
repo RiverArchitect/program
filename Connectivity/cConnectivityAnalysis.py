@@ -5,6 +5,7 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cFish as cFi
     import fGlobal as fG
     import cMakeTable as cMkT
@@ -25,7 +26,7 @@ class ConnectivityAnalysis:
 
     def __init__(self, condition, species, lifestage, units, *args):
         self.logger = logging.getLogger("logfile")
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
+        self.cache = config.dir2co + ".cache\\"
         fG.chk_dir(self.cache)
         arcpy.env.workspace = self.cache
         arcpy.env.overwriteOutput = True
@@ -33,11 +34,10 @@ class ConnectivityAnalysis:
         self.species = species
         self.lifestage = lifestage
         self.units = units
-        self.dir2condition = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
         try:
             self.out_dir = args[0]
         except:
-            self.out_dir = os.path.dirname(__file__) + "\\Output\\" + self.condition + "\\"
+            self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
             fG.chk_dir(self.out_dir)
         self.connectivity_analysis()
 
@@ -50,14 +50,14 @@ class ConnectivityAnalysis:
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
 
-        for Q in sorted(mkt.discharges):
+        for Q in sorted(cMkT.discharges):
             self.logger.info("\n>>> Analyzing discharge: %i" % Q)
 
             # *** get/create interpolated depth and velocity rasters
             # use interpolated h from cWaterLevel, in new interpolated area set velocity = 0
 
-            h_ras = Raster(self.dir2condition + mkt.dict_Q_h_ras[Q])
-            u_ras = Raster(self.dir2condition + mkt.dict_Q_u_ras[Q])
+            h_ras = Raster(config.dir2condition + cMkT.dict_Q_h_ras[Q])
+            u_ras = Raster(config.dir2condition + cMkT.dict_Q_u_ras[Q])
 
             # read in fish data (minimum depth needed, max swimming speed, ...)
             h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")

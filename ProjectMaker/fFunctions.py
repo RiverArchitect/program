@@ -1,5 +1,6 @@
 import os, logging, sys
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+import config
 
 def chk_dir(directory):
     if not os.path.exists(directory):
@@ -79,10 +80,10 @@ def write_dict2xlsx(data_dict, file, key_col, val_col, start_row, *logger):
     logger = logging.getLogger("logfile")
     try:
         # load relevant files from RiverArchitect/ModifyTerrain module
-        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\openpyxl\\")
+        sys.path.append(config.dir2oxl)
         import openpyxl as oxl
     except:
-        logger.info("ExceptionERROR: Cannot find .../RiverArchitect/MT/.openpyxl/openpyxl.py.")
+        logger.info("ExceptionERROR: Cannot find %s." % config.dir2oxl)
         logger.info("                --> Correction required in: fFunctions.py")
         try:
             from inspect import currentframe, getframeinfo

@@ -17,6 +17,7 @@ try:
     import slave_gui as sg
     # load routines from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cFlows as cFl
     import cFish as cFi
     import fGlobal as fGl
@@ -75,8 +76,8 @@ class MainGui(sg.RaModuleGui):
     def select_condition(self):
         items = self.lb_condition.curselection()
         self.condition = [self.condition_list[int(item)] for item in items][0]
-        self.dir_input_ras = self.dir2ra + "01_Conditions\\" + self.condition + "\\"
-        self.out_dir = self.dir2co + "Output\\" + self.condition + "\\"
+        self.dir_input_ras = config.dir2conditions + self.condition + "\\"
+        self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
         fGl.chk_dir(self.out_dir)
 
         if os.path.exists(self.dir_input_ras):
@@ -155,7 +156,7 @@ class MainGui(sg.RaModuleGui):
         self.make_fish_menu(rebuild=False)
 
     def select_boundary_shp(self):
-        self.bound_shp = askopenfilename(initialdir=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\",
+        self.bound_shp = askopenfilename(initialdir=config.dir2conditions,
                                          title="Select boundary shapefile containing a rectangular polygon",
                                          filetypes=[("Shapefiles", "*.shp")])
 
@@ -168,7 +169,3 @@ class MainGui(sg.RaModuleGui):
     def __call__(self):
         self.mainloop()
 
-
-# enable script to run stand-alone
-if __name__ == "__main__":
-    MainGui().mainloop()

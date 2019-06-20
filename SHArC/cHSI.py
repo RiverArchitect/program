@@ -11,6 +11,7 @@ except:
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cFish as cFi
     import cMakeTable as cMkT
     import cInputOutput as cIO
@@ -21,20 +22,20 @@ except:
 
 class CHSI:
     def __init__(self, hab_condition, cover_applies, unit):
-        self.cache = os.path.dirname(os.path.abspath(__file__)) + "\\.cache\\"
+        self.cache = config.dir2sh + ".cache\\"
         self.condition = hab_condition
         self.combine_method = "geometric_mean"
         self.cover_applies = cover_applies  # BOOL
         self.logger = logging.getLogger("logfile")
 
-        self.path_condition = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\01_Conditions\\" + self.condition + "\\"
-        self.path_hsi = os.path.dirname(os.path.abspath(__file__)) + "\\HSI\\" + str(self.condition) + "\\"
+        self.path_condition = config.dir2conditions + self.condition + "\\"
+        self.path_hsi = config.dir2sh + "HSI\\" + str(self.condition) + "\\"
         if self.cover_applies:
             p_ext = "cover"
         else:
             p_ext = "no_cover"
-        self.path_csi = os.path.dirname(os.path.abspath(__file__)) + "\\CHSI\\" + str(self.condition) + "\\" + p_ext + "\\"
-        self.path_sha_ras = os.path.dirname(os.path.abspath(__file__)) + "\\SHArea\\Rasters_" + str(self.condition) + "\\" + p_ext + "\\"
+        self.path_csi = config.dir2sh + "CHSI\\" + str(self.condition) + "\\" + p_ext + "\\"
+        self.path_sha_ras = config.dir2sh + "SHArea\\Rasters_" + str(self.condition) + "\\" + p_ext + "\\"
         fG.chk_dir(self.cache)
         fG.chk_dir(self.path_csi)
         fG.chk_dir(self.path_sha_ras)
@@ -351,15 +352,15 @@ class HHSI:
     def __init__(self, geo_input_path, condition, *unit_system):
 
         # general directories and parameters
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
+        self.cache = config.dir2sh + ".cache\\"
         self.condition = condition
         self.dir_in_geo = geo_input_path
-        self.path_hsi = os.path.dirname(os.path.realpath(__file__)) + "\\HSI\\" + str(condition) + "\\"
+        self.path_hsi = config.dir2sh + "HSI\\" + str(condition) + "\\"
         self.error = False
         self.flow_dict_h = {}
         self.flow_dict_u = {}
         self.fish = cFi.Fish()
-        self.logger = logging.getLogger("habitat_evaluation")
+        self.logger = logging.getLogger("logfile")
         self.raster_dict = {}
         self.ras_h = []
         self.ras_u = []
@@ -727,4 +728,4 @@ class CovHSI(HHSI):
         return self.spatial_join_analysis(__ras__, curve_data)
 
     def __call__(self, *args):
-        print("Class Info: <type> = CovHSI (Module: Habitat Evaluation)")
+        print("Class Info: <type> = CovHSI (Module: SHArC)")

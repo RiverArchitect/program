@@ -11,6 +11,8 @@ except:
     print("ExceptionERROR: No valid ARCPY found.")
 
 try:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import fFunctions as fF
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: fFunctions).")
@@ -18,7 +20,7 @@ except:
 
 class SHArC:
     def __init__(self, unit, reach, stn, version):
-        self.path2geodata = os.path.dirname(os.path.realpath(__file__)) + "\\" + str(reach).upper() + "_" + str(stn).lower() + "_" + str(version) + "\\Geodata\\"
+        self.path2geodata = config.dir2sh + str(reach).upper() + "_" + str(stn).lower() + "_" + str(version) + "\\Geodata\\"
         self.cache = self.path2geodata + ".cache\\"
         self.cache_count = 0
         fF.chk_dir(self.cache)
@@ -28,7 +30,7 @@ class SHArC:
         self.unit = unit
         if self.unit == "us":
             self.area_unit = "SQUARE_FEET_US"
-            self.ft2ac = 1 / 43560
+            self.ft2ac = config.ft2ac
         else:
             self.area_unit = "SQUARE_METERS"
             self.ft2ac = 1
@@ -204,4 +206,4 @@ class SHArC:
         arcpy.env.workspace = self.cache
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = CAUA (ProjectProposal)")
+        print("Class Info: <type> = cSHArC (ProjectMaker)")

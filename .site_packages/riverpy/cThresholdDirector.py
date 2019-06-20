@@ -1,7 +1,8 @@
 # !/usr/bin/python
 try:
     import sys, os, logging
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\")
+    import config
+    sys.path.append(config.dir2oxl)
     import openpyxl as oxl
 except:
     print("ExceptionERROR: Cannot find package files (.site_packages/openpyxl/openpyxl).")
@@ -11,7 +12,6 @@ class ThresholdDirector:
     # Reads threshold values from file as a function of feature name
     def __init__(self, *args):
         self.logger = logging.getLogger("logfile")
-        self.dir2lf = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
         try:
             # LF instantiates with args[0] = True
             # avoids circular relation and only locally import cDef
@@ -28,7 +28,7 @@ class ThresholdDirector:
                                 "inverse_tcd": 21, "fill": 22, "scour": 23, "S0": 20, "taux": 6, "lf": 24, "ds": 25,
                                 "name": 4}
         self.unit_conv_candidates = ["d2w_low", "d2w_up", "det_low", "det_up", "u", "h", "D", "fill", "scour"]
-        self.thresh_xlsx = self.dir2lf + ".templates\\threshold_values.xlsx"
+        self.thresh_xlsx = config.xlsx_thresholds
 
         try:
             self.wb = oxl.load_workbook(filename=self.thresh_xlsx, read_only=True, data_only=True)

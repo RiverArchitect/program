@@ -5,6 +5,7 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, datetime, logging, numpy).")
 
 try:
+    import config
     import cFish as cFi
     import cInputOutput as cIO
     import fGlobal as fG
@@ -122,8 +123,6 @@ class SeasonalFlowProcessor:
         # functionality:
         # 1) instantiate object
         # 2) assign fish species with self.get_fish_seasons and run self.make_flow_duration() for each species/lifestage
-        self.dir_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
-        self.dir_2lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\"
         self.export_dict = {}
         self.fish = cFi.Fish()
         self.fish_seasons = {}
@@ -134,7 +133,7 @@ class SeasonalFlowProcessor:
         self.min_year = 9999
         self.max_year = 1
         self.season_years = int()
-        self.xlsx_template = self.dir_2lvl_up + "00_Flows\\templates\\flow_duration_template.xlsx"
+        self.xlsx_template = config.dir2ra + "00_Flows\\templates\\flow_duration_template.xlsx"
         self.read_flow_series(input_xlsx)
 
     def add_years(self, curr_date, number_of_years):
@@ -208,7 +207,7 @@ class SeasonalFlowProcessor:
     def make_condition_flow2d_duration(self, condition):
         # condition = STR of CONDITION
         for fish in self.export_dict.keys():
-            xlsx_name = self.dir_2lvl_up + "00_Flows\\" + condition + "\\flow_duration_" + str(fish) + ".xlsx"
+            xlsx_name = config.dir2ra + "00_Flows\\" + condition + "\\flow_duration_" + str(fish) + ".xlsx"
             flows = FlowAssessment()
             Q = []
             pr = []
@@ -313,9 +312,9 @@ class SeasonalFlowProcessor:
             self.logger.info("ERROR: The source discharge file contains non-detectable formats.")
 
     def write_flow_duration2xlsx(self, condition):
-        fG.chk_dir(self.dir_2lvl_up + "00_Flows\\" + condition + "\\")
+        fG.chk_dir(config.dir2ra + "00_Flows\\" + condition + "\\")
         for fish in self.export_dict.keys():
-            export_xlsx_name = self.dir_2lvl_up + "00_Flows\\" + condition + "\\flow_duration_" + str(fish) + ".xlsx"
+            export_xlsx_name = config.dir2ra + "00_Flows\\" + condition + "\\flow_duration_" + str(fish) + ".xlsx"
             self.logger.info("   * writing to " + export_xlsx_name)
             try:
                 xlsx_write = cIO.Write(self.xlsx_template)

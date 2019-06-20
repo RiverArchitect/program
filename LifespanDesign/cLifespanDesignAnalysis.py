@@ -4,7 +4,8 @@ try:
     from cParameters import *
     from cReadInpLifespan import *
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fG
+    import fGlobal as fGl
+    import config
 except:
     print("ExceptionERROR: Cannot find package files (/.site_packages/riverpy/).")
 
@@ -29,7 +30,7 @@ class ArcPyAnalysis:
         # args[2] = FLOAT defining mannings n in s/m^(1/3)
         self.raster_info_lf = ""
         self.condition = str(condition)
-        self.cache = os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\"
+        self.cache = config.dir2lf + ".cache\\"
         self.extent_type = "standard"
 
         self.raster_dict_ds = {}
@@ -40,8 +41,7 @@ class ArcPyAnalysis:
         try:
             self.output = args[0]
         except:
-            self.output = fG.get_newest_output_folder(
-                os.path.dirname(os.path.realpath(__file__)) + "\\Output\\Rasters\\")
+            self.output = fGl.get_newest_output_folder(config.dir2lf + "Output\\Rasters\\")
 
         try:
             unit_system = args[1]
@@ -54,7 +54,7 @@ class ArcPyAnalysis:
             __n__ = 0.0473934
 
         if unit_system == "us":
-            self.ft2m = 0.3048
+            self.ft2m = config.m2ft  # this is correctly assigned!
             self.ft2in = 12  # (in/ft) conversion factor for U.S. customary units
             self.n = __n__ / 1.49  # (s/ft^(1/3)) global Manning's n where k =1.49 converts to US customary
             self.n_label = "s/ft^(1/3)"
@@ -524,7 +524,7 @@ class ArcPyAnalysis:
                         temp_dict = {}
                         for morph_unit in mu_bad:
                             temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                        self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
+                        self.ras_mu = CellStatistics(fGl.dict_values2list(temp_dict.values()), "SUM", "DATA")
                         temp_ras = Con((self.ras_mu >= 1), 0, 1.0)
                         self.ras_mu = temp_ras
                     except:
@@ -536,7 +536,7 @@ class ArcPyAnalysis:
                         temp_dict = {}
                         for morph_unit in mu_good:
                             temp_dict.update({morph_unit: Con((mu.raster == mu.mu_dict[morph_unit]), 1.0, 0)})
-                        self.ras_mu = CellStatistics(fG.dict_values2list(temp_dict.values()), "SUM", "DATA")
+                        self.ras_mu = CellStatistics(fGl.dict_values2list(temp_dict.values()), "SUM", "DATA")
                         temp_ras = Con((self.ras_mu >= 1), 1.0, 0)
                         self.ras_mu = temp_ras
                     except:
@@ -1183,7 +1183,7 @@ class ArcPyAnalysis:
                 self.logger.info("   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
                 if os.path.isfile(self.output + __full_name__):
                     self.logger.info("      >>> Overwriting existing raster.")
-                    file_locked = fG.rm_raster(self.output + __full_name__)
+                    file_locked = fGl.rm_raster(self.output + __full_name__)
                     if file_locked:
                         self.logger.info(
                             "ERROR: Existing files are locked. Consider deleting manually or revise file structure.")
@@ -1258,7 +1258,7 @@ class ArcPyAnalysis:
                 "   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
             if os.path.isfile(self.output + __full_name__ + '.tif'):
                 self.logger.info("      >>> Overwriting existing raster.")
-                file_locked = fG.rm_raster(self.output + __full_name__)
+                file_locked = fGl.rm_raster(self.output + __full_name__)
                 if file_locked:
                     self.logger.info(
                         "ERROR: Existing files are locked. Consider deleting manually or revise file structure.")

@@ -4,9 +4,10 @@ try:
     import sys, os, arcpy, logging
     from arcpy.sa import *
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cReachManager as cRM
     import cDefinitions as cDef
-    import fGlobal as fG
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
 
@@ -18,16 +19,15 @@ class VolumeAssessment:
         # reach_ids = list of reach names to limit the analysis
 
         # general directories and parameters
-        self.dir = os.path.dirname(os.path.realpath(__file__)) + "\\"
-        self.cache = self.dir + ".cache\\"
+        self.cache = config.dir2mt + ".cache\\"
         #mod_ras_dir.split("\\")[-1].split("/")[-1].split(".tif")[0]
         self.vol_name = mod_ras_dir.split(":\\")[-1].split(":/")[-1].split("01_Conditions\\")[-1].split("01_Conditions/")[-1].split(".tif")[0].replace("\\", "_").replace("/", "_").replace("_dem", "")
-        fG.chk_dir(self.cache)
-        fG.clean_dir(self.cache)
+        fGl.chk_dir(self.cache)
+        fGl.clean_dir(self.cache)
         self.logger = logging.getLogger("logfile")
-        self.output_ras_dir = self.dir + "Output\\%s\\" % self.vol_name
-        fG.chk_dir(self.output_ras_dir)
-        fG.clean_dir(self.output_ras_dir)
+        self.output_ras_dir = config.dir2mt + "Output\\%s\\" % self.vol_name
+        fGl.chk_dir(self.output_ras_dir)
+        fGl.clean_dir(self.output_ras_dir)
         self.rasters = []
         self.raster_info = ""
         self.rasters_for_pos_vol = {}
@@ -193,20 +193,20 @@ class VolumeAssessment:
         # write excavation volumes to workbook
         writer = cRM.Write(self.output_ras_dir)
         writer.write_volumes(self.vol_name, self.reach_names_applied,
-                             fG.dict_values2list(self.volume_neg_dict.values()), self.unit_info.strip(), -1)
+                             fGl.dict_values2list(self.volume_neg_dict.values()), self.unit_info.strip(), -1)
         del writer
 
         # write fill volumes to workbook
         writer = cRM.Write(self.output_ras_dir)
         writer.write_volumes(self.vol_name, self.reach_names_applied,
-                             fG.dict_values2list(self.volume_pos_dict.values()), self.unit_info.strip(), 1)
+                             fGl.dict_values2list(self.volume_pos_dict.values()), self.unit_info.strip(), 1)
 
         self.logger.info("FINISHED.")
 
         # copy logfile (contains volume information)
         try:
             from shutil import copyfile
-            copyfile(os.path.dirname(__file__) + "\\logfile.log", os.path.dirname(__file__) + "\\Output\\Logfiles\\logfile.log")
+            copyfile(config.dir2ra + "logfile.log", config.dir2va + "Output\\Logfiles\\logfile.log")
         except:
             pass
 
