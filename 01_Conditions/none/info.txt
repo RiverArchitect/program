@@ -1,0 +1,4 @@
+Dummy condition - invalid selection for most modules.
+
+Valid for:
+ - Terraforming/ModifyTerrain/RiverBuilder
