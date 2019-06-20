@@ -20,7 +20,7 @@ class Fish:
         self.ls_col_add = {"spawning": 1, "fry": 3, "ammocoetes": 3, "juvenile": 5, "adult": 7, "hydrological year": 1,
                            "season": 3, "depth > x": 5, "velocity > x": 7}
         self.parameter_rows = {"u": 9, "h": 38, "substrate": 72, "cobbles": 81, "boulders": 82, "plants": 84,
-                               "wood": 85, "start_date": 6, "end_date": 7}
+                               "wood": 85, "start_date": 6, "end_date": 7, "h_min": 87}
         self.path_lvl_up = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
         self.reader = None
         self.species = []
@@ -97,6 +97,20 @@ class Fish:
         except:
             self.logger.info("ERROR: Could not access Fish.xlsx (close workbook).")
         return curve_data
+
+    def get_travel_threshold(self, species, lifestage, par):
+        try:
+            self.open_fish_wb()
+        except:
+            self.logger.info("ERROR: Could not access Fish.xlsx.")
+
+        try:
+            row = self.parameter_rows[par]
+            col = self.reader.col_num_to_name(self.reader.col_name_to_num(self.species_col[species]) + self.ls_col_add[lifestage] - 1)
+            threshold = self.reader.read_cell(col, row)
+            return float(threshold)
+        except:
+            self.logger.info("ERROR: Could not read %s travel threshold for %s %s." % (par, lifestage, species))
 
     def get_season_dates(self, species, lifestage):
         try:
