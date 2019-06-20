@@ -66,9 +66,9 @@ class ConditionCreator:
             self.error = True
 
     def make_d2w(self, h_ras_dir, dem_ras_dir):
-        wle = cWL.WLE(self.dir2condition)
+        wle = cWL.WLE(h_ras_dir, dem_ras_dir, self.dir2condition)
         try:
-            self.error = wle.calculate_d2w(h_ras_dir, dem_ras_dir)
+            self.error = wle.calculate_d2w()
         except:
             self.error = True
 
