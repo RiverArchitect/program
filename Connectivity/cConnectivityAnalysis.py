@@ -25,6 +25,10 @@ try:
     from arcpy.sa import *
 except:
     print("ExceptionERROR: Spatial Analyst (arcpy.sa) is not available (check license?)")
+try:
+    import pathos.multiprocessing as mp
+except:
+    print("WARNING: Missing pathos package (optional, required for multiprocessing).")
 
 
 class ConnectivityAnalysis:
@@ -57,7 +61,6 @@ class ConnectivityAnalysis:
 
         self.logger.info("Attempting CPU multiprocessing of analysis...")
         try:
-            import multiprocessing as mp
             thread_num = min(len(self.discharges), mp.cpu_count())
             p = mp.Pool(thread_num)
             p.map(self.analyze_flow, sorted(self.discharges))
