@@ -4,7 +4,6 @@ try:
     import sys, os, arcpy, logging
     import arcpy
     from arcpy.sa import *
-    import cRiverBuilderConstruct as cRBC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import fGlobal as fGl
@@ -37,15 +36,9 @@ class RiverBuilder:
             self.logger.info("         Setting unit_system default to \'us\'.")
 
         if self.units == "us":
-            self.m2ft = 0.3048
+            self.m2ft = config.m2ft
         else:
             self.m2ft = 1.0
-
-    def make_inp_file(self, txt_file_name):
-        # txt_file_name = STR of Input.txt to be stored in self.dir/RiverBuilder (file name only!)
-        self.logger.info(" * Writing River Builder Input file (%s)." % txt_file_name)
-        new_inp_file = cRBC.InputFile(txt_file_name)
-
 
     def run_riverbuilder(self, input_file_name):
         # input_file_name = STR of RiverBuilder Input.txt file that must be stored in self.dir
@@ -53,7 +46,7 @@ class RiverBuilder:
         self.R.source('riverbuilder.r')
         # self.R.get("riverbuilder")  # uncomment if next command doesn't work
         self.R.riverbuilder(input_file_name, self.dir_out, overwrite='TRUE')  # difference to R: TRUE as STR
-
+        return self.dir_out
 
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RiverBuilder (%s)" % os.path.dirname(__file__))

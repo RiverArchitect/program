@@ -113,6 +113,10 @@ def eliminate_nan_from_list(base_list, *args):
     return partner_lists
 
 
+def file_names_in_dir(directory):
+    return [name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))]
+
+
 def flatten(lis):
     for item in lis:
         if isinstance(item, Iterable) and not isinstance(item, str):
@@ -137,8 +141,7 @@ def get_newest_output_folder(directory):
 
 
 def get_subdir_names(directory):
-    subdir_list = [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
-    return subdir_list
+    return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
 
 
 def interpolate_linear(x1, x2, y1, y2, xi):
