@@ -152,10 +152,15 @@ class RaModuleGui(tk.Frame):
         if askokcancel("Close", "Do you really want to quit?"):
             tk.Frame.quit(self)
 
-    def set_bg_color(self, master_frame, bg_color):
+    @staticmethod
+    def set_bg_color(master_frame, bg_color):
         master_frame.config(bg=bg_color)
         for wid in master_frame.winfo_children():
-            wid.configure(bg=bg_color)
+            try:
+                wid.configure(bg=bg_color)
+            except:
+                # some widget do not accept bg as kwarg
+                pass
 
     def set_geometry(self, ww, wh, tab_title):
         # ww and wh = INT of window width and window height

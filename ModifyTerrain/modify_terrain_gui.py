@@ -98,8 +98,8 @@ class RiverBuilderFrame(tk.Frame):
         self.set_widget_state("disabled")
 
     def select_input_file(self):
-        showinfo("INFO", "The file must be located in %s ." % config.dir2mt)
-        self.rb_inp_file = askopenfilename(initialdir=config.dir2mt, title="Select RB Input.txt", filetypes=[("TXT", "*.txt")])
+        showinfo("INFO", "The file must be located in %s ." % config.dir2rb)
+        self.rb_inp_file = askopenfilename(initialdir=config.dir2rb, title="Select RB Input.txt", filetypes=[("TXT", "*.txt")])
         self.l_inp_rb.config(fg="dark slate gray", text="Selected Input.txt file:\n%s" % self.rb_inp_file)
 
     def start_app(self, app_name):
@@ -116,7 +116,12 @@ class RiverBuilderFrame(tk.Frame):
 
         if app_name == "rb":
             rb = cRB.RiverBuilder(self.unit)
-            rb.run_riverbuilder(self.rb_inp_file)
+            showinfo("INFO", "Analysis make take some minutes. Press OK to start.")
+            try:
+                out_dir = rb.run_riverbuilder(self.rb_inp_file)
+                webbrowser.open(out_dir)
+            except:
+                pass
 
     def set_widget_state(self, state):
         # mode = STR (either "normal" or "disabled")

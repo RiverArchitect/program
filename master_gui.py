@@ -11,9 +11,6 @@ try:
     sys.path.append(os.path.dirname(__file__) + "\\.site_packages\\riverpy\\")
     import config
     from cLogger import Logger
-    import cDefinitions as cDef
-    import cReachManager as cRM
-    import fGlobal as fGl
 except:
     print("ERROR: Could not import riverpy.")
 try:
