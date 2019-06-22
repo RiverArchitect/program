@@ -118,7 +118,8 @@ class RiverBuilderFrame(tk.Frame):
             rb = cRB.RiverBuilder(self.unit)
             showinfo("INFO", "Analysis make take some minutes. Press OK to start.")
             try:
-                webbrowser.open(rb.run_riverbuilder(self.rb_inp_file))
+                out_dir = rb.run_riverbuilder(self.rb_inp_file)
+                webbrowser.open(out_dir)
             except:
                 pass
 
