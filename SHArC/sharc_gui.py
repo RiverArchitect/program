@@ -113,7 +113,7 @@ class MainGui(sg.RaModuleGui):
         self.cb_combine_method_pd = tk.Checkbutton(self, text="Product", variable=self.combine_method,
                                                    onvalue="product", offvalue="geometric_mean")
         self.cb_combine_method_pd.grid(sticky=tk.W, row=2, column=3, columnspan=2, padx=self.xd, pady=self.yd)
-        self.cb_bshp = tk.Checkbutton(self, text="Use calculation boundary (rectangular polygon) shapefile",
+        self.cb_bshp = tk.Checkbutton(self, text="Use calculation boundary (polygon) shapefile",
                                       variable=self.apply_boundary, onvalue=True, offvalue=False,
                                       command=lambda: self.activate_shape_selection(self.b_select_bshp))
         self.cb_bshp.grid(sticky=tk.W, row=1, column=0, columnspan=self.max_columnspan - 1, padx=self.xd, pady=self.yd)

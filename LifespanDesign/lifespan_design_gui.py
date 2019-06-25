@@ -131,6 +131,8 @@ class FaGui(sg.RaModuleGui):
         self.b_v_condition = tk.Button(self, fg="red", text="Select",
                                        command=lambda: self.select_condition())
         self.b_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
+        self.b_ref_condition = tk.Button(self, text="Refresh list", command=lambda: self.refresh_conditions())
+        self.b_ref_condition.grid(sticky=tk.W, row=3, column=4, padx=self.xd, pady=self.yd)
         self.l_n = tk.Label(self, text="Roughness (Manning\'s n): %.3f " % self.manning_n)
         self.l_n.grid(sticky=tk.W, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
@@ -148,7 +150,7 @@ class FaGui(sg.RaModuleGui):
                                  self.open_inp_file("input_definitions.inp"))
         self.b_mod_r.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_r["state"] = "disabled"
-        self.b_mod_m = tk.Button(self, width=25, bg="white", text="Modify global map parameters", command=lambda:
+        self.b_mod_m = tk.Button(self, width=25, bg="white", text="Modify map parameters", command=lambda:
                                  self.open_inp_file("mapping.inp"))
         self.b_mod_m.grid(sticky=tk.EW,row=5, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_th = tk.Button(self, width=25, bg="white", text="Modify survival threshold values", command=lambda:
@@ -294,6 +296,17 @@ class FaGui(sg.RaModuleGui):
                     webbrowser.open(_f)
                 except:
                     pass
+
+    def refresh_conditions(self):
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
+        try:
+            self.lb_condition.delete(0, tk.END)
+        except:
+            pass
+
+        for e in self.condition_list:
+            self.lb_condition.insert(tk.END, e)
+        self.sb_condition.config(command=self.lb_condition.yview)
 
     def run_raster_maker(self):
         showinfo("INFORMATION",
