@@ -142,6 +142,7 @@ class HHSIgui(object):
         self.b_Q.config(fg="black", text="View discharge dependency file (xlsx workbook)",
                         command=lambda: self.open_files(self.discharge_xlsx), bg="PaleGreen1")
         self.b_run["state"] = "normal"
+        self.b_run.config(fg="MediumOrchid4")
 
     def run_raster_calc(self):
         msg0 = "Analysis takes a while. \nPython windows seem unresponsive in the meanwhile. \nCheck console messages."
@@ -156,7 +157,7 @@ class HHSIgui(object):
             if not hhsi.error:
                 fG.open_folder(hhsi.path_hsi)
                 self.l_run_info.config(fg="forest green", text="RUN SUCCESSFULLY COMPLETED (close window)")
-                self.b_run.config(width=30, bg="PaleGreen1", text="Re-run (generate habitat condition)")
+                self.b_run.config(width=30, fg="dark green", bg="PaleGreen1", text="Re-run (generate habitat condition)")
             else:
                 self.l_run_info.config(fg="red", text="RUN COMPLETED WITH ERRORS")
                 self.b_run.config(bg="salmon", text="Re-run (generate habitat condition)")
