@@ -152,10 +152,28 @@ class RaModuleGui(tk.Frame):
         if askokcancel("Close", "Do you really want to quit?"):
             tk.Frame.quit(self)
 
-    def set_bg_color(self, master_frame, bg_color):
+    def refresh_conditions(self, lb, sb, condition_dir):
+        # lb = tk.ListBox of conditions
+        # sb = tk.Scrollbar of conditions
+        self.condition_list = fGl.get_subdir_names(condition_dir)
+        try:
+            lb.delete(0, tk.END)
+        except:
+            pass
+
+        for e in self.condition_list:
+            lb.insert(tk.END, e)
+        sb.config(command=lb.yview)
+
+    @staticmethod
+    def set_bg_color(master_frame, bg_color):
         master_frame.config(bg=bg_color)
         for wid in master_frame.winfo_children():
-            wid.configure(bg=bg_color)
+            try:
+                wid.configure(bg=bg_color)
+            except:
+                # some widget do not accept bg as kwarg
+                pass
 
     def set_geometry(self, ww, wh, tab_title):
         # ww and wh = INT of window width and window height

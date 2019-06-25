@@ -1,7 +1,8 @@
 try:
     import sys, os, logging
+    from shutil import copyfile
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, shutil, sys, logging).")
 
 try:
     import cWaterLevel as cWL
@@ -9,7 +10,8 @@ try:
     import cMorphUnits as cMU
     import fSubCondition as fSC
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-    import fGlobal as fG
+    import config
+    import fGlobal as fGl
     import cMakeTable as cMT
     import cMakeInp as cMI
     import cFlows as cFl
@@ -28,6 +30,7 @@ except:
 
 class ConditionCreator:
     def __init__(self, dir2condition):
+        self.condition = dir2condition.strip("\\").strip("/").split("\\")[-1].split("/")[-1]
         self.dir2condition = dir2condition  # string of the condition to be created
         self.error = False
         self.logger = logging.getLogger("logfile")
@@ -53,6 +56,22 @@ class ConditionCreator:
             self.error = True
 
     def create_sub_condition(self, dir2src_condition, dir2bound):
+        src_condition = dir2src_condition.strip("\\").strip("/").split("\\")[-1].split("/")[-1]
+        try:
+            copyfile(dir2src_condition + "flow_definitions.xlsx", self.dir2condition + "flow_definitions.xlsx")
+            all_flow_files = fGl.file_names_in_dir(config.dir2flows + src_condition)
+            for f_xlsx in all_flow_files:
+                try:
+                    copyfile(config.dir2flows + src_condition + "\\" + f_xlsx, config.dir2flows + self.condition + "\\" + f_xlsx)
+                except:
+                    pass
+        except:
+            self.logger.info(" *** Could not find FLOW DEFINITIONS for %s. Use ANALYZE FLOWS for new sub-condition." % dir2src_condition)
+        try:
+            copyfile(dir2src_condition + "input_definitions.inp", self.dir2condition + "input_definitions.inp")
+        except:
+            self.logger.info(
+                " *** Could not find input_definitions.inp in %s. Use MAKE INPUT FILE for new sub-condition." % dir2src_condition)
         try:
             self.error = fSC.make_sub_condition(dir2src_condition, self.dir2condition, dir2bound)
         except:
@@ -147,14 +166,15 @@ class ConditionCreator:
         # folder_dir = STR (full directory)
         # type_id = STR (copied raster names will be named beginning with type_id)
         # string_container = STR (characters that need to be contained within raster names
-        self.logger.info(" > Getting " + str(type_id) + " rasters from " + str(folder_dir) + ".")
+        self.logger.info(" > Getting {0} Rasters containing {1} from {2}.".format(str(type_id), string_container, str(folder_dir)))
         arcpy.env.workspace = folder_dir
         raster_list = arcpy.ListRasters("*", "All")
         arcpy.env.workspace = self.dir2condition
         try:
             for ras in raster_list:
                 if str(string_container).__len__() > 0:
-                    if str(string_container) in str(ras):
+                    if str(string_container).lower() in str(ras).lower():
+                        self.logger.info("   * Copying %s." % str(folder_dir + ras))
                         self.save_tif(folder_dir + ras, type_id, no_data=False)
         except:
             self.logger.info("ERROR: The selected folder does not contain any depth/velocity Raster containing the defined string.")

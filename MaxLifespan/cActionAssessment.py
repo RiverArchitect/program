@@ -244,18 +244,25 @@ class ArcPyContainer:
 
     def make_zero_ras(self, dir_base_ras):
         arcpy.CheckOutExtension('Spatial')  # check out license
+        if dir_base_ras == "blank":
+            all_ras = fGl.file_names_in_dir(config.dir2lf + "Output\\Rasters\\" + str(self.condition) + "\\")
+            for ras in all_ras:
+                if str(ras).endswith(".tif"):
+                    dir_base_ras = config.dir2lf + "Output\\Rasters\\" + str(self.condition) + "\\" + str(ras)
+                    break
+
         zero_ras_str = config.dir2ml + ".templates\\rasters\\zeros.tif"
         if os.path.isfile(zero_ras_str):
             fGl.rm_file(zero_ras_str)
         try:
-            base_dem = arcpy.Raster(dir_base_ras)
             self.logger.info(" >> Preparing zero raster based on \n    " + dir_base_ras)
-            arcpy.env.extent = base_dem.extent
+            base_ras = arcpy.Raster(dir_base_ras)
+            arcpy.env.extent = base_ras.extent
             arcpy.env.workspace = self.cache
-            zero_ras = Con(IsNull(base_dem), 0, 0)
+            zero_ras = Con(IsNull(base_ras), 0, 0)
             zero_ras.save(zero_ras_str)
         except:
-            self.logger.info("ExceptionERROR: Unable to create ZERO Raster. Manual intervention required: Check Package documentation (Troubleshooting).")
+            self.logger.info("ExceptionERROR: Unable to create ZERO Raster. Manual intervention required: Check RA wiki (Troubleshooting).")
         arcpy.CheckInExtension('Spatial')  # check in license
 
     def __call__(self):

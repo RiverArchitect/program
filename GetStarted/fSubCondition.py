@@ -14,14 +14,22 @@ except:
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find riverpy.")
 
 
-def make_sub_condition(source_condition, target_condition, base_ras_name):
+def chk_geo_type(geo_file_name, target_condition):
+    if not str(geo_file_name).endswith(".shp"):
+        return str(geo_file_name)
+    else:
+        return fGl.shp2raster(geo_file_name, target_condition + "boundary.tif", field_name="gridcode")
+
+
+def make_sub_condition(source_condition, target_condition, base_geo_name):
     # source_condition =  STR of a source condition ("D:\\...\\RiverArchitect\\01_Conditions\\2017\\")
     # target_condition = STR of a target condition ("D:\\...\\RiverArchitect\\01_Conditions\\2017_confinement\\")
-    # base_ras_name = STR of a full path and name of a raster that is used for limiting raster extents ("D:\\...\\Rasters\\projectarea")
+    # base_geo_name = STR of a full path and name of a raster that is used for limiting raster extents ("D:\\...\\Rasters\\projectarea")
 
     logger = logging.getLogger('logfile.log')
     logger.info(" * Setting arcpy environment ...")
@@ -35,11 +43,18 @@ def make_sub_condition(source_condition, target_condition, base_ras_name):
         return True
 
     try:
+        logger.info(" * Verifying provided boundary files ...")
+        base_geo_name = chk_geo_type(base_geo_name, target_condition)
+    except:
+        logger.info("ERROR: The provided boundary file (%s) is invalid." % base_geo_name)
+        return True
+
+    try:
         logger.info(" * Loading boundary Raster ...")
-        base_ras = arcpy.Raster(base_ras_name.split('.aux')[0])
+        base_ras = arcpy.Raster(base_geo_name.split('.aux')[0])
         arcpy.env.extent = base_ras.extent
     except:
-        logger.info("ERROR: Could not load boundary Raster: " + str(base_ras_name).split('.aux')[0])
+        logger.info("ERROR: Could not load boundary Raster: " + str(base_geo_name).split('.aux')[0])
         return True
 
     logger.info(" * Looking for source GeoTIFFs in %s ..." % source_condition)

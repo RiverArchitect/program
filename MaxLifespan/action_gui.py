@@ -75,6 +75,7 @@ class ActionGui(sg.RaModuleGui):
         # GUI OBJECT VARIABLES
         self.gui_condition = tk.StringVar()
         self.gui_interpreter = tk.StringVar()
+        self.lf_extents = tk.BooleanVar()
         self.mapping = tk.BooleanVar()
 
         # LABELS
@@ -85,8 +86,8 @@ class ActionGui(sg.RaModuleGui):
         self.l_features.grid(sticky=tk.W, row=0, column=1, columnspan=5, padx=self.xd, pady=self.yd)
         self.l_condition = tk.Label(self, text="Condition: \n(select)")
         self.l_condition.grid(sticky=tk.W, row=1, column=0, padx=self.xd, pady=self.yd)
-        self.l_base_ras = tk.Label(self, fg="red3", text="Base raster: " + self.dir_base_ras)
-        self.l_base_ras.grid(sticky=tk.W, row=5, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.l_base_ras = tk.Label(self, text="Base raster: " + self.dir_base_ras)
+        self.l_base_ras.grid(sticky=tk.W, row=6, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
         # DROP DOWN ENTRIES (SCROLL BARS)
         self.sb_condition = tk.Scrollbar(self, orient=tk.VERTICAL)
@@ -96,31 +97,37 @@ class ActionGui(sg.RaModuleGui):
             self.lb_condition.insert(tk.END, e)
         self.lb_condition.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
         self.sb_condition.config(command=self.lb_condition.yview)
+        self.b_ref_condition = tk.Button(self, text="Refresh list",
+                                         command=lambda: self.refresh_conditions(self.lb_condition, self.sb_condition, config.dir2lf + "Output\\Rasters\\"))
+        self.b_ref_condition.grid(sticky=tk.W, row=1, column=4, padx=self.xd, pady=self.yd)
 
         # ENTRIES
         self.l_inpath_curr = tk.Label(self, fg="dark slate gray", text="Source: "+str(self.dir2lf_rasters))
         self.l_inpath_curr.grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
         # BUTTONS
-        self.b_c_help = tk.Button(self, width=5, bg="white", text="Info", command=lambda:
-                         self.condition_info())
+        self.b_c_help = tk.Button(self, width=5, bg="white", text="Info", command=lambda: self.condition_info())
         self.b_c_help.grid(sticky=tk.W, row=1, column=3, padx=self.xd, pady=self.yd)
         self.b_inpath = tk.Button(self, width=50, bg="white", text="Change input directory",
                                   command=lambda: self.change_inpath())
         self.b_inpath.grid(sticky=tk.W, row=2, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.b_mod_m = tk.Button(self, width=50, bg="white", text="Modify map extent", command=lambda:
                                  self.open_inp_file("mapping.inp"))
-        self.b_mod_m.grid(sticky=tk.W, row=6, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.b_set_base = tk.Button(self, width=50, fg="red3", bg="white", text="Define extent raster (FLOAT tif-raster)",
+        self.b_mod_m.grid(sticky=tk.W, row=7, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.b_set_base = tk.Button(self, width=50, bg="white", text="Define extent Raster (FLOAT tif-raster)",
                                     command=lambda: self.set_base_ras())
-        self.b_set_base.grid(sticky=tk.W, row=4, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.b_set_base.grid(sticky=tk.W, row=5, column=0, columnspan=5, padx=self.xd, pady=self.yd)
 
         self.complete_menus()
 
         # CHECK BOXES (CHECKBUTTONS)
+        self.cb_base = tk.Checkbutton(self, fg="SteelBlue", text="Use lifespan Raster extents OR",
+                                      variable=self.lf_extents, onvalue=True, offvalue=False)
+        self.cb_base.grid(sticky=tk.W, row=4, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.cb_base.select()
         self.cb_lyt = tk.Checkbutton(self, fg="SteelBlue", text="Create maps and layouts after making geofiles",
                                      variable=self.mapping, onvalue=True, offvalue=False)
-        self.cb_lyt.grid(sticky=tk.W, row=7, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.cb_lyt.grid(sticky=tk.W, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         self.cb_lyt.select()  # select by default
 
     def set_base_ras(self):
@@ -196,6 +203,9 @@ class ActionGui(sg.RaModuleGui):
             self.verify()
         if self.verified:
             run = RunGui(self)
+            if self.lf_extents.get():
+                self.dir_base_ras = "blank"
+
             for feat in self.feature_type:
                 run.gui_geo_maker(self.condition, feat.split("_mlf")[0], self.unit, self.inpath, self.dir_base_ras)
                 run.gui_quit()
@@ -212,11 +222,11 @@ class ActionGui(sg.RaModuleGui):
             if not self.mapping.get():
                 self.master.bell()
                 tk.Button(self, bg="gold", width=50, text="IMPORTANT\n Read logfile(s)", command=lambda:
-                          self.open_log_file()).grid(sticky=tk.W, row=3, column=0, padx=self.xd, pady=self.yd)
+                          self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
             else:
                 tk.Button(self, bg="pale green", width=50, text="IMPORTANT\n Read logfile(s) from Map Maker",
                           command=lambda:
-                          self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+                          self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
             if self.mapping.get():
                 self.run_map_maker()
 
@@ -237,7 +247,7 @@ class ActionGui(sg.RaModuleGui):
             self.master.bell()
 
             tk.Button(self, bg="pale green", width=50, text="IMPORTANT\n Read logfile(s)", command=lambda:
-                      self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+                      self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
     def verify(self, *args):
         # args[0] = True limits verification to condition only

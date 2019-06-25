@@ -66,7 +66,7 @@ class CreateSubCondition(object):
         tk.Label(top, text="").grid(sticky=tk.W, row=6, column=0)  # dummy
 
         # 03 Define spatial boundary raster
-        self.b_bound = tk.Button(top, bg="white", text="Select spatial boundary Raster",
+        self.b_bound = tk.Button(top, bg="white", text="Select spatial boundary Shapefile or Raster",
                                  command=lambda: self.select_boundary())
         self.b_bound.grid(sticky=tk.EW, row=7, column=0, columnspan=3, padx=self.xd, pady=self.yd)
         self.l_bound = tk.Label(top, fg="red", text="No spatial boundary Raster defined.", width=self.col_0_width*2)
@@ -91,6 +91,7 @@ class CreateSubCondition(object):
         self.dir2sub_condition = config.dir2conditions + str(self.sub_condition_name.get()) + "\\"
         if not os.path.exists(self.dir2sub_condition):
             os.makedirs(self.dir2sub_condition)
+            os.makedirs(config.dir2flows + str(self.sub_condition_name.get()))
         else:
             showinfo("WARNING",
                      "The defined condition already exists and files may be overwritten. Make sure to SAVE IMPORTANT FILE from the existing condition BEFORE CLICKING OK.")
@@ -103,14 +104,17 @@ class CreateSubCondition(object):
                 self.b_create_c.config(fg="forest green", text="Sub-Condition created.")
                 self.l_run_info.config(text="New condition: %s" % self.dir2sub_condition)
             else:
-                self.b_create_c.config(fg="red", text="Sub-Condition creation failed.")
+                self.b_create_c.config(fg="red", text="Sub-Condition creation failed (click to re-run).")
         except:
             pass
 
     def select_boundary(self):
-        msg0 = "Select a Boundary Raster file (if this is a GRID Raster, select the corresponding .aux.xml file)."
-        msg1 = "Ensure that the boundary Raster only contains On-Off Integers, where 0=Outside and 1=Inside boundary."
-        showinfo("INFO", msg0 + msg1)
+        msg0 = "Select a Boundary Shapefile or Raster (if this is a GRID Raster, select the corresponding .aux.xml file).\n\n"
+        msg1 = "If Shapefile: River Architect automatically uses the \'gridcode\' Field in the Shapefile\'s Attribute Table.\n"
+        msg2 = "              If \'gridcode\' cannot be found, the third Field or the FID Field is used.\n"
+        msg3 = "              Ensure that the third Field contains On-Off Integers only, where 0=Outside and 1=Inside boundary.\n"
+        msg4 = "\nIf Raster: Ensure that the Raster contains On-Off Integers only, where 0=Outside and 1=Inside boundary."
+        showinfo("INFO", msg0 + msg1 + msg2 + msg3 + msg4)
         self.dir2bound = askopenfilename(initialdir=self.dir2src_condition, title="Select Boundary raster")
         self.l_bound.config(fg="forest green", text=self.dir2bound)
 

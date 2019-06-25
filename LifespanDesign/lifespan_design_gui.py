@@ -131,6 +131,7 @@ class FaGui(sg.RaModuleGui):
         self.b_v_condition = tk.Button(self, fg="red", text="Select",
                                        command=lambda: self.select_condition())
         self.b_v_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
+
         self.l_n = tk.Label(self, text="Roughness (Manning\'s n): %.3f " % self.manning_n)
         self.l_n.grid(sticky=tk.W, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
@@ -142,15 +143,17 @@ class FaGui(sg.RaModuleGui):
             self.lb_condition.insert(tk.END, e)
         self.lb_condition.grid(sticky=tk.W, row=3, column=1, padx=self.xd, pady=self.yd)
         self.sb_condition.config(command=self.lb_condition.yview)
+        self.b_ref_condition = tk.Button(self, text="Refresh list", command=lambda: self.refresh_conditions(self.lb_condition, self.sb_condition, config.dir2conditions))
+        self.b_ref_condition.grid(sticky=tk.W, row=3, column=4, padx=self.xd, pady=self.yd)
 
         # BUTTONS
         self.b_mod_r = tk.Button(self, width=25, bg="white", text="Revise input file", command=lambda:
                                  self.open_inp_file("input_definitions.inp"))
         self.b_mod_r.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_r["state"] = "disabled"
-        self.b_mod_m = tk.Button(self, width=25, bg="white", text="Modify global map parameters", command=lambda:
+        self.b_mod_m = tk.Button(self, width=25, bg="white", text="Modify map parameters", command=lambda:
                                  self.open_inp_file("mapping.inp"))
-        self.b_mod_m.grid(sticky=tk.EW,row=5, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_mod_m.grid(sticky=tk.EW, row=5, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_th = tk.Button(self, width=25, bg="white", text="Modify survival threshold values", command=lambda:
                                   self.open_inp_file("threshold_values.xlsx"))
         self.b_mod_th.grid(sticky=tk.EW, row=6, column=0, columnspan=2, padx=self.xd, pady=self.yd)

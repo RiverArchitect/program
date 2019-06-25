@@ -29,15 +29,15 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
     arcpy.CheckOutExtension('Spatial')
     arcpy.gp.overwriteOutput = True
 
-    path2PP = config.dir2pm + reach + "_" + stn + "_" + version + "\\"
+    dir2pp = config.dir2pm + reach + "_" + stn + "_" + version + "\\"
 
     # folder settings
-    ras_dir = path2PP + "Geodata\\Rasters\\"
-    shp_dir = path2PP + "Geodata\\Shapefiles\\"
-    quant_dir = path2PP + "Quantities\\"
+    ras_dir = dir2pp + "Geodata\\Rasters\\"
+    shp_dir = dir2pp + "Geodata\\Shapefiles\\"
+    quant_dir = dir2pp + "Quantities\\"
 
     # file and variable settings
-    xlsx_target = path2PP + str(reach.upper()) + "_" + stn + "_assessment_" + version + ".xlsx"
+    xlsx_target = dir2pp + str(reach.upper()) + "_" + stn + "_assessment_" + version + ".xlsx"
     feature_dict = {"Large wood": 211,
                     "ELJs (plantings)": 212,
                     "Bioengineering (veget.)": 213,
@@ -154,7 +154,7 @@ def main(act_tbx_dir, crit_lf, reach, stn, unit, version):
                 arcpy.Delete_management(shp)
             except:
                 logger.info(str(shp) + " is locked. Remove manually to avoid confusion.")
-    arcpy.env.workspace = path2PP + "Geodata\\"
+    arcpy.env.workspace = dir2pp + "Geodata\\"
     logger.info(" -- OK (Clean up)\n")
 
     # RELEASE LOGGER AND OPEN LOGFILE

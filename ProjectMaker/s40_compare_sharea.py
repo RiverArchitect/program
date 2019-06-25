@@ -18,7 +18,7 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
     # cover_app_pre = False 
     # fish = {"Chinook salmon": ["juvenile"]}
     error = False
-    sys.path.append(dir2ra + ".site_packages\\openpyxl\\")
+    sys.path.append(config.dir2oxl)
 
     # set directories
     if cover_pre:
@@ -31,8 +31,8 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
         post_ext = "no_cover"
 
     dir2PP = os.path.dirname(os.path.realpath(__file__)) + "\\" + reach + "_" + stn + "_" + version + "\\"
-    dir2ras_chsi = [dir2ra + "SHArC\\SHArea\\Rasters\\" + condition_initial + "\\" + pre_ext + "\\",
-                    dir2ra + "SHArC\\SHArea\\Rasters\\" + condition_project + "\\" + post_ext + "\\"]
+    dir2ras_chsi = [config.dir2sh + "SHArea\\Rasters\\" + condition_initial + "\\" + pre_ext + "\\",
+                    config.dir2sh + "SHArea\\Rasters\\" + condition_project + "\\" + post_ext + "\\"]
     dir2ras_tar = [dir2PP + "Geodata\\Rasters\\" + condition_initial + "\\" + pre_ext + "\\",
                    dir2PP + "Geodata\\Rasters\\" + condition_project + "\\" + post_ext + "\\"]
     chk_dir(dir2ras_tar[0])
