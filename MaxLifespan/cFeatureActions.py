@@ -20,14 +20,18 @@ class Director:
         try:
             self.raster_input_path = args[0]
         except:
-            self.raster_input_path = config.dir2lf + "Products\\Rasters\\" + str(self.condition) + "\\"
+            self.raster_input_path = config.dir2lf + "Output\\Rasters\\" + str(self.condition) + "\\"
 
         arcpy.env.workspace = self.raster_input_path
         self.all_rasters = arcpy.ListRasters()
+        if not self.all_rasters:
+            self.all_rasters = []
         arcpy.env.workspace = config.dir2ml
 
     def append_ds_rasters(self, feature_list):
         raster_list = []
+        if str(self.all_rasters).__len__() < 1:
+            return []
         for feat in feature_list:
             for ras_name in self.all_rasters:
                 if feat in ras_name:
@@ -41,6 +45,8 @@ class Director:
 
     def append_lf_rasters(self, feature_list):
         raster_list = []
+        if str(self.all_rasters).__len__() < 1:
+            return []
         for feat in feature_list:
             for ras_name in self.all_rasters:
                 if feat in ras_name:

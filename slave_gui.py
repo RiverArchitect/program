@@ -152,6 +152,19 @@ class RaModuleGui(tk.Frame):
         if askokcancel("Close", "Do you really want to quit?"):
             tk.Frame.quit(self)
 
+    def refresh_conditions(self, lb, sb, condition_dir):
+        # lb = tk.ListBox of conditions
+        # sb = tk.Scrollbar of conditions
+        self.condition_list = fGl.get_subdir_names(condition_dir)
+        try:
+            lb.delete(0, tk.END)
+        except:
+            pass
+
+        for e in self.condition_list:
+            lb.insert(tk.END, e)
+        sb.config(command=lb.yview)
+
     @staticmethod
     def set_bg_color(master_frame, bg_color):
         master_frame.config(bg=bg_color)
