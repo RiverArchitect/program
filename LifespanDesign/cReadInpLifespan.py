@@ -18,7 +18,7 @@ class Info(object):
     def __init__(self, condition, *args):
         # type defines lines to read in .inp file
         self.alt_path = str()
-        self.inp_file = config.dir2condition + condition + "\\input_definitions.inp"
+        self.inp_file = config.dir2conditions + condition + "\\input_definitions.inp"
         self.inp_coord = r'' + os.path.dirname(os.path.abspath(__file__)) + "\\.templates\\mapping.inp"
         self.ras_names = []
         try:
