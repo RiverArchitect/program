@@ -4,6 +4,11 @@ try:
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, glob, logging, time, webbrowser).")
 
+try:
+    import arcpy
+    from arcpy.sa import *
+except:
+    logging.info("ArcGIS ERROR: No SpatialAnalyst extension available.")
 
 try:
     import config
@@ -284,6 +289,20 @@ def print_dict(dictionary):
     return out_str
 
 
+def raster2shp(raster_name, out_shp_name=str(), simplify="NO_SIMPLIFY", calculate_area=True):
+    # raster_name = STR of full path to INTEGER Raster
+    if out_shp_name.__len__() < 1:
+        out_shp_name = raster_name.split(".")[0] + ".shp"
+    arcpy.CheckOutExtension('Spatial')
+    arcpy.RasterToPolygon_conversion(Int(arcpy.Raster(raster_name)), out_shp_name, simplify)
+    if calculate_area:
+        arcpy.AddField_management(out_shp_name, "F_AREA", "FLOAT", 9)
+        arcpy.CalculateGeometryAttributes_management(out_shp_name, geometry_property=[["F_AREA", "AREA"]],
+                                                     area_unit=out_shp_name)
+    arcpy.CheckInExtension('Spatial')
+    return out_shp_name
+
+
 def rm_dir(directory):
     # Deletes everything reachable from the directory named in 'directory', and the directory itself
     # assuming there are no symbolic links.
@@ -328,6 +347,40 @@ def rm_raster(full_path):
     except:
         locked = True
     return locked
+
+
+def shp2raster(shp_name, out_raster_name=str(), field_name=str(), cellsize=1):
+    # shp_name = STR of full path to POLYGON
+    # out_raster_name = STR to fill path of output (TIF) Raster
+    if out_raster_name.__len__() < 1 or not(out_raster_name.endswith(".tif")):
+        out_raster_name = shp_name.split(".")[0] + ".tif"
+    arcpy.CheckOutExtension('Spatial')
+    if field_name.__len__() < 1:
+        fields = arcpy.ListFields(shp_name)
+        if fields.__len__() > 2:
+            for f in fields:
+                if "gridcode" in f.name:
+                    field_name = f.name
+            if field_name.__len__() < 1:
+                field_name = fields[2].name
+        else:
+            field_name = fields[0].name  # this is FID
+    try:
+        arcpy.PolygonToRaster_conversion(shp_name, value_field=field_name, out_rasterdataset=out_raster_name,
+                                         cell_assignment="CELL_CENTER", priority_field=field_name, cellsize=cellsize)
+    except arcpy.ExecuteError:
+        logging.info("ExecuteERROR: (arcpy).")
+        logging.info(arcpy.GetMessages(2))
+        arcpy.AddError(arcpy.GetMessages(2))
+    except Exception as e:
+        logging.info("ExceptionERROR: (arcpy).")
+        logging.info(e.args[0])
+        arcpy.AddError(e.args[0])
+    except:
+        logging.info("ERROR: (arcpy).")
+        logging.info(arcpy.GetMessages())
+    arcpy.CheckInExtension('Spatial')
+    return out_raster_name
 
 
 def str2frac(arg):
