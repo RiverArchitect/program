@@ -103,6 +103,7 @@ class MainGui(sg.RaModuleGui):
         self.b_make_inp["state"] = "disabled"
         self.master.wait_window(new_window.top)
         self.b_make_inp["state"] = "normal"
+        del new_window
 
     def populate_c(self):
         try:
