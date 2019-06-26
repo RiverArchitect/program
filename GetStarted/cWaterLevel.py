@@ -21,47 +21,27 @@ except:
 
 
 class WLE:
-    def __init__(self, path2h_ras, path2dem_ras, *args, **kwargs):
-        # path2h_ras: full path to the depth raster used for interpolating WLE
-        # path2dem_ras: full path to the DEM
+    def __init__(self, *args, **kwargs):
         # args[0] optional out_dir -- otherwise: out_dir = script_dir
-        # kwargs["unique_id"] (Boolean): determines if output files have integer discharge value in output file name
+        # kwargs
 
         self.cache = config.dir2gs + ".cache\\"
         fGl.chk_dir(self.cache)
-
-        self.path2h_ras = path2h_ras
-        self.path2dem_ras = path2dem_ras
 
         try:
             self.out_dir = args[0]
         except:
             self.out_dir = config.dir2gs
 
-        try:
-            self.unique_id = kwargs["unique_id"]
-        except:
-            self.unique_id = False
-
-        if self.unique_id:
-            Q = int(os.path.splitext(os.path.basename(self.path2h_ras))[0].split("h")[1])
-            self.out_wle = "wle%i.tif" % Q
-            self.out_wle_var = "wle%i_var.tif" % Q
-            self.out_h_interp = "h%i_interp.tif" % Q
-            self.out_d2w = "d2w%i.tif" % Q
-        else:
-            self.out_wle = "wle.tif"
-            self.out_wle_var = "wle_var.tif"
-            self.out_h_interp = "h_interp.tif"
-            self.out_d2w = "d2w.tif"
-
         self.logger = logging.getLogger("logfile")
 
-    def interpolate_wle(self, method="Kriging"):
+    def interpolate_wle(self, path2h_ras, path2dem_ras, method='Kriging'):
         """
         Interpolates water level elevation, used as preliminary step for getting depth to groundwater and disconnected wetted areas.
 
         Args:
+            path2h_ras: path to the depth raster
+            path2dem_ras: path to the DEM
             method: 'Kriging' or 'Nearest Neighbor'. Determines the method used to interpolate WLE.
 
         Saves interpolated WLE raster to self.out_dir (also saves a WLE variance raster if Kriging method is used).
@@ -71,12 +51,13 @@ class WLE:
             arcpy.CheckOutExtension('Spatial')  # check out license
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            arcpy.env.extent = "MAXOF"
+
 
             try:
                 self.logger.info("Reading input rasters ...")
-                ras_h = arcpy.Raster(self.path2h_ras)
-                ras_dem = arcpy.Raster(self.path2dem_ras)
+                ras_h = arcpy.Raster(path2h_ras)
+                ras_dem = arcpy.Raster(path2dem_ras)
+                arcpy.env.extent = ras_dem.extent
                 cell_size = arcpy.GetRasterProperties_management(ras_dem, 'CELLSIZEX').getOutput(0)
                 self.logger.info("OK")
             except:
@@ -169,13 +150,12 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving WLE raster to:")
-                self.logger.info(str(self.out_dir))
-                ras_wle_dem.save(self.out_dir + self.out_wle)
+                self.logger.info("Saving WLE raster to:\n%s" % str(self.out_dir) + "\\wle.tif")
+                ras_wle_dem.save(self.out_dir + "\\wle.tif")
                 self.logger.info("OK")
                 if method == "Kriging":
-                    self.logger.info("Saving WLE Kriging variance raster ...")
-                    ras_wle_var.save(self.out_dir + self.out_wle_var)
+                    self.logger.info("Saving WLE Kriging variance raster (%s) ..." % self.out_dir + "\\wle_var.tif")
+                    ras_wle_var.save(self.out_dir + "\\wle_var.tif")
                     self.logger.info("OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
@@ -198,24 +178,25 @@ class WLE:
         # return Boolean False if successful.
         return False
 
-    def calculate_h(self):
+    def calculate_h(self, path2h_ras, path2dem_ras):
         try:
             arcpy.CheckOutExtension('Spatial')  # check out license
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            arcpy.env.extent = "MAXOF"
+            base_ras = arcpy.Raster(path2h_ras)
+            arcpy.env.extent = base_ras.extent
 
             # check if interpolated WLE already exists
-            path2wle_ras = os.path.join(self.out_dir, self.out_wle)
+            path2wle_ras = os.path.join(self.out_dir, 'wle.tif')
             if not os.path.exists(path2wle_ras):
-                self.interpolate_wle()
+                self.interpolate_wle(path2h_ras, path2dem_ras)
             else:
                 self.logger.info("Using existing interpolated WLE raster ...")
 
             try:
                 self.logger.info("Reading input rasters ...")
                 ras_wle = arcpy.Raster(path2wle_ras)
-                ras_dem = arcpy.Raster(self.path2dem_ras)
+                ras_dem = arcpy.Raster(path2dem_ras)
                 self.logger.info("OK")
             except:
                 self.logger.info("ERROR: Could not find / access input rasters.")
@@ -234,9 +215,8 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving interpolated depth raster to:")
-                self.logger.info(str(self.out_dir))
-                ras_h_interp.save(self.out_dir + self.out_h_interp)
+                self.logger.info("Saving interpolated depth raster to:\n%s" % self.out_dir + "\\h_interp.tif")
+                ras_h_interp.save(self.out_dir + "\\h_interp.tif")
                 self.logger.info("OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
@@ -255,24 +235,24 @@ class WLE:
             self.logger.info(e.args[0])
             return True
 
-    def calculate_d2w(self):
+    def calculate_d2w(self, path2h_ras, path2dem_ras):
         try:
             arcpy.CheckOutExtension('Spatial')  # check out license
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            arcpy.env.extent = "MAXOF"
 
             # check if interpolated WLE already exists
-            path2wle_ras = os.path.join(self.out_dir, self.out_wle)
+            path2wle_ras = os.path.join(self.out_dir, 'wle.tif')
             if not os.path.exists(path2wle_ras):
-                self.interpolate_wle()
+                self.interpolate_wle(path2h_ras, path2dem_ras)
             else:
                 self.logger.info("Using existing interpolated WLE raster ...")
 
             try:
                 self.logger.info("Reading input rasters ...")
                 ras_wle = arcpy.Raster(path2wle_ras)
-                ras_dem = arcpy.Raster(self.path2dem_ras)
+                ras_dem = arcpy.Raster(path2dem_ras)
+                arcpy.env.extent = ras_dem.extent
                 self.logger.info("OK")
             except:
                 self.logger.info("ERROR: Could not find / access input rasters.")
@@ -280,7 +260,8 @@ class WLE:
 
             try:
                 self.logger.info("Calculating depth to groundwater raster ...")
-                ras_d2w = Con((ras_wle > 0), (ras_dem - ras_wle))
+                else_ras = arcpy.Raster(os.path.join(self.out_dir, 'wle_var.tif'))
+                ras_d2w = Con((ras_wle > 0), Con((ras_dem - ras_wle) > 0, Float(ras_dem - ras_wle), Float(else_ras)))
                 self.logger.info("OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
@@ -290,9 +271,8 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving depth to groundwater raster to:")
-                self.logger.info(str(self.out_dir))
-                ras_d2w.save(self.out_dir + self.out_h_interp)
+                self.logger.info("Saving depth to groundwater raster to:\n%s" % str(self.out_dir))
+                ras_d2w.save(self.out_dir + "\\d2w.tif")
                 self.logger.info("OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
