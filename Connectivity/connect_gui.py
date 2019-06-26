@@ -59,7 +59,7 @@ class MainGui(sg.RaModuleGui):
         self.l_inpath_curr.grid(sticky=tk.W, row=4, column=0, columnspan=6, padx=0, pady=self.yd)
 
         self.l_aqua = tk.Label(self, fg="red", text="Select Aquatic Ambiance (at least one)")
-        self.l_aqua.grid(row=5, column=0, columnspan=6)
+        self.l_aqua.grid(sticky=tk.W, row=5, column=0, columnspan=6, padx=0, pady=self.yd)
 
         # run analysis
         self.b_connect = tk.Button(self, text="Run Analysis",

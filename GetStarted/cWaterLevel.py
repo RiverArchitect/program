@@ -111,10 +111,10 @@ class WLE:
                     arcpy.Kriging_3d(in_point_features=pts_wse, z_field="grid_code",
                                      out_surface_raster=self.cache + "ras_wle_dem",
                                      semiVariogram_props="Spherical",
-                                     cell_size=cell_size,
-                                     out_variance_prediction_raster=self.cache + "ras_wle_var")
+                                     cell_size=cell_size)
+                    # out_variance_prediction_raster=self.cache + "ras_wle_var" ***
                     ras_wle_dem = arcpy.Raster(self.cache + "ras_wle_dem")
-                    ras_wle_var = arcpy.Raster(self.cache + "ras_wle_var")
+                    # ras_wle_var = arcpy.Raster(self.cache + "ras_wle_var") ***
                     self.logger.info("OK")
                 except arcpy.ExecuteError:
                     self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
@@ -173,10 +173,12 @@ class WLE:
                 self.logger.info(str(self.out_dir))
                 ras_wle_dem.save(self.out_dir + self.out_wle)
                 self.logger.info("OK")
+                """ ***
                 if method == "Kriging":
                     self.logger.info("Saving WLE Kriging variance raster ...")
                     ras_wle_var.save(self.out_dir + self.out_wle_var)
                     self.logger.info("OK")
+                """
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
                 return True
