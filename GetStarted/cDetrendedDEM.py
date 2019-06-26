@@ -41,12 +41,12 @@ class DET:
             arcpy.CheckOutExtension('Spatial')  # check out license
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
-            arcpy.env.extent = "MAXOF"
 
             try:
                 self.logger.info(" * Reading input rasters ...")
                 ras_h = arcpy.Raster(path2h_ras)
                 ras_dem = arcpy.Raster(path2dem_ras)
+                arcpy.env.extent = ras_dem.extent
                 self.logger.info(" * OK")
             except:
                 self.logger.info("ERROR: Could not find / access input rasters.")
@@ -77,7 +77,7 @@ class DET:
                 self.logger.info(arcpy.GetMessages(2))
                 return True
 
-            base_join = self.out_dir + 'spat_join_det.shp'
+            base_join = self.out_dir + '\\spat_join_det.shp'
             try:
                 self.logger.info(" * Spatial join analysis ...")
                 base_join = arcpy.SpatialJoin_analysis(target_features=pts_dem, join_features=pts_hmin,
@@ -119,9 +119,8 @@ class DET:
                 return True
 
             try:
-                self.logger.info(" * Saving depth to Thalweg raster (detrended DEM) to:")
-                self.logger.info(str(self.out_dir))
-                ras_det.save(self.out_dir + "dem_detrend.tif")
+                self.logger.info(" * Saving depth to Thalweg raster (detrended DEM) to:\n%s" % self.out_dir + "\\dem_detrend.tif")
+                ras_det.save(self.out_dir + "\\dem_detrend.tif")
                 self.logger.info(" * OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
