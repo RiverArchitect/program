@@ -119,6 +119,7 @@ def eliminate_nan_from_list(base_list, *args):
 
 
 def file_names_in_dir(directory):
+    # returns file names only (without directory)
     return [name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))]
 
 

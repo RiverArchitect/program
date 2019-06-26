@@ -1,12 +1,13 @@
 # !/usr/bin/python
 import sys, os
 try:
+    sys.path.append(os.path.dirname(__file__))
     import config
     import cReachManager as cRM
     sys.path.append(config.dir2oxl)
     import openpyxl as oxl
 except:
-    print("ExceptionERROR: Cannot find package files (cReachManager.py/openpyxl/openpyxl).")
+    print("ExceptionERROR: Cannot find riverpy (%s)." % os.path.dirname(__file__))
 
 
 class FeatureReader:
