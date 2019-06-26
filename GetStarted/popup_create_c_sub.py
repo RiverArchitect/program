@@ -103,6 +103,9 @@ class CreateSubCondition(object):
                 fGl.open_folder(self.dir2sub_condition)
                 self.b_create_c.config(fg="forest green", text="Sub-Condition created.")
                 self.l_run_info.config(text="New condition: %s" % self.dir2sub_condition)
+                if str(self.dir2bound).endswith("shp"):
+                    msg = "Restart River Architect to create ANOTHER SUBSET (arcpy issue)"
+                    self.b_create_c.config(text=msg, fg="MediumOrchid4")
             else:
                 self.b_create_c.config(fg="red", text="Sub-Condition creation failed (click to re-run).")
         except:

@@ -508,6 +508,11 @@ class HHSI:
         i_hsi_prev = curve_data[1][0]
         for i_par in curve_data[0]:
             try:
+                float(i_par)
+            except:
+                self.logger.info("      * skipping all values larger than {0} (no data provided).".format(str(i_par_prev)))
+                break
+            try:
                 __ras__.append(Float(Con((Float(ras) >= Float(i_par_prev)) & (Float(ras) < Float(i_par)), (
                                          Float(i_hsi_prev) + (
                                           (Float(ras) - Float(i_par_prev)) / (Float(i_par) - Float(i_par_prev)) * Float(
