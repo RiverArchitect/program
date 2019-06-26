@@ -130,6 +130,11 @@ class PopulateCondition(object):
         self.b_sdet["state"] = "disabled"
         self.b_smuh["state"] = "disabled"
         self.b_smuu["state"] = "disabled"
+        try:
+            fGl.clean_dir(config.dir2gs + ".cache\\")
+            fGl.rm_dir(config.dir2gs + ".cache\\")
+        except:
+            pass
 
     def gui_quit(self):
         self.top.destroy()
