@@ -47,10 +47,9 @@ def main(action_dir, reach, stn, unit, version):
     # file settings
     xlsx_target = path2PP + str(reach.upper()) + "_" + stn + "_assessment_" + version + ".xlsx"
 
-    # LOOK UP ACTION RASTERS
     action_ras = {}
     try:
-        logger.info("Looking up Action Rasters ...")
+        logger.info("Looking up MaxLifespan Rasters ...")
         arcpy.env.workspace = action_dir
         action_ras_all = arcpy.ListRasters()
         logger.info(" >> Source directory: " + action_dir)
@@ -62,7 +61,7 @@ def main(action_dir, reach, stn, unit, version):
                     action_ras.update({aras: arcpy.Raster(action_dir + aras)})
             if ("max" in str(aras)) and ("plant" in str(aras)):
                 max_lf_plants = arcpy.Raster(action_dir + aras)
-        logger.info(" -- OK (Action raster read)\n")
+        logger.info(" -- OK (read Rasters)\n")
     except:
         logger.info("ERROR: Could not find action Rasters.")
 
@@ -121,6 +120,9 @@ def main(action_dir, reach, stn, unit, version):
             logger.info(" >> Calculating area statistics ... ")
             try:
                 arcpy.AddField_management(shp_dir + aras_no_end + ".shp", "F_AREA", "FLOAT", 9)
+            except:
+                logger.info("    * field F_AREA already exists ")
+            try:
                 arcpy.CalculateGeometryAttributes_management(shp_dir + aras_no_end + ".shp",
                                                              geometry_property=[["F_AREA", "AREA"]],
                                                              area_unit=area_units)
@@ -131,11 +133,17 @@ def main(action_dir, reach, stn, unit, version):
             arcpy.env.workspace = path2PP + "Geodata\\"
         logger.info(" -- OK (Shapefile and raster analyses)\n")
         logger.info("Calculating area statistics of plants to be cleared for construction ...")
-        arcpy.AddField_management(shp_dir + "PlantDelineation.shp", "F_AREA", "FLOAT", 9)
-        arcpy.CalculateGeometryAttributes_management(shp_dir + "PlantDelineation.shp",
-                                                     geometry_property=[["F_AREA", "AREA"]],
-                                                     area_unit=area_units)
-        shp_4_stats.update({"clearing": shp_dir + "PlantDelineation.shp"})
+        try:
+            arcpy.AddField_management(shp_dir + "PlantDelineation.shp", "F_AREA", "FLOAT", 9)
+        except:
+            logger.info("    * cannot add field F_AREA to %s (already exists?)" % str(shp_dir + "PlantDelineation.shp"))
+        try:
+            arcpy.CalculateGeometryAttributes_management(shp_dir + "PlantDelineation.shp",
+                                                         geometry_property=[["F_AREA", "AREA"]],
+                                                         area_unit=area_units)
+            shp_4_stats.update({"clearing": shp_dir + "PlantDelineation.shp"})
+        except:
+            logger.info("    * no clearing applicable ")
         logger.info(" -- OK (Statistic calculation)\n")
     except arcpy.ExecuteError:
         logger.info("ExecuteERROR: (arcpy).")
@@ -201,21 +209,16 @@ def main(action_dir, reach, stn, unit, version):
 
     logger.info(" -- OK (PLANT DELINEATION FINISHED)\n")
 
-    # RELEASE LOGGER AND OPEN LOGFILE
+
     try:
-        logfile = os.getcwd() + "\\logfile.log"
-        try:
-            if not error:
-                webbrowser.open(xlsx_target)
-        except:
-            pass
-        webbrowser.open(logfile)
+        if not error:
+            webbrowser.open(xlsx_target)
     except:
         pass
 
 
 if __name__ == "__main__":
-    dir2AP = str(input('Please enter the path to the RiverArchitect module (e.g., "D:/RiverArchitect/MaxLifespan/Products/Rasters/condition_rrr_lyr20_plants/") >> '))
+    dir2AP = str(input('Please enter the path to the RiverArchitect module (e.g., "D:/RiverArchitect/MaxLifespan/Output/Rasters/condition_rrr_lyr20_plants/") >> '))
     reach = str(input('Please enter a reach abbreviation ("RRR") >> ')).upper()
     stn = str(input('Please enter a site name abbreviation ("stn") >> ')).lower()
     unit = str(input('Please enter a unit system ("us" or "si") >> '))

@@ -33,12 +33,12 @@ class MainGui(sg.RaModuleGui):
         self.condition_i_list = []
         self.condition_p_list = []
         self.condition_pl_list = []
-        self.condition_tbx_list = []
+        self.condition_bio_list = []
         self.condition_init = ""
         self.condition_proj = ""
 
         self.dir2prj = ""  #os.path.dirname(os.path.abspath(__file__)) + "\\Geodata\\"
-        self.dir2AP = config.dir2ml + "Products\\Rasters\\"
+        self.dir2AP = config.dir2ml + "Output\\Rasters\\"
         self.fish = {}
         self.fish_applied = {}
         self.reach = ""
@@ -202,7 +202,7 @@ class MainGui(sg.RaModuleGui):
         self.condition_i_list = []  # reset pre-project condition list
         self.condition_p_list = []  # reset post-project condition list
         self.condition_pl_list = []  # reset plant condition list
-        self.condition_tbx_list = []  # reset tbx condition list
+        self.condition_bio_list = []  # reset tbx condition list
 
         dir2HE = config.dir2sh + "CHSI\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
@@ -210,15 +210,15 @@ class MainGui(sg.RaModuleGui):
             self.condition_i_list.append(str(f))  # pre-project propositions
             self.condition_p_list.append(str(f))  # post-project propositions
 
-        dir2AP = config.dir2ml + "Output\\Rasters\\"
-        ap_list = [d for d in os.listdir(dir2AP) if os.path.isdir(os.path.join(dir2AP, d))]
+        dir2lf_ras = config.dir2lf + "Output\\Rasters\\"
+        ap_list = [d for d in os.listdir(dir2lf_ras) if os.path.isdir(os.path.join(dir2lf_ras, d))]
         for f in ap_list:
             if ("plant" in str(f).lower()) or ("lyr20" in str(f).lower()):
                 if not("bio" in str(f).lower()):
                     self.condition_pl_list.append(f)
             if "bio" in str(f).lower() or ("lyr20" in str(f).lower()):
                 if not("plant" in str(f).lower()):
-                    self.condition_tbx_list.append(f)
+                    self.condition_bio_list.append(f)
 
     def get_variables(self):
         self.version = str(self.e_version.get())
@@ -246,13 +246,13 @@ class MainGui(sg.RaModuleGui):
             msges.append("Plant delineation module requirements:\n")
             msges.append("- ProjectArea.shp (Polygon)")
             msges.append("- PlantDelineation.shp (Polygon)")
-            msges.append("- Maximum Lifespan Maps for plants (lyr20) are stored in /MaxLifespan/Products/Rasters/condition_RRR_lyr20.../\n")
+            msges.append("- Maximum Lifespan Maps for plants (lyr20) are stored in /MaxLifespan/Output/Rasters/condition_RRR_lyr20.../\n")
 
         if app_name == "s21":
             msges.append("Plant stabilization module requirements:\n")
             msges.append("- ProjectArea.shp (Polygon)")
             msges.append("- Critical plantings lifespan determines plantings that require stabilization with bioengineering features")
-            msges.append("- Maximum Lifespan Maps for bioengineering (lyr20) features are stored in /MaxLifespan/Products/Rasters/condition_RRR_lyr20.../\n")
+            msges.append("- Maximum Lifespan Maps for bioengineering (lyr20) features are stored in /MaxLifespan/Output/Rasters/condition_RRR_lyr20.../\n")
 
         if app_name == "s40":
             msges.append("Weighted Usable habitat Area module requirements:\n")
@@ -367,7 +367,7 @@ class MainGui(sg.RaModuleGui):
                 if (condition_pl.__len__() < 1) or (str(condition_pl) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_pl = config.dir2ml + "Products\\Rasters\\" + condition_pl + "\\"
+                dir2AP_pl = config.dir2ml + "Output\\Rasters\\" + condition_pl + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s20.main(dir2AP_pl, self.reach, self.stn, self.unit, self.version)
                 self.b_s20.config(text="Delineate plantings OK", fg="forest green")
@@ -377,11 +377,11 @@ class MainGui(sg.RaModuleGui):
         if app_name == "s21":
             try:
                 items = self.lb_condition_tbx.curselection()
-                condition_tbx = [self.condition_tbx_list[int(item)] for item in items][0]
+                condition_tbx = [self.condition_bio_list[int(item)] for item in items][0]
                 if (condition_tbx.__len__() < 1) or (str(condition_tbx) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_tbx = config.dir2ml + "Products\\Rasters\\" + condition_tbx + "\\"
+                dir2AP_tbx = config.dir2ml + "Output\\Rasters\\" + condition_tbx + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s21.main(dir2AP_tbx, self.vege_cr, self.reach, self.stn, self.unit, self.version)
                 self.b_s21.config(text="Stabilize plantings OK", fg="forest green")
@@ -396,7 +396,7 @@ class MainGui(sg.RaModuleGui):
                 if self.cover_app_pre.get() or self.cover_app_post.get():
                     msg1 = "Make sure that cover cHSI rasters are available in SHArC/cHSI/"
                     msg2 = str(self.condition_init) + " AND / OR " + str(self.condition_proj) + "/cover/.\n\n"
-                    msg3 = "Press OK to launch AUA calculation with cover."
+                    msg3 = "Press OK to launch SHArea calculation with cover."
                     showinfo("Info", msg1 + msg2 + msg3)
                 if (self.condition_init.__len__() < 1) or (str(self.condition_init) == "Validate Variables"):
                     showinfo("ERROR", "Select initial condition.")
@@ -406,7 +406,7 @@ class MainGui(sg.RaModuleGui):
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
                 s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), config.dir2ra, self.fish_applied, self.reach, self.stn, self.unit, self.version)
-                self.b_s40.config(text="Net gain in AUA calculation OK", fg="forest green")
+                self.b_s40.config(text="Net gain in SHArea calculation OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
@@ -425,8 +425,8 @@ class MainGui(sg.RaModuleGui):
             error_msges.append("Site short name must consist of three small letters (letter1 + letter2 + letter3).")
         if self.vege_cr == 0.01:
             error_msges.append("Minimum survival threshold for plants must be a float number in years.")
-        if not os.path.isdir(config.dir2ml + "Products\\"):
-            error_msges.append("Check path to RiverArchitect package and its subdirectory MaxLifespan/Products.")
+        if not os.path.isdir(config.dir2ml + "Output\\"):
+            error_msges.append("Check path to RiverArchitect package and its subdirectory MaxLifespan/Output.")
 
         if error_msges.__len__() > 0:
             self.master.bell()
@@ -496,7 +496,7 @@ class MainGui(sg.RaModuleGui):
                 self.lb_condition_tbx.delete(0, tk.END)
             except:
                 pass
-            for e in self.condition_tbx_list:
+            for e in self.condition_bio_list:
                 self.lb_condition_tbx.insert(tk.END, e)
             self.lb_condition_tbx.grid(sticky=tk.EW, row=18, column=1, padx=self.xd, pady=self.yd)
             self.sb_condition_tbx.config(command=self.lb_condition_tbx.yview)

@@ -157,14 +157,8 @@ def main(condition_initial, condition_project, cover_pre, cover_post, dir2ra, fi
         logger.info("ERROR: Could not run SHArea analysis.")
         error = True
 
-    # RELEASE LOGGER AND OPEN LOGFILE
     try:
-        logfile = os.getcwd() + "\\logfile.log"
-        try:
-            if not error:
-                webbrowser.open(dir2PP + xlsx_out_name)
-        except:
-            pass
-        webbrowser.open(logfile)
+        if not error:
+            webbrowser.open(dir2PP + xlsx_out_name)
     except:
         pass
