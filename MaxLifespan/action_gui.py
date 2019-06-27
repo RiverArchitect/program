@@ -209,16 +209,8 @@ class ActionGui(sg.RaModuleGui):
             for feat in self.feature_type:
                 run.gui_geo_maker(self.condition, feat.split("_mlf")[0], self.unit, self.inpath, self.dir_base_ras)
                 run.gui_quit()
-            self.l_inpath_curr.destroy()
-            # self.cb_lyt.destroy()
-            self.b_inpath.destroy()
-            self.lb_condition.destroy()
-            self.sb_condition.destroy()
-            self.l_c_ok = tk.Label(self, fg="forest green", text=str(self.condition))
-            self.l_c_ok.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
+            self.l_inpath_curr.config(fg="forest green", text="Finished.")
 
-            tk.Button(self, width=25, bg="pale green", text="QUIT", command=lambda:
-                      tk.Frame.quit(self)).grid(sticky=tk.EW, row=3, column=0, padx=self.xd, pady=self.yd)
             if not self.mapping.get():
                 self.master.bell()
                 tk.Button(self, bg="gold", width=50, text="IMPORTANT\n Read logfile(s)", command=lambda:
@@ -229,6 +221,7 @@ class ActionGui(sg.RaModuleGui):
                           self.open_log_file()).grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
             if self.mapping.get():
                 self.run_map_maker()
+        self.verified = False
 
     def run_map_maker(self):
         if not self.verified:
@@ -240,10 +233,7 @@ class ActionGui(sg.RaModuleGui):
             run = RunGui(self)
             run.gui_map_maker(self.condition, self.feature_type)
             run.gui_quit()
-            try:
-                self.l_inpath_curr.destroy()
-            except:
-                pass
+
             self.master.bell()
 
             tk.Button(self, bg="pale green", width=50, text="IMPORTANT\n Read logfile(s)", command=lambda:

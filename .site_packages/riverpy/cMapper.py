@@ -327,9 +327,15 @@ class Mapper:
 
             # choose layout
             self.map_string = self.choose_ref_map(str(map_item).lower().split(".tif")[0])
+            if self.map_string.__len__() < 1:
+                self.logger.info("ERROR: No reference map found for %s (skipping)." % str(map_item))
+                continue
             self.logger.info("    * source map layer: " + self.map_string)
             self.m = self.aprx.listMaps(self.map_string)[0]
             self.logger.info("    * source map layout: " + self.choose_ref_layout(self.map_string))
+            if self.choose_ref_layout(self.map_string).__len__() < 1:
+                self.logger.info("ERROR: No reference layer found for %s (skipping)." % str(self.map_string))
+                continue
             self.map_layout = self.aprx.listLayouts(self.choose_ref_layout(self.map_string))[0]
             self.logger.info("    * setting legend ...")
             self.legend = self.map_layout.listElements("legend_element", "legend")[0]

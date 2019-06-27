@@ -155,7 +155,7 @@ class FaGui(sg.RaModuleGui):
                                  self.open_inp_file("mapping.inp"))
         self.b_mod_m.grid(sticky=tk.EW, row=5, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_th = tk.Button(self, width=25, bg="white", text="Modify survival threshold values", command=lambda:
-                                  self.open_inp_file("threshold_values.xlsx"))
+                                  self.open_inp_file("threshold_values"))
         self.b_mod_th.grid(sticky=tk.EW, row=6, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_mod_rea = tk.Button(self, width=25, bg="white", text="Modify river/reach extents", command=lambda:
                                    self.open_inp_file("computation_extents.xlsx", "MT"))
@@ -267,16 +267,18 @@ class FaGui(sg.RaModuleGui):
 
     def open_inp_file(self, filename, *args):
         # args[0] = STR indicating other modules
+        _f = None
         try:
             if str(args[0]) == "MT":
                 _f = self.reach_template_dir + filename
-            else:
-                _f = config.dir2conditions + self.condition + "\\" + filename
         except:
-            try:
-                _f = config.dir2conditions + self.condition + "\\" + filename
-            except:
-                _f = None
+            if "threshold_values" in filename:
+                _f = config.xlsx_thresholds
+            if not _f:
+                try:
+                    _f = config.dir2conditions + self.condition + "\\" + filename
+                except:
+                    pass
 
         if os.path.isfile(_f):
             try:
