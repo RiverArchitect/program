@@ -66,6 +66,8 @@ class Graphy:
 
     def get_neighbors(self, i, j):
         # static method for now
+
+        # list of indices
         l = [(i + 1, j),
              (i - 1, j),
              (i, j + 1),
@@ -75,7 +77,14 @@ class Graphy:
              (i - 1, j + 1),
              (i + 1, j - 1)]
 
-        return l
+        # corresponding unit vectors for step direction
+
+        # 45 deg rotation matrix
+        rot = [[np.cos(), np.sin()], [-np.sin(), np.cos()]]
+        
+        vs = []
+
+        return l, vs
 
     """Dynamic program"""
     def find_shortest_path(self, start, end):
