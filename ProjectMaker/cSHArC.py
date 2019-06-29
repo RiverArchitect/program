@@ -120,6 +120,9 @@ class SHArC:
             self.logger.info("     saving project CHSI shapefile of raster " + str(csi_raster) + ".tif to:")
             self.logger.info("     " + target_dir + str(shp_name))
             arcpy.AddField_management(shp_name, "F_AREA", "FLOAT", 9)
+        except:
+            pass
+        try:
             arcpy.CalculateGeometryAttributes_management(shp_name, geometry_property=[["F_AREA", "AREA"]],
                                                          area_unit=self.area_unit)
             self.logger.info("   * summing area ...")
@@ -147,7 +150,8 @@ class SHArC:
         # template feature = shapefile (full path)
         # fields = list: ["SHAPE@", look_for_entry]
         self.logger.info("   * reading project area extents ...")
-        for row in arcpy.da.SearchCursor(template_feature, fields):
+        with arcpy.da.SearchCursor(template_feature, fields) as cursor:
+            row = cursor.next()
             if row[1] == 1:
                 try:
                     self.extents = row[0].extent

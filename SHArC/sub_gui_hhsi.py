@@ -15,10 +15,10 @@ try:
     # load routines from LifespanDesign
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
-    import cMakeTable as cMkT
+    import cMakeTable as cMT
     import cFlows as cFl
     import cInputOutput as cIO
-    import fGlobal as fG
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find package files (riverpy).")
 
@@ -28,7 +28,7 @@ class HHSIgui(object):
         top = self.top = tk.Toplevel(master)
         self.dir_input_ras = ""
         self.condition = ""
-        self.condition_list = fG.get_subdir_names(config.dir2conditions)
+        self.condition_list = fGl.get_subdir_names(config.dir2conditions)
         self.max_columnspan = 5
         self.discharge_xlsx = []
         self.unit = unit
@@ -107,14 +107,14 @@ class HHSIgui(object):
     def open_files(self, f_list):
         for _f in f_list:
             self.user_message("Do not forget to save files after editing ...")
-            fG.open_file(_f)
+            fGl.open_file(_f)
 
     def prepare_discharge_file(self):
         for species in self.fish_applied.keys():
             for ls in self.fish_applied[species]:
                 fsn = str(species).lower()[0:2] + str(ls)[0:2]
                 # copy spreadsheet with discharge dependencies (if not yet existent)
-                spreadsheet_handle = cMkT.MakeFlowTable(self.condition, "sharc", unit=self.unit)
+                spreadsheet_handle = cMT.MakeFlowTable(self.condition, "sharc", unit=self.unit)
                 self.discharge_xlsx.append(spreadsheet_handle.make_aquatic_condition_xlsx(fsn))
                 # get discharge statistics and write them to workbook
                 xlsx_flow_dur = config.dir2flows + self.condition + "\\flow_duration_" + str(fsn) + ".xlsx"
@@ -135,6 +135,7 @@ class HHSIgui(object):
                                            spreadsheet_handle.wb_out_name.split(".xlsx")[0] + "_cov.xlsx")
 
                 if error_msg.__len__() > 0:
+                    error_msg.insert(0, "VERIFY THAT RiverArchitect/00_Flows/%s/ contains valid xlsx files!\n" % self.condition)
                     showinfo("ERRORS FOUND", "\n".join(error_msg))
 
     def remake_buttons(self):
@@ -155,7 +156,7 @@ class HHSIgui(object):
 
         try:
             if not hhsi.error:
-                fG.open_folder(hhsi.path_hsi)
+                fGl.open_folder(hhsi.path_hsi)
                 self.l_run_info.config(fg="forest green", text="RUN SUCCESSFULLY COMPLETED (close window)")
                 self.b_run.config(width=30, fg="dark green", bg="PaleGreen1", text="Re-run (generate habitat condition)")
             else:
