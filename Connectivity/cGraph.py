@@ -67,15 +67,16 @@ class Graphy:
                 neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
 
                 for n_i, neighbor in enumerate(neighbors):
-                    # check if depth > threshold
-                    if self.h_mat[i, j] > self.h_thresh:
-                        # check velocity condition
-                        mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
-                        dir_u_a = self.u_dir_mat[i, j] * np.pi/180  # angle from north (degrees -> radians)
-                        if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
-                            graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
+                    # check if neighbor index is within array
+                    if 0 <= neighbor[0] < len(row) and 0 <= neighbor[1] <= len(col):
+                        # check if depth > threshold
+                        if self.h_mat[i, j] > self.h_thresh:
+                            # check velocity condition
+                            mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
+                            dir_u_a = self.u_dir_mat[i, j] * np.pi/180  # angle from north (degrees -> radians)
+                            if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
+                                graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
         self.logger.info("OK")
-
 
     def get_neighbors(self, i, j):
         # static method for now
@@ -101,7 +102,9 @@ class Graphy:
                  (1/np.sqrt(2), -1/np.sqrt(2))]
 
         # perpendicular complements to pvecs
-        pvecs_perp = list(deque(pvecs).rotate(-2))
+        q = deque(pvecs)
+        q.rotate(-2)
+        pvecs_perp = list(q)
 
         return l, pvecs, pvecs_perp
 
@@ -121,7 +124,6 @@ class Graphy:
                 return False
         else:
             return False
-
 
     """Dynamic program"""
     def find_shortest_path(self, start, end):
