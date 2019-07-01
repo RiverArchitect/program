@@ -5,8 +5,9 @@ except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
 try:
     from collections import deque
+    import numpy as np
 except:
-    print("ExceptionERROR: Missing fundamental package 'collections'.")
+    print("ExceptionERROR: Missing fundamental packages (required: collections, numpy).")
 try:
     import arcpy
 except:
@@ -21,7 +22,7 @@ class Graphy:
     """
     Class for constructing and navigating directed graphs
     """
-    def __init__(self, path2_h_ras, path2_u_ras, path2_u_dir_ras):
+    def __init__(self, path2_h_ras, path2_u_ras, path2_u_dir_ras, h_thresh, u_thresh):
 
         self.logger = logging.getLogger("logfile")
         self.cache = config.dir2co + ".cache\\"
@@ -30,6 +31,8 @@ class Graphy:
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
         self.path2_u_dir_ras = path2_u_dir_ras
+        self.h_thresh = h_thresh
+        self.u_thresh = u_thresh
 
         self.read_hydraulic_rasters()
         self.construct_graph()
@@ -56,35 +59,71 @@ class Graphy:
 
     def construct_graph(self):
         """Convert matrices to directed graph"""
+        self.logger.info("Constructing graph...")
         graph = {}
-        for row, i in enumerate(mat):
-            for col, j in enumerate(row):
+        for i, row in enumerate(mat):
+            for j, col in enumerate(row):
                 key = str(i) + ',' + str(j)
+                neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
 
-                neighbors = get_neighbors(i, j)
-
+                for n_i, neighbor in enumerate(neighbors):
+                    # check if neighbor index is within array
+                    if 0 <= neighbor[0] < len(row) and 0 <= neighbor[1] <= len(col):
+                        # check if depth > threshold
+                        if self.h_mat[i, j] > self.h_thresh:
+                            # check velocity condition
+                            mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
+                            dir_u_a = self.u_dir_mat[i, j] * np.pi/180  # angle from north (degrees -> radians)
+                            if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
+                                graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
+        self.logger.info("OK")
 
     def get_neighbors(self, i, j):
         # static method for now
 
-        # list of indices
+        # neighboring indices, going ccw from east
         l = [(i + 1, j),
-             (i - 1, j),
-             (i, j + 1),
-             (i, j - 1),
              (i + 1, j + 1),
-             (i - 1, j - 1),
+             (i, j + 1),
              (i - 1, j + 1),
+             (i - 1, j),
+             (i - 1, j - 1),
+             (i, j - 1),
              (i + 1, j - 1)]
 
-        # corresponding unit vectors for step direction
+        # unit vectors pointing from current node to neighbors
+        pvecs = [(1, 0),
+                 (1/np.sqrt(2), 1/np.sqrt(2)),
+                 (0, 1),
+                 (-1/np.sqrt(2), 1/np.sqrt(2)),
+                 (-1, 0),
+                 (-1/np.sqrt(2), -1/np.sqrt(2)),
+                 (0, -1),
+                 (1/np.sqrt(2), -1/np.sqrt(2))]
 
-        # 45 deg rotation matrix
-        rot = [[np.cos(), np.sin()], [-np.sin(), np.cos()]]
-        
-        vs = []
+        # perpendicular complements to pvecs
+        q = deque(pvecs)
+        q.rotate(-2)
+        pvecs_perp = list(q)
 
-        return l, vs
+        return l, pvecs, pvecs_perp
+
+    def check_velocity_condition(self, mag_u_a, dir_u_a, pvec, pvec_perp):
+        """Checks if velocity vector u_a allows travel in direction pvec"""
+        # check if magnitude is too high
+        if mag_u_a < self.u_thresh:
+            # u_a vector (dir is angle from north!)
+            u_a = (mag_u_a * np.sin(dir_u_a), mag_u_a * np.cos(dir_u_a))
+            # split into components parallel and perpendicular to travel direction
+            u_a_perp = np.dot(u_a, pvec_perp)
+            u_a_par = np.dot(u_a, pvec)
+            u_f_par = np.sqrt(self.u_thresh**2 - u_a_perp**2)
+            if u_f_par + u_a_par > 0:
+                return True
+            else:
+                return False
+        else:
+            return False
 
     """Dynamic program"""
     def find_shortest_path(self, start, end):
