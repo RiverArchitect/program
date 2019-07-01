@@ -16,6 +16,95 @@ except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
 
 
+class MandatoryFrame(tk.Frame):
+    def __init__(self, master=None, **options):
+        Frame.__init__(self, master, **options)
+        self.config(width=350, height=400)
+
+        # 02 Velocity raster folder
+        self.b_su = tk.Button(self, width=self.col_0_width, bg="white", text="Select velocity (u) folder",
+                              command=lambda: self.select_u())
+        self.b_su.grid(sticky=tk.EW, row=2, column=0, padx=self.xd, pady=self.yd)
+        self.l_u_str = tk.Label(self, text="Raster string: ")
+        self.l_u_str.grid(sticky=tk.W, row=2, column=1, padx=self.xd, pady=self.yd)
+        self.e_u = tk.Entry(self, width=6, textvariable=self.str_u)
+        self.e_u.grid(sticky=tk.EW, row=2, column=2, padx=self.xd, pady=self.yd)
+        self.b_u_info = tk.Button(self, width=5, bg="white", text="Help", command=lambda: self.user_info('u'))
+        self.b_u_info.grid(sticky=tk.EW, row=2, column=3, padx=self.xd, pady=self.yd)
+        self.l_u_folder = tk.Label(self, fg="red", text="No u-folder defined.")
+        self.l_u_folder.grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=4, column=0)  # dummy
+
+        # 03 Depth raster folder
+        self.b_sh = tk.Button(self, width=self.col_0_width, bg="white", text="Select depth (h) folder",
+                              command=lambda: self.select_h())
+        self.b_sh.grid(sticky=tk.EW, row=5, column=0, padx=self.xd, pady=self.yd)
+        self.l_h_str = tk.Label(self, text="Raster string: ")
+        self.l_h_str.grid(sticky=tk.W, row=5, column=1, padx=self.xd, pady=self.yd)
+        self.e_h = tk.Entry(self, width=6, textvariable=self.str_h)
+        self.e_h.grid(sticky=tk.EW, row=5, column=2, padx=self.xd, pady=self.yd)
+        self.b_h_info = tk.Button(self, width=5, bg="white", text="Help", command=lambda: self.user_info('h'))
+        self.b_h_info.grid(sticky=tk.EW, row=5, column=3, padx=self.xd, pady=self.yd)
+        self.l_h_folder = tk.Label(self, fg="red", text="No h-folder defined.")
+        self.l_h_folder.grid(sticky=tk.W, row=6, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=7, column=0)  # dummy
+
+        # 04 DEM raster
+        self.b_sdem = tk.Button(self, width=self.col_0_width, bg="white", text="Select DEM Raster",
+                                command=lambda: self.select_dem())
+        self.b_sdem.grid(sticky=tk.EW, row=8, column=0, padx=self.xd, pady=self.yd)
+        self.l_dem = tk.Label(self, fg="red", text="No DEM Raster defined.")
+        self.l_dem.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=10, column=0)  # dummy
+
+        # 05 Grain size raster
+        self.b_sgrain = tk.Button(self, width=self.col_0_width, bg="white", text="Select Grain size Raster",
+                                  command=lambda: self.select_grains())
+        self.b_sgrain.grid(sticky=tk.EW, row=11, column=0, padx=self.xd, pady=self.yd)
+        self.l_grain = tk.Label(self, fg="red", text="No Grain size Raster defined.")
+        self.l_grain.grid(sticky=tk.W, row=12, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=13, column=0)  # dummy
+
+
+class OptionalFrame(tk.Frame):
+    def __init__(self, master=None, **options):
+        Frame.__init__(self, master, **options)
+        self.config(width=350, height=400)
+
+        # Velocity Direction raster
+        self.b_udir = tk.Button(self, )
+
+        # 06 Scour raster
+        self.b_sscour = tk.Button(self, width=self.col_0_width, bg="white", text="Select Scour Raster",
+                                  command=lambda: self.select_scour())
+        self.b_sscour.grid(sticky=tk.EW, row=14, column=0, padx=self.xd, pady=self.yd)
+        self.l_scour_info = tk.Label(self, fg="gray35", text="(optional)")
+        self.l_scour_info.grid(sticky=tk.W, row=14, column=1, padx=self.xd, pady=self.yd)
+        self.l_scour = tk.Label(self, fg="red", text="No Scour Raster defined.")
+        self.l_scour.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=16, column=0)  # dummy
+
+        # 07 Fill raster
+        self.b_sfill = tk.Button(self, width=self.col_0_width, bg="white", text="Select Fill Raster",
+                                 command=lambda: self.select_fill())
+        self.b_sfill.grid(sticky=tk.EW, row=17, column=0, padx=self.xd, pady=self.yd)
+        self.l_fill_info = tk.Label(self, fg="gray35", text="(optional)")
+        self.l_fill_info.grid(sticky=tk.W, row=17, column=1, padx=self.xd, pady=self.yd)
+        self.l_fill = tk.Label(self, fg="red", text="No Fill Raster defined.")
+        self.l_fill.grid(sticky=tk.W, row=18, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=19, column=0)  # dummy
+
+        # 08 Background raster
+        self.b_sback = tk.Button(self, width=self.col_0_width, bg="white", text="Select Background Raster",
+                                 command=lambda: self.select_back())
+        self.b_sback.grid(sticky=tk.EW, row=20, column=0, padx=self.xd, pady=self.yd)
+        self.l_back_info = tk.Label(self, fg="gray35", text="(optional)")
+        self.l_back_info.grid(sticky=tk.W, row=20, column=1, padx=self.xd, pady=self.yd)
+        self.l_back = tk.Label(self, fg="red", text="No Background Raster defined.")
+        self.l_back.grid(sticky=tk.W, row=21, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="").grid(sticky=tk.W, row=22, column=0)  # dummy
+
+
 class CreateCondition(object):
     def __init__(self, master):
         config.dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\"
@@ -28,6 +117,7 @@ class CreateCondition(object):
         self.dir2h = '.'
         self.dir2scour = '.'
         self.dir2u = '.'
+        self.dir2u_dir = '.'
 
         self.new_condition_name = tk.StringVar()
         self.str_h = tk.StringVar()
@@ -55,79 +145,14 @@ class CreateCondition(object):
         self.e_condition.grid(sticky=tk.EW, row=0, column=1, columnspan=2, padx=self.xd, pady=self.yd)
         tk.Label(top, text="").grid(sticky=tk.W, row=1, column=0)  # dummy
 
-        # 02 Velocity raster folder
-        self.b_su = tk.Button(top, width=self.col_0_width, bg="white", text="Select velocity (u) folder",
-                              command=lambda: self.select_u())
-        self.b_su.grid(sticky=tk.EW, row=2, column=0, padx=self.xd, pady=self.yd)
-        self.l_u_str = tk.Label(top,text="Raster string: ")
-        self.l_u_str.grid(sticky=tk.W, row=2, column=1, padx=self.xd, pady=self.yd)
-        self.e_u = tk.Entry(top, width=6, textvariable=self.str_u)
-        self.e_u.grid(sticky=tk.EW, row=2, column=2, padx=self.xd, pady=self.yd)
-        self.b_u_info = tk.Button(top, width=5, bg="white", text="Help", command=lambda: self.user_info('u'))
-        self.b_u_info.grid(sticky=tk.EW, row=2, column=3, padx=self.xd, pady=self.yd)
-        self.l_u_folder = tk.Label(top, fg="red", text="No u-folder defined.")
-        self.l_u_folder.grid(sticky=tk.W, row=3, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=4, column=0)  # dummy
+        # MANDATORY INPUTS FRAME
+        self.mandatory = MandatoryFrame(self.top, relief=tk.RAISED)
+        self.mandatory.grid(row=2, column=0, columnspan=3)
 
-        # 03 Depth raster folder
-        self.b_sh = tk.Button(top, width=self.col_0_width, bg="white", text="Select depth (h) folder",
-                              command=lambda: self.select_h())
-        self.b_sh.grid(sticky=tk.EW, row=5, column=0, padx=self.xd, pady=self.yd)
-        self.l_h_str = tk.Label(top, text="Raster string: ")
-        self.l_h_str.grid(sticky=tk.W, row=5, column=1, padx=self.xd, pady=self.yd)
-        self.e_h = tk.Entry(top, width=6, textvariable=self.str_h)
-        self.e_h.grid(sticky=tk.EW, row=5, column=2, padx=self.xd, pady=self.yd)
-        self.b_h_info = tk.Button(top, width=5, bg="white", text="Help", command=lambda: self.user_info('h'))
-        self.b_h_info.grid(sticky=tk.EW, row=5, column=3, padx=self.xd, pady=self.yd)
-        self.l_h_folder = tk.Label(top, fg="red", text="No h-folder defined.")
-        self.l_h_folder.grid(sticky=tk.W, row=6, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=7, column=0)  # dummy
-
-        # 04 DEM raster
-        self.b_sdem = tk.Button(top, width=self.col_0_width, bg="white", text="Select DEM Raster",
-                                command=lambda: self.select_dem())
-        self.b_sdem.grid(sticky=tk.EW, row=8, column=0, padx=self.xd, pady=self.yd)
-        self.l_dem = tk.Label(top, fg="red", text="No DEM Raster defined.")
-        self.l_dem.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=10, column=0)  # dummy
-
-        # 05 Grain size raster
-        self.b_sgrain = tk.Button(top, width=self.col_0_width, bg="white", text="Select Grain size Raster",
-                                  command=lambda: self.select_grains())
-        self.b_sgrain.grid(sticky=tk.EW, row=11, column=0, padx=self.xd, pady=self.yd)
-        self.l_grain = tk.Label(top, fg="red", text="No Grain size Raster defined.")
-        self.l_grain.grid(sticky=tk.W, row=12, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=13, column=0)  # dummy
-
-        # 06 Scour raster
-        self.b_sscour = tk.Button(top, width=self.col_0_width, bg="white", text="Select Scour Raster",
-                                  command=lambda: self.select_scour())
-        self.b_sscour.grid(sticky=tk.EW, row=14, column=0, padx=self.xd, pady=self.yd)
-        self.l_scour_info = tk.Label(top, fg="gray35", text="(optional)")
-        self.l_scour_info.grid(sticky=tk.W, row=14, column=1, padx=self.xd, pady=self.yd)
-        self.l_scour = tk.Label(top, fg="red", text="No Scour Raster defined.")
-        self.l_scour.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=16, column=0)  # dummy
-
-        # 07 Fill raster
-        self.b_sfill = tk.Button(top, width=self.col_0_width, bg="white", text="Select Fill Raster",
-                                 command=lambda: self.select_fill())
-        self.b_sfill.grid(sticky=tk.EW, row=17, column=0, padx=self.xd, pady=self.yd)
-        self.l_fill_info = tk.Label(top, fg="gray35", text="(optional)")
-        self.l_fill_info.grid(sticky=tk.W, row=17, column=1, padx=self.xd, pady=self.yd)
-        self.l_fill = tk.Label(top, fg="red", text="No Fill Raster defined.")
-        self.l_fill.grid(sticky=tk.W, row=18, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=19, column=0)  # dummy
-
-        # 08 Background raster
-        self.b_sback = tk.Button(top, width=self.col_0_width, bg="white", text="Select Background Raster",
-                                 command=lambda: self.select_back())
-        self.b_sback.grid(sticky=tk.EW, row=20, column=0, padx=self.xd, pady=self.yd)
-        self.l_back_info = tk.Label(top, fg="gray35", text="(optional)")
-        self.l_back_info.grid(sticky=tk.W, row=20, column=1, padx=self.xd, pady=self.yd)
-        self.l_back = tk.Label(top, fg="red", text="No Background Raster defined.")
-        self.l_back.grid(sticky=tk.W, row=21, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=22, column=0)  # dummy
+        # OPTIONAL INPUTS FRAME
+        self.optional = OptionalFrame(self.top, relief=tk.RAISED)
+        self.set_bg_color(self.optional, "yellow")
+        self.optional.grid(row=3, column=0, columnspan=3)
 
         # 09 CREATE CONDITION
         self.b_create_c = tk.Button(top, width=self.col_0_width, bg="white", text="CREATE CONDITION",
