@@ -36,11 +36,13 @@ def analysis_call(parameter_name, feature, feature_analysis):
                 if not type(feature.threshold_taux) is list:
                     feature_analysis.design_stable_grains(feature.threshold_taux)
                 else:
-                    logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                    logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
             if parameter_name == "ds_wood":
                 feature_analysis.design_wood()
             if parameter_name == "sidech":
                 feature_analysis.design_side_channel()
+        else:
+            logger.info("      * Design mapping is off.")
 
         # invoke lifespan raster creation
         if parameter_name == "d2w":
@@ -50,47 +52,47 @@ def analysis_call(parameter_name, feature, feature_analysis):
             if not (type(feature.threshold_det_low) is list) and not (type(feature.threshold_det_up) is list):
                 feature_analysis.analyse_det(feature.threshold_det_low, feature.threshold_det_up)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "Fr":
             if not type(feature.threshold_Fr) is list:
                 feature_analysis.analyse_Fr(feature.threshold_Fr)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "fill":
             if not type(feature.threshold_fill) is list:
                 feature_analysis.analyse_fill(feature.threshold_fill)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "fine_grains":
             if not (type(feature.threshold_taux) is list) and not (type(feature.threshold_Dmaxf) is list):
                 feature_analysis.analyse_fine_grains(feature.threshold_taux, feature.threshold_Dmaxf)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "h":
             if not type(feature.threshold_h) is list:
                 feature_analysis.analyse_h(feature.threshold_h)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "mobile_grains":
             if not type(feature.threshold_taux) is list:
                 feature_analysis.analyse_mobile_grains(feature.threshold_taux)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "mu":
             if (0 in feature.mu_method) or (1 in feature.mu_method):
                 feature_analysis.analyse_mu(feature.mu_bad, feature.mu_good, feature.mu_method)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "scour":
             if not type(feature.threshold_scour) is list:
                 feature_analysis.analyse_scour(feature.threshold_scour)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "taux":
             if not type(feature.threshold_taux) is list:
                 feature_analysis.analyse_taux(feature.threshold_taux)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "tcd":
             run = False
             if not (type(feature.threshold_fill) is list) and not (type(feature.threshold_scour) is list):
@@ -103,19 +105,19 @@ def analysis_call(parameter_name, feature, feature_analysis):
                 feature_analysis.analyse_fill(feature.threshold_fill)
                 run = True
             if not run:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "u":
             if not type(feature.threshold_u) is list:
                 feature_analysis.analyse_u(feature.threshold_u)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "lf_bioengineering":
             if not (type(feature.threshold_S0) is list) and not (type(feature.threshold_d2w_up) is list):
                 feature_analysis.analyze_bio(feature.threshold_S0, feature.threshold_d2w_up)
             else:
-                logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
     except:
-        logger.info("      * No thresholds provided for %s. Omitting analysis." % parameter_name)
+        logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
     return feature_analysis
 
 
@@ -161,10 +163,10 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
         pot_err_msg = "parameter analysis"
         for par in feature.parameter_list:
             try:
-                logger.info("   >> Calling parameter analysis (" + par + ").")
+                logger.info("   >> Checking if %s applies ... " % par)
                 feature_analysis = analysis_call(par, feature, feature_analysis)
             except:
-                logger.info("ERROR: Failed calling " + par + " analysis of " + feature.name + ".")
+                logger.info("ERROR: Failed checking " + par + " of " + feature.name + ".")
 
         pot_err_msg = "habitat join"
         if habitat:
@@ -315,7 +317,7 @@ def raster_maker(condition, reach_ids, *args):
         for f in feature_list:
             logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
             if reach_extents == "MAXOF":
-                logger.info("FEATURE (ALL REACHES): " + str(f))
+                logger.info("FEATURE: " + str(f))
             else:
                 logger.info("FEATURE (REACH: " + reaches.dict_id_names[r] + "): " + str(f))
             logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")

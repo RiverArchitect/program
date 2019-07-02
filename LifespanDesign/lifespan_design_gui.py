@@ -176,10 +176,10 @@ class FaGui(sg.RaModuleGui):
         self.cb_habitat = tk.Checkbutton(self, text="Apply habitat matching",
                                          command=lambda: self.mod_habitat())
         self.cb_habitat.grid(sticky=tk.W, row=9, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.cb_extent = tk.Checkbutton(self, text="Limit computation extent to background (back.tif) raster",
+        self.cb_extent = tk.Checkbutton(self, text="Limit computation extent to boundary (boundary.tif) raster",
                                         variable=self.extent_type, onvalue="raster", offvalue="standard")
         self.cb_extent.grid(sticky=tk.W, row=11, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.cb_extent.select()
+        self.cb_extent.deselect()
 
     def complete_menus(self):
         # FEATURE DROP DOWN

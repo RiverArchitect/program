@@ -69,7 +69,9 @@ class MandatoryFrame(tk.Frame):
 class OptionalFrame(tk.Frame):
     def __init__(self, master=None, **options):
         Frame.__init__(self, master, **options)
-        self.config(width=350, height=400)
+        self.bg_color = "khaki"
+        self.config(width=350, height=400, bg=self.bg_color)
+
 
         self.xd = 5
         self.yd = 5
@@ -86,7 +88,8 @@ class OptionalFrame(tk.Frame):
         self.b_va_info.grid(sticky=tk.EW, row=0, column=3, padx=self.xd, pady=self.yd)
         self.l_va_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_va_info.grid(sticky=tk.W, row=0, column=4, padx=self.xd, pady=self.yd)
-        self.l_va_folder = tk.Label(self, fg="red", text="No va-folder defined.")
+        self.l_va_folder = tk.Label(self, fg="tan4", text="No va-folder defined.")
+
         self.l_va_folder.grid(sticky=tk.W, row=1, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=13, column=0)  # dummy
 
@@ -95,7 +98,8 @@ class OptionalFrame(tk.Frame):
         self.b_sscour.grid(sticky=tk.EW, row=14, column=0, padx=self.xd, pady=self.yd)
         self.l_scour_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_scour_info.grid(sticky=tk.W, row=14, column=1, padx=self.xd, pady=self.yd)
-        self.l_scour = tk.Label(self, fg="red", text="No Scour Raster defined.")
+        self.l_scour = tk.Label(self, fg="tan4", text="No Scour Raster defined.")
+
         self.l_scour.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=16, column=0)  # dummy
 
@@ -104,7 +108,8 @@ class OptionalFrame(tk.Frame):
         self.b_sfill.grid(sticky=tk.EW, row=17, column=0, padx=self.xd, pady=self.yd)
         self.l_fill_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_fill_info.grid(sticky=tk.W, row=17, column=1, padx=self.xd, pady=self.yd)
-        self.l_fill = tk.Label(self, fg="red", text="No Fill Raster defined.")
+        self.l_fill = tk.Label(self, fg="tan4", text="No Fill Raster defined.")
+
         self.l_fill.grid(sticky=tk.W, row=18, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=19, column=0)  # dummy
 
@@ -113,9 +118,16 @@ class OptionalFrame(tk.Frame):
         self.b_sback.grid(sticky=tk.EW, row=20, column=0, padx=self.xd, pady=self.yd)
         self.l_back_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_back_info.grid(sticky=tk.W, row=20, column=1, padx=self.xd, pady=self.yd)
-        self.l_back = tk.Label(self, fg="red", text="No Background Raster defined.")
+        self.l_back = tk.Label(self, fg="tan4", text="No Background Raster defined.")
         self.l_back.grid(sticky=tk.W, row=21, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=22, column=0)  # dummy
+
+        for wid in self.winfo_children():
+            try:
+                wid.configure(bg=self.bg_color)
+            except:
+                # some widget do not accept bg as kwarg
+                pass
 
 
 class CreateCondition(object):
@@ -206,10 +218,16 @@ class CreateCondition(object):
         new_condition.transfer_rasters_from_folder(self.dir2u, "u", str(self.str_u.get()))
         new_condition.save_tif(self.dir2dem, "dem")
         new_condition.save_tif(self.dir2grains, "dmean")
-        new_condition.transfer_rasters_from_folder(self.dir2va, "va", str(self.str_va.get()))
-        new_condition.save_tif(self.dir2back, "scour")
-        new_condition.save_tif(self.dir2back, "fill")
-        new_condition.save_tif(self.dir2back, "back")
+
+        if str(self.str_va.get()).__len__() > 2:
+            new_condition.transfer_rasters_from_folder(self.dir2va, "va", str(self.str_va.get()))
+        if self.dir2scour.__len__() > 2:
+            new_condition.save_tif(self.dir2scour, "scour")
+        if self.dir2fill.__len__() > 2:
+            new_condition.save_tif(self.dir2fill, "fill")
+        if self.dir2back.__len__() > 2:
+            new_condition.save_tif(self.dir2back, "back")
+
         self.top.bell()
         try:
             if not new_condition.error:

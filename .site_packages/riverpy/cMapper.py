@@ -331,10 +331,14 @@ class Mapper:
                 self.logger.info("ERROR: No reference map found for %s (skipping)." % str(map_item))
                 continue
             self.logger.info("    * source map layer: " + self.map_string)
-            self.m = self.aprx.listMaps(self.map_string)[0]
-            self.logger.info("    * source map layout: " + self.choose_ref_layout(self.map_string))
-            if self.choose_ref_layout(self.map_string).__len__() < 1:
-                self.logger.info("ERROR: No reference layer found for %s (skipping)." % str(self.map_string))
+            try:
+                self.m = self.aprx.listMaps(self.map_string)[0]
+                self.logger.info("    * source map layout: " + self.choose_ref_layout(self.map_string))
+                if self.choose_ref_layout(self.map_string).__len__() < 1:
+                    self.logger.info("ERROR: No reference layer found for %s (skipping)." % str(self.map_string))
+                    continue
+            except:
+                self.logger.info("ERROR: Invalid reference map for %s (skipping)." % str(self.map_string))
                 continue
             self.map_layout = self.aprx.listLayouts(self.choose_ref_layout(self.map_string))[0]
             self.logger.info("    * setting legend ...")

@@ -107,7 +107,8 @@ class ConditionCreator:
         except:
             self.error = True
 
-    def make_raster_name(self, input_raster_name, type_id):
+    @staticmethod
+    def make_raster_name(input_raster_name, type_id):
         if type_id == "dem":
             return "dem.tif"
         if type_id == "back":
@@ -151,8 +152,9 @@ class ConditionCreator:
             return -1
         # don't convert NoData to 0 for velocity angle rasters (0 corresponds to north)
         if not no_data and type_id != "va":
-            self.logger.info("     * converting NoData to 0 ... ")
-            ras4tif = Con((IsNull(input_ras) == 1), (IsNull(input_ras) * 0), Float(input_ras))
+            self.logger.info("     * eliminate 0 data ... ")
+            ras4tif = Con(Float(input_ras) > 0.000, Float(input_ras))
+
         else:
             ras4tif = input_ras
         self.logger.info("   - saving " + self.dir2condition + target_raster_name)
@@ -178,7 +180,7 @@ class ConditionCreator:
                         self.logger.info("   * Copying %s." % str(folder_dir + ras))
                         self.save_tif(folder_dir + ras, type_id, no_data=False)
         except:
-            self.logger.info("ERROR: The selected folder does not contain any depth/velocity Raster containing the defined string.")
+            self.logger.info("ERROR: The selected folder does not contain any Raster containing the defined string.")
 
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = ConditionCreator (%s)" % os.path.dirname(__file__))
