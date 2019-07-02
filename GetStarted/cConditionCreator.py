@@ -114,7 +114,7 @@ class ConditionCreator:
             return "back.tif"
         if type_id == "fill":
             return "fill.tif"
-        if (type_id == "h") or (type_id == "u"):
+        if (type_id == "h") or (type_id == "u") or (type_id == "u_dir"):
             return os.path.splitext(input_raster_name)[0] + ".tif"
         if type_id == "dmean":
             return "dmean.tif"
@@ -132,7 +132,7 @@ class ConditionCreator:
                     no_data = k[1]
         except:
             pass
-        target_raster_name = self.make_raster_name(str(dir2inp_ras).split("\\")[-1].split("/")[-1], type_id)
+        target_raster_name = self.make_raster_name(os.path.basename(dir2inp_ras), type_id)
         self.logger.info("   - loading " + dir2inp_ras)
         try:
             arcpy.CheckOutExtension('Spatial')
