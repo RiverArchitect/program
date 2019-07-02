@@ -1,8 +1,8 @@
 """Helper class for graph theory applications"""
 try:
-    import sys, os, logging
+    import sys, os, logging, random
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 try:
     from collections import deque
     import numpy as np
@@ -25,8 +25,8 @@ class Graphy:
     def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh):
 
         self.logger = logging.getLogger("logfile")
-        self.cache = config.dir2co + ".cache\\"
-        fG.chk_dir(self.cache)
+        self.cache = config.dir2co + ".cache\\%s" % str(random.randint(1000000, 9999999))
+        fGl.chk_dir(self.cache)
 
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras

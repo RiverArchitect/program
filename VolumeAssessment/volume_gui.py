@@ -127,7 +127,7 @@ class MainGui(sg.RaModuleGui):
                                     mod_ras_dir=self.mod_dem_dir, reach_ids=self.reach_ids_applied)
         self.vol_name, self.dir_ras_vol = vola.get_volumes()
         self.raster4mapping = vola.rasters
-        fGl.rm_dir(config.dir2va + ".cache\\")
+        fGl.rm_dir(vola.cache)
 
         self.runmenu.entryconfig(1, command=lambda: self.run_map_maker())
         if self.mapping.get():

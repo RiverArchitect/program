@@ -1,7 +1,7 @@
 try:
-    import sys, os, logging
+    import sys, os, logging, random
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
 try:
     import arcpy
@@ -15,14 +15,14 @@ try:
     import cFish as cFi
     import cMakeTable as cMkT
     import cInputOutput as cIO
-    import fGlobal as fG
+    import fGlobal as fGl
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 
 
 class CHSI:
     def __init__(self, hab_condition, cover_applies, unit):
-        self.cache = config.dir2sh + ".cache\\"
+        self.cache = config.dir2sh + ".cache%s\\" % str(random.randint(10000, 99999))
         self.condition = hab_condition
         self.combine_method = "geometric_mean"
         self.cover_applies = cover_applies  # BOOL
@@ -36,9 +36,9 @@ class CHSI:
             p_ext = "no_cover"
         self.path_csi = config.dir2sh + "CHSI\\" + str(self.condition) + "\\" + p_ext + "\\"
         self.path_sha_ras = config.dir2sh + "SHArea\\Rasters_" + str(self.condition) + "\\" + p_ext + "\\"
-        fG.chk_dir(self.cache)
-        fG.chk_dir(self.path_csi)
-        fG.chk_dir(self.path_sha_ras)
+        fGl.chk_dir(self.cache)
+        fGl.chk_dir(self.path_csi)
+        fGl.chk_dir(self.path_sha_ras)
 
         self.unit = unit
         if self.unit == "us":
@@ -179,10 +179,10 @@ class CHSI:
                     pass
             try:
                 arcpy.env.workspace = os.path.dirname(os.path.abspath(__file__))  # temporary workspace
-                fG.rm_dir(self.cache)
+                fGl.rm_dir(self.cache)
                 if not args[0]:
                     self.logger.info("        * restoring cache ...")
-                    fG.chk_dir(self.cache)
+                    fGl.chk_dir(self.cache)
                     arcpy.env.workspace = self.cache
             except:
                 self.logger.info("   >> Cleared .cache folder (arcpy.Delete_management) ...")
@@ -365,10 +365,10 @@ class HHSI:
         self.ras_h = []
         self.ras_u = []
 
-        fG.chk_dir(self.cache)
-        fG.clean_dir(self.cache)
-        fG.chk_dir(self.path_hsi)
-        fG.chk_dir(self.dir_in_geo)
+        fGl.chk_dir(self.cache)
+        fGl.clean_dir(self.cache)
+        fGl.chk_dir(self.path_hsi)
+        fGl.chk_dir(self.dir_in_geo)
 
         # set unit system variables
         try:
@@ -397,10 +397,10 @@ class HHSI:
                     pass
             try:
                 arcpy.env.workspace = os.path.dirname(os.path.abspath(__file__))  # temporary workspace
-                fG.rm_dir(self.cache)
+                fGl.rm_dir(self.cache)
                 if not args[0]:
                     self.logger.info("        * restoring cache ...")
-                    fG.chk_dir(self.cache)
+                    fGl.chk_dir(self.cache)
                     arcpy.env.workspace = self.cache
             except:
                 self.logger.info(" >> Cleared .cache folder (arcpy.Delete_management) ...")

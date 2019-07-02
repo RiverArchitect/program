@@ -1,7 +1,7 @@
 
 # !/usr/bin/python
 try:
-    import sys, os, arcpy, logging
+    import sys, os, arcpy, logging, random
     from arcpy.sa import *
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
@@ -10,7 +10,7 @@ try:
     import fGlobal as fGl
     import cFeatures as cFe
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging, random).")
 
 
 class ModifyTerrain:
@@ -23,7 +23,7 @@ class ModifyTerrain:
 
         # general directories and parameters
         self.all_rasters = []  # will get assigned an arcpy.ListRasters() list
-        self.cache = config.dir2mt + ".cache\\"
+        self.cache = config.dir2mt + ".cache%s\\" % str(random.randint(1000000, 9999999))
         fGl.chk_dir(self.cache)
         fGl.clean_dir(self.cache)
         self.features = cDef.FeatureDefinitions()

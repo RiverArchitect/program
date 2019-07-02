@@ -23,7 +23,6 @@ except:
 def analysis_call(parameter_name, feature, feature_analysis):
     logger = logging.getLogger("logfile")
     # NOTE: if not type(...) statements exclude empty values from thresholds workbook
-
     try:
         # invoke design raster creation
         if feature.ds:

@@ -1,6 +1,6 @@
 # !/usr/bin/python
 try:
-    import sys, os, logging
+    import sys, os, logging, random
     # add folder containing package routines to the system path
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import cActionAssessment as cAA
@@ -8,12 +8,11 @@ try:
 
     # load classes files from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
     import cMapper as cMp
-    import fGlobal as fG
+    import fGlobal as fGl
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
-    print(
-        "       PACKAGE requirement: cFeatureActions, cActionAssessment, /.site_packages/riverpy/fGlobal+cMapper.")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random, riverpy).")
 
 
 def map_maker(condition, feature_groups, *args):
@@ -27,7 +26,7 @@ def map_maker(condition, feature_groups, *args):
     mapper.prepare_layout(True, map_items=feature_groups)
 
     if not mapper.error:
-        fG.open_folder(mapper.output_dir)
+        fGl.open_folder(mapper.output_dir)
 
 
 def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
@@ -54,11 +53,11 @@ def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
         logger.info("Bad argument type. Applying: " + str(feature_type))
 
     # set environment
-    temp_path = os.getcwd() + "\\.cache\\"
+    temp_path = os.getcwd() + "\\.cache%s\\" % str(random.randint(1000000, 9999999))
     if os.path.exists(temp_path):
-        fG.rm_dir(temp_path)  # delete cache if there are remainders from previous analysis
+        fGl.rm_dir(temp_path)  # delete cache if there are remainders from previous analysis
         logger.info("Found and deleted old .cache folder.")
-    fG.chk_dir(temp_path)
+    fGl.chk_dir(temp_path)
 
     feature_assessment = cAA.ArcPyContainer(condition, feature_type, dir_base_ras, unit_system, alternate_inpath)
     feature_assessment()  # call data processing
@@ -66,7 +65,7 @@ def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
     try:
         # erase traces
         del feature_assessment
-        fG.rm_dir(temp_path)  # dump cache after feature analysis
+        fGl.rm_dir(temp_path)  # dump cache after feature analysis
     except:
         logger.info("WARNING: Could not remove .cache.")
 
@@ -82,5 +81,4 @@ if __name__ == "__main__":
     try:
         geo_file_maker(condition, feature_type, os.getcwd())
     except:
-        print("Bad input. Using default condition (2008) and feature_type (terraforming).")
-        geo_file_maker(condition="2008", feature_type="terraforming")
+        print("Bad input.")

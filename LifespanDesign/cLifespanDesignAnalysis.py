@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, logging
+import random
 try:
     from cParameters import *
     from cReadInpLifespan import *
@@ -30,7 +30,7 @@ class ArcPyAnalysis:
         # args[2] = FLOAT defining mannings n in s/m^(1/3)
         self.raster_info_lf = ""
         self.condition = str(condition)
-        self.cache = config.dir2lf + ".cache\\"
+        self.cache = config.dir2lf + ".cache%s\\" % str(random.randint(1000000, 9999999))
         self.extent_type = "standard"
 
         self.raster_dict_ds = {}

@@ -1,7 +1,7 @@
 try:
-    import sys, os, logging
+    import sys, os, logging, random
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
@@ -35,7 +35,7 @@ class ConnectivityAnalysis:
 
     def __init__(self, condition, species, lifestage, units, *args):
         self.logger = logging.getLogger("logfile")
-        self.cache = config.dir2co + ".cache\\"
+        self.cache = config.dir2co + ".cache%s\\" % str(random.randint(1000000, 9999999))
         fG.chk_dir(self.cache)
         arcpy.env.workspace = self.cache
         arcpy.env.overwriteOutput = True

@@ -1,7 +1,7 @@
 
 # !/usr/bin/python
 try:
-    import sys, os, arcpy, logging
+    import sys, os, arcpy, logging, random
     from arcpy.sa import *
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
@@ -9,7 +9,7 @@ try:
     import cDefinitions as cDef
     import fGlobal as fGl
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging, random).")
 
 
 class VolumeAssessment:
@@ -19,8 +19,7 @@ class VolumeAssessment:
         # reach_ids = list of reach names to limit the analysis
 
         # general directories and parameters
-        self.cache = config.dir2mt + ".cache\\"
-        #mod_ras_dir.split("\\")[-1].split("/")[-1].split(".tif")[0]
+        self.cache = config.dir2mt + ".cache%s\\" % str(random.randint(1000000, 9999999))
         self.vol_name = mod_ras_dir.split(":\\")[-1].split(":/")[-1].split("01_Conditions\\")[-1].split("01_Conditions/")[-1].split(".tif")[0].replace("\\", "_").replace("/", "_").replace("_dem", "")
         fGl.chk_dir(self.cache)
         fGl.clean_dir(self.cache)

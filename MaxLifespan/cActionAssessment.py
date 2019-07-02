@@ -14,8 +14,9 @@ try:
     import arcpy
     from arcpy.sa import *  # good for raster processing
     import numpy as np
+    import random
 except:
-    print("ExceptionERROR: Missing packages (required: arcpy, numpy")
+    print("ExceptionERROR: Missing packages (required: arcpy, numpy, random")
 
 
 class ArcPyContainer:
@@ -23,7 +24,7 @@ class ArcPyContainer:
         self.logger = logging.getLogger("logfile")
         self.raster_info_lf = ""
         self.condition = str(condition)
-        self.cache = config.dir2ml + ".cache\\"
+        self.cache = config.dir2ml + ".cache%s\\" % str(random.randint(1000000, 9999999))
         self.feature_info = cDef.FeatureDefinitions()
         self.output_ras = config.dir2ml + "Output\\Rasters\\" + self.condition + "\\"
         fGl.chk_dir(self.output_ras)

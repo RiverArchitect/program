@@ -1,7 +1,7 @@
 try:
-    import sys, os, logging
+    import sys, os, logging, random
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
 try:
     import arcpy
@@ -29,7 +29,7 @@ class WLE:
         kwargs["unique_id"] (Boolean): determines if output files have integer discharge value in output file name
         """
 
-        self.cache = os.path.join(config.dir2gs, ".cache")
+        self.cache = os.path.join(config.dir2gs, ".cache%s" % str(random.randint(1000000, 9999999)))
         fGl.chk_dir(self.cache)
 
         self.path2h_ras = path2h_ras

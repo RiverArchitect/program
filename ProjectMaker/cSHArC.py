@@ -1,8 +1,8 @@
 # logs to logfile.log
 try:
-    import sys, os, logging
+    import sys, os, logging, random
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
 try:
     import arcpy
@@ -21,7 +21,7 @@ except:
 class SHArC:
     def __init__(self, unit, reach, stn, version):
         self.path2geodata = config.dir2sh + str(reach).upper() + "_" + str(stn).lower() + "_" + str(version) + "\\Geodata\\"
-        self.cache = self.path2geodata + ".cache\\"
+        self.cache = self.path2geodata + ".cache%s\\" % str(random.randint(1000000, 9999999))
         self.cache_count = 0
         fF.chk_dir(self.cache)
         self.extents = [0, 0, 0, 0]
