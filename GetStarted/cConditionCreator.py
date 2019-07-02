@@ -154,6 +154,7 @@ class ConditionCreator:
         if not no_data and type_id != "va":
             self.logger.info("     * eliminate 0 data ... ")
             ras4tif = Con(Float(input_ras) > 0.000, Float(input_ras))
+
         else:
             ras4tif = input_ras
         self.logger.info("   - saving " + self.dir2condition + target_raster_name)

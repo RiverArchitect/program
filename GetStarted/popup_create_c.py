@@ -72,6 +72,7 @@ class OptionalFrame(tk.Frame):
         self.bg_color = "khaki"
         self.config(width=350, height=400, bg=self.bg_color)
 
+
         self.xd = 5
         self.yd = 5
         self.col_0_width = 30
@@ -88,6 +89,7 @@ class OptionalFrame(tk.Frame):
         self.l_va_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_va_info.grid(sticky=tk.W, row=0, column=4, padx=self.xd, pady=self.yd)
         self.l_va_folder = tk.Label(self, fg="tan4", text="No va-folder defined.")
+
         self.l_va_folder.grid(sticky=tk.W, row=1, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=13, column=0)  # dummy
 
@@ -97,6 +99,7 @@ class OptionalFrame(tk.Frame):
         self.l_scour_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_scour_info.grid(sticky=tk.W, row=14, column=1, padx=self.xd, pady=self.yd)
         self.l_scour = tk.Label(self, fg="tan4", text="No Scour Raster defined.")
+
         self.l_scour.grid(sticky=tk.W, row=15, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=16, column=0)  # dummy
 
@@ -106,6 +109,7 @@ class OptionalFrame(tk.Frame):
         self.l_fill_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_fill_info.grid(sticky=tk.W, row=17, column=1, padx=self.xd, pady=self.yd)
         self.l_fill = tk.Label(self, fg="tan4", text="No Fill Raster defined.")
+
         self.l_fill.grid(sticky=tk.W, row=18, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=19, column=0)  # dummy
 
@@ -214,6 +218,7 @@ class CreateCondition(object):
         new_condition.transfer_rasters_from_folder(self.dir2u, "u", str(self.str_u.get()))
         new_condition.save_tif(self.dir2dem, "dem")
         new_condition.save_tif(self.dir2grains, "dmean")
+
         if str(self.str_va.get()).__len__() > 2:
             new_condition.transfer_rasters_from_folder(self.dir2va, "va", str(self.str_va.get()))
         if self.dir2scour.__len__() > 2:
@@ -222,6 +227,7 @@ class CreateCondition(object):
             new_condition.save_tif(self.dir2fill, "fill")
         if self.dir2back.__len__() > 2:
             new_condition.save_tif(self.dir2back, "back")
+
         self.top.bell()
         try:
             if not new_condition.error:
