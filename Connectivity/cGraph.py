@@ -22,7 +22,7 @@ class Graphy:
     """
     Class for constructing and navigating directed graphs
     """
-    def __init__(self, path2_h_ras, path2_u_ras, path2_u_dir_ras, h_thresh, u_thresh):
+    def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh):
 
         self.logger = logging.getLogger("logfile")
         self.cache = config.dir2co + ".cache\\"
@@ -30,7 +30,7 @@ class Graphy:
 
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
-        self.path2_u_dir_ras = path2_u_dir_ras
+        self.path2_va_ras = path2_va_ras
         self.h_thresh = h_thresh
         self.u_thresh = u_thresh
 
@@ -42,7 +42,7 @@ class Graphy:
         try:
             self.h_ras = Raster(self.path2_h_ras)
             self.u_ras = Raster(self.path2_u_ras)
-            self.u_dir_ras = Raster(self.path2_u_dir_ras)
+            self.va_ras = Raster(self.path2_va_ras)
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -53,7 +53,7 @@ class Graphy:
         try:
             self.h_mat = arcpy.RasterToNumPyArray(self.h_ras)
             self.u_mat = arcpy.RasterToNumPyArray(self.u_ras)
-            self.u_dir_mat = arcpy.RasterToNumPyArray(self.u_dir_ras)
+            self.va_mat = arcpy.RasterToNumPyArray(self.va_ras)
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
@@ -73,7 +73,7 @@ class Graphy:
                         if self.h_mat[i, j] > self.h_thresh:
                             # check velocity condition
                             mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
-                            dir_u_a = self.u_dir_mat[i, j] * np.pi/180  # angle from north (degrees -> radians)
+                            dir_u_a = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
                             if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
                                 graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
         self.logger.info("OK")

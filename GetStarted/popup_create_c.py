@@ -76,18 +76,18 @@ class OptionalFrame(tk.Frame):
         self.col_0_width = 30
 
         # Velocity Direction rasters
-        self.b_sudir = tk.Button(self, width=self.col_0_width, bg="white", text="Select velocity direction (u_dir) folder")
-        self.b_sudir.grid(sticky=tk.EW, row=0, column=0, padx=self.xd, pady=self.yd)
-        self.l_udir_str = tk.Label(self, text="Raster string: ")
-        self.l_udir_str.grid(sticky=tk.W, row=0, column=1, padx=self.xd, pady=self.yd)
-        self.e_udir = tk.Entry(self, width=6)
-        self.e_udir.grid(sticky=tk.EW, row=0, column=2, padx=self.xd, pady=self.yd)
-        self.b_udir_info = tk.Button(self, width=5, bg="white", text="Help")
-        self.b_udir_info.grid(sticky=tk.EW, row=0, column=3, padx=self.xd, pady=self.yd)
-        self.l_udir_info = tk.Label(self, fg="gray35", text="(optional)")
-        self.l_udir_info.grid(sticky=tk.W, row=0, column=4, padx=self.xd, pady=self.yd)
-        self.l_udir_folder = tk.Label(self, fg="red", text="No u_dir-folder defined.")
-        self.l_udir_folder.grid(sticky=tk.W, row=1, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.b_sva = tk.Button(self, width=self.col_0_width, bg="white", text="Select velocity angle (va) folder")
+        self.b_sva.grid(sticky=tk.EW, row=0, column=0, padx=self.xd, pady=self.yd)
+        self.l_va_str = tk.Label(self, text="Raster string: ")
+        self.l_va_str.grid(sticky=tk.W, row=0, column=1, padx=self.xd, pady=self.yd)
+        self.e_va = tk.Entry(self, width=6)
+        self.e_va.grid(sticky=tk.EW, row=0, column=2, padx=self.xd, pady=self.yd)
+        self.b_va_info = tk.Button(self, width=5, bg="white", text="Help")
+        self.b_va_info.grid(sticky=tk.EW, row=0, column=3, padx=self.xd, pady=self.yd)
+        self.l_va_info = tk.Label(self, fg="gray35", text="(optional)")
+        self.l_va_info.grid(sticky=tk.W, row=0, column=4, padx=self.xd, pady=self.yd)
+        self.l_va_folder = tk.Label(self, fg="red", text="No va-folder defined.")
+        self.l_va_folder.grid(sticky=tk.W, row=1, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=13, column=0)  # dummy
 
         # 06 Scour raster
@@ -130,12 +130,12 @@ class CreateCondition(object):
         self.dir2h = '.'
         self.dir2scour = '.'
         self.dir2u = '.'
-        self.dir2u_dir = '.'
+        self.dir2va = '.'
 
         self.new_condition_name = tk.StringVar()
         self.str_h = tk.StringVar()
         self.str_u = tk.StringVar()
-        self.str_udir = tk.StringVar()
+        self.str_va = tk.StringVar()
         self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
@@ -175,9 +175,9 @@ class CreateCondition(object):
         self.optional = OptionalFrame(self.top, relief=tk.RAISED)
         self.optional.config(bg="khaki")
         self.optional.grid(row=3, column=0, columnspan=3)
-        self.optional.b_sudir.config(command=lambda: self.select_u_dir())
-        self.optional.e_udir.config(textvariable=self.str_udir)
-        self.optional.b_udir_info.config(command=lambda: self.user_info('u_dir'))
+        self.optional.b_sva.config(command=lambda: self.select_va())
+        self.optional.e_va.config(textvariable=self.str_va)
+        self.optional.b_va_info.config(command=lambda: self.user_info('va'))
         self.optional.b_sscour.config(command=lambda: self.select_scour())
         self.optional.b_sfill.config(command=lambda: self.select_fill())
         self.optional.b_sback.config(command=lambda: self.select_back())
@@ -206,7 +206,7 @@ class CreateCondition(object):
         new_condition.transfer_rasters_from_folder(self.dir2u, "u", str(self.str_u.get()))
         new_condition.save_tif(self.dir2dem, "dem")
         new_condition.save_tif(self.dir2grains, "dmean")
-        new_condition.transfer_rasters_from_folder(self.dir2u_dir, "u_dir", str(self.str_udir.get()))
+        new_condition.transfer_rasters_from_folder(self.dir2va, "va", str(self.str_va.get()))
         new_condition.save_tif(self.dir2back, "scour")
         new_condition.save_tif(self.dir2back, "fill")
         new_condition.save_tif(self.dir2back, "back")
@@ -267,15 +267,15 @@ class CreateCondition(object):
         self.dir2u = askdirectory(initialdir=self.dir2h) + "/"
         self.mandatory.l_u_folder.config(fg="forest green", text=str(self.dir2u))
 
-    def select_u_dir(self):
+    def select_va(self):
         msg = self.user_raster_info()
         showinfo("INFO", msg)
-        self.dir2u_dir = askdirectory(initialdir=self.dir2u) + "/"
-        self.optional.l_udir_folder.config(fg="forest green", text=str(self.dir2u_dir))
+        self.dir2va = askdirectory(initialdir=self.dir2u) + "/"
+        self.optional.l_va_folder.config(fg="forest green", text=str(self.dir2va))
 
     def user_info(self, variable_name):
         msg = ''
-        if (variable_name == 'h') or (variable_name == 'u') or (variable_name == 'u_dir'):
+        if (variable_name == 'h') or (variable_name == 'u') or (variable_name == 'va'):
             msg0 = "Only Rasters containing the entered string will be copied to the new condition folder."
             msg1 = "\n\n" + self.user_raster_info()
             msg = msg0 + msg1
