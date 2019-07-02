@@ -74,9 +74,10 @@ class FeatureContainer:
         self.feat_lyr_type = self.set_feat_layer_type()
 
         if not sub_feature:
-            self.feature = Feature(self.id)
             if self.feats.col_name_dict[feature_name] in ["Q", "R", "J", "K", "L", "M"]:
                 self.sub = True
+            else:
+                self.feature = Feature(self.id)
         else:
             # sub_feature containing features (called in second iteration in feature_analysis.py)
             self.feature = Feature(self.id)

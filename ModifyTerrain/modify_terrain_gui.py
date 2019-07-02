@@ -186,7 +186,6 @@ class MainGui(sg.RaModuleGui):
         self.mbar.add_cascade(label="Reaches", menu=self.reachmenu)  # attach it to the menubar
         self.reachmenu = self.make_reach_menu(self.reachmenu)
 
-
     def set_inpath(self):
         self.th_mod.in_topo = config.dir2conditions + str(self.condition) + "\\"
         self.in_feat = config.dir2ml + "Output\\Rasters\\" + str(self.condition) + "\\"

@@ -30,21 +30,21 @@ except:
 
 class ConditionCreator:
     def __init__(self, dir2condition):
-        self.condition = dir2condition.strip("\\").strip("/").split("\\")[-1].split("/")[-1]
+        self.condition = os.path.basename(dir2condition.strip("\\").strip("/"))
         self.dir2condition = dir2condition  # string of the condition to be created
         self.error = False
         self.logger = logging.getLogger("logfile")
 
     def create_discharge_table(self):
         try:
-            flow_table = cMT.MakeFlowTable(self.dir2condition.split("/")[-1].split("\\")[-1], "q_return")
+            flow_table = cMT.MakeFlowTable(os.path.basename(self.dir2condition), "q_return")
             return flow_table.make_condition_xlsx()
         except:
             self.error = True
 
     def create_flow_duration_table(self, input_flow_xlsx, aquatic_ambiance):
         try:
-            condition = self.dir2condition.split("/")[-1].split("\\")[-1]
+            condition = os.path.basename(self.dir2condition)
             flows = cFl.SeasonalFlowProcessor(input_flow_xlsx)
             for fish in aquatic_ambiance.keys():
                 for lfs in aquatic_ambiance[fish]:
@@ -56,7 +56,7 @@ class ConditionCreator:
             self.error = True
 
     def create_sub_condition(self, dir2src_condition, dir2bound):
-        src_condition = dir2src_condition.strip("\\").strip("/").split("\\")[-1].split("/")[-1]
+        src_condition = os.path.basename(dir2src_condition.strip("\\").strip("/"))
         try:
             copyfile(dir2src_condition + "flow_definitions.xlsx", self.dir2condition + "flow_definitions.xlsx")
             all_flow_files = fGl.file_names_in_dir(config.dir2flows + src_condition)
@@ -107,14 +107,15 @@ class ConditionCreator:
         except:
             self.error = True
 
-    def make_raster_name(self, input_raster_name, type_id):
+    @staticmethod
+    def make_raster_name(input_raster_name, type_id):
         if type_id == "dem":
             return "dem.tif"
         if type_id == "back":
             return "back.tif"
         if type_id == "fill":
             return "fill.tif"
-        if (type_id == "h") or (type_id == "u"):
+        if (type_id == "h") or (type_id == "u") or (type_id == "va"):
             return os.path.splitext(input_raster_name)[0] + ".tif"
         if type_id == "dmean":
             return "dmean.tif"
@@ -132,7 +133,7 @@ class ConditionCreator:
                     no_data = k[1]
         except:
             pass
-        target_raster_name = self.make_raster_name(str(dir2inp_ras).split("\\")[-1].split("/")[-1], type_id)
+        target_raster_name = self.make_raster_name(os.path.basename(dir2inp_ras), type_id)
         self.logger.info("   - loading " + dir2inp_ras)
         try:
             arcpy.CheckOutExtension('Spatial')
@@ -149,9 +150,10 @@ class ConditionCreator:
             self.logger.info("ERROR: Failed to load %s ." % dir2inp_ras)
             self.error = True
             return -1
-        if not no_data:
-            self.logger.info("     * converting NoData to 0 ... ")
-            ras4tif = Con((IsNull(input_ras) == 1), (IsNull(input_ras) * 0), Float(input_ras))
+        # don't convert NoData to 0 for velocity angle rasters (0 corresponds to north)
+        if not no_data and type_id != "va":
+            self.logger.info("     * eliminate 0 data ... ")
+            ras4tif = Con(Float(input_ras) > 0.000, Float(input_ras))
         else:
             ras4tif = input_ras
         self.logger.info("   - saving " + self.dir2condition + target_raster_name)
@@ -177,7 +179,7 @@ class ConditionCreator:
                         self.logger.info("   * Copying %s." % str(folder_dir + ras))
                         self.save_tif(folder_dir + ras, type_id, no_data=False)
         except:
-            self.logger.info("ERROR: The selected folder does not contain any depth/velocity Raster containing the defined string.")
+            self.logger.info("ERROR: The selected folder does not contain any Raster containing the defined string.")
 
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = ConditionCreator (%s)" % os.path.dirname(__file__))

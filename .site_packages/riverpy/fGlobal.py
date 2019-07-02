@@ -118,6 +118,25 @@ def eliminate_nan_from_list(base_list, *args):
     return partner_lists
 
 
+def err_info(func):
+    def wrapper(*args, **kwargs):
+        logger = logging.getLogger("logfile")
+        try:
+            func(*args, **kwargs)
+        except arcpy.ExecuteError:
+            logger.info("ExecuteERROR: (arcpy).")
+            logger.info(arcpy.GetMessages(2))
+            arcpy.AddError(arcpy.GetMessages(2))
+        except Exception as e:
+            logger.info("ExceptionERROR: (arcpy).")
+            logger.info(e.args[0])
+            arcpy.AddError(e.args[0])
+        except:
+            logger.info("ERROR: (arcpy).")
+            logger.info(arcpy.GetMessages())
+    return wrapper
+
+
 def file_names_in_dir(directory):
     # returns file names only (without directory)
     return [name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name))]
@@ -382,6 +401,14 @@ def shp2raster(shp_name, out_raster_name=str(), field_name=str(), cellsize=1):
         logging.info(arcpy.GetMessages())
     arcpy.CheckInExtension('Spatial')
     return out_raster_name
+
+
+def spatial_license(func):
+    def wrapper(*args, **kwargs):
+        arcpy.CheckOutExtension('Spatial')
+        func(*args, **kwargs)
+        arcpy.CheckInExtension('Spatial')
+    return wrapper
 
 
 def str2frac(arg):
