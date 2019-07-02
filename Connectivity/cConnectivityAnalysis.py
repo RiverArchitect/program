@@ -53,15 +53,19 @@ class ConnectivityAnalysis:
         fG.chk_dir(self.h_interp_dir)
         self.u_interp_dir = os.path.join(self.out_dir, "u_interp\\")
         fG.chk_dir(self.u_interp_dir)
+        self.va_interp_dir = os.path.join(self.out_dir, "va_interp\\")
+        fG.chk_dir(self.va_interp_dir)
         self.areas_dir = os.path.join(self.out_dir, "areas\\")
         fG.chk_dir(self.areas_dir)
         # populated by self.get_hydraulic_rasters()
         self.discharges = []
         self.Q_h_dict = {}
         self.Q_u_dict = {}
+        self.Q_va_dict = {}
         # populated by self.get_interpolated_rasters()
         self.Q_h_interp_dict = {}
         self.Q_u_interp_dict = {}
+        self.Q_va_interp_dict = {}
         # populated by self.analyze_flows(Q)
         self.Q_areas_dict = {}
 
@@ -76,6 +80,7 @@ class ConnectivityAnalysis:
             self.discharges = sorted(mkt.discharges)
             self.Q_h_dict = {Q: self.dir2condition + mkt.dict_Q_h_ras[Q] for Q in self.discharges}
             self.Q_u_dict = {Q: self.dir2condition + mkt.dict_Q_u_ras[Q] for Q in self.discharges}
+            self.Q_va_dict = {Q: self.dir2condition + mkt.dict_Q_va_ras[Q] for Q in self.discharges}
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -89,8 +94,10 @@ class ConnectivityAnalysis:
             # define paths to interpolated depths and velocities
             h_interp_basename = "h%i_interp.tif" % Q
             u_interp_basename = "u%i_interp.tif" % Q
+            va_interp_basename = "va%i_interp.tif" % Q
             h_interp_path = os.path.join(self.h_interp_dir, h_interp_basename)
             u_interp_path = os.path.join(self.u_interp_dir, u_interp_basename)
+            va_interp_path = os.path.join(self.va_interp_dir, va_interp_basename)
             # check if interpolated depth already exists
             if h_interp_basename in os.listdir(self.dir2condition):
                 h_ras = Raster(os.path.join(self.dir2condition, h_interp_basename))
@@ -106,12 +113,16 @@ class ConnectivityAnalysis:
                 wle.calculate_h()
                 h_ras = Raster(h_interp_path)
                 self.logger.info("OK")
-            # in new interpolated area set velocity = 0
+            # in new interpolated area set velocity and velocity angle = 0
             u_ras = Raster(self.Q_u_dict[Q])
+            va_ras = Raster(self.Q_va_dict[Q])
             u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
+            va_ras = Con(IsNull(va_ras) & (h_ras > 0), 0, va_ras)
             u_ras.save(u_interp_path)
+            va_ras.save(va_interp_path)
             self.Q_h_interp_dict[Q] = h_interp_path
             self.Q_u_interp_dict[Q] = u_interp_path
+            self.Q_va_dict[Q] = va_interp_path
         self.logger.info("OK")
 
     def connectivity_analysis(self):
@@ -191,6 +202,9 @@ class ConnectivityAnalysis:
         cost path back to the threshold masked low flow polygon.
         :param Q: corresponding discharge for finding path
         """
+        path2h_ras = self.Q_h_interp_dict[Q]
+        path2u_ras = self.Q_u_interp_dict[Q]
+        path2va_ras = self.Q_va_interp_dict[Q]
 
     def make_disconnect_Q_map(self):
         """

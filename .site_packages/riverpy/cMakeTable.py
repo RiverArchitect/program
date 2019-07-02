@@ -29,6 +29,7 @@ class MakeFlowTable:
         self.condition = condition
         self.dict_Q_h_ras = {}
         self.dict_Q_u_ras = {}
+        self.dict_Q_va_ras = {}
 
         self.dir_in_ras = config.dir2conditions + str(self.condition) + "\\"
         self.dir_xlsx_out = ""
@@ -37,7 +38,7 @@ class MakeFlowTable:
         self.discharges = []
         self.h_rasters = []
         self.u_rasters = []
-
+        self.va_rasters = []
 
         # dummy workbook variable instantiations
         self.xlsx_template = config.xlsx_dummy
@@ -86,10 +87,13 @@ class MakeFlowTable:
             if rn[0] == "u":
                 self.logger.info("     -- Found flow velocity raster: " + str(rn))
                 self.u_rasters.append(rn)
+            if rn[:2] == "va":
+                self.logger.info("     -- Found flow velocity angle raster: " + str(rn))
 
         # make Q_flowdur-raster dictionary
         self.dict_Q_h_ras = dict(zip(self.discharges, self.h_rasters))
         self.dict_Q_u_ras = dict(zip(self.discharges, self.u_rasters))
+        self.dict_Q_va_ras = dict(zip(self.discharges, self.va_rasters))
         # order discharges in descending order for flow duration curve
         self.discharges.sort(reverse=True)
 
