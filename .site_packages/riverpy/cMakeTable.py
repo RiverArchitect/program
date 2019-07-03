@@ -89,6 +89,7 @@ class MakeFlowTable:
                 self.u_rasters.append(rn)
             if rn[:2] == "va":
                 self.logger.info("     -- Found flow velocity angle raster: " + str(rn))
+                self.va_rasters.append(rn)
 
         # make Q_flowdur-raster dictionary
         self.dict_Q_h_ras = dict(zip(self.discharges, self.h_rasters))
