@@ -40,6 +40,7 @@ class Graphy:
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
         self.path2_va_ras = path2_va_ras
+        self.path2_target_ras = path2_target
         self.h_thresh = h_thresh
         self.u_thresh = u_thresh
 
@@ -62,9 +63,13 @@ class Graphy:
     def read_hydraulic_rasters(self):
         self.logger.info("Retrieving hydraulic rasters...")
         try:
+            self.logger.info("Reading depth raster %s" % self.path2_h_ras)
             self.h_ras = Raster(self.path2_h_ras)
+            self.logger.info("Reading velocity raster %s" % self.path2_u_ras)
             self.u_ras = Raster(self.path2_u_ras)
+            self.logger.info("Reading velocity angle raster %s" % self.path2_va_ras)
             self.va_ras = Raster(self.path2_va_ras)
+            self.logger.info("Reading target area raster %s" % self.path2_target)
             self.target_ras = Raster(self.path2_target)
             self.logger.info("OK")
         except:
@@ -78,6 +83,7 @@ class Graphy:
             self.u_mat = arcpy.RasterToNumPyArray(self.u_ras)
             self.va_mat = arcpy.RasterToNumPyArray(self.va_ras)
             self.target_mat = arcpy.RasterToNumPyArray(self.target_ras)
+            self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
@@ -86,13 +92,13 @@ class Graphy:
         self.logger.info("Constructing graph...")
         graph = {}
         for i, row in enumerate(self.h_mat):
-            for j, col in enumerate(row):
+            for j, val in enumerate(row):
                 key = str(i) + ',' + str(j)
                 neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
 
                 for n_i, neighbor in enumerate(neighbors):
                     # check if neighbor index is within array
-                    if (0 <= neighbor[0] < len(row)) and (0 <= neighbor[1] < len(col)):
+                    if (0 <= neighbor[0] < self.h_mat.shape[0]) and (0 <= neighbor[1] < self.h_mat.shape[1]):
                         # check if depth > threshold
                         if self.h_mat[i, j] > self.h_thresh:
                             # check velocity condition
@@ -133,7 +139,7 @@ class Graphy:
 
     def check_velocity_condition(self, mag_u_a, dir_u_a, pvec, pvec_perp):
         """Checks if velocity vector u_a allows travel in direction pvec"""
-        # if magnitude is less than swimming speed, can always pass
+        # if magnitude of water velocity is less than max swimming speed, can always pass
         if mag_u_a < self.u_thresh:
             return True
         else:
@@ -141,19 +147,23 @@ class Graphy:
             u_a = (mag_u_a * np.sin(dir_u_a), mag_u_a * np.cos(dir_u_a))
             # split into components parallel and perpendicular to travel direction
             u_a_perp = np.dot(u_a, pvec_perp)
-            u_a_par = np.dot(u_a, pvec)
-            u_f_par = np.sqrt(self.u_thresh ** 2 - u_a_perp ** 2)
-            if u_f_par + u_a_par > 0:
-                return True
-            else:
+            # if we can't cancel perpendicular component, not passable
+            if abs(u_a_perp) > self.u_thresh:
                 return False
+            else:
+                u_a_par = np.dot(u_a, pvec)
+                u_f_par = np.sqrt(self.u_thresh ** 2 - u_a_perp ** 2)
+                if u_f_par + u_a_par > 0:
+                    return True
+                else:
+                    return False
 
     def target_to_keys(self):
         """Converts self.escape_target polygon to a list of target node keys (end) used for graph traversal"""
         # for each active target cell, add corresponding key to list
         l = []
         for i, row in enumerate(self.target_mat):
-            for j, col in enumerate(row):
+            for j, val in enumerate(row):
                 # if cell value is not null or zero
                 if self.target_mat[i, j] > 0:
                     key = str(i) + ',' + str(j)
@@ -183,15 +193,25 @@ class Graphy:
                     q.append(next_node)
                 # if we made it to target, get length of path
                 if next_node in end:
-                    return dist[next_node]
-                    # *** convert to path length
+                    shortest_path = self.flatten_path(dist[next_node])
+                    return shortest_path
         # if no path found after traversing graph from start
         return -999
+
+    def flatten_path(self, path_obj):
+        p = []
+        for obj in path_obj:
+            if type(obj) == list:
+                for item in self.flatten_path(obj):
+                    p.append(item)
+            else:
+                p.append(obj)
+        return p
 
     def make_shortest_paths_raster(self):
         """Makes a raster where each cell indicates the shortest path to end"""
         # for each cell, find shortest path to target
-        # get length of shortest path, save to output array at same index
+        # get length of shortest path (len(shortest_path) - 1), save at corresponding array index
         # convert output array to raster
         # save output raster
         pass

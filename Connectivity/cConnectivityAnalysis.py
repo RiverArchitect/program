@@ -76,8 +76,11 @@ class ConnectivityAnalysis:
         self.Q_h_interp_dict = {}
         self.Q_u_interp_dict = {}
         self.Q_va_interp_dict = {}
-        # populated by self.analyze_flows(Q)
+        # populated by self.disconnected_areas(Q)
         self.Q_areas_dict = {}
+        self.Q_d_area_vals = {}
+        self.Q_d_area_percents = {}
+        # populated by self.make_disconnect_Q_map()
         self.target = ''
 
         self.get_hydraulic_rasters()
@@ -133,7 +136,7 @@ class ConnectivityAnalysis:
             va_ras.save(va_interp_path)
             self.Q_h_interp_dict[Q] = h_interp_path
             self.Q_u_interp_dict[Q] = u_interp_path
-            self.Q_va_dict[Q] = va_interp_path
+            self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
     def connectivity_analysis(self):
@@ -149,23 +152,31 @@ class ConnectivityAnalysis:
         except:
             self.logger.info("ERROR: Multiprocessing failed, proceeding with serial processing.")
         """
+        # compute disconnected areas
         for Q in sorted(self.discharges):
-            self.analyze_flow(Q)
+            self.disconnected_areas(Q)
 
+        # *** save Excel worksheet with Q vs. disconnected area plot
+
+        # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
+
+        # *** make shortest escape route length map
+        for Q in sorted(self.discharges):
+            self.make_shortest_paths_map(Q)
 
         self.clean_up()
 
-    def analyze_flow(self, Q):
-        self.logger.info("\n>>> Analyzing discharge: %i" % Q)
+    def disconnected_areas(self, Q):
+        self.logger.info("Computing disconnected areas...")
+        self.logger.info("Discharge: %s" % str(Q))
         # get interpolated depth/velocity rasters
         h_ras = Raster(self.Q_h_interp_dict[Q])
-        u_ras = Raster(self.Q_u_interp_dict[Q])
 
-        self.logger.info("Masking rasters with thresholds...")
+        self.logger.info("Masking depth raster with threshold...")
         # mask according to fish data
         mask_h = Con(h_ras > self.h_min, h_ras)
-        # also make integer type masked raster for polygon conversion
+        # integer type masked raster for polygon conversion
         bin_h = Con(h_ras > self.h_min, 1)
         self.logger.info("OK")
 
@@ -195,29 +206,11 @@ class ConnectivityAnalysis:
         total_area = sum(areas)
         self.logger.info("Total navigable wetted area: %.2f" % total_area)
         disconnected_area = sum(areas[1:])
+        self.Q_d_area_vals[Q] = disconnected_area
         self.logger.info("Disconnected wetted area: %.2f" % disconnected_area)
         percent_disconnected = disconnected_area / total_area * 100
+        self.Q_d_area_percents[Q] = percent_disconnected
         self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
-
-
-
-        # *** save data to a table in Connectivity/Output, open table when finished
-        # graph theory metrics...
-        # particle tracking...
-
-    def make_shortest_paths_map(self, Q):
-        """
-        Produces a raster where each cell value is the length of the least
-        cost path back to the threshold masked low flow polygon.
-        :param Q: corresponding discharge for finding path
-        """
-        path2h_ras = self.Q_h_interp_dict[Q]
-        path2u_ras = self.Q_u_interp_dict[Q]
-        path2va_ras = self.Q_va_interp_dict[Q]
-
-        cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
-        # *** create raster...
-
 
     def make_disconnect_Q_map(self):
         """
@@ -243,12 +236,12 @@ class ConnectivityAnalysis:
             arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
             # *** if Q = lowest discharge, save target raster
             if Q == min(self.discharges):
-                arcpy.MakeFeatureLayer_management(disconnected_layer, "target", exp)
-                # convert target feature to raster
-                arcpy.FeatureToRaster_conversion("target", 'OID@', "target.tif")
-                target = Raster("target.tif")
-                target.save(os.path.join(self.out_dir, "target.tif"))
+                target_lyr = os.path.join(self.cache, "target")
                 self.target = os.path.join(self.out_dir, "target.tif")
+                arcpy.MakeFeatureLayer_management(disconnected_layer, target_lyr, exp)
+                # convert target feature layer to raster
+                cell_size = arcpy.GetRasterProperties_management(self.Q_h_interp_dict[Q], 'CELLSIZEX').getOutput(0)
+                arcpy.FeatureToRaster_conversion(target_lyr, 'gridcode', self.target, cell_size)
             # delete mainstem polygon to get disconnected areas
             arcpy.DeleteFeatures_management(disconnected_layer)
             # convert back to polygon
@@ -259,6 +252,25 @@ class ConnectivityAnalysis:
             out_ras = Con(~IsNull(arcpy.sa.ExtractByMask(out_ras, disconnected_areas)), Q, out_ras)
 
         out_ras.save(out_ras_path)
+
+    def make_shortest_paths_map(self, Q):
+        """
+        Produces a raster where each cell value is the length of the least
+        cost path back to the threshold masked low flow polygon.
+        :param Q: corresponding discharge for finding path
+        """
+        self.logger.info("Finding shortest escape routes...")
+        self.logger.info("Discharge: %s" % str(Q))
+        self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
+        self.logger.info("\tminimum swimming depth  = %s" % self.h_min)
+        self.logger.info("\tmaximum swimming speed  = %s" % self.u_max)
+        path2h_ras = self.Q_h_interp_dict[Q]
+        path2u_ras = self.Q_u_interp_dict[Q]
+        path2va_ras = self.Q_va_interp_dict[Q]
+
+        cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
+        # *** create raster...
+        self.logger.info("OK")
 
     def clean_up(self):
         try:
