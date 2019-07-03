@@ -2,7 +2,10 @@ try:
     import sys, os, logging, random
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
-
+try:
+    import cGraph
+except:
+    print("ExceptionERROR: Cannot import cGraph (check Connectivity directory)")
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
@@ -41,8 +44,15 @@ class ConnectivityAnalysis:
         arcpy.env.overwriteOutput = True
         self.condition = condition
         self.dir2condition = config.dir2conditions + self.condition + "\\"
+
         self.species = species
         self.lifestage = lifestage
+        # read in fish data (minimum depth needed, max swimming speed, ...)
+        self.h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
+        self.logger.info("minimum swimming depth = %s" % self.h_min)
+        self.u_max = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "u_max")
+        self.logger.info("maximum swimming speed  = %s" % self.u_max)
+
         self.units = units
         try:
             self.out_dir = args[0]
@@ -151,17 +161,11 @@ class ConnectivityAnalysis:
         h_ras = Raster(self.Q_h_interp_dict[Q])
         u_ras = Raster(self.Q_u_interp_dict[Q])
 
-        # read in fish data (minimum depth needed, max swimming speed, ...)
-        h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
-        self.logger.info("minimum swimming depth = %s" % h_min)
-        u_max = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "u_max")
-        self.logger.info("maximum swimming speed  = %s" % h_min)
-
         self.logger.info("Masking rasters with thresholds...")
         # mask according to fish data
-        mask_h = Con(h_ras > h_min, h_ras)
+        mask_h = Con(h_ras > self.h_min, h_ras)
         # also make integer type masked raster for polygon conversion
-        bin_h = Con(h_ras > h_min, 1)
+        bin_h = Con(h_ras > self.h_min, 1)
         self.logger.info("OK")
 
         # raster to polygon conversion
@@ -209,6 +213,10 @@ class ConnectivityAnalysis:
         path2h_ras = self.Q_h_interp_dict[Q]
         path2u_ras = self.Q_u_interp_dict[Q]
         path2va_ras = self.Q_va_interp_dict[Q]
+
+        cg = cGraph(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max)
+        # *** create raster...
+
 
     def make_disconnect_Q_map(self):
         """
