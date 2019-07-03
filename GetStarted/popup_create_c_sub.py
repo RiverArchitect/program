@@ -119,7 +119,11 @@ class CreateSubCondition(object):
         msg4 = "\nIf Raster: Ensure that the Raster contains On-Off Integers only, where 0=Outside and 1=Inside boundary."
         showinfo("INFO", msg0 + msg1 + msg2 + msg3 + msg4)
         self.dir2bound = askopenfilename(initialdir=self.dir2src_condition, title="Select Boundary raster")
-        self.l_bound.config(fg="forest green", text=self.dir2bound)
+        if self.dir2bound.__len__() > 50:
+            label_name = self.dir2bound[0:20] + " ... " + self.dir2bound[27:-1]
+        else:
+            label_name = self.dir2bound
+        self.l_bound.config(fg="forest green", text=label_name)
 
     def select_src_condition(self):
         items = self.lb_condition.curselection()
