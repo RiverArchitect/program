@@ -9,6 +9,14 @@ try:
 except:
     print("ExceptionERROR: Missing fundamental packages (required: collections, numpy).")
 try:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
+    import config
+    import cFish as cFi
+    import fGlobal as fG
+    import cMakeTable as cMkT
+except:
+    print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
+try:
     import arcpy
 except:
     print("ExceptionERROR: arcpy is not available (check license connection?)")
@@ -22,17 +30,31 @@ class Graphy:
     """
     Class for constructing and navigating directed graphs
     """
-    def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh):
+
+    def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh, path2_target):
 
         self.logger = logging.getLogger("logfile")
         self.cache = config.dir2co + ".cache\\%s" % str(random.randint(1000000, 9999999))
-        fGl.chk_dir(self.cache)
+        fG.chk_dir(self.cache)
 
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
         self.path2_va_ras = path2_va_ras
         self.h_thresh = h_thresh
         self.u_thresh = u_thresh
+
+        self.h_ras = None
+        self.u_ras = None
+        self.va_ras = None
+        self.h_mat = np.ndarray((0, 0))
+        self.u_mat = np.ndarray((0, 0))
+        self.va_mat = np.ndarray((0, 0))
+        self.graph = {}
+
+        self.path2_target = path2_target
+        self.target_ras = None
+        self.target_mat = np.ndarray((0, 0))
+
 
         self.read_hydraulic_rasters()
         self.construct_graph()
@@ -43,6 +65,7 @@ class Graphy:
             self.h_ras = Raster(self.path2_h_ras)
             self.u_ras = Raster(self.path2_u_ras)
             self.va_ras = Raster(self.path2_va_ras)
+            self.target_ras = Raster(self.path2_target)
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -54,6 +77,7 @@ class Graphy:
             self.h_mat = arcpy.RasterToNumPyArray(self.h_ras)
             self.u_mat = arcpy.RasterToNumPyArray(self.u_ras)
             self.va_mat = arcpy.RasterToNumPyArray(self.va_ras)
+            self.target_mat = arcpy.RasterToNumPyArray(self.target_ras)
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
@@ -61,14 +85,14 @@ class Graphy:
         """Convert matrices to directed graph"""
         self.logger.info("Constructing graph...")
         graph = {}
-        for i, row in enumerate(mat):
+        for i, row in enumerate(self.h_mat):
             for j, col in enumerate(row):
                 key = str(i) + ',' + str(j)
                 neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
 
                 for n_i, neighbor in enumerate(neighbors):
                     # check if neighbor index is within array
-                    if 0 <= neighbor[0] < len(row) and 0 <= neighbor[1] <= len(col):
+                    if (0 <= neighbor[0] < len(row)) and (0 <= neighbor[1] < len(col)):
                         # check if depth > threshold
                         if self.h_mat[i, j] > self.h_thresh:
                             # check velocity condition
@@ -78,55 +102,70 @@ class Graphy:
                                 graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
         self.logger.info("OK")
 
-    def get_neighbors(self, i, j):
-        # static method for now
-
+    @staticmethod
+    def get_neighbors(i, j):
         # neighboring indices, going ccw from east
-        l = [(i + 1, j),
-             (i + 1, j + 1),
-             (i, j + 1),
-             (i - 1, j + 1),
-             (i - 1, j),
-             (i - 1, j - 1),
-             (i, j - 1),
-             (i + 1, j - 1)]
+        neighbors = [(i + 1, j),
+                     (i + 1, j + 1),
+                     (i, j + 1),
+                     (i - 1, j + 1),
+                     (i - 1, j),
+                     (i - 1, j - 1),
+                     (i, j - 1),
+                     (i + 1, j - 1)]
 
         # unit vectors pointing from current node to neighbors
         pvecs = [(1, 0),
-                 (1/np.sqrt(2), 1/np.sqrt(2)),
+                 (1 / np.sqrt(2), 1 / np.sqrt(2)),
                  (0, 1),
-                 (-1/np.sqrt(2), 1/np.sqrt(2)),
+                 (-1 / np.sqrt(2), 1 / np.sqrt(2)),
                  (-1, 0),
-                 (-1/np.sqrt(2), -1/np.sqrt(2)),
+                 (-1 / np.sqrt(2), -1 / np.sqrt(2)),
                  (0, -1),
-                 (1/np.sqrt(2), -1/np.sqrt(2))]
+                 (1 / np.sqrt(2), -1 / np.sqrt(2))]
 
         # perpendicular complements to pvecs
         q = deque(pvecs)
         q.rotate(-2)
         pvecs_perp = list(q)
 
-        return l, pvecs, pvecs_perp
+        return neighbors, pvecs, pvecs_perp
 
     def check_velocity_condition(self, mag_u_a, dir_u_a, pvec, pvec_perp):
         """Checks if velocity vector u_a allows travel in direction pvec"""
-        # check if magnitude is too high
+        # if magnitude is less than swimming speed, can always pass
         if mag_u_a < self.u_thresh:
+            return True
+        else:
             # u_a vector (dir is angle from north!)
             u_a = (mag_u_a * np.sin(dir_u_a), mag_u_a * np.cos(dir_u_a))
             # split into components parallel and perpendicular to travel direction
             u_a_perp = np.dot(u_a, pvec_perp)
             u_a_par = np.dot(u_a, pvec)
-            u_f_par = np.sqrt(self.u_thresh**2 - u_a_perp**2)
+            u_f_par = np.sqrt(self.u_thresh ** 2 - u_a_perp ** 2)
             if u_f_par + u_a_par > 0:
                 return True
             else:
                 return False
-        else:
-            return False
+
+    def target_to_keys(self):
+        """Converts self.escape_target polygon to a list of target node keys (end) used for graph traversal"""
+        # for each active target cell, add corresponding key to list
+        l = []
+        for i, row in enumerate(self.target_mat):
+            for j, col in enumerate(row):
+                # if cell value is not null or zero
+                if self.target_mat[i, j] > 0:
+                    key = str(i) + ',' + str(j)
+                    l.append(key)
+        return l
 
     """Dynamic program"""
     def find_shortest_path(self, start, end):
+        """Finds shortest path from start node to set of end nodes (i,.e. target)"""
+        # if we start in target area, path length is zero
+        if start in end:
+            return 0
         # key = node, value = shortest path to that node
         dist = {start: [start]}
         q = deque(start)
@@ -135,11 +174,24 @@ class Graphy:
             # goes from left so we always get to that node in least steps possible
             at = q.popleft()
             # for all possible next nodes
-            for next in self.graph[at]:
+            for next_node in self.graph[at]:
                 # if we don't already have a path to the next node
-                if next not in dist:
-                    # add path = path to at node, then from at to next
-                    dist[next] = [dist[at], next]
+                if next_node not in dist:
+                    # add path = path to at node, then from at to next node
+                    dist[next_node] = [dist[at], next_node]
                     # add next node to end of q
-                    q.append(next)
-        return dist[end]
+                    q.append(next_node)
+                # if we made it to target, get length of path
+                if next_node in end:
+                    return dist[next_node]
+                    # *** convert to path length
+        # if no path found after traversing graph from start
+        return -999
+
+    def make_shortest_paths_raster(self):
+        """Makes a raster where each cell indicates the shortest path to end"""
+        # for each cell, find shortest path to target
+        # get length of shortest path, save to output array at same index
+        # convert output array to raster
+        # save output raster
+        pass

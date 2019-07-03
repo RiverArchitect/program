@@ -2,7 +2,10 @@ try:
     import sys, os, logging, random
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
-
+try:
+    import cGraph
+except:
+    print("ExceptionERROR: Cannot import cGraph (check Connectivity directory)")
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
@@ -41,8 +44,15 @@ class ConnectivityAnalysis:
         arcpy.env.overwriteOutput = True
         self.condition = condition
         self.dir2condition = config.dir2conditions + self.condition + "\\"
+
         self.species = species
         self.lifestage = lifestage
+        # read in fish data (minimum depth needed, max swimming speed, ...)
+        self.h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
+        self.logger.info("minimum swimming depth = %s" % self.h_min)
+        self.u_max = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "u_max")
+        self.logger.info("maximum swimming speed  = %s" % self.u_max)
+
         self.units = units
         try:
             self.out_dir = args[0]
@@ -53,17 +63,22 @@ class ConnectivityAnalysis:
         fG.chk_dir(self.h_interp_dir)
         self.u_interp_dir = os.path.join(self.out_dir, "u_interp\\")
         fG.chk_dir(self.u_interp_dir)
+        self.va_interp_dir = os.path.join(self.out_dir, "va_interp\\")
+        fG.chk_dir(self.va_interp_dir)
         self.areas_dir = os.path.join(self.out_dir, "areas\\")
         fG.chk_dir(self.areas_dir)
         # populated by self.get_hydraulic_rasters()
         self.discharges = []
         self.Q_h_dict = {}
         self.Q_u_dict = {}
+        self.Q_va_dict = {}
         # populated by self.get_interpolated_rasters()
         self.Q_h_interp_dict = {}
         self.Q_u_interp_dict = {}
+        self.Q_va_interp_dict = {}
         # populated by self.analyze_flows(Q)
         self.Q_areas_dict = {}
+        self.target = ''
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
@@ -76,6 +91,7 @@ class ConnectivityAnalysis:
             self.discharges = sorted(mkt.discharges)
             self.Q_h_dict = {Q: self.dir2condition + mkt.dict_Q_h_ras[Q] for Q in self.discharges}
             self.Q_u_dict = {Q: self.dir2condition + mkt.dict_Q_u_ras[Q] for Q in self.discharges}
+            self.Q_va_dict = {Q: self.dir2condition + mkt.dict_Q_va_ras[Q] for Q in self.discharges}
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -89,8 +105,10 @@ class ConnectivityAnalysis:
             # define paths to interpolated depths and velocities
             h_interp_basename = "h%i_interp.tif" % Q
             u_interp_basename = "u%i_interp.tif" % Q
+            va_interp_basename = "va%i_interp.tif" % Q
             h_interp_path = os.path.join(self.h_interp_dir, h_interp_basename)
             u_interp_path = os.path.join(self.u_interp_dir, u_interp_basename)
+            va_interp_path = os.path.join(self.va_interp_dir, va_interp_basename)
             # check if interpolated depth already exists
             if h_interp_basename in os.listdir(self.dir2condition):
                 h_ras = Raster(os.path.join(self.dir2condition, h_interp_basename))
@@ -106,12 +124,16 @@ class ConnectivityAnalysis:
                 wle.calculate_h()
                 h_ras = Raster(h_interp_path)
                 self.logger.info("OK")
-            # in new interpolated area set velocity = 0
+            # in new interpolated area set velocity and velocity angle = 0
             u_ras = Raster(self.Q_u_dict[Q])
+            va_ras = Raster(self.Q_va_dict[Q])
             u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
+            va_ras = Con(IsNull(va_ras) & (h_ras > 0), 0, va_ras)
             u_ras.save(u_interp_path)
+            va_ras.save(va_interp_path)
             self.Q_h_interp_dict[Q] = h_interp_path
             self.Q_u_interp_dict[Q] = u_interp_path
+            self.Q_va_dict[Q] = va_interp_path
         self.logger.info("OK")
 
     def connectivity_analysis(self):
@@ -140,15 +162,11 @@ class ConnectivityAnalysis:
         h_ras = Raster(self.Q_h_interp_dict[Q])
         u_ras = Raster(self.Q_u_interp_dict[Q])
 
-        # read in fish data (minimum depth needed, max swimming speed, ...)
-        h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
-        self.logger.info("minimum depth = %s" % h_min)
-
         self.logger.info("Masking rasters with thresholds...")
         # mask according to fish data
-        mask_h = Con(h_ras > h_min, h_ras)
+        mask_h = Con(h_ras > self.h_min, h_ras)
         # also make integer type masked raster for polygon conversion
-        bin_h = Con(h_ras > h_min, 1)
+        bin_h = Con(h_ras > self.h_min, 1)
         self.logger.info("OK")
 
         # raster to polygon conversion
@@ -181,6 +199,8 @@ class ConnectivityAnalysis:
         percent_disconnected = disconnected_area / total_area * 100
         self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
 
+
+
         # *** save data to a table in Connectivity/Output, open table when finished
         # graph theory metrics...
         # particle tracking...
@@ -191,6 +211,13 @@ class ConnectivityAnalysis:
         cost path back to the threshold masked low flow polygon.
         :param Q: corresponding discharge for finding path
         """
+        path2h_ras = self.Q_h_interp_dict[Q]
+        path2u_ras = self.Q_u_interp_dict[Q]
+        path2va_ras = self.Q_va_interp_dict[Q]
+
+        cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
+        # *** create raster...
+
 
     def make_disconnect_Q_map(self):
         """
@@ -212,7 +239,16 @@ class ConnectivityAnalysis:
             disconnected_layer = os.path.join(self.cache, "disc_area")
             # convert shp to feature layer
             arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
+            # select largest area (mainstem)
             arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
+            # *** if Q = lowest discharge, save target raster
+            if Q == min(self.discharges):
+                arcpy.MakeFeatureLayer_management(disconnected_layer, "target", exp)
+                # convert target feature to raster
+                arcpy.FeatureToRaster_conversion("target", 'OID@', "target.tif")
+                target = Raster("target.tif")
+                target.save(os.path.join(self.out_dir, "target.tif"))
+                self.target = os.path.join(self.out_dir, "target.tif")
             # delete mainstem polygon to get disconnected areas
             arcpy.DeleteFeatures_management(disconnected_layer)
             # convert back to polygon

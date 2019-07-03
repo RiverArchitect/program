@@ -219,7 +219,7 @@ class CreateCondition(object):
         new_condition.save_tif(self.dir2dem, "dem")
         new_condition.save_tif(self.dir2grains, "dmean")
 
-        if str(self.str_va.get()).__len__() > 2:
+        if str(self.dir2va).__len__() > 2:
             new_condition.transfer_rasters_from_folder(self.dir2va, "va", str(self.str_va.get()))
         if self.dir2scour.__len__() > 2:
             new_condition.save_tif(self.dir2scour, "scour")
