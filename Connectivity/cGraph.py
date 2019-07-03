@@ -126,8 +126,10 @@ class Graphy:
 
     def check_velocity_condition(self, mag_u_a, dir_u_a, pvec, pvec_perp):
         """Checks if velocity vector u_a allows travel in direction pvec"""
-        # check if magnitude is too high
+        # if magnitude is less than swimming speed, can always pass
         if mag_u_a < self.u_thresh:
+            return True
+        else:
             # u_a vector (dir is angle from north!)
             u_a = (mag_u_a * np.sin(dir_u_a), mag_u_a * np.cos(dir_u_a))
             # split into components parallel and perpendicular to travel direction
@@ -138,8 +140,6 @@ class Graphy:
                 return True
             else:
                 return False
-        else:
-            return False
 
     """Dynamic program"""
     def find_shortest_path(self, start, end):

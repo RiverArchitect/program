@@ -153,7 +153,9 @@ class ConnectivityAnalysis:
 
         # read in fish data (minimum depth needed, max swimming speed, ...)
         h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
-        self.logger.info("minimum depth = %s" % h_min)
+        self.logger.info("minimum swimming depth = %s" % h_min)
+        u_max = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "u_max")
+        self.logger.info("maximum swimming speed  = %s" % h_min)
 
         self.logger.info("Masking rasters with thresholds...")
         # mask according to fish data
@@ -191,6 +193,8 @@ class ConnectivityAnalysis:
         self.logger.info("Disconnected wetted area: %.2f" % disconnected_area)
         percent_disconnected = disconnected_area / total_area * 100
         self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
+
+
 
         # *** save data to a table in Connectivity/Output, open table when finished
         # graph theory metrics...

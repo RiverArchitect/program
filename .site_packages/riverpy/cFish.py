@@ -21,7 +21,7 @@ class Fish:
         self.ls_col_add = {"spawning": 1, "fry": 3, "ammocoetes": 3, "juvenile": 5, "adult": 7, "hydrological year": 1,
                            "season": 3, "depth > x": 5, "velocity > x": 7}
         self.parameter_rows = {"u": 9, "h": 38, "substrate": 72, "cobbles": 81, "boulders": 82, "plants": 84,
-                               "wood": 85, "start_date": 6, "end_date": 7, "h_min": 87}
+                               "wood": 85, "start_date": 6, "end_date": 7, "h_min": 87, "u_max": 88}
         self.reader = None
         self.species = []
         self.species_col = {}
