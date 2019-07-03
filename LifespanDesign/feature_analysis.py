@@ -124,11 +124,6 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
     logger = logging.getLogger("logfile")
     pot_err_msg = "FUNDAMENTAL APPLICATION ERROR - Revise River Architect usage instructions"
     try:
-        try:
-            fGl.clean_dir(os.getcwd() + "\\.cache\\")  # ensure that the cache is empty
-            pass
-        except:
-            logger.info("ERROR: .cache folder in use.")
 
         # instantiate GIS Analysis Object
         pot_err_msg = "ArcPyAnalysis"
@@ -175,9 +170,12 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
             feature_analysis.join_with_wildcard()
         pot_err_msg = "non applicable feature: saving an empty results-Raster"
         feature_analysis.save_manager(feature.ds, feature.lf, feature.id)
-
     except:
         logger.info("ERROR: Analysis stopped (" + pot_err_msg + " failed).")
+    try:
+        fGl.rm_dir(feature_analysis.cache)  # dump cache after feature analysis
+    except:
+        logger.info("WARNING: Could not remove .cache folder.")
 
 
 def map_maker(*args, **kwargs):
@@ -295,10 +293,6 @@ def raster_maker(condition, reach_ids, *args):
     logger.info("lifespan_design.raster_maker initiated with feature list = " + str(feature_list) + "\nUnit system: " +
                 str(unit_system))
 
-    # set environment settings
-    temp_path = os.getcwd() + "\\.cache\\"
-    fGl.chk_dir(temp_path)
-
     reach_reader = cRM.Read()
     reaches = cDef.ReachDefinitions()
 
@@ -332,10 +326,7 @@ def raster_maker(condition, reach_ids, *args):
         if reach_extents == "MAXOF":
             break
 
-    try:
-        fGl.rm_dir(temp_path)  # dump cache after feature analysis
-    except:
-        logger.info("WARNING: Package could not remove .cache folder.")
+
     logger.info("RASTERS FINISHED.")
 
     if mapping:

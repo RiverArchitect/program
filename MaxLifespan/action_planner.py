@@ -52,20 +52,14 @@ def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
         feature_type = "terraforming"
         logger.info("Bad argument type. Applying: " + str(feature_type))
 
-    # set environment
-    temp_path = os.getcwd() + "\\.cache%s\\" % str(random.randint(1000000, 9999999))
-    if os.path.exists(temp_path):
-        fGl.rm_dir(temp_path)  # delete cache if there are remainders from previous analysis
-        logger.info("Found and deleted old .cache folder.")
-    fGl.chk_dir(temp_path)
-
     feature_assessment = cAA.ArcPyContainer(condition, feature_type, dir_base_ras, unit_system, alternate_inpath)
     feature_assessment()  # call data processing
 
     try:
-        # erase traces
+        cache_dir = str(feature_assessment.cache)
         del feature_assessment
-        fGl.rm_dir(temp_path)  # dump cache after feature analysis
+        fGl.cool_down(5)
+        fGl.rm_dir(cache_dir)  # dump cache after feature analysis
     except:
         logger.info("WARNING: Could not remove .cache.")
 

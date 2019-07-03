@@ -120,6 +120,7 @@ def eliminate_nan_from_list(base_list, *args):
 
 def err_info(func):
     def wrapper(*args, **kwargs):
+        arcpy.gp.overwriteOutput = True
         logger = logging.getLogger("logfile")
         try:
             func(*args, **kwargs)
@@ -295,9 +296,6 @@ def open_folder(directory):
                 os.system("start \"\" https://en.wikipedia.org/wiki/Criticism_of_Apple_Inc.")
             except:
                 pass
-
-        # Alternative:
-        # subprocess.Popen(r'explorer /select,"C:\path\of\folder\file"')
     except:
         pass
 
@@ -345,25 +343,28 @@ def rm_file(full_name):
 
 def rm_raster(full_path):
     # Deletes everything reachable from the rasters full_path
-    # full_path = "D:\\example_folder\\example_raster_name"
-    locked = False
+    # full_path = "D:\\example_folder\\example_raster_name.tif"
     try:
         os.remove(full_path)
+        return False
     except:
         locked = True
     try:
         if not locked:
             os.remove(full_path + ".aux.xml")
+            return False
     except:
         locked = True
     try:
         if not locked:
             os.remove(full_path + ".ovr")
+            return False
     except:
         locked = True
     try:
         if not locked:
             rm_dir(full_path + "\\")
+            return False
     except:
         locked = True
     return locked

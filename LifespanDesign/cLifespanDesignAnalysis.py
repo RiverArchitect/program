@@ -31,6 +31,7 @@ class ArcPyAnalysis:
         self.raster_info_lf = ""
         self.condition = str(condition)
         self.cache = config.dir2lf + ".cache%s\\" % str(random.randint(1000000, 9999999))
+        fGl.chk_dir(self.cache)
         self.extent_type = "standard"
 
         self.raster_dict_ds = {}
@@ -935,7 +936,7 @@ class ArcPyAnalysis:
             pass
         try:
             h = FlowDepth(self.condition)
-            save_ras = Con(~IsNull(h.rasters[-1]), Float(self.raster_dict_lf[self.raster_info_lf]))
+            save_ras = Con(Float(h.rasters[-1]) > 0.000, Float(self.raster_dict_lf[self.raster_info_lf]))
             self.logger.info("      * cropping to wetted area of the highest discharge ... ")
         except:
             save_ras = self.raster_dict_lf[self.raster_info_lf]
@@ -951,8 +952,8 @@ class ArcPyAnalysis:
             self.logger.info("      Preparing Cast: Modified lf raster name.")
         self.logger.info(
             "   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
-        if os.path.isfile(self.output + __full_name__ + '.tif'):
-            self.logger.info("      >>> Overwriting existing raster.")
+        if os.path.isfile(self.output + __full_name__):
+            self.logger.info("      >>> Overwriting existing raster (%s)." % str(self.output + __full_name__))
             file_locked = fGl.rm_raster(self.output + __full_name__)
             if file_locked:
                 self.logger.info(
