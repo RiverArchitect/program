@@ -112,7 +112,7 @@ class InputFile:
                 "FLOODPLAIN PARAMETERS (METERS)****": ["w_floodplain", "floodplain_outer_height", "w_terrace",
                                                        "terrace_outer_height", "w_boundary"],
                 "USER-DEFINED FUNCTIONS": ["user_functions"],
-                "SUB-REACH VARIABILITY PARAMETERS": ["sub_curvature", "sub_floodplain_l", "sub_floodplain_r",
+                "SUB-REACH VARIABILITY PARAMETERS (ADD FUNCTIONS)": ["sub_curvature", "sub_floodplain_l", "sub_floodplain_r",
                                                      "sub_meander", "sub_thalweg", "sub_w_bf"],
                 "CROSS SECTIONAL SHAPE": ["xs_shape"]
                 }
