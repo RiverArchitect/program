@@ -78,6 +78,7 @@ class ConnectivityAnalysis:
         self.Q_va_interp_dict = {}
         # populated by self.analyze_flows(Q)
         self.Q_areas_dict = {}
+        self.target = ''
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
@@ -214,7 +215,7 @@ class ConnectivityAnalysis:
         path2u_ras = self.Q_u_interp_dict[Q]
         path2va_ras = self.Q_va_interp_dict[Q]
 
-        cg = cGraph(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max)
+        cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
         # *** create raster...
 
 
@@ -247,6 +248,7 @@ class ConnectivityAnalysis:
             arcpy.Delete_management(disconnected_layer)
             # assign Q as value within disconnected area
             out_ras = Con(~IsNull(arcpy.sa.ExtractByMask(out_ras, disconnected_areas)), Q, out_ras)
+            # *** if Q = lowest discharge, save target raster
 
         out_ras.save(out_ras_path)
 

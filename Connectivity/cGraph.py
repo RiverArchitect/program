@@ -31,11 +31,11 @@ class Graphy:
     Class for constructing and navigating directed graphs
     """
 
-    def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh):
+    def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh, path2_target):
 
         self.logger = logging.getLogger("logfile")
         self.cache = config.dir2co + ".cache\\%s" % str(random.randint(1000000, 9999999))
-        fGl.chk_dir(self.cache)
+        fG.chk_dir(self.cache)
 
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
@@ -51,6 +51,11 @@ class Graphy:
         self.va_mat = np.ndarray((0, 0))
         self.graph = {}
 
+        self.path2_target = path2_target
+        self.target_ras = None
+        self.target_mat = np.ndarray((0, 0))
+
+
         self.read_hydraulic_rasters()
         self.construct_graph()
 
@@ -60,6 +65,7 @@ class Graphy:
             self.h_ras = Raster(self.path2_h_ras)
             self.u_ras = Raster(self.path2_u_ras)
             self.va_ras = Raster(self.path2_va_ras)
+            self.target_ras = Raster(self.path2_target)
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -71,6 +77,7 @@ class Graphy:
             self.h_mat = arcpy.RasterToNumPyArray(self.h_ras)
             self.u_mat = arcpy.RasterToNumPyArray(self.u_ras)
             self.va_mat = arcpy.RasterToNumPyArray(self.va_ras)
+            self.target_mat = arcpy.RasterToNumPyArray(self.target_ras)
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
@@ -141,8 +148,24 @@ class Graphy:
             else:
                 return False
 
+    def target_to_keys(self):
+        """Converts self.escape_target polygon to a list of target node keys (end) used for graph traversal"""
+        # for each active target cell, add corresponding key to list
+        l = []
+        for i, row in enumerate(self.target_mat):
+            for j, col in enumerate(row):
+                # if cell value is not null or zero
+                if self.target_mat[i, j] > 0:
+                    key = str(i) + ',' + str(j)
+                    l.append(key)
+        return l
+
     """Dynamic program"""
     def find_shortest_path(self, start, end):
+        """Finds shortest path from start node to set of end nodes (i,.e. target)"""
+        # if we start in target area, path length is zero
+        if start in end:
+            return 0
         # key = node, value = shortest path to that node
         dist = {start: [start]}
         q = deque(start)
@@ -158,4 +181,17 @@ class Graphy:
                     dist[next_node] = [dist[at], next_node]
                     # add next node to end of q
                     q.append(next_node)
-        return dist[end]
+                # if we made it to target, get length of path
+                if next_node in end:
+                    return dist[next_node]
+                    # *** convert to path length
+        # if no path found after traversing graph from start
+        return -999
+
+    def make_shortest_paths_raster(self):
+        """Makes a raster where each cell indicates the shortest path to end"""
+        # for each cell, find shortest path to target
+        # get length of shortest path, save to output array at same index
+        # convert output array to raster
+        # save output raster
+        pass
