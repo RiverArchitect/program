@@ -239,7 +239,16 @@ class ConnectivityAnalysis:
             disconnected_layer = os.path.join(self.cache, "disc_area")
             # convert shp to feature layer
             arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
+            # select largest area (mainstem)
             arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
+            # *** if Q = lowest discharge, save target raster
+            if Q == min(self.discharges):
+                arcpy.MakeFeatureLayer_management(disconnected_layer, "target", exp)
+                # convert target feature to raster
+                arcpy.FeatureToRaster_conversion("target", 'OID@', "target.tif")
+                target = Raster("target.tif")
+                target.save(os.path.join(self.out_dir, "target.tif"))
+                self.target = os.path.join(self.out_dir, "target.tif")
             # delete mainstem polygon to get disconnected areas
             arcpy.DeleteFeatures_management(disconnected_layer)
             # convert back to polygon
@@ -248,7 +257,6 @@ class ConnectivityAnalysis:
             arcpy.Delete_management(disconnected_layer)
             # assign Q as value within disconnected area
             out_ras = Con(~IsNull(arcpy.sa.ExtractByMask(out_ras, disconnected_areas)), Q, out_ras)
-            # *** if Q = lowest discharge, save target raster
 
         out_ras.save(out_ras_path)
 
