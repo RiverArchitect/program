@@ -99,6 +99,7 @@ class SubFrame(tk.Frame):
         self.config(width=880, height=500)
         self.input_file = cRBC.InputFile()
         self.grid_propagate(False)
+        self.add_variability_fun_dict = {}
         self.tko_dict = {}
         self.tko_spec_dict = {}
         self.par_tko_dict = {}
@@ -107,10 +108,29 @@ class SubFrame(tk.Frame):
         self.occupied_rows = []
         self.px = 5
         self.py = 5
+        self.sub_fun_dict = {}
         self.user_functions_applied = ()
         self.user_function_count_dict = {}
         [self.user_function_count_dict.update({k: 0}) for k in self.input_file.user_function_dict.keys()]
+
         self.make_widgets()
+
+    def add_sub_function(self, par=str()):
+        # par = STR of sub-reach type (e.g., sub_curvature)
+        # fun_str = STR of user function
+        fun_str = str(self.tko_dict[par].get()).split("=")[0]
+        success = False
+        try:
+            self.sub_fun_dict[par].append(fun_str)
+            success = True
+        except:
+            self.sub_fun_dict.update({par: [fun_str]})
+            success = True
+        if success:
+            self.add_variability_fun_dict[par].config(fg="forest green")
+            showinfo("INFO", "Added {0} as {1}".format(fun_str, self.input_file.par_name_dict[par].split("*")[0]))
+        else:
+            showinfo("ERROR", "Could not append function.")
 
     def make_user_functions(self):
         sub_frame = PopUpUserFunction(self, self.user_function_count_dict)
@@ -133,12 +153,10 @@ class SubFrame(tk.Frame):
                     self.tko_dict.update({par: self.input_file.par_tk_dict[par](self, 20, self.user_functions_applied, row, col0+1)})
                     self.tko_dict[par].grid(sticky=tk.EW, row=row, column=col0+1)
                     # self.par_tko_dict.update({par: [row, col0+1]})
-                    self.msg_b_dict.update({par: tk.Button(self, text="info", width=5,
+                    self.msg_b_dict.update({par: tk.Button(self, text="Info", width=5,
                                                            command=partial(self.show_msg, par))})
                     self.msg_b_dict[par].grid(sticky=tk.EW, row=row, column=col0+2)
-                    if "xs_shape" in par:
-                        self.make_widget_specifier(row=row, col=col0+3, par=par)
-                    if "user_functions" in par:
+                    if ("xs_shape" in par) or ("user_functions" in par) or ("sub_" in par):
                         self.make_widget_specifier(row=row, col=col0+3, par=par)
                     self.occupied_rows.append(row)
                 row += 1
@@ -166,11 +184,28 @@ class SubFrame(tk.Frame):
                                                  command=lambda: self.make_user_functions()).grid(sticky=tk.EW, row=row, column=col-2)})
             self.tko_spec_dict.update({par: [tk.Button(self, text="Reset", command=lambda: self.reset_user_functions())]})
             self.tko_spec_dict[par][0].grid(sticky=tk.W, row=row, column=col)
+        if "sub_" in par:
+            self.add_variability_fun_dict.update({par: tk.Button(self, text="ADD", fg="orchid4",
+                                                                 command=partial(self.add_sub_function, par))})
+            self.add_variability_fun_dict[par].grid(sticky=tk.W, row=row, column=col)
+            tk.Button(self, text="Show/Clear",  command=partial(self.show_clear_sub, par)).grid(sticky=tk.W, row=row, column=col+1)
 
     def reset_user_functions(self):
         answer = askyesno("Reset defined functions", "This will delete all defined user functions. Are you sure?")
         if answer:
             self.user_functions_applied = ()
+
+    def show_clear_sub(self, par):
+        msg0 = "The currently applied sub-reach variability functions for %s are:\n - " % self.input_file.par_name_dict[par].split("*")[0]
+        try:
+            msg1 = "\n - ".join(self.sub_fun_dict[par])
+        except:
+            msg1 = "\nNONE"
+        qes = "\n\nDo you want to clear all user-function definitions for %s?" % self.input_file.par_name_dict[par].split("*")[0]
+        answer = askyesno("Sub-Reach Function", msg0 + msg1 + qes)
+        if answer:
+            del self.sub_fun_dict[par]
+            self.add_variability_fun_dict[par].config(fg="orchid4")
 
     def show_msg(self, par):
         _f = open(config.dir2rb + "messages\\" + par + ".txt", "r")
@@ -240,7 +275,13 @@ class CreateInput(object):
     def get_user_input(self):
         for par, tko in self.f_req.tko_dict.items():
             try:
-                self.user_input.update({par: str(tko.get())})
+                if not ("sub_" in par):
+                    self.user_input.update({par: str(tko.get())})
+                else:
+                    try:
+                        self.user_input.update({par: str("\n%s=" % self.f_req.input_file.par_name_dict[par].split("*")[0]).join(self.f_req.sub_fun_dict[par])})
+                    except:
+                        pass
                 if "TZ" in str(tko.get()):
                     try:
                         self.user_input[par] = "TZ(%s)" % str(self.f_req.tko_spec_dict[par][1].get())
