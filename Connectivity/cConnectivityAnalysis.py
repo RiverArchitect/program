@@ -67,6 +67,8 @@ class ConnectivityAnalysis:
         fG.chk_dir(self.va_interp_dir)
         self.areas_dir = os.path.join(self.out_dir, "areas\\")
         fG.chk_dir(self.areas_dir)
+        self.shortest_paths_dir = os.path.join(self.out_dir, "shortest_paths\\")
+        fG.chk_dir(self.shortest_paths_dir)
         # populated by self.get_hydraulic_rasters()
         self.discharges = []
         self.Q_h_dict = {}
@@ -161,7 +163,7 @@ class ConnectivityAnalysis:
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
 
-        # *** make shortest escape route length map
+        # make shortest escape route length map
         for Q in sorted(self.discharges):
             self.make_shortest_paths_map(Q)
 
@@ -234,7 +236,7 @@ class ConnectivityAnalysis:
             arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
             # select largest area (mainstem)
             arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
-            # *** if Q = lowest discharge, save target raster
+            # if Q = lowest discharge, save target raster
             if Q == min(self.discharges):
                 target_lyr = os.path.join(self.cache, "target")
                 self.target = os.path.join(self.out_dir, "target.tif")
@@ -259,7 +261,7 @@ class ConnectivityAnalysis:
         cost path back to the threshold masked low flow polygon.
         :param Q: corresponding discharge for finding path
         """
-        self.logger.info("Finding shortest escape routes...")
+        self.logger.info("Making shortest escape route map...")
         self.logger.info("Discharge: %s" % str(Q))
         self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
         self.logger.info("\tminimum swimming depth  = %s" % self.h_min)
@@ -269,7 +271,8 @@ class ConnectivityAnalysis:
         path2va_ras = self.Q_va_interp_dict[Q]
 
         cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
-        # *** create raster...
+        shortest_paths_ras = cg.make_shortest_paths_raster()
+        shortest_paths_ras.save(os.path.join(self.shortest_paths_dir, "path_lengths%s.tif" % str(Q)))
         self.logger.info("OK")
 
     def clean_up(self):

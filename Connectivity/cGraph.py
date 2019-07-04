@@ -55,9 +55,13 @@ class Graphy:
         self.path2_target = path2_target
         self.target_ras = None
         self.target_mat = np.ndarray((0, 0))
+        self.end = []
 
-
+        # populates rasters and matrices
         self.read_hydraulic_rasters()
+        # makes target into "end" graph nodes list
+        self.target_to_keys()
+        # construct directed graph
         self.construct_graph()
 
     def read_hydraulic_rasters(self):
@@ -79,10 +83,10 @@ class Graphy:
     def ras_2_mats(self):
         self.logger.info("Converting rasters to arrays...")
         try:
-            self.h_mat = arcpy.RasterToNumPyArray(self.h_ras)
-            self.u_mat = arcpy.RasterToNumPyArray(self.u_ras)
-            self.va_mat = arcpy.RasterToNumPyArray(self.va_ras)
-            self.target_mat = arcpy.RasterToNumPyArray(self.target_ras)
+            self.h_mat = arcpy.RasterToNumPyArray(self.h_ras, nodata_to_value=np.nan)
+            self.u_mat = arcpy.RasterToNumPyArray(self.u_ras, nodata_to_value=np.nan)
+            self.va_mat = arcpy.RasterToNumPyArray(self.va_ras, nodata_to_value=np.nan)
+            self.target_mat = arcpy.RasterToNumPyArray(self.target_ras)  # integer type, nans not allowed
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
@@ -93,19 +97,23 @@ class Graphy:
         graph = {}
         for i, row in enumerate(self.h_mat):
             for j, val in enumerate(row):
-                key = str(i) + ',' + str(j)
-                neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
+                # check if val is nan
+                if not np.isnan(val):
+                    key = str(i) + ',' + str(j)
+                    neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
 
-                for n_i, neighbor in enumerate(neighbors):
-                    # check if neighbor index is within array
-                    if (0 <= neighbor[0] < self.h_mat.shape[0]) and (0 <= neighbor[1] < self.h_mat.shape[1]):
-                        # check if depth > threshold
-                        if self.h_mat[i, j] > self.h_thresh:
-                            # check velocity condition
-                            mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
-                            dir_u_a = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
-                            if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
-                                graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
+                    for n_i, neighbor in enumerate(neighbors):
+                        # check if neighbor index is within array
+                        if (0 <= neighbor[0] < self.h_mat.shape[0]) and (0 <= neighbor[1] < self.h_mat.shape[1]):
+                            # check if neighbor is nan
+                            if not np.isnan(self.h_mat[neighbor]):
+                                # check if depth > threshold (at current location and neighbor location)
+                                if (self.h_mat[i, j] > self.h_thresh) and (self.h_mat[neighbor] > self.h_thresh):
+                                    # check velocity condition
+                                    mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
+                                    dir_u_a = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
+                                    if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
+                                        graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
         self.logger.info("OK")
 
     @staticmethod
@@ -159,22 +167,23 @@ class Graphy:
                     return False
 
     def target_to_keys(self):
-        """Converts self.escape_target polygon to a list of target node keys (end) used for graph traversal"""
+        """Converts escape target matrix to a list of target node keys (end) used for graph traversal"""
         # for each active target cell, add corresponding key to list
-        l = []
         for i, row in enumerate(self.target_mat):
             for j, val in enumerate(row):
-                # if cell value is not null or zero
-                if self.target_mat[i, j] > 0:
+                # active if cell value = 1
+                if self.target_mat[i, j] == 1:
                     key = str(i) + ',' + str(j)
-                    l.append(key)
-        return l
+                    self.end.append(key)
 
     """Dynamic program"""
-    def find_shortest_path(self, start, end):
+    def find_shortest_path(self, start):
         """Finds shortest path from start node to set of end nodes (i,.e. target)"""
+        # if cannot move from start, -999
+        if start not in self.graph.keys():
+            return -999
         # if we start in target area, path length is zero
-        if start in end:
+        if start in self.end:
             return 0
         # key = node, value = shortest path to that node
         dist = {start: [start]}
@@ -192,10 +201,10 @@ class Graphy:
                     # add next node to end of q
                     q.append(next_node)
                 # if we made it to target, get length of path
-                if next_node in end:
+                if next_node in self.end:
                     shortest_path = self.flatten_path(dist[next_node])
-                    return shortest_path
-        # if no path found after traversing graph from start
+                    return len(shortest_path) - 1
+        # if no path to end found after traversing graph from start, -999
         return -999
 
     def flatten_path(self, path_obj):
@@ -210,8 +219,20 @@ class Graphy:
 
     def make_shortest_paths_raster(self):
         """Makes a raster where each cell indicates the shortest path to end"""
+        self.logger.info("Searching for escape routes...")
+        # initialize output array as nans
+        shortest_path_mat = np.zeros(self.h_mat.shape)
+        shortest_path_mat[:] = np.nan
         # for each cell, find shortest path to target
-        # get length of shortest path (len(shortest_path) - 1), save at corresponding array index
-        # convert output array to raster
-        # save output raster
-        pass
+        for i, row in enumerate(self.h_mat):
+            for j, val in enumerate(row):
+                if val is not np.nan:
+                    start = str(i) + ',' + str(j)
+                    shortest_path_mat[i, j] = self.find_shortest_path(start)
+        self.logger.info("OK")
+
+        self.logger.info("Converting escape route lengths array to raster...")
+        # *** georeference!!!
+        shortest_path_ras = arcpy.NumPyArrayToRaster(shortest_path_mat, value_to_nodata=np.nan)
+        self.logger.info("OK")
+        return shortest_path_ras
