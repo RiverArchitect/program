@@ -57,7 +57,10 @@ class Graphy:
         self.target_mat = np.ndarray((0, 0))
         self.end = []
 
-        # populates rasters and matrices
+        self.cell_size = 1
+        self.ref_pt = arcpy.Point(0, 0)
+
+        # populates rasters and matrices, gets cell size and lower left corner reference point from depth raster
         self.read_hydraulic_rasters()
         # makes target into "end" graph nodes list
         self.target_to_keys()
@@ -76,6 +79,8 @@ class Graphy:
             self.logger.info("Reading target area raster %s" % self.path2_target)
             self.target_ras = Raster(self.path2_target)
             self.logger.info("OK")
+            self.cell_size = arcpy.GetRasterProperties_management(self.h_ras, 'CELLSIZEX').getOutput(0)
+            self.ref_pt = arcpy.Point(self.h_ras.extent.XMin, self.h_ras.extent.YMin)
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
         self.ras_2_mats()
@@ -94,7 +99,6 @@ class Graphy:
     def construct_graph(self):
         """Convert matrices to directed graph"""
         self.logger.info("Constructing graph...")
-        graph = {}
         for i, row in enumerate(self.h_mat):
             for j, val in enumerate(row):
                 # check if val is nan
@@ -113,7 +117,10 @@ class Graphy:
                                     mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
                                     dir_u_a = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
                                     if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
-                                        graph[key] = str(neighbor[0]) + ',' + str(neighbor[1])
+                                        try:
+                                            self.graph[key] = self.graph[key] + [str(neighbor[0]) + ',' + str(neighbor[1])]
+                                        except KeyError:
+                                            self.graph[key] = [str(neighbor[0]) + ',' + str(neighbor[1])]
         self.logger.info("OK")
 
     @staticmethod
@@ -187,23 +194,25 @@ class Graphy:
             return 0
         # key = node, value = shortest path to that node
         dist = {start: [start]}
-        q = deque(start)
+        q = deque([start])
         while len(q):
             # at = node we know the shortest path to already
             # goes from left so we always get to that node in least steps possible
             at = q.popleft()
-            # for all possible next nodes
-            for next_node in self.graph[at]:
-                # if we don't already have a path to the next node
-                if next_node not in dist:
-                    # add path = path to at node, then from at to next node
-                    dist[next_node] = [dist[at], next_node]
-                    # add next node to end of q
-                    q.append(next_node)
-                # if we made it to target, get length of path
-                if next_node in self.end:
-                    shortest_path = self.flatten_path(dist[next_node])
-                    return len(shortest_path) - 1
+            # if we can get to 'at' but can't leave, it will not be in keys, so check
+            if at in self.graph.keys():
+                # for all possible next nodes
+                for next_node in self.graph[at]:
+                    # if we don't already have a path to the next node
+                    if next_node not in dist:
+                        # add path = path to at node, then from at to next node
+                        dist[next_node] = [dist[at], next_node]
+                        # add next node to end of q
+                        q.append(next_node)
+                    # if we made it to target, get length of path
+                    if next_node in self.end:
+                        shortest_path = self.flatten_path(dist[next_node])
+                        return len(shortest_path) - 1
         # if no path to end found after traversing graph from start, -999
         return -999
 
@@ -233,6 +242,9 @@ class Graphy:
 
         self.logger.info("Converting escape route lengths array to raster...")
         # *** georeference!!!
-        shortest_path_ras = arcpy.NumPyArrayToRaster(shortest_path_mat, value_to_nodata=np.nan)
+        shortest_path_ras = arcpy.NumPyArrayToRaster(shortest_path_mat,
+                                                     lower_left_corner=self.ref_pt,
+                                                     x_cell_size=self.cell_size,
+                                                     value_to_nodata=np.nan)
         self.logger.info("OK")
         return shortest_path_ras
