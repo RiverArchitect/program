@@ -150,7 +150,7 @@ class ConditionCreator:
             self.logger.info("ERROR: Failed to load %s ." % dir2inp_ras)
             self.error = True
             return -1
-        # don't convert NoData to 0 for velocity angle rasters (0 corresponds to north)
+        # convert 0 to NoData for depth rasters
         if not no_data and type_id == "h":
             self.logger.info("     * eliminate 0 data ... ")
             ras4tif = Con(Float(input_ras) > 0.000, Float(input_ras))
