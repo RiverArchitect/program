@@ -12,7 +12,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import cFish as cFi
-    import fGlobal as fG
+    import fGlobal as fGl
     import cMakeTable as cMkT
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
@@ -30,12 +30,11 @@ class Graphy:
     """
     Class for constructing and navigating directed graphs
     """
-
     def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh, path2_target):
 
         self.logger = logging.getLogger("logfile")
         self.cache = config.dir2co + ".cache\\%s" % str(random.randint(1000000, 9999999))
-        fG.chk_dir(self.cache)
+        fGl.chk_dir(self.cache)
 
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
@@ -51,6 +50,7 @@ class Graphy:
         self.u_mat = np.ndarray((0, 0))
         self.va_mat = np.ndarray((0, 0))
         self.graph = {}
+        self.inv_graph = {}
 
         self.path2_target = path2_target
         self.target_ras = None
@@ -79,7 +79,7 @@ class Graphy:
             self.logger.info("Reading target area raster %s" % self.path2_target)
             self.target_ras = Raster(self.path2_target)
             self.logger.info("OK")
-            self.cell_size = arcpy.GetRasterProperties_management(self.h_ras, 'CELLSIZEX').getOutput(0)
+            self.cell_size = float(arcpy.GetRasterProperties_management(self.h_ras, 'CELLSIZEX').getOutput(0))
             self.ref_pt = arcpy.Point(self.h_ras.extent.XMin, self.h_ras.extent.YMin)
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -88,14 +88,15 @@ class Graphy:
     def ras_2_mats(self):
         self.logger.info("Converting rasters to arrays...")
         try:
-            self.h_mat = arcpy.RasterToNumPyArray(self.h_ras, nodata_to_value=np.nan)
-            self.u_mat = arcpy.RasterToNumPyArray(self.u_ras, nodata_to_value=np.nan)
-            self.va_mat = arcpy.RasterToNumPyArray(self.va_ras, nodata_to_value=np.nan)
-            self.target_mat = arcpy.RasterToNumPyArray(self.target_ras)  # integer type, nans not allowed
+            self.h_mat = arcpy.RasterToNumPyArray(self.h_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
+            self.u_mat = arcpy.RasterToNumPyArray(self.u_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
+            self.va_mat = arcpy.RasterToNumPyArray(self.va_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
+            self.target_mat = arcpy.RasterToNumPyArray(self.target_ras, lower_left_corner=self.ref_pt)  # integer type
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
+    @fGl.err_info
     def construct_graph(self):
         """Convert matrices to directed graph"""
         self.logger.info("Constructing graph...")
@@ -117,10 +118,15 @@ class Graphy:
                                     mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
                                     dir_u_a = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
                                     if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
+                                        neighbor_key = str(neighbor[0]) + ',' + str(neighbor[1])
                                         try:
-                                            self.graph[key] = self.graph[key] + [str(neighbor[0]) + ',' + str(neighbor[1])]
+                                            self.graph[key] = self.graph[key] + [neighbor_key]
                                         except KeyError:
-                                            self.graph[key] = [str(neighbor[0]) + ',' + str(neighbor[1])]
+                                            self.graph[key] = [neighbor_key]
+                                        try:
+                                            self.inv_graph[neighbor_key] = self.inv_graph[neighbor_key] + [key]
+                                        except KeyError:
+                                            self.inv_graph[neighbor_key] = [key]
         self.logger.info("OK")
 
     @staticmethod
@@ -173,8 +179,9 @@ class Graphy:
                 else:
                     return False
 
+    @fGl.err_info
     def target_to_keys(self):
-        """Converts escape target matrix to a list of target node keys (end) used for graph traversal"""
+        """Converts escape target matrix to a list of target node keys (self.end) used for graph traversal"""
         # for each active target cell, add corresponding key to list
         for i, row in enumerate(self.target_mat):
             for j, val in enumerate(row):
@@ -183,68 +190,48 @@ class Graphy:
                     key = str(i) + ',' + str(j)
                     self.end.append(key)
 
-    """Dynamic program"""
-    def find_shortest_path(self, start):
-        """Finds shortest path from start node to set of end nodes (i,.e. target)"""
-        # if cannot move from start, -999
-        if start not in self.graph.keys():
-            return -999
-        # if we start in target area, path length is zero
-        if start in self.end:
-            return 0
-        # key = node, value = shortest path to that node
-        dist = {start: [start]}
-        q = deque([start])
-        while len(q):
-            # at = node we know the shortest path to already
-            # goes from left so we always get to that node in least steps possible
-            at = q.popleft()
-            # if we can get to 'at' but can't leave, it will not be in keys, so check
-            if at in self.graph.keys():
-                # for all possible next nodes
-                for next_node in self.graph[at]:
-                    # if we don't already have a path to the next node
-                    if next_node not in dist:
-                        # add path = path to at node, then from at to next node
-                        dist[next_node] = [dist[at], next_node]
-                        # add next node to end of q
-                        q.append(next_node)
-                    # if we made it to target, get length of path
-                    if next_node in self.end:
-                        shortest_path = self.flatten_path(dist[next_node])
-                        return len(shortest_path) - 1
-        # if no path to end found after traversing graph from start, -999
-        return -999
+    def dynamic_shortest_paths(self):
+        """A dynamic program for finding shortest escape routes; much faster than previous method!"""
+        self.logger.info("Finding escape routes...")
+        # set of nodes for which we already know the shortest path length. key=node key, value=number of steps
+        known_nodes = {end_node: 0 for end_node in self.end}
+        # number of steps to target area
+        steps = 1
+        valid_neighbors = True
+        while valid_neighbors:
+            self.logger.info("path step: %i" % steps)
+            valid_neighbors = False  # gets reset to True if any neighbors are added
+            # only nodes added from the previous iteration (used as stepping stones)
+            prev_nodes = [known_node for known_node in known_nodes.keys() if known_nodes[known_node] == steps - 1]
+            for prev_node in prev_nodes:
+                # get all nodes that can reach prev_node
+                if prev_node in self.inv_graph.keys():
+                    neighbors = self.inv_graph[prev_node]
+                    for neighbor in neighbors:
+                        # if neighbor is not already in known_nodes
+                        if neighbor not in known_nodes.keys():
+                            # save node and steps to known_nodes
+                            known_nodes[neighbor] = steps
+                            valid_neighbors = True
+            steps += 1
+        self.logger.info("OK")
 
-    def flatten_path(self, path_obj):
-        p = []
-        for obj in path_obj:
-            if type(obj) == list:
-                for item in self.flatten_path(obj):
-                    p.append(item)
-            else:
-                p.append(obj)
-        return p
-
-    def make_shortest_paths_raster(self):
-        """Makes a raster where each cell indicates the shortest path to end"""
-        self.logger.info("Searching for escape routes...")
+        self.logger.info("Converting node dict to array...")
         # initialize output array as nans
         shortest_path_mat = np.zeros(self.h_mat.shape)
         shortest_path_mat[:] = np.nan
-        # for each cell, find shortest path to target
-        for i, row in enumerate(self.h_mat):
-            for j, val in enumerate(row):
-                if val is not np.nan:
-                    start = str(i) + ',' + str(j)
-                    shortest_path_mat[i, j] = self.find_shortest_path(start)
+        for known_node in known_nodes.keys():
+            i, j = list(map(int, known_node.split(',')))
+            shortest_path_mat[i, j] = known_nodes[known_node]
         self.logger.info("OK")
 
         self.logger.info("Converting escape route lengths array to raster...")
-        # *** georeference!!!
         shortest_path_ras = arcpy.NumPyArrayToRaster(shortest_path_mat,
                                                      lower_left_corner=self.ref_pt,
                                                      x_cell_size=self.cell_size,
                                                      value_to_nodata=np.nan)
+        # *** set disconnectd areas to -999
+        # *** revise disconnected areas calculation; there could be more disconnected areas due to velocity condition
         self.logger.info("OK")
         return shortest_path_ras
+
