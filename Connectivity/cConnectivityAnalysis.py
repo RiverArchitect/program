@@ -10,7 +10,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import cFish as cFi
-    import fGlobal as fG
+    import fGlobal as fGl
     import cMakeTable as cMkT
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
@@ -39,7 +39,7 @@ class ConnectivityAnalysis:
     def __init__(self, condition, species, lifestage, units, *args):
         self.logger = logging.getLogger("logfile")
         self.cache = config.dir2co + ".cache%s\\" % str(random.randint(1000000, 9999999))
-        fG.chk_dir(self.cache)
+        fGl.chk_dir(self.cache)
         arcpy.env.workspace = self.cache
         arcpy.env.overwriteOutput = True
         self.condition = condition
@@ -58,17 +58,17 @@ class ConnectivityAnalysis:
             self.out_dir = args[0]
         except:
             self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
-        fG.chk_dir(self.out_dir)
+        fGl.chk_dir(self.out_dir)
         self.h_interp_dir = os.path.join(self.out_dir, "h_interp\\")
-        fG.chk_dir(self.h_interp_dir)
+        fGl.chk_dir(self.h_interp_dir)
         self.u_interp_dir = os.path.join(self.out_dir, "u_interp\\")
-        fG.chk_dir(self.u_interp_dir)
+        fGl.chk_dir(self.u_interp_dir)
         self.va_interp_dir = os.path.join(self.out_dir, "va_interp\\")
-        fG.chk_dir(self.va_interp_dir)
+        fGl.chk_dir(self.va_interp_dir)
         self.areas_dir = os.path.join(self.out_dir, "areas\\")
-        fG.chk_dir(self.areas_dir)
+        fGl.chk_dir(self.areas_dir)
         self.shortest_paths_dir = os.path.join(self.out_dir, "shortest_paths\\")
-        fG.chk_dir(self.shortest_paths_dir)
+        fGl.chk_dir(self.shortest_paths_dir)
         # populated by self.get_hydraulic_rasters()
         self.discharges = []
         self.Q_h_dict = {}
@@ -101,6 +101,7 @@ class ConnectivityAnalysis:
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
 
+    @fGl.err_info
     def get_interpolated_rasters(self):
         """
         Retrieves interpolated depth/velocity rasters, and produces them if they do not already exist.
@@ -141,6 +142,7 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
+    @fGl.err_info
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
         """ *** fix multiprocessing hang
@@ -168,10 +170,11 @@ class ConnectivityAnalysis:
             self.make_shortest_paths_map(Q)
 
         self.clean_up()
+        self.logger.info("\nFinished.")
 
     def disconnected_areas(self, Q):
         self.logger.info("Computing disconnected areas...")
-        self.logger.info("Discharge: %s" % str(Q))
+        self.logger.info("Discharge: %i" % int(Q))
         # get interpolated depth/velocity rasters
         h_ras = Raster(self.Q_h_interp_dict[Q])
 
@@ -184,7 +187,7 @@ class ConnectivityAnalysis:
 
         # raster to polygon conversion
         self.logger.info("Converting raster to polygon...")
-        areas_shp_path = os.path.join(self.areas_dir, "areas%i.shp" % Q)
+        areas_shp_path = os.path.join(self.areas_dir, "areas%i.shp" % int(Q))
         arcpy.RasterToPolygon_conversion(bin_h,
                                          areas_shp_path,
                                          "NO_SIMPLIFY"
@@ -238,12 +241,15 @@ class ConnectivityAnalysis:
             arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
             # if Q = lowest discharge, save target raster
             if Q == min(self.discharges):
+                self.logger.info("Creating target area raster...")
+                arcpy.env.extent = Raster(self.Q_h_interp_dict[Q])  # target needs matching extent so matrices align
                 target_lyr = os.path.join(self.cache, "target")
                 self.target = os.path.join(self.out_dir, "target.tif")
                 arcpy.MakeFeatureLayer_management(disconnected_layer, target_lyr, exp)
                 # convert target feature layer to raster
                 cell_size = arcpy.GetRasterProperties_management(self.Q_h_interp_dict[Q], 'CELLSIZEX').getOutput(0)
                 arcpy.FeatureToRaster_conversion(target_lyr, 'gridcode', self.target, cell_size)
+                self.logger.info("OK.")
             # delete mainstem polygon to get disconnected areas
             arcpy.DeleteFeatures_management(disconnected_layer)
             # convert back to polygon
@@ -254,6 +260,7 @@ class ConnectivityAnalysis:
             out_ras = Con(~IsNull(arcpy.sa.ExtractByMask(out_ras, disconnected_areas)), Q, out_ras)
 
         out_ras.save(out_ras_path)
+        self.logger.info("Saved Q_disconnect raster: %s" % out_ras_path)
 
     def make_shortest_paths_map(self, Q):
         """
@@ -262,7 +269,7 @@ class ConnectivityAnalysis:
         :param Q: corresponding discharge for finding path
         """
         self.logger.info("Making shortest escape route map...")
-        self.logger.info("Discharge: %s" % str(Q))
+        self.logger.info("Discharge: %i" % int(Q))
         self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
         self.logger.info("\tminimum swimming depth  = %s" % self.h_min)
         self.logger.info("\tmaximum swimming speed  = %s" % self.u_max)
@@ -271,15 +278,16 @@ class ConnectivityAnalysis:
         path2va_ras = self.Q_va_interp_dict[Q]
 
         cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
-        shortest_paths_ras = cg.make_shortest_paths_raster()
-        shortest_paths_ras.save(os.path.join(self.shortest_paths_dir, "path_lengths%s.tif" % str(Q)))
+        shortest_paths_ras = cg.dynamic_shortest_paths()
+        self.logger.info("Saving shortest paths raster...")
+        shortest_paths_ras.save(os.path.join(self.shortest_paths_dir, "path_lengths%i.tif" % int(Q)))
         self.logger.info("OK")
 
     def clean_up(self):
         try:
             self.logger.info("Cleaning up ...")
-            fG.clean_dir(self.cache)
-            fG.rm_dir(self.cache)
+            fGl.clean_dir(self.cache)
+            fGl.rm_dir(self.cache)
             self.logger.info("OK")
         except:
             self.logger.info("Failed to clean up .cache folder.")
