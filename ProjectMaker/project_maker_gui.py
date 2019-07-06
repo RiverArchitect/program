@@ -1,7 +1,7 @@
 try:
     import os, sys
     import tkinter as tk
-    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.messagebox import askokcancel, showinfo, askyesno
     from tkinter.filedialog import *
     import webbrowser, shutil, random
 except:
@@ -10,6 +10,7 @@ except:
 try:
     import s20_plantings_delineation as s20
     import s21_plantings_stabilization as s21
+    import s30_terrain_stabilization as s30
     import s40_compare_sharea as s40
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
@@ -22,29 +23,68 @@ except:
     print("ERROR: Missing sub routines (cannot access python files in subfolder).")
 
 
+class PopUpStab(object):
+    def __init__(self, master, n_curr, txcr_curr):
+        top = self.top = tk.Toplevel(master)
+        msg0 = "Manning\'s n and the critical dimensionless bed shear (Shields) Tau_x,cr stress determine grain stability.\n"
+        msg1 = "Please refer to the Wiki for more details:\n"
+        msg2 = "     https://github.com/RiverArchitect/Welcome/wiki/LifespanDesign#inpras"
+        msg3 = "River Architect uses an internal conversion factor to convert between US customary and metric units.\n"
+        self.n_usr = tk.DoubleVar()
+        self.txcr_usr = tk.DoubleVar()
+
+        self.l_0 = tk.Label(top, text=msg0+msg1+msg2)
+        self.l_0.grid(sticky=tk.W, row=0, rowspan=4, column=0, columnspan=3, padx=5, pady=5)
+
+        self.l_n = tk.Label(top, text="Enter new SI-metric value for Manning\'s n in [s/m^(1/3)]:")
+        self.l_n.grid(sticky=tk.W, row=4, column=0, padx=5, pady=5)
+        self.e_n = tk.Entry(top, width=10, textvariable=self.n_usr)
+        self.e_n.grid(sticky=tk.W, row=4, column=1, padx=5, pady=5)
+        self.l_n_c = tk.Label(top, text="current: %s" % str(n_curr))
+        self.l_n_c.grid(sticky=tk.W, row=4, column=2, padx=5, pady=5)
+        tk.Label(top, text=msg3).grid(row=5, column=0, columnspan=3, padx=5, pady=5)
+        tk.Label(top, text="  ").grid(row=6, column=0, columnspan=3, padx=5, pady=5)
+
+        self.l_t = tk.Label(top, text="Enter new value for Tau_x,cr [dimensionless]:")
+        self.l_t.grid(sticky=tk.W, row=7, column=0, padx=5, pady=5)
+        self.e_t = tk.Entry(top, width=10, textvariable=self.txcr_usr)
+        self.e_t.grid(sticky=tk.W, row=7, column=1, padx=5, pady=5)
+        self.l_t_c = tk.Label(top, text="current: %s" % str(txcr_curr))
+        self.l_t_c.grid(sticky=tk.W, row=7, column=2, padx=5, pady=5)
+        tk.Label(top, text="  ").grid(row=8, column=0, columnspan=3, padx=5, pady=5)
+
+        self.b = tk.Button(top, text='OK', command=self.cleanup)
+        self.b.grid(row=9, column=2, padx=5, pady=5)
+
+        self.top.iconbitmap(config.code_icon)
+
+    def cleanup(self):
+        self.n_def = self.n_usr.get()
+        self.t_def = self.txcr_usr.get()
+        self.top.destroy()
+
+
 class MainGui(sg.RaModuleGui):
     def __init__(self, from_master):
         sg.RaModuleGui.__init__(self, from_master)
         self.ww = 740  # window width
-        self.wh = 990  # window height
+        self.wh = 900  # window height
         self.title = "Project Maker"
         self.set_geometry(self.ww, self.wh, self.title)
 
         self.condition_i_list = []
         self.condition_p_list = []
         self.condition_pl_list = []
-        self.condition_bio_list = []
+        self.condition_ter_list = []
         self.condition_init = ""
         self.condition_proj = ""
 
-        self.dir2prj = ""  #os.path.dirname(os.path.abspath(__file__)) + "\\Geodata\\"
-        self.dir2AP = config.dir2ml + "Output\\Rasters\\"
+        self.dir2prj = ""  # os.path.dirname(os.path.abspath(__file__)) + "\\Geodata\\"
+        self.dir2ap = config.dir2ml + "Output\\Rasters\\"
         self.fish = {}
         self.fish_applied = {}
-        self.reach = ""
-        self.site_name = ""
-        self.stn = ""
-        self.vege_cr = float(0.0)
+        self.n = 0.04
+        self.txcr = 0.047
         self.version = ""
         self.w_e = 14  # width of entries
         self.w_lb = 20  # width of listboxes
@@ -54,6 +94,10 @@ class MainGui(sg.RaModuleGui):
 
         self.cover_app_pre = tk.BooleanVar()
         self.cover_app_post = tk.BooleanVar()
+        self.prj_name = tk.StringVar()
+        self.ter_cr = tk.DoubleVar()
+        self.vege_cr = tk.DoubleVar()
+        self.vege_stab_cr = tk.DoubleVar()
 
         self.complete_menus()
 
@@ -63,7 +107,7 @@ class MainGui(sg.RaModuleGui):
         msg2 = "START: DEFINE AND VALIDATE VARIABLES\n"
 
         self.l_welcome = tk.Label(self, fg="white", background="gray45", text=msg0 + msg1 + msg2)
-        self.l_welcome.grid(sticky=tk.EW, row=0, column=0, rowspan=3, columnspan=3, padx=self.xd, pady=self.yd)
+        self.l_welcome.grid(sticky=tk.EW, row=0, column=0, rowspan=2, columnspan=3, padx=self.xd, pady=self.yd)
 
         self.l_version = tk.Label(self, text="Project version: ")
         self.l_version.grid(sticky=tk.W, row=3, column=0, padx=self.xd, pady=self.yd)
@@ -72,81 +116,68 @@ class MainGui(sg.RaModuleGui):
         self.l_version_help = tk.Label(self, fg="gray26", text="(3-digits: v+INT+INT, example: v10)")
         self.l_version_help.grid(sticky=tk.W, row=3, column=2, padx=self.xd, pady=self.yd)
 
-        self.l_reach = tk.Label(self, text="Reach: ")
-        self.l_reach.grid(sticky=tk.W, row=4, column=0, padx=self.xd, pady=self.yd)
-        self.e_reach = tk.Entry(self, width=self.w_e, textvariable=self.version)
-        self.e_reach.grid(sticky=tk.EW, row=4, column=1, padx=self.xd, pady=self.yd)
-        self.l_reach_help = tk.Label(self, fg="gray26", text="(3-characters: RRR, example: TBR)")
-        self.l_reach_help.grid(sticky=tk.W, row=4, column=2, padx=self.xd, pady=self.yd)
-
-        self.l_site_name = tk.Label(self, text="Site name: ")
-        self.l_site_name.grid(sticky=tk.W, row=5, column=0, padx=self.xd, pady=self.yd)
-        self.e_site_name = tk.Entry(self, width=self.w_e, textvariable=self.version)
-        self.e_site_name.grid(sticky=tk.EW, row=5, column=1, padx=self.xd, pady=self.yd)
+        self.l_site_name = tk.Label(self, text="Project name: ")
+        self.l_site_name.grid(sticky=tk.W, row=4, column=0, padx=self.xd, pady=self.yd)
+        self.e_site_name = tk.Entry(self, width=self.w_e, textvariable=self.prj_name)
+        self.e_site_name.grid(sticky=tk.EW, row=4, column=1, padx=self.xd, pady=self.yd)
         self.l_site_name_help = tk.Label(self, fg="gray26", text="(CamelCase string, no spaces, example: MySite)")
-        self.l_site_name_help.grid(sticky=tk.W, row=5, column=2, padx=self.xd, pady=self.yd)
-
-        self.l_stn = tk.Label(self, text="Site short name: ")
-        self.l_stn.grid(sticky=tk.W, row=6, column=0, padx=self.xd, pady=self.yd)
-        self.e_stn = tk.Entry(self, width=self.w_e, textvariable=self.version)
-        self.e_stn.grid(sticky=tk.EW, row=6, column=1, padx=self.xd, pady=self.yd)
-        self.l_stn_help = tk.Label(self, fg="gray26", text="(3-characters: stn, example: sit)")
-        self.l_stn_help.grid(sticky=tk.W, row=6, column=2, padx=self.xd, pady=self.yd)
-
-        self.l_vege_cr = tk.Label(self, text="Critical plantings lifespan:\n(for plant stabilization)")
-        self.l_vege_cr.grid(sticky=tk.W, row=7, column=0, padx=self.xd, pady=self.yd)
-        self.e_vege_cr = tk.Entry(self, width=self.w_e, textvariable=self.version)
-        self.e_vege_cr.grid(sticky=tk.EW, row=7, column=1, padx=self.xd, pady=self.yd)
-        self.l_vege_cr_help = tk.Label(self, fg="gray26", text=" years (float number, example: 2.5)")
-        self.l_vege_cr_help.grid(sticky=tk.W, row=7, column=2, padx=self.xd, pady=self.yd)
-
-        self.b_dir2SR = tk.Button(self, text="Change path to RiverArchitect package (skip this if current is ok)",
-                                  command=lambda: self.set_dir2SR())
-        self.b_dir2SR.grid(sticky=tk.EW, row=8, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.l_dir2SR = tk.Label(self, fg="gray26", text="Current: " + str(config.dir2ra))
-        self.l_dir2SR.grid(sticky=tk.W, row=9, column=0, columnspan=3, padx=self.xd, pady=self.yd - 3)
+        self.l_site_name_help.grid(sticky=tk.W, row=4, column=2, padx=self.xd, pady=self.yd)
 
         self.b_val_var = tk.Button(self, text="VALIDATE VARIABLES", command=lambda: self.verify_variables())
-        self.b_val_var.grid(sticky=tk.EW, row=10, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
+        self.b_val_var.grid(sticky=tk.EW, row=8, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
 
-        self.l_placeholder1 = tk.Label(self, fg="white", background="gray45", text="ASSESS AND DELINEATE PLANTINGS")
-        self.l_placeholder1.grid(sticky=tk.EW, row=11, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
-        self.l_condition_pl = tk.Label(self, text="Select plant MaxLifespan map folder: ")
-        self.l_condition_pl.grid(sticky=tk.W, row=13, column=0, padx=self.xd, pady=self.yd)
+        self.l_placeholder1 = tk.Label(self, fg="white", background="gray45", text="ASSESS, DELINEATE AND STABILIZE PLANTINGS")
+        self.l_placeholder1.grid(sticky=tk.EW, row=9, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
+        self.l_vege_cr = tk.Label(self, text="Do not plant where expected lifespans are less than:")
+        self.l_vege_cr.grid(sticky=tk.W, row=10, column=0, padx=self.xd, pady=self.yd)
+        self.e_vege_cr = tk.Entry(self, width=self.w_e, textvariable=self.vege_cr)
+        self.e_vege_cr.grid(sticky=tk.EW, row=10, column=1, padx=self.xd, pady=self.yd)
+        self.l_vege_cr_help = tk.Label(self, fg="gray26", text=" years (float number, example: 2.5)")
+        self.l_vege_cr_help.grid(sticky=tk.W, row=10, column=2, padx=self.xd, pady=self.yd)
+        self.l_vege_stab_cr = tk.Label(self, text="Stabilize plants where expected lifespans are less than:")
+        self.l_vege_stab_cr.grid(sticky=tk.W, row=11, column=0, padx=self.xd, pady=self.yd)
+        self.e_vege_stab_cr = tk.Entry(self, width=self.w_e, textvariable=self.vege_stab_cr)
+        self.e_vege_stab_cr.grid(sticky=tk.EW, row=11, column=1, padx=self.xd, pady=self.yd)
+        self.l_vege_stab_cr_help = tk.Label(self, fg="gray26", text=" years (should be higher than above value)")
+        self.l_vege_stab_cr_help.grid(sticky=tk.W, row=11, column=2, padx=self.xd, pady=self.yd)
+        self.l_condition_pl = tk.Label(self, text="Select plant Max Lifespan Condition: ")
+        self.l_condition_pl.grid(sticky=tk.W, row=12, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_pl = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.sb_condition_pl.grid(sticky=tk.W, row=13, column=2, padx=0, pady=self.yd)
+        self.sb_condition_pl.grid(sticky=tk.W, row=12, column=2, padx=0, pady=self.yd)
         self.lb_condition_pl = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_pl.set)
-        self.lb_condition_pl.grid(sticky=tk.EW, row=13, column=1, padx=self.xd, pady=self.yd)
+        self.lb_condition_pl.grid(sticky=tk.EW, row=12, column=1, padx=self.xd, pady=self.yd)
         self.lb_condition_pl.insert(tk.END, "Validate Variables")
         self.sb_condition_pl.config(command=self.lb_condition_pl.yview)
-        self.l_sel_pl = tk.Label(self, fg="gray27",
-                                 text="No validation required for selection.")
-        self.l_sel_pl.grid(sticky=tk.E, row=13, column=2, padx=self.xd, pady=self.yd)
-
-        self.b_s20 = tk.Button(self, text="Delineate plantings", command=lambda: self.start_app("s20"))
-        self.b_s20.grid(sticky=tk.EW, row=15, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_s20 = tk.Button(self, text="Place best vegetation plantings", command=lambda: self.start_app("s2X"))
+        self.b_s20.grid(sticky=tk.EW, row=13, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_s20["state"] = "disabled"
-        self.b_s20_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s20"))
-        self.b_s20_help.grid(sticky=tk.E, row=15, column=2, padx=self.xd, pady=self.yd * 2)
+        self.b_s20_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s2X"))
+        self.b_s20_help.grid(sticky=tk.E, row=13, column=2, padx=self.xd, pady=self.yd * 2)
 
-        self.l_placeholder2 = tk.Label(self, fg="white", background="gray45", text="VEGETATION PLANTINGS STABILIZATION")
-        self.l_placeholder2.grid(sticky=tk.EW, row=16, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
-        self.l_condition_tbx = tk.Label(self, text="Select bioeng. MaxLifespan Raster folder: ")
-        self.l_condition_tbx.grid(sticky=tk.W, row=18, column=0, padx=self.xd, pady=self.yd)
-        self.sb_condition_tbx = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.sb_condition_tbx.grid(sticky=tk.W, row=18, column=2, padx=0, pady=self.yd)
-        self.lb_condition_tbx = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_tbx.set)
-        self.lb_condition_tbx.grid(sticky=tk.EW, row=18, column=1, padx=self.xd, pady=self.yd)
-        self.lb_condition_tbx.insert(tk.END, "Validate Variables")
-        self.sb_condition_tbx.config(command=self.lb_condition_tbx.yview)
-        self.l_sel_tbx = tk.Label(self, fg="gray27", text="No validation required for selection.")
-        self.l_sel_tbx.grid(sticky=tk.E, row=18, column=2, padx=self.xd, pady=self.yd)
-
-        self.b_s21 = tk.Button(self, text="Stabilize plantings", command=lambda: self.start_app("s21"))
-        self.b_s21.grid(sticky=tk.EW, row=20, column=0, columnspan=2, padx=self.xd, pady=self.yd)
-        self.b_s21["state"] = "disabled"
-        self.b_s21_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s21"))
-        self.b_s21_help.grid(sticky=tk.E, row=20, column=2, padx=self.xd, pady=self.yd * 2)
+        self.l_placeholder2 = tk.Label(self, fg="white", background="gray45", text="TERRAIN STABILIZATION")
+        self.l_placeholder2.grid(sticky=tk.EW, row=14, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
+        self.l_ter_cr = tk.Label(self, text="Critical lifespan:")
+        self.l_ter_cr.grid(sticky=tk.W, row=15, column=0, padx=self.xd, pady=self.yd)
+        self.e_ter_cr = tk.Entry(self, width=self.w_e, textvariable=self.ter_cr)
+        self.e_ter_cr.grid(sticky=tk.EW, row=15, column=1, padx=self.xd, pady=self.yd)
+        self.l_ter_cr_help = tk.Label(self, fg="gray26", text=" years (float number, example: 2.5)")
+        self.l_ter_cr_help.grid(sticky=tk.W, row=15, column=2, padx=self.xd, pady=self.yd)
+        self.l_condition_ter = tk.Label(self, text="Select bioeng. MaxLifespan Condition: ")
+        self.l_condition_ter.grid(sticky=tk.W, row=18, column=0, padx=self.xd, pady=self.yd)
+        self.sb_condition_ter = tk.Scrollbar(self, orient=tk.VERTICAL)
+        self.sb_condition_ter.grid(sticky=tk.W, row=18, column=2, padx=0, pady=self.yd)
+        self.lb_condition_ter = tk.Listbox(self, height=3, width=self.w_lb, yscrollcommand=self.sb_condition_ter.set)
+        self.lb_condition_ter.grid(sticky=tk.EW, row=18, column=1, padx=self.xd, pady=self.yd)
+        self.lb_condition_ter.insert(tk.END, "Validate Variables")
+        self.sb_condition_ter.config(command=self.lb_condition_ter.yview)
+        self.b_s30_def = tk.Button(self, width=14, bg="white", text="Set stability drivers",
+                                   command=lambda: self.set_stab_vars())
+        self.b_s30_def.grid(sticky=tk.E, row=18, column=2, padx=self.xd, pady=self.yd * 2)
+        self.b_s30 = tk.Button(self, text="Stabilize terrain", command=lambda: self.start_app("s30"))
+        self.b_s30.grid(sticky=tk.EW, row=20, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_s30["state"] = "disabled"
+        self.b_s30_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s30"))
+        self.b_s30_help.grid(sticky=tk.E, row=20, column=2, padx=self.xd, pady=self.yd * 2)
 
         self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN SEASONAL USABLE HABITAT AREA ")
         self.l_placeholder3.grid(sticky=tk.EW, row=21, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
@@ -202,7 +233,7 @@ class MainGui(sg.RaModuleGui):
         self.condition_i_list = []  # reset pre-project condition list
         self.condition_p_list = []  # reset post-project condition list
         self.condition_pl_list = []  # reset plant condition list
-        self.condition_bio_list = []  # reset tbx condition list
+        self.condition_ter_list = []  # reset terrain stab. condition list
 
         dir2HE = config.dir2sh + "CHSI\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
@@ -210,25 +241,21 @@ class MainGui(sg.RaModuleGui):
             self.condition_i_list.append(str(f))  # pre-project propositions
             self.condition_p_list.append(str(f))  # post-project propositions
 
-        dir2lf_ras = config.dir2lf + "Output\\Rasters\\"
-        ap_list = [d for d in os.listdir(dir2lf_ras) if os.path.isdir(os.path.join(dir2lf_ras, d))]
+        dir2mlf_ras = config.dir2ml + "Output\\Rasters\\"
+        ap_list = [d for d in os.listdir(dir2mlf_ras) if os.path.isdir(os.path.join(dir2mlf_ras, d))]
         for f in ap_list:
             if ("plant" in str(f).lower()) or ("lyr20" in str(f).lower()):
                 if not("bio" in str(f).lower()):
                     self.condition_pl_list.append(f)
-            if "bio" in str(f).lower() or ("lyr20" in str(f).lower()):
+        dir2lf_ras = config.dir2lf + "Output\\Rasters\\"
+        lf_list = [d for d in os.listdir(dir2lf_ras) if os.path.isdir(os.path.join(dir2lf_ras, d))]
+        for f in lf_list:
+            if ("bio" in str(f).lower()) or ("lyr20" in str(f).lower()) or ("lf_wood" in str(f).lower()) or ("lf_grains" in str(f).lower()):
                 if not("plant" in str(f).lower()):
-                    self.condition_bio_list.append(f)
+                    self.condition_ter_list.append(f)
 
     def get_variables(self):
         self.version = str(self.e_version.get())
-        self.reach = str(self.e_reach.get()).upper()
-        self.site_name = str(self.e_site_name.get())
-        self.stn = str(self.e_stn.get()).lower()
-        try:
-            self.vege_cr = float(self.e_vege_cr.get())
-        except:
-            self.vege_cr = 0.01
 
     def help_info(self, app_name):
         # app_name = STR
@@ -242,24 +269,28 @@ class MainGui(sg.RaModuleGui):
             for k in self.fish_applied.keys():
                 msges.append("> " + str(k) + " lifestage(s):\n   - " + "\n   - ".join(self.fish_applied[k]))
 
-        if app_name == "s20":
-            msges.append("Plant delineation module requirements:\n")
+        if app_name == "s2X":
+            msges.append("Plant delineation requirements:\n")
+            msges.append("- Critical lifespan determines what plantings require stabilization with bioengineering features")
             msges.append("- ProjectArea.shp (Polygon)")
             msges.append("- PlantDelineation.shp (Polygon)")
-            msges.append("- Maximum Lifespan Maps for plants (lyr20) are stored in /MaxLifespan/Output/Rasters/condition_RRR_lyr20.../\n")
+            msges.append("- Max. Lifespan Maps for plants (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
+            msges.append("    (max_lf_plants.tif)")
+            msges.append("- Max. Lifespan Maps for bioengineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
+            msges.append("    (lf_wood.tif, lf_bio.tif)\n")
 
-        if app_name == "s21":
-            msges.append("Plant stabilization module requirements:\n")
+        if app_name == "s30":
+            msges.append("Stabilization requirements:\n")
+            msges.append("- Critical lifespan determines what plantings require stabilization with bioengineering features")
             msges.append("- ProjectArea.shp (Polygon)")
-            msges.append("- Critical plantings lifespan determines plantings that require stabilization with bioengineering features")
-            msges.append("- Maximum Lifespan Maps for bioengineering (lyr20) features are stored in /MaxLifespan/Output/Rasters/condition_RRR_lyr20.../\n")
+            msges.append("- Max. Lifespan Maps for bioengineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
+            msges.append("    (lf_grains.tif)\n")
 
         if app_name == "s40":
-            msges.append("Weighted Usable habitat Area module requirements:\n")
+            msges.append("Seasonal Habitat Area (SHArea) calculation requires:\n")
             msges.append("- ProjectArea.shp (Polygon)")
-            msges.append("- The fish menu is situated in the upper left corner of the GUI window.")
-            msges.append("- The fish menu contents originate from definitions in /RiverArchitect/.site_packages/templates/Fish.xlsx.")
-            msges.append("- CHSI conditions refer to available folders in /SHArC/CHSI\n")
+            msges.append("- Aquatic ambiance for target fish-lifestage (upper left corner of the window - source: RiverArchitect/.site_packages/templates/Fish.xlsx).")
+            msges.append("- CHSI conditions defined by folder in /SHArC/CHSI/\n")
 
         showinfo("Module Info", "\n".join(msges))
 
@@ -300,20 +331,20 @@ class MainGui(sg.RaModuleGui):
 
     def prepare_project(self):
         # requires that self.dir2prj was updated before
-        self.xlsx_file_name = self.reach + "_" + self.stn + "_assessment_" + self.version + ".xlsx"
+        self.xlsx_file_name = self.prj_name.get() + "_assessment_" + self.version + ".xlsx"
         if not(os.path.exists(self.dir2prj)):
-            shutil.copytree(config.dir2pm + ".templates\\REACH_stn_vii_TEMPLATE\\", self.dir2prj)
-            os.rename(self.dir2prj + "REACH_stn_assessment_vii.xlsx", self.dir2prj + self.xlsx_file_name)
+            shutil.copytree(config.dir2pm + ".templates\\Project_vii_TEMPLATE\\", self.dir2prj)
+            os.rename(self.dir2prj + "Project_assessment_vii.xlsx", self.dir2prj + self.xlsx_file_name)
             return "New project assessment folder created."
         else:
             if os.path.isfile(self.dir2prj + self.xlsx_file_name):
                 rnd_ext = str(random.randint(1000000, 9999999))
-                alt_xlsx_file_name = self.reach + "_" + self.stn + "_assessment_" + self.version + "_old" + rnd_ext + ".xlsx"
+                alt_xlsx_file_name = self.xlsx_file_name.split(".xlsx")[0] + "_old" + rnd_ext + ".xlsx"
                 shutil.copyfile(self.dir2prj + self.xlsx_file_name, self.dir2prj + alt_xlsx_file_name)
                 return "Old project assessment workbook renamed."
             else:
                 try:
-                    os.rename(self.dir2prj + "REACH_stn_assessment_vii.xlsx", self.dir2prj + self.xlsx_file_name)
+                    shutil.copyfile(config.dir2pm + ".templates\\Project_vii_TEMPLATE\\Project_assessment_vii.xlsx", self.dir2prj + self.xlsx_file_name)
                     return "Project assessment workbook created."
                 except:
                     return "A PROBLEM OCCURRED: Ensure that " + self.dir2prj + self.xlsx_file_name + " exists."
@@ -327,10 +358,6 @@ class MainGui(sg.RaModuleGui):
             items = self.lb_condition_p.curselection()
             self.condition_proj = [self.condition_p_list[int(item)] for item in items][0]
             self.b_select_c_p.config(fg="forest green", text="Selection OK")
-
-    def set_dir2SR(self):
-        config.dir2ra = askdirectory(initialdir=".") + "/"
-        self.l_dir2SR.config(text="Current: " + str(config.dir2ra))
 
     def set_fish(self, species, *lifestage):
         try:
@@ -354,37 +381,65 @@ class MainGui(sg.RaModuleGui):
             self.b_show_fish.config(fg="forest green")
             showinfo("Fish added", "All available species added.")
 
+    def set_stab_vars(self):
+        sub_frame = PopUpStab(self.master, self.n, self.txcr)
+        self.b_s30_def["state"] = "disabled"
+        self.master.wait_window(sub_frame.top)
+        self.b_s30_def["state"] = "normal"
+        if sub_frame.n_def > 0.0:
+            self.n = float(sub_frame.n_def)
+        if sub_frame.t_def > 0.0:
+            self.txcr = float(sub_frame.t_def)
+        showinfo("INFO", "Applying\n Manning\'s n = {0} s/m^(1/3) and\n Tau_x,cr = {1}.".format(str(self.n), str(self.txcr)))
+
     def start_app(self, app_name):
         # app_name = STR
         c_msg1 = "Background calcluation (check console window).\n\n"
         c_msg2 = "Python windows seem unresponsive in the meanwhile.\n\n"
         c_msg3 = "Logfile and cost master file automatically open once the process successfully terminated.\n\n"
         c_msg4 = "\n    >> PRESS OK TO START << "
-        if app_name == "s20":
+        if app_name == "s2X":
             try:
                 items = self.lb_condition_pl.curselection()
                 condition_pl = [self.condition_pl_list[int(item)] for item in items][0]
                 if (condition_pl.__len__() < 1) or (str(condition_pl) == "Validate Variables"):
                     showinfo("ERROR", "Select condition.")
                     return -1
-                dir2AP_pl = config.dir2ml + "Output\\Rasters\\" + condition_pl + "\\"
+                dir2ml_pl = config.dir2ml + "Output\\Rasters\\" + condition_pl + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s20.main(dir2AP_pl, self.reach, self.stn, self.unit, self.version)
-                self.b_s20.config(text="Delineate plantings OK", fg="forest green")
+                best_plant_dir = s20.main(dir2ml_pl, self.vege_cr.get(), self.prj_name.get(), self.unit, self.version)
+                try:
+                    lf_req = float(self.vege_stab_cr.get())
+                except:
+                    showinfo("ERROR", "Wrong format of critical lifespan (must be numeric).")
+                    return -1
+                s21.main(best_plant_dir,  config.dir2lf + "Output\\Rasters\\" + condition_pl + "\\", lf_req,
+                         self.prj_name.get(), self.unit, self.version)
+                self.b_s20.config(text="Plantings OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
-        if app_name == "s21":
+        if app_name == "s30":
             try:
-                items = self.lb_condition_tbx.curselection()
-                condition_tbx = [self.condition_bio_list[int(item)] for item in items][0]
-                if (condition_tbx.__len__() < 1) or (str(condition_tbx) == "Validate Variables"):
-                    showinfo("ERROR", "Select condition.")
+                items = self.lb_condition_ter.curselection()
+                condition_ter = [self.condition_ter_list[int(item)] for item in items][0]
+                if (condition_ter.__len__() < 1) or (str(condition_ter) == "Validate Variables"):
+                    showinfo("ERROR", "Validate Variables first.")
                     return -1
-                dir2AP_tbx = config.dir2ml + "Output\\Rasters\\" + condition_tbx + "\\"
+            except:
+                showinfo("ERROR", "Select condition.")
+                return -1
+            try:
+                dir2lf_ter = config.dir2lf + "Output\\Rasters\\" + condition_ter + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s21.main(dir2AP_tbx, self.vege_cr, self.reach, self.stn, self.unit, self.version)
-                self.b_s21.config(text="Stabilize plantings OK", fg="forest green")
+                try:
+                    lf_req = float(self.ter_cr.get())
+                except:
+                    showinfo("ERROR", "Wrong format of critical lifespan (must be numeric).")
+                    return -1
+                s30.main(dir2lf_ter, lf_req, self.prj_name.get(), self.unit, self.version, self.n, self.txcr)
+
+                self.b_s30.config(text="Stabilize terrain OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
@@ -394,7 +449,7 @@ class MainGui(sg.RaModuleGui):
                     showinfo("ATTENTION", "Select at least one fish species - lifestage!")
                     return -1
                 if self.cover_app_pre.get() or self.cover_app_post.get():
-                    msg1 = "Make sure that cover cHSI rasters are available in SHArC/cHSI/"
+                    msg1 = "Make sure that cover cHSI rasters are available in SHArC/CHSI/"
                     msg2 = str(self.condition_init) + " AND / OR " + str(self.condition_proj) + "/cover/.\n\n"
                     msg3 = "Press OK to launch SHArea calculation with cover."
                     showinfo("Info", msg1 + msg2 + msg3)
@@ -405,7 +460,7 @@ class MainGui(sg.RaModuleGui):
                     showinfo("ERROR", "Select condition after terraforming.")
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), config.dir2ra, self.fish_applied, self.reach, self.stn, self.unit, self.version)
+                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.fish_applied, self.prj_name.get(), self.unit, self.version)
                 self.b_s40.config(text="Net gain in SHArea calculation OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
@@ -417,48 +472,45 @@ class MainGui(sg.RaModuleGui):
             error_msges.append("Project version must start with small letter \'v\'.")
         if not (self.version.__len__() == 3):
             error_msges.append("Project version string must have three digits (v + number + number).")
-        if not (self.reach.__len__() == 3):
-            error_msges.append("Reach string must consist of three character (Letter1 + Letter2 + Letter3).")
-        if self.site_name.split(" ").__len__() > 1:
+        if self.prj_name.get().split(" ").__len__() > 1:
             error_msges.append("SiteName may not contain spaces. Use CamelCases instead.")
-        if not (self.stn.__len__() == 3):
-            error_msges.append("Site short name must consist of three small letters (letter1 + letter2 + letter3).")
-        if self.vege_cr == 0.01:
-            error_msges.append("Minimum survival threshold for plants must be a float number in years.")
         if not os.path.isdir(config.dir2ml + "Output\\"):
-            error_msges.append("Check path to RiverArchitect package and its subdirectory MaxLifespan/Output.")
+            error_msges.append("Cannot find " + config.dir2ml + "Output\\")
 
         if error_msges.__len__() > 0:
             self.master.bell()
             showinfo("VERIFICATION ERROR(S)", "Variable definition errors occurred:\n - ".join(error_msges))
+            return -1
         else:
             self.get_condition_lists()
             self.update_condition_lb("plant")
-            self.update_condition_lb("toolbox")
+            self.update_condition_lb("terrain")
             self.update_condition_lb("init")
             self.update_condition_lb("proj")
 
-            self.dir2prj = os.path.dirname(os.path.abspath(__file__)) + "\\" + self.reach + "_" + self.stn + "_" + self.version + "\\"
+            self.dir2prj = config.dir2pm + self.prj_name.get() + "_" + self.version + "\\"
             msg = self.prepare_project()
             self.make_fish_menu()
             self.b_s20["state"] = "normal"
-            self.b_s21["state"] = "normal"
+            self.b_s30["state"] = "normal"
             self.b_s40["state"] = "normal"
             msg_next0 = "\n\n A workbook and a layout file will automatically open after clicking on OK."
             msg_next1 = "\n\n >> Create relevant shapefiles and safe the layout as \n" + self.dir2prj + "ProjectMaps.aprx\n \n"
             msg_next2 = "\n\n >> Verify the assessment workbook, transfer terraforming volumes (tab: terraforming volumes), and safe-close the workbook."
-            showinfo("INFO", msg + msg_next0 + msg_next1 + msg_next2)
+            qes = "\n\n Open workbook and Project (aprx) to make the required adaptations?"
 
-            try:
-                webbrowser.open(self.dir2prj + self.xlsx_file_name)
+            answer = askyesno("INFO", msg + msg_next0 + msg_next1 + msg_next2 + qes)
+            if answer:
                 try:
-                    webbrowser.open(self.dir2prj + "ProjectMaps.aprx")
+                    webbrowser.open(self.dir2prj + self.xlsx_file_name)
+                    try:
+                        webbrowser.open(self.dir2prj + "ProjectMaps.aprx")
+                    except:
+                        pass
                 except:
-                    pass
-            except:
-                sol1 = "\n\n >> Verify that the workbook exists in " + self.dir2prj
-                sol2 = "\n\n >> Ensure that a standard application is defined for opening workbooks."
-                showinfo("ERROR", "Could not open " + self.xlsx_file_name + "." + sol1 + sol2)
+                    sol1 = "\n\n >> Verify that the workbook exists in " + self.dir2prj
+                    sol2 = "\n\n >> Ensure that a standard application is defined for opening workbooks."
+                    showinfo("ERROR", "Could not open " + self.xlsx_file_name + "." + sol1 + sol2)
 
     def update_condition_lb(self, condition_type):
         if condition_type == "init":
@@ -468,7 +520,7 @@ class MainGui(sg.RaModuleGui):
                 pass
             for e in self.condition_i_list:
                 self.lb_condition_i.insert(tk.END, e)
-            self.lb_condition_i.grid(sticky=tk.EW, row=25, column=1, padx=self.xd, pady=self.yd)
+            # self.lb_condition_i.grid(sticky=tk.EW, row=25, column=1, padx=self.xd, pady=self.yd)
             self.sb_condition_i.config(command=self.lb_condition_i.yview)
 
         if condition_type == "plant":
@@ -478,7 +530,7 @@ class MainGui(sg.RaModuleGui):
                 pass
             for e in self.condition_pl_list:
                 self.lb_condition_pl.insert(tk.END, e)
-            self.lb_condition_pl.grid(sticky=tk.EW, row=13, column=1, padx=self.xd, pady=self.yd)
+            # self.lb_condition_pl.grid(sticky=tk.EW, row=13, column=1, padx=self.xd, pady=self.yd)
             self.sb_condition_pl.config(command=self.lb_condition_pl.yview)
 
         if condition_type == "proj":
@@ -491,15 +543,15 @@ class MainGui(sg.RaModuleGui):
             self.lb_condition_p.grid(sticky=tk.EW, row=28, column=1, padx=self.xd, pady=self.yd)
             self.sb_condition_p.config(command=self.lb_condition_p.yview)
 
-        if condition_type == "toolbox":
+        if condition_type == "terrain":
             try:
-                self.lb_condition_tbx.delete(0, tk.END)
+                self.lb_condition_ter.delete(0, tk.END)
             except:
                 pass
-            for e in self.condition_bio_list:
-                self.lb_condition_tbx.insert(tk.END, e)
-            self.lb_condition_tbx.grid(sticky=tk.EW, row=18, column=1, padx=self.xd, pady=self.yd)
-            self.sb_condition_tbx.config(command=self.lb_condition_tbx.yview)
+            for e in self.condition_ter_list:
+                self.lb_condition_ter.insert(tk.END, e)
+            # self.lb_condition_ter.grid(sticky=tk.EW, row=18, column=1, padx=self.xd, pady=self.yd)
+            self.sb_condition_ter.config(command=self.lb_condition_ter.yview)
 
     def __call__(self):
         self.mainloop()

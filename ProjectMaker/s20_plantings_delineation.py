@@ -1,66 +1,68 @@
 # !/usr/bin/python
-import arcpy
-import webbrowser
-from fFunctions import *
-logger = logging.getLogger("logfile")
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
-import config
 try:
-    from arcpy.sa import *
-except:
-    logger.info("ArcGIS ERROR: No SpatialAnalyst extension available.")
-try:
-    # load RiverArchitects own packages
+    import sys, os, logging
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import cDefinitions as cDef
+    import config
+    import fGlobal as fGl
 except:
     print("ExceptionError: Could not find own packages (./site_packages/riverpy/)")
 
+try:
+    import arcpy
+    from arcpy.sa import *
+except:
+    print("ArcGIS ERROR: No SpatialAnalyst extension available.")
 
-def main(action_dir, reach, stn, unit, version):
-    # required input variables:
-    # reach = "TBR"  #  (corresponding to folder name)
-    # site_name = "BartonsBar" (for example)
-    # stn = "brb"
-    # unit = "us" or "si"
-    # version = "v10"  # type() =  3-char str: vII
-    error = False
+
+def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=str()):
+    """ delineate optimum plantings
+    required input variables:
+    min_lf = minimum plant lifespan where plantings are considered
+    prj_name = "TBR"  #  (corresponding to folder name)
+    prj_name = "BartonsBar" (for example)
+    unit = "us" or "si"
+    version = "v10"  # type() =  3-char str: vII
+    """
+    logger = logging.getLogger("logfile")
+
+    logger.info("PLACE OPTIMUM PLANT SPECIES ----- ----- ----- -----")
     features = cDef.FeatureDefinitions(False)  # read feature IDs (required to identify plants)
 
     if unit == "us":
         area_units = "SQUARE_FEET_US"
-        ft2_to_acres = float(1 / (3 * 3 * 4840))  # 3*3 is ft2 to yd2 and 4840 yd2 to ac
+        ft2_to_acres = config.ft2ac
     else:
         area_units = "SQUARE_METERS"
         ft2_to_acres = 1.0
     arcpy.CheckOutExtension('Spatial')
     arcpy.gp.overwriteOutput = True
 
-    path2PP = config.dir2pm + reach + "_" + stn + "_" + version + "\\"
+    path2pp = config.dir2pm + prj_name + "_" + version + "\\"
 
     # folder settings 
-    ras_dir = path2PP + "Geodata\\Rasters\\"
-    shp_dir = path2PP + "Geodata\\Shapefiles\\"
-    quant_dir = path2PP + "Quantities\\"
-    del_ovr_files(path2PP)  # Delete temporary raster calculator files
+    ras_dir = path2pp + "Geodata\\Rasters\\"
+    shp_dir = path2pp + "Geodata\\Shapefiles\\"
+    quant_dir = path2pp + "Quantities\\"
+    fGl.del_ovr_files(path2pp)  # Delete temporary raster calculator files
 
     # file settings
-    xlsx_target = path2PP + str(reach.upper()) + "_" + stn + "_assessment_" + version + ".xlsx"
+    xlsx_target = path2pp + prj_name + "_assessment_" + version + ".xlsx"
 
     action_ras = {}
     try:
         logger.info("Looking up MaxLifespan Rasters ...")
-        arcpy.env.workspace = action_dir
+        arcpy.env.workspace = maxlf_dir
         action_ras_all = arcpy.ListRasters()
-        logger.info(" >> Source directory: " + action_dir)
-        arcpy.env.workspace = path2PP + "Geodata\\"
+        logger.info(" >> Source directory: " + maxlf_dir)
+        arcpy.env.workspace = path2pp + "Geodata\\"
         for aras in action_ras_all:
             for plant in features.id_list_plants:
                 if plant in str(aras):
-                    logger.info("   -- found: " + action_dir + str(aras))
-                    action_ras.update({aras: arcpy.Raster(action_dir + aras)})
+                    logger.info("   -- found: " + maxlf_dir + str(aras))
+                    action_ras.update({aras: arcpy.Raster(maxlf_dir + aras)})
             if ("max" in str(aras)) and ("plant" in str(aras)):
-                max_lf_plants = arcpy.Raster(action_dir + aras)
+                max_lf_plants = arcpy.Raster(maxlf_dir + aras)
         logger.info(" -- OK (read Rasters)\n")
     except:
         logger.info("ERROR: Could not find action Rasters.")
@@ -72,7 +74,7 @@ def main(action_dir, reach, stn, unit, version):
         arcpy.PolygonToRaster_conversion("ProjectArea.shp", "AreaCode", ras_dir + "ProjectArea.tif",
                                          cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
         logger.info(" -- OK. Loading Project raster ...")
-        arcpy.env.workspace = path2PP + "Geodata\\"
+        arcpy.env.workspace = path2pp + "Geodata\\"
         prj_area = arcpy.Raster(ras_dir + "ProjectArea.tif")
         logger.info(" -- OK (Shapefile2Raster conversion)\n")
     except arcpy.ExecuteError:
@@ -93,7 +95,8 @@ def main(action_dir, reach, stn, unit, version):
     shp_4_stats = {}
     try:
         logger.info("Analyzing optimum plant types in project area ...")
-        logger.info(" >> Cropping maximum lifespans (action) raster ... ")
+        logger.info(" >> Cropping maximum lifespan Raster ... ")
+        arcpy.env.extent = prj_area.extent
         max_lf_crop = Con((~IsNull(prj_area) & ~IsNull(max_lf_plants)), Float(max_lf_plants))
         logger.info(" >> Saving crop ... ")
         max_lf_crop.save(ras_dir + "max_lf_pl_c.tif")
@@ -106,8 +109,8 @@ def main(action_dir, reach, stn, unit, version):
             else:
                 aras_tif = aras
                 aras_no_end = aras.split('.tif')[0]
-            logger.info(" >> Plant action raster: " + str(plant_ras))
-            __temp_ras__ = Con((~IsNull(prj_area) & ~IsNull(plant_ras)), Con((Float(max_lf_plants) >= 2.5), (max_lf_plants * plant_ras)))
+            logger.info(" >> Applying MaxLifespan Raster({}) where lifespan > {} years.".format(str(plant_ras), str(min_lf)))
+            __temp_ras__ = Con((~IsNull(prj_area) & ~IsNull(plant_ras)), Con((Float(max_lf_plants) >= min_lf), (max_lf_plants * plant_ras)))
             logger.info(" >> Saving raster ... ")
             __temp_ras__.save(ras_dir + aras_tif)
             logger.info(" >> Converting to shapefile (polygon for area statistics) ... ")
@@ -116,7 +119,7 @@ def main(action_dir, reach, stn, unit, version):
                 arcpy.RasterToPolygon_conversion(shp_ras, shp_dir + aras_no_end + ".shp", "NO_SIMPLIFY")
             except:
                 logger.info("     !! " + aras_tif + " is not suitable for this project.")
-            arcpy.env.workspace = action_dir
+            arcpy.env.workspace = maxlf_dir
             logger.info(" >> Calculating area statistics ... ")
             try:
                 arcpy.AddField_management(shp_dir + aras_no_end + ".shp", "F_AREA", "FLOAT", 9)
@@ -128,9 +131,9 @@ def main(action_dir, reach, stn, unit, version):
                                                              area_unit=area_units)
                 shp_4_stats.update({aras: shp_dir + aras_no_end + ".shp"})
             except:
+                shp_4_stats.update({aras: config.dir2pm + ".templates\\area_dummy.shp"})
                 logger.info("     !! Omitting (not applicable) ...")
-                error = True
-            arcpy.env.workspace = path2PP + "Geodata\\"
+            arcpy.env.workspace = path2pp + "Geodata\\"
         logger.info(" -- OK (Shapefile and raster analyses)\n")
         logger.info("Calculating area statistics of plants to be cleared for construction ...")
         try:
@@ -143,6 +146,7 @@ def main(action_dir, reach, stn, unit, version):
                                                          area_unit=area_units)
             shp_4_stats.update({"clearing": shp_dir + "PlantDelineation.shp"})
         except:
+            shp_4_stats.update({"clearing": config.dir2pm + ".templates\\area_dummy.shp"})
             logger.info("    * no clearing applicable ")
         logger.info(" -- OK (Statistic calculation)\n")
     except arcpy.ExecuteError:
@@ -169,7 +173,7 @@ def main(action_dir, reach, stn, unit, version):
                 arcpy.Delete_management(shp)
             except:
                 logger.info(str(shp) + " is locked. Remove manually to avoid confusion.")
-    arcpy.env.workspace = path2PP + "Geodata\\"
+    arcpy.env.workspace = path2pp + "Geodata\\"
     logger.info(" -- OK (Clean up)\n")
 
     # EXPORT STATISTIC TABLES
@@ -191,7 +195,7 @@ def main(action_dir, reach, stn, unit, version):
     logger.info("Processing table statistics ...")
     write_dict = {}
     for sf in stat_files.keys():
-        stat_data = read_txt(stat_files[sf])
+        stat_data = fGl.read_txt(stat_files[sf])
         logger.info("     --> Extracting relevant area ...")
         polygon_count = 0
         total_area_ft2 = 0.0
@@ -201,26 +205,19 @@ def main(action_dir, reach, stn, unit, version):
                 polygon_count += 1
         write_dict.update({sf: total_area_ft2 * float(ft2_to_acres)})
         logger.info("     --> OK")
-    logger.info(" -- OK (Area extraction finished)\n")
+    logger.info(" -- OK (Area extraction finished).")
 
     # WRITE AREA DATA TO EXCEL FILE
     logger.info("Writing results ...")
-    write_dict2xlsx(write_dict, xlsx_target, "B", "C", 4)
+    fGl.write_dict2xlsx(write_dict, xlsx_target, "B", "C", 4)
 
-    logger.info(" -- OK (PLANT DELINEATION FINISHED)\n")
-
-
-    try:
-        if not error:
-            webbrowser.open(xlsx_target)
-    except:
-        pass
+    logger.info(" -- OK (PLANT PLACEMENT FINISHED)\n")
+    return ras_dir
 
 
 if __name__ == "__main__":
     dir2AP = str(input('Please enter the path to the RiverArchitect module (e.g., "D:/RiverArchitect/MaxLifespan/Output/Rasters/condition_rrr_lyr20_plants/") >> '))
-    reach = str(input('Please enter a reach abbreviation ("RRR") >> ')).upper()
-    stn = str(input('Please enter a site name abbreviation ("stn") >> ')).lower()
+    prj_name = str(input('Please enter a Project name ("ProjectName") >> '))
     unit = str(input('Please enter a unit system ("us" or "si") >> '))
     version = str(input('Please enter a version number ("vii") >> '))
-    main(dir2AP, reach, stn, unit, version)
+    main(dir2AP, prj_name, unit, version)

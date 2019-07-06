@@ -1,8 +1,9 @@
 try:
     import os, logging, sys, glob, webbrowser, time
     from collections import Iterable  # used in the flatten function
+    from bisect import bisect_left
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, glob, logging, time, webbrowser).")
+    print("ExceptionERROR: Missing fundamental packages (required: bisect, collections, os, sys, glob, logging, time, webbrowser).")
 
 try:
     import arcpy
@@ -56,6 +57,19 @@ def cool_down(seconds):
         sys.stdout.flush()
         time.sleep(1)
     sys.stdout.write('\n')
+
+
+def del_ovr_files(directory):
+    # directory must end with "\\" or "/"
+    all_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+    for f in all_files:
+        if ".ovr" in f:
+            try:
+                print("Attempting to remove old temporary files ...")
+                os.remove(directory + f)
+                print("Success.")
+            except:
+                pass
 
 
 def dict_values2list(dv):
@@ -152,6 +166,23 @@ def flatten(lis):
             yield item
 
 
+def get_closest_val_in_list(usr_list, target_num):
+    """ Returns closes value to target_num in a sorted usr_list
+    if two numbers are equally close the smallest number is returned
+    """
+    pos = bisect_left(usr_list, target_num)
+    if pos == 0:
+        return usr_list[0]
+    if pos == len(usr_list):
+        return usr_list[-1]
+    before = usr_list[pos - 1]
+    after = usr_list[pos]
+    if after - target_num < target_num - before:
+       return after
+    else:
+       return before
+
+
 def get_credits():
     c_file = open(config.dir2templates + "credits.txt", "r")
     credits_str = "\n".join(c_file.read().splitlines())
@@ -172,8 +203,7 @@ def get_subdir_names(directory):
 
 def interpolate_linear(x1, x2, y1, y2, xi):
     # returns linear interpolation yi of xi between two points 1 and 2
-    yi = y1 + ((xi - x1) / (x2 - x1) * (y2 - y1))
-    return yi
+    return y1 + ((xi - x1) / (x2 - x1) * (y2 - y1))
 
 
 def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names):
@@ -321,6 +351,51 @@ def raster2shp(raster_name, out_shp_name=str(), simplify="NO_SIMPLIFY", calculat
     return out_shp_name
 
 
+def read_txt(file_name):
+    """ returns numeric data of a comma delimited text file
+    INPUT:  file = full path of text (or csv) file
+    OUTPUT: data = LIST: [[col0_row0, col1_row0, ...], [col0_row1, col1_row1, ...], ...]
+    original use: ProjectMaker/s21_plantings_stabilization
+    """
+
+    logger = logging.getLogger("logfile")
+    logger.info(" >> Reading " + str(file_name))
+    data = []
+    if os.path.isfile(file_name):
+        file_name = open(file_name)
+        lines = file_name.readlines()
+        header = lines[0].split(",")
+        try:
+            col_grid = header.index("gridcode")
+            try:
+                col_area = header.index("F_sAREA\n")
+            except:
+                try:
+                    col_area = header.index("F_AREA")
+                except:
+                    col_area = header.index("F_AREA\n")
+        except:
+            col_grid = 0
+        lines = lines[1:]  # remove header
+        for l in lines:
+            try:
+                l = str(l).split(",")
+                grid_val = float(l[col_grid])
+                try:
+                    area_val = float(l[col_area].split("\n")[0])
+                except:
+                    area_val = float(l[col_area])
+            except:
+                logger.info("    !! non-numeric data in text file (line " + str(l) + ").")
+                grid_val = 0.0
+                area_val = 0.0
+            data.append([grid_val, area_val])
+        logger.info("     --> File read OK.")
+    else:
+        logger.info("ERROR: File not found.")
+    return data
+
+
 def rm_dir(directory):
     # Deletes everything reachable from the directory named in 'directory', and the directory itself
     # assuming there are no symbolic links.
@@ -445,6 +520,19 @@ def tuple2num(arg):
     return new
 
 
+def verify_shp_file(shapefile):
+    # shapefile = STR (full path) of shapefile
+    # returns TRUE if the shapefile is NOT EMPTY (has at least one polygon or line)
+    try:
+        item_number = arcpy.GetCount_management(shapefile)
+    except:
+        return False
+    if item_number > 0:
+        return True
+    else:
+        return False
+
+
 def write_data(folder_dir, file_name, data):
     if not os.path.exists(folder_dir):
         os.mkdir(folder_dir)
@@ -455,4 +543,47 @@ def write_data(folder_dir, file_name, data):
         line = str(i)+'\n'
         f.write(line)
     print('Data written to: \n' + folder_dir + '\\' + str(file_name) + '.csv')
+
+
+def write_dict2xlsx(data_dict, file, key_col, val_col, start_row):
+    """ uses openpyxl to write data to an xlsx-workbook
+    INPUT:  file = full path of xlsx file
+    """
+    logger = logging.getLogger("logfile")
+    try:
+        # load relevant files from RiverArchitect/ModifyTerrain module
+        sys.path.append(config.dir2oxl)
+        import openpyxl as oxl
+    except:
+        logger.info("ExceptionERROR: Cannot find %s." % config.dir2oxl)
+        logger.info("                --> Correction required in: fFunctions.py")
+        try:
+            from inspect import currentframe, getframeinfo
+            frameinfo = getframeinfo(currentframe())
+            logger.info("                    " + str(frameinfo.filename))
+            logger.info("                    line number: " + str(frameinfo.lineno - 9))
+        except:
+            pass
+    logger.info(" >> Writing to " + str(file))
+
+    try:
+        wb = oxl.load_workbook(filename=file)
+    except:
+        logger.info("ERROR: Failed to access " + str(file))
+        return -1
+    try:
+        ws = wb["from_geodata"]
+    except:
+        logger.info("ERROR: Sheet \'from_geodata\' is missing in " + str(file))
+        return -1
+
+    i_row = start_row
+    for dct_key in data_dict.keys():
+        ws[key_col + str(i_row)].value = dct_key
+        ws[val_col + str(i_row)].value = data_dict[dct_key]
+        i_row += 1
+
+    wb.save(str(file))
+    wb.close()
+    logger.info(" -- OK (Write to workbook)")
 
