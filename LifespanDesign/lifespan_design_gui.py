@@ -24,7 +24,7 @@ class PopUpWindow(object):
     def __init__(self, master):
         top = self.top = tk.Toplevel(master)
         msg0 = "Manning\'s n is used in the calculation of grain mobility for shear velocity.\n"
-        msg1 = "Please refer to the manual (Lifespan mapping section about angular boulders and grain mobility) for more details.\n"
+        msg1 = "Please refer to the Wiki (Lifespan mapping section about angular boulders and grain mobility) for more details.\n"
         msg3 = "If you are using US costumary units, River Architect will use an internal conversion factor for the here entered metric value.\n"
         self.l_0 = tk.Label(top, text=msg0)
         self.l_0.pack(padx=5, pady=5)

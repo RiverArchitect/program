@@ -17,14 +17,16 @@ dir2ml = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\
 dir2mt = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\"
 dir2oxl = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\openpyxl\\"
 dir2pm = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ProjectMaker\\"
+dir2rb = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\RiverBuilder\\"
 dir2ripy = os.path.dirname(__file__) + "\\"
 dir2templates = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\"
 dir2sh = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\SHArC\\"
 dir2va = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\"
 
-ft2ac = 1 / 43560
+ft2ac = float(1 / 43560)
 m2ft = 0.3048
 
+empty_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\oups.txt"
 xlsx_aqua = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\Fish.xlsx"
 xlsx_dummy = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\empty.xlsx"
 xlsx_mu = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\morphological_units.xlsx"

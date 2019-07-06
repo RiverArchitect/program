@@ -1,0 +1,5 @@
+Oups -- Something went wrong :(
+
+Check calculation Warning and Error messages.
+
+More information: https://github.com/RiverArchitect/Welcome/wiki/Troubleshooting
