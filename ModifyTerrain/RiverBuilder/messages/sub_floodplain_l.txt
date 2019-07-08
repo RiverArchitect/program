@@ -1,1 +1,1 @@
-Left Floodplain (assign user function) - whereas the channel is treated as one entity having a width, the floodplains have been segregated into independent units. This function governs variability in the location of the outer edge of the river left (i.e. left looking downstream) floodplain.
+Left Floodplain (USER FUNCTION) - whereas the channel is treated as one entity having a width, the floodplains have been segregated into independent units. This function governs variability in the location of the outer edge of the river left (i.e., left looking downstream) floodplain.

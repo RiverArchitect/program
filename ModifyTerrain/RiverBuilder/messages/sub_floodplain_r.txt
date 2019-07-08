@@ -1,1 +1,1 @@
-Right Floodplain (assign user function) - governs variability in the location of the outer edge of the river left (i.e. left looking downstream) floodplain.
+Right Floodplain (USER FUNCTION) - governs variability in the location of the outer edge of the river left (i.e., left looking downstream) floodplain.

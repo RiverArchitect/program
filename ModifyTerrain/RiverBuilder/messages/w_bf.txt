@@ -1,1 +1,1 @@
-Bankfull Width (Wbf) - the distance between bank tops on the X-Y plane, not counting any sub-reach variability functions. Input must be a positive real number.
+Bankfull Width Wbf (in meters, i.e., FLOAT > 0.0) - the distance between bank tops on the X-Y plane, not counting any sub-reach variability functions.
