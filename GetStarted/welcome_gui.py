@@ -1,7 +1,7 @@
 try:
     import os, sys
     import tkinter as tk
-    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.messagebox import askokcancel, askyesno, showinfo
     from tkinter.filedialog import *
     import webbrowser
 except:
@@ -81,6 +81,7 @@ class MainGui(sg.RaModuleGui):
         self.b_create_c["state"] = "disabled"
         self.master.wait_window(new_window.top)
         self.b_create_c["state"] = "normal"
+        self.gui_quit()
 
     def create_c_sub(self):
         try:
@@ -92,6 +93,7 @@ class MainGui(sg.RaModuleGui):
         self.b_create_sub_c["state"] = "disabled"
         self.master.wait_window(new_window.top)
         self.b_create_sub_c["state"] = "normal"
+        self.gui_quit()
 
     def make_inp(self):
         try:
@@ -104,6 +106,11 @@ class MainGui(sg.RaModuleGui):
         self.master.wait_window(new_window.top)
         self.b_make_inp["state"] = "normal"
         del new_window
+
+    def gui_quit(self):
+        answer = askyesno("Info", "River Architect must be restarted in order to finalize register dataset.\nPlease confirm closing River Architect?")
+        if answer:
+            self.master.destroy()
 
     def populate_c(self):
         try:
