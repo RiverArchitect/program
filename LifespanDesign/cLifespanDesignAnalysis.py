@@ -69,6 +69,7 @@ class ArcPyAnalysis:
 
         self.g = 9.81 / self.ft2m   # (ft/s2) gravity acceleration
         self.s = 2.68               # (--) relative grain density (ratio of rho_s and rho_w)
+        self.sf = 0.99              # (--) default safety factor
 
         self.info = Info(condition)
         self.lifespans = self.info.lifespan_read()   # definition of lifespans in years from CONDITION/input_definitions.inp
@@ -1003,7 +1004,7 @@ class ArcPyAnalysis:
         try:
             self.sf = float(sf)
         except:
-            self.sf = 1
+            self.sf = 0.99
 
     def verify_threshold_freq(self, freq):
         # inverse is boolean (False or True)

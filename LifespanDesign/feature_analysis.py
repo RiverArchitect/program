@@ -73,10 +73,10 @@ def analysis_call(parameter_name, feature, feature_analysis):
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "mobile_grains":
-            if not type(feature.threshold_taux) is list:
+            if not (type(feature.threshold_taux) is list) and (feature_analysis.sf > 0.99):
                 feature_analysis.analyse_mobile_grains(feature.threshold_taux)
             else:
-                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s (taux + safety factor)." % parameter_name)
         if parameter_name == "mu":
             if (0 in feature.mu_method) or (1 in feature.mu_method):
                 feature_analysis.analyse_mu(feature.mu_bad, feature.mu_good, feature.mu_method)
