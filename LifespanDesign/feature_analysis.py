@@ -88,10 +88,10 @@ def analysis_call(parameter_name, feature, feature_analysis):
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "taux":
-            if not type(feature.threshold_taux) is list:
+            if not (type(feature.threshold_taux) is list) and (feature_analysis.sf == 0.99):
                 feature_analysis.analyse_taux(feature.threshold_taux)
             else:
-                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s (or SF is defined)." % parameter_name)
         if parameter_name == "tcd":
             run = False
             if not (type(feature.threshold_fill) is list) and not (type(feature.threshold_scour) is list):
