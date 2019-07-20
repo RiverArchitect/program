@@ -41,12 +41,14 @@ def analysis_call(parameter_name, feature, feature_analysis):
             if parameter_name == "sidech":
                 feature_analysis.design_side_channel()
         else:
-            logger.info("      * Design mapping is off.")
+            logger.info("      * Design mapping is turned off.")
 
         # invoke lifespan raster creation
         if parameter_name == "d2w":
             if not (type(feature.threshold_d2w_low) is list) and not (type(feature.threshold_d2w_up) is list):
                 feature_analysis.analyse_d2w(feature.threshold_d2w_low, feature.threshold_d2w_up)
+            else:
+                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "det":
             if not (type(feature.threshold_det_low) is list) and not (type(feature.threshold_det_up) is list):
                 feature_analysis.analyse_det(feature.threshold_det_low, feature.threshold_det_up)
@@ -76,7 +78,7 @@ def analysis_call(parameter_name, feature, feature_analysis):
             if not (type(feature.threshold_taux) is list) and (feature_analysis.sf > 0.99):
                 feature_analysis.analyse_mobile_grains(feature.threshold_taux)
             else:
-                logger.info("      * Negative: No thresholds provided for %s (taux + safety factor)." % parameter_name)
+                logger.info("      * Negative: No thresholds provided for %s (taux and SF)." % parameter_name)
         if parameter_name == "mu":
             if (0 in feature.mu_method) or (1 in feature.mu_method):
                 feature_analysis.analyse_mu(feature.mu_bad, feature.mu_good, feature.mu_method)
@@ -111,8 +113,8 @@ def analysis_call(parameter_name, feature, feature_analysis):
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
         if parameter_name == "lf_bioengineering":
-            if not (type(feature.threshold_S0) is list) and not (type(feature.threshold_d2w_up) is list):
-                feature_analysis.analyze_bio(feature.threshold_S0, feature.threshold_d2w_up)
+            if not (type(feature.threshold_S0) is list) and not ((type(feature.threshold_d2w_low) is list) and (type(feature.threshold_d2w_up) is list)):
+                feature_analysis.analyse_bio(feature.threshold_S0, feature.threshold_d2w_up, feature.threshold_d2w_up)
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
     except:

@@ -90,7 +90,7 @@ class ArcPyContainer:
     @fGl.spatial_license
     def get_lifespan_data(self):
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
-        self.logger.info("   LOOK UP LIFESPAN MAP DATA")
+        self.logger.info("   LOOKING UP LIFESPAN DATA")
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
         arcpy.env.workspace = self.cache
 
@@ -98,7 +98,6 @@ class ArcPyContainer:
             sn = self.get_feat_shortname(str(self.features.lf_rasters[i]))
             shortname = "lf_" + sn
             self.logger.info("   >> Adding lifespan raster for " + shortname + " ...")
-
             try:
                 self.raster_dict.update({shortname: self.features.lf_rasters[i]})
                 self.logger.info("      Success: Added highest lifespans from " + str(sn) + " (lf).")
@@ -116,6 +115,10 @@ class ArcPyContainer:
     def get_feat_shortname(self, raster_name):
         for sn in self.feature_info.id_list:
             if sn in raster_name:
+                if "bio_v" in raster_name:
+                    return "bio_v"
+                if "bio_m" in raster_name:
+                    return "bio_m"
                 return sn
 
     def get_feat_num(self, raster_name):
@@ -150,8 +153,7 @@ class ArcPyContainer:
                 pass
 
             try:
-                self.logger.info(
-                    "      -> Applying best performance of " + str(sn) + " ...")
+                self.logger.info("      -> Applying best performance of " + str(sn) + " ...")
                 __temp_ras__ = Con((Float(feat_ras) == Float(self.best_lf_ras)), 1)
 
                 self.logger.info("       > Saving raster " + str(sn) + " *** takes time *** ")
@@ -159,7 +161,7 @@ class ArcPyContainer:
             except:
                 self.errors = True
                 self.logger.info("WARNING: Identification failed (" + str(sn) + ").")
-                __temp_ras__ = 0
+                continue
 
             try:
                 self.logger.info(
@@ -176,16 +178,20 @@ class ArcPyContainer:
                 self.logger.info("WARNING: Conversion to polygon failed (" + str(sn) + ").")
 
         try:
-            self.logger.info("   >> Setting lifespans of design features to 20 years ...")
-            update_ras_0 = Con((Float(self.best_lf_ras) == 0.8), Float(20.0), self.best_lf_ras)
+            self.logger.info("   >> Setting lifespans of design features to 50 years ...")
+            update_ras_0 = Con((Float(self.best_lf_ras) == 0.8), Float(50.0), self.best_lf_ras)
             update_ras_1 = Con(~(Float(update_ras_0) == Float(0)), update_ras_0)
             self.best_lf_ras = update_ras_1
 
             self.logger.info("   >> Saving maximum lifespan rasters (all features) ...")
             self.best_lf_ras.save(self.cache + "max_lf.tif")
             try:
-                if not(self.feature_info.id_list_plants[0] in " ".join(fGl.dict_values2list(self.raster_dict.keys()))):
-                    arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf.tif")
+                control_str = " ".join(fGl.dict_values2list(self.raster_dict.keys()))
+                if not(self.feature_info.id_list_plants[0] in control_str):
+                    if not("bio" in control_str):
+                        arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf.tif")
+                    else:
+                        arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf_bio.tif")
                 else:
                     arcpy.CopyRaster_management(self.cache + "max_lf.tif", self.output_ras + "max_lf_plants.tif")
             except:
@@ -197,10 +203,8 @@ class ArcPyContainer:
 
         if not self.errors:
             self.logger.info("   >> Success.")
-            self.logger.info("   >> Best suitable feature shapefiles are stored in:")
-            self.logger.info("      " + str(self.output_shp))
-            self.logger.info("   >> Best lifespans raster is stored in:")
-            self.logger.info("      " + str(self.output_ras))
+            self.logger.info("   >> Best suitable feature shapefiles are stored in:\n%s" % str(self.output_shp))
+            self.logger.info("   >> Best lifespans raster is stored in:\n%s"% str(self.output_ras))
 
     @fGl.spatial_license
     def make_zero_ras(self, dir_base_ras):

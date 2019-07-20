@@ -97,12 +97,13 @@ class FlowDepth(ParameterContainer):
         ParameterContainer.__init__(self, condition, "h")
         self.rasters = []
         for ras_name in self.raster_names:
-            ras_act = self.raster_path + self.condition + "\\" + ras_name
+            ras_act = self.raster_path + self.condition + "\\" + ras_name.split(".tif")[0]
             if arcpy.Exists(ras_act) or os.path.isfile(ras_act + '.tif'):
                 try:
-                    self.rasters.append(arcpy.Raster(ras_act + '.tif'))
+                    self.rasters.append(arcpy.Raster(str(ras_act + '.tif')))
                 except:
-                    self.rasters.append(arcpy.Raster(ras_act))
+                    pass
+                    # self.rasters.append(arcpy.Raster(ras_act))
             else:
                 self.rasters.append("")
 

@@ -59,8 +59,8 @@ class Director:
         return raster_list
 
 
-class FrameworkFeatures(Director):
-    # This class stores all information about Framework features
+class FeatureGroup(Director):
+    # This class stores all information about Feature Groups (terraforming, plantings, bioengineering or connectivity)
     def __init__(self, condition, *args):
         try:
             # check if args[0] = alternative input path exists
@@ -74,87 +74,16 @@ class FrameworkFeatures(Director):
         self.lf_rasters = self.append_lf_rasters(self.shortnames)
 
 
-class PlantFeatures(Director):
-    # This class stores all information about Toolbox features
-    def __init__(self, condition, *args):
-        try:
-            # check if args[0] = alternative input path exists
-            Director.__init__(self, condition, args[0])
-        except:
-            Director.__init__(self, condition)
-        self.features = cDef.FeatureDefinitions()
-        self.names = self.features.name_list_plants
-        self.shortnames = self.features.id_list_plants
-        self.ds_rasters = self.append_ds_rasters(self.shortnames)
-        self.lf_rasters = self.append_lf_rasters(self.shortnames)
-
-
-class ToolboxFeatures(Director):
-    # This class stores all information about Toolbox features
-    def __init__(self, condition, *args):
-        try:
-            # check if args[0] = alternative input path exists
-            Director.__init__(self, condition, args[0])
-        except:
-            Director.__init__(self, condition)
-        self.features = cDef.FeatureDefinitions()
-        self.names = self.features.name_list_toolbox
-        self.shortnames = self.features.id_list_toolbox
-        self.ds_rasters = self.append_ds_rasters(self.shortnames)
-        self.lf_rasters = self.append_lf_rasters(self.shortnames)
-
-
-class ComplementaryFeatures(Director):
-    # This class stores all information about Complementary features
-    def __init__(self, condition, *args):
-        try:
-            # check if args[0] = alternative input path exists
-            Director.__init__(self, condition, args[0])
-        except:
-            Director.__init__(self, condition)
-        self.features = cDef.FeatureDefinitions()
-        self.names = self.features.name_list_complement
-        self.shortnames = self.features.id_list_complement
-        self.ds_rasters = self.append_ds_rasters(self.shortnames)
-        self.lf_rasters = self.append_lf_rasters(self.shortnames)
-
-
-class Manager(FrameworkFeatures, PlantFeatures, ToolboxFeatures, ComplementaryFeatures):
+class Manager(FeatureGroup):
     # Manages feature layer assignments
     def __init__(self, condition, feature_type, *args):
-
-        acceptable_types = ["terraforming", "plantings", "bioengineering", "maintenance"]
-
+        acceptable_types = ["terraforming", "plantings", "bioengineering", "connectivity"]
         if feature_type in acceptable_types:
-            if feature_type == "terraforming":
-                try:
-                    # check if args[0] = alternative input path exists
-                    FrameworkFeatures.__init__(self, condition, args[0])
-                except:
-                    FrameworkFeatures.__init__(self, condition)
-
-            if feature_type == "plantings":
-                try:
-                    # check if args[0] = alternative input path exists
-                    PlantFeatures.__init__(self, condition, args[0])
-                except:
-                    PlantFeatures.__init__(self, condition)
-
-            if feature_type == "bioengineering":
-                try:
-                    # check if args[0] = alternative input path exists
-                    ToolboxFeatures.__init__(self, condition, args[0])
-                except:
-                    ToolboxFeatures.__init__(self, condition)
-
-            if feature_type == "maintenance":
-                try:
-                    # check if args[0] = alternative input path exists
-                    ComplementaryFeatures.__init__(self, condition, args[0])
-                except:
-                    ComplementaryFeatures.__init__(self, condition)
-
+            try:
+                # check if args[0] = alternative input path exists
+                FeatureGroup.__init__(self, condition, args[0])
+            except:
+                FeatureGroup.__init__(self, condition)
                 self.logger.info("*** feature_type: " + str(feature_type))
-
         else:
             self.logger.info("ERROR: Invalid keyword for feature type.")

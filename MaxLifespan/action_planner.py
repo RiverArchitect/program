@@ -30,10 +30,10 @@ def map_maker(condition, feature_groups, *args):
 
 
 def geo_file_maker(condition, feature_type, dir_base_ras, *args, **kwargs):
-    # feature_type = STR - either "terraforming", "plantings", "bioengineering" or "maintenance"
+    # feature_type = STR - either "terraforming", "plantings", "bioengineering" or "connectivity"
     # kwargs: unit_system ("us" or "si"), alternate_inpath (STR)
 
-    allowed_feature_types = ["terraforming", "plantings", "bioengineering", "maintenance"]
+    allowed_feature_types = ["terraforming", "plantings", "bioengineering", "connectivity"]
     unit_system = "us"
     alternate_inpath = None
     try:

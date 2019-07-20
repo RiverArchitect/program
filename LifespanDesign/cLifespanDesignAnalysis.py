@@ -77,7 +77,7 @@ class ArcPyAnalysis:
 
     @fGl.err_info
     @fGl.spatial_license
-    def analyze_bio(self, threshold_S0, threshold_d2w_up):
+    def analyse_bio(self, threshold_S0, threshold_d2w_low, threshold_d2w_up):
         # lifespan analysis that forces steep terrain to be equipped with soil bio engineering
         # features: bioengineering
         self.set_extent()
@@ -98,11 +98,15 @@ class ArcPyAnalysis:
                 min_lf = 1.0
                 max_lf = 50.0
                 self.logger.info("          * using default max. lifespan (error in input.inp definitions): " + str(max_lf))
-            self.ras_biolf = Con((Float(ras_S0) >= Float(threshold_S0)),
-                                 Con((Float(d2w.raster) < Float(threshold_d2w_up)), Float(max_lf), Float(min_lf)))
+            self.ras_bio_v_lf = Con((Float(ras_S0) >= Float(threshold_S0)),
+                                    Con((Float(d2w.raster) < Float(threshold_d2w_up)),
+                                        Con((Float(d2w.raster) >= Float(threshold_d2w_low)), Float(max_lf), Float(min_lf))))
+            self.ras_bio_m_lf = Con((Float(ras_S0) >= Float(threshold_S0)),
+                                    Con((Float(d2w.raster) >= Float(threshold_d2w_up)), Float(max_lf), Float(min_lf)))
 
-            self.raster_info_lf = "ras_biolf"
-            self.raster_dict_lf.update({"ras_biolf": self.ras_biolf})
+            self.raster_info_lf = "ras_bio_v_lf"  # vegetale bioeng.
+            self.raster_dict_lf.update({"ras_bio_v_lf": self.ras_bio_v_lf})
+            self.raster_dict_lf.update({"ras_bio_m_lf": self.ras_bio_m_lf})
         else:
             self.logger.info("          * Nothing to do (no Rasters provided).")
 
@@ -849,10 +853,10 @@ class ArcPyAnalysis:
         # map type =  either "lf" or "ds" (str) for lifespan / design maps
         # name = feature ID (str, max. 6 char. for design maps)
 
-        if name.__len__() > 6:
+        if name.split(".")[0].__len__() > 8:
             # shorten name if required
-            self.logger.info("   >> Hint: Feature ID too long - applying instead: " + str(name[:6]))
-            name = name[:6] + '.tif'
+            self.logger.info("   >> Hint: Feature ID (" + str(name) + ")too long - applying instead: " + str(name[:6]))
+            name = name[:8] + '.tif'
 
         try:
             arcpy.gp.overwriteOutput = True
