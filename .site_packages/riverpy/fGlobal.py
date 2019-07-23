@@ -206,6 +206,13 @@ def interpolate_linear(x1, x2, y1, y2, xi):
     return y1 + ((xi - x1) / (x2 - x1) * (y2 - y1))
 
 
+def list_file_type_in_dir(directory, f_ending):
+    # directory = full directory ending on "/" or "\\"
+    # f_ending = STR, e.g., ".py"
+    # returns a LIST of full file paths
+    return glob.glob(directory + "*" + f_ending)
+
+
 def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names):
     # sets / creates a raster/shp/mxd/pdf output dir as a function of provided condition + feature layer type
     # condition = STR or number (will be converted to str)

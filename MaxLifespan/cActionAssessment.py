@@ -70,7 +70,7 @@ class ArcPyContainer:
     def get_design_data(self):
         # requires that get_best_lifespan is first executed!
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
-        self.logger.info("   LOOK UP DESIGN MAP DATA")
+        self.logger.info("   LOOKING UP DESIGN DATA")
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
         arcpy.env.workspace = self.cache
         for i in range(0, self.features.ds_rasters.__len__()):

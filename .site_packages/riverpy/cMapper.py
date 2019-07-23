@@ -74,51 +74,47 @@ class Mapper:
         except ValueError:
             return ""
 
-    def choose_ref_layout(self, map_name):
-        # type(map_name) == str
-        map_name = str(map_name)
-        if "lf" in map_name:
-            if not ("mlf" in map_name):
+    def choose_ref_layout(self, map_lyr_name=str()):
+        if "lf" in map_lyr_name:
+            if not ("mlf" in map_lyr_name):
                 return "layout_lf"
             else:
-                if "bio" in map_name.lower():
+                if "bio" in map_lyr_name.lower():
                     return "layout_mlf_bioeng"
-                if "maint" in map_name.lower():
+                if "maint" in map_lyr_name.lower():
                     return "layout_mlf_maintenance"
-                if "plant" in map_name.lower():
+                if "plant" in map_lyr_name.lower():
                     return "layout_mlf_plants"
-                if "terra" in map_name.lower():
+                if "terra" in map_lyr_name.lower():
                     return "layout_mlf_terraforming"
-        if "ds" in map_name:
-            if "bio" in map_name.lower():
+        if "ds" in map_lyr_name:
+            if "bio" in map_lyr_name.lower():
                 return "layout_ds_bio"
-            if ("dcf" in map_name.lower()) or ("dcr" in map_name.lower()) or ("dst" in map_name.lower()) or ("grav" in map_name.lower()) or ("rocks" in map_name.lower()):
+            if ("dcf" in map_lyr_name.lower()) or ("dcr" in map_lyr_name.lower()) or ("dst" in map_lyr_name.lower()) or ("grav" in map_lyr_name.lower()) or ("rocks" in map_lyr_name.lower()):
                 return "layout_ds_Dcr"
-            if "fines" in map_name.lower():
-                if "15" in map_name.lower():
+            if "fines" in map_lyr_name.lower():
+                if "15" in map_lyr_name.lower():
                     return "layout_ds_FS_D15"
-                if "85" in map_name.lower():
+                if "85" in map_lyr_name.lower():
                     return "layout_ds_FS_D85"
-            if "sidech" in map_name.lower():
+            if "sidech" in map_lyr_name.lower():
                 return "layout_ds_SeS0"
-            if "sideca" in map_name.lower():
+            if "sideca" in map_lyr_name.lower():
                 return "layout_ds_sideca"
-            if "widen" in map_name.lower():
+            if "widen" in map_lyr_name.lower():
                 return "layout_ds_widen"
-            if "wood" in map_name.lower():
+            if ("wood" in map_lyr_name.lower()) or ("Dw" in map_lyr_name.lower()):
                 return "layout_ds_Dw"
-        if "volume_" in map_name:
-            return map_name
-        if "exc" in map_name:
+        if "volume_" in map_lyr_name:
+            return map_lyr_name
+        if "exc" in map_lyr_name:
             return "volume_cust_neg"
-        if "fil" in map_name:
+        if "fil" in map_lyr_name:
             return "volume_cust_pos"
-        # if no map_name could be identified > return lifespan layout
+        # if no map_lyr_name could be identified > return lifespan layout
         return "layout_lf"
 
-    def choose_ref_map(self, map_name):
-        # type(map_name) == str
-        map_name = str(map_name)
+    def choose_map_layer(self, map_name=str()):
         if "lf" in map_name:
             if not ("mlf" in map_name):
                 return "layer_lf"
@@ -126,7 +122,7 @@ class Mapper:
                 if "bio" in map_name.lower():
                     return "layer_mlf_bioeng"
                 if "maint" in map_name.lower():
-                    return "layer_mlf_maintenance"
+                    return "layer_mlf_connectivity"
                 if "plant" in map_name.lower():
                     return "layer_mlf_plants"
                 if "terra" in map_name.lower():
@@ -134,7 +130,7 @@ class Mapper:
         if "ds_" in map_name:
             if "bio" in map_name.lower():
                 return "layer_ds_bio"
-            if ("dcf" in map_name.lower()) or ("dcr" in map_name.lower()) or ("dst" in map_name.lower()) or ("grav" in map_name.lower()) or ("rocks" in map_name.lower()):
+            if ("dcf" in map_name.lower()) or ("dcr" in map_name.lower()) or ("dst" in map_name.lower()) or ("grav" in map_name.lower()) or ("grain" in map_name.lower()):
                 return "layer_ds_Dcr"
             if "fines" in map_name.lower():
                 if "15" in map_name.lower():
@@ -220,7 +216,7 @@ class Mapper:
 
         self.logger.info(" >> Starting PDF creation for: " + str(self.map_layout.name))
         self.logger.info("    * Map format: ANSI E landscape (w = %0.1f in, h = %0.1f in)" % (self.map_layout.pageWidth, self.map_layout.pageHeight))
-
+        map_name = map_name.split("\\")[-1].split("/")[-1]
         if self.map_type == "lf":
             for lyr in self.m.listLayers():
                 if not ((str(map_name).split(".pdf")[0] in lyr.name) or ("background" in lyr.name)):
@@ -249,7 +245,8 @@ class Mapper:
                 __PDFpath__ = self.output_dir + fig_name + "_temp.pdf"
                 self.logger.info("      - exporting PDF page ... ")
                 try:
-                    self.map_layout.exportToPDF(__PDFpath__, image_compression="ADAPTIVE", resolution=self.resolution)
+                    self.map_layout.exportToPDF(__PDFpath__, image_compression="ADAPTIVE", resolution=self.resolution,
+                                                clip_to_elements=True)
                 except:
                     self.error = True
                     self.logger.info("ERROR: Could not export PDF page no. " + str(__count__))
@@ -306,9 +303,9 @@ class Mapper:
 
         arcpy.env.workspace = self.dir_map_ras
         arcpy.env.overwriteOutput = True
-        self.ras4map_list = arcpy.ListRasters("*", "tif")
+        self.ras4map_list = fGl.list_file_type_in_dir(self.dir_map_ras, ".tif")
         if self.ras4map_list.__len__() < 1:
-            self.ras4map_list = arcpy.ListRasters("*", "GRID")
+            self.ras4map_list = fGl.list_file_type_in_dir(self.dir_map_ras, ".aux.xml")
         try:
             for k in kwargs.items():
                 if "map_items" in str(k[0]).lower():
@@ -322,11 +319,12 @@ class Mapper:
         self.logger.info("----- ----- ----- ----- ----- ----- ----- ----- -----")
 
         for map_item in self.map_list:
-            map_name = str(map_item).lower().split(".tif")[0].split("_mlf")[0]
+            map_name = map_item.split("\\")[-1].split("/")[-1]
+            map_name = str(map_name).lower().split(".tif")[0].split("_mlf")[0]
             self.logger.info(" >> Preparing map: " + self.output_dir + map_name + ".pdf")
 
             # choose layout
-            self.map_string = self.choose_ref_map(str(map_item).lower().split(".tif")[0])
+            self.map_string = self.choose_map_layer(str(map_name).lower().split(".tif")[0])
             if self.map_string.__len__() < 1:
                 self.logger.info("ERROR: No reference map found for %s (skipping)." % str(map_item))
                 continue
@@ -343,10 +341,10 @@ class Mapper:
             self.map_layout = self.aprx.listLayouts(self.choose_ref_layout(self.map_string))[0]
             self.logger.info("    * setting legend ...")
             self.legend = self.map_layout.listElements("legend_element", "legend")[0]
-            self.legend.syncLayerOrder = True
-            self.legend.syncLayerVisibility = True
-            self.legend.syncNewLayer = True
-            self.legend.syncReferenceScale = True
+            self.legend.syncLayerOrder = False
+            self.legend.syncLayerVisibility = False
+            self.legend.syncNewLayer = False
+            self.legend.syncReferenceScale = False
             self.logger.info("    * saving updates ...")
             self.aprx.save()
 
@@ -359,7 +357,7 @@ class Mapper:
                     self.logger.info("    * creating new layer ...")
                     lf_source_layer = self.m.listLayers(self.choose_ref_layer(map_name))[0]  # lf_sym
                     __new_ras_lyr_name__ = map_name + ".lyrx"
-                    __new_ras__ = arcpy.Raster(self.dir_map_ras + str(map_item))
+                    __new_ras__ = arcpy.Raster(str(map_item))
                     self.raster_extent = __new_ras__.extent
                     __new_ras_lyr__ = arcpy.MakeRasterLayer_management(__new_ras__, map_name, "#", "", "#")
                     arcpy.SaveToLayerFile_management(__new_ras_lyr__, self.output_dir + "layers\\" + map_name)

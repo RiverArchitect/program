@@ -15,13 +15,12 @@ except:
 class Director:
     def __init__(self, condition, *args):
         # args[0] is an optional input path
-        self.condition = condition  # [str] state of planning situation, .e.g., "2008"
         self.logger = logging.getLogger("logfile")
         try:
             self.raster_input_path = args[0]
+            self.logger.info("*** input directory: " + str(self.raster_input_path))
         except:
-            self.raster_input_path = config.dir2lf + "Output\\Rasters\\" + str(self.condition) + "\\"
-
+            self.raster_input_path = config.dir2lf + "Output\\Rasters\\" + str(condition) + "\\"
         arcpy.env.workspace = self.raster_input_path
         self.all_rasters = arcpy.ListRasters()
         if not self.all_rasters:
@@ -35,12 +34,14 @@ class Director:
         for feat in feature_list:
             for ras_name in self.all_rasters:
                 if feat in ras_name:
-                    if ras_name[0:2] == "ds":
+                    if "ds" in ras_name:
                         ras_act = self.raster_input_path + ras_name
-                        if os.path.isfile(ras_act + '.aux.xml') or os.path.isfile(ras_act) or os.path.isfile(ras_act + '.tif'):
+                        if os.path.isfile(ras_act.split(".")[0] + '.aux.xml') or os.path.isfile(ras_act.split(".")[0] + '.tif'):
                             raster_list.append(arcpy.Raster(ras_act))
                         else:
                             raster_list.append("")
+        if raster_list.__len__() < 1:
+            self.logger.info("WARNING: No Lifespan / Design Raster found (%s)." % str(self.raster_input_path))
         return raster_list
 
     def append_lf_rasters(self, feature_list):
@@ -50,40 +51,28 @@ class Director:
         for feat in feature_list:
             for ras_name in self.all_rasters:
                 if feat in ras_name:
-                    if ras_name[0:2] == "lf":
+                    if "lf" in ras_name:
                         ras_act = self.raster_input_path + ras_name
-                        if os.path.isfile(ras_act + '.aux.xml') or os.path.isfile(ras_act) or os.path.isfile(ras_act + '.tif'):
+                        if os.path.isfile(ras_act.split(".")[0] + '.aux.xml') or os.path.isfile(ras_act.split(".")[0] + '.tif'):
                             raster_list.append(arcpy.Raster(ras_act))
                         else:
                             raster_list.append("")
+        if raster_list.__len__() < 1:
+            self.logger.info("WARNING: No Lifespan / Design Raster found (%s)." % str(self.raster_input_path))
         return raster_list
 
 
-class FeatureGroup(Director):
-    # This class stores all information about Feature Groups (terraforming, plantings, bioengineering or connectivity)
-    def __init__(self, condition, *args):
-        try:
-            # check if args[0] = alternative input path exists
-            Director.__init__(self, condition, args[0])
-        except:
-            Director.__init__(self, condition)
-        self.features = cDef.FeatureDefinitions()
-        self.names = self.features.name_list_framework
-        self.shortnames = self.features.id_list_framework
-        self.ds_rasters = self.append_ds_rasters(self.shortnames)
-        self.lf_rasters = self.append_lf_rasters(self.shortnames)
-
-
-class Manager(FeatureGroup):
+class Manager(Director):
     # Manages feature layer assignments
-    def __init__(self, condition, feature_type, *args):
+    def __init__(self, condition, feature_type, lf_dir):
         acceptable_types = ["terraforming", "plantings", "bioengineering", "connectivity"]
         if feature_type in acceptable_types:
-            try:
-                # check if args[0] = alternative input path exists
-                FeatureGroup.__init__(self, condition, args[0])
-            except:
-                FeatureGroup.__init__(self, condition)
-                self.logger.info("*** feature_type: " + str(feature_type))
+            Director.__init__(self, condition,  lf_dir)
+            self.logger.info("*** feature_type: " + str(feature_type))
+            self.features = cDef.FeatureDefinitions()
+            self.names = self.features.feat_class_name_dict[feature_type]
+            self.shortnames = self.features.feat_class_id_dict[feature_type]
+            self.ds_rasters = self.append_ds_rasters(self.shortnames)
+            self.lf_rasters = self.append_lf_rasters(self.shortnames)
         else:
             self.logger.info("ERROR: Invalid keyword for feature type.")

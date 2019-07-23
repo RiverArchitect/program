@@ -84,34 +84,25 @@ class FeatureDefinitions:
         self.id_list_plants = self.read_user_input.get_feat_id(self.threshold_cols_plants)
         self.id_list_toolbox = self.read_user_input.get_feat_id(self.threshold_cols_toolbox)
         self.id_list_complement = self.read_user_input.get_feat_id(self.threshold_cols_complement)
+
         self.name_list_framework = self.read_user_input.get_feat_name(self.threshold_cols_framework)
         self.name_list_plants = self.read_user_input.get_feat_name(self.threshold_cols_plants)
         self.name_list_toolbox = self.read_user_input.get_feat_name(self.threshold_cols_toolbox)
         self.name_list_complement = self.read_user_input.get_feat_name(self.threshold_cols_complement)
+
         self.fill_ids = self.read_user_input.get_feat_id(self.fill_cols)
         self.excavate_ids = self.read_user_input.get_feat_id(self.excavate_cols)
         self.read_user_input.close_wb()
 
         # merge lists
-        self.id_list = []
-        self.name_list = []
-        self.threshold_cols = []
+        self.id_list = self.id_list_framework + self.id_list_plants + self.id_list_toolbox + self.id_list_complement
+        self.name_list = self.name_list_framework + self.name_list_plants + self.name_list_toolbox + self.name_list_complement
+        self.threshold_cols = self.threshold_cols_framework + self.threshold_cols_plants + self.threshold_cols_toolbox + self.threshold_cols_complement
 
-        [self.id_list.append(item) for item in self.id_list_framework]
-        [self.name_list.append(item) for item in self.name_list_framework]
-        [self.threshold_cols.append(item) for item in self.threshold_cols_framework]
-
-        [self.id_list.append(item) for item in self.id_list_plants]
-        [self.name_list.append(item) for item in self.name_list_plants]
-        [self.threshold_cols.append(item) for item in self.threshold_cols_plants]
-
-        [self.id_list.append(item) for item in self.id_list_toolbox]
-        [self.name_list.append(item) for item in self.name_list_toolbox]
-        [self.threshold_cols.append(item) for item in self.threshold_cols_toolbox]
-
-        [self.id_list.append(item) for item in self.id_list_complement]
-        [self.name_list.append(item) for item in self.name_list_complement]
-        [self.threshold_cols.append(item) for item in self.threshold_cols_complement]
+        self.feat_class_id_dict = {"terraforming": self.id_list_framework, "plantings": self.id_list_plants,
+                                   "bioengineering": self.id_list_toolbox, "connectivity": self.id_list_complement}
+        self.feat_class_name_dict = {"terraforming": self.name_list_framework, "plantings": self.name_list_plants,
+                                     "bioengineering": self.name_list_toolbox, "connectivity": self.name_list_complement}
 
         if use_cust:
             self.id_list.append("cust")

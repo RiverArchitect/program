@@ -33,6 +33,8 @@ class ArcPyAnalysis:
         self.cache = config.dir2lf + ".cache%s\\" % str(random.randint(1000000, 9999999))
         fGl.chk_dir(self.cache)
         self.extent_type = "standard"
+        self.threshold_freq = 0.0
+        self.inverse_tcd = False
 
         self.raster_dict_ds = {}
         self.raster_info_lf = "init"
@@ -72,14 +74,14 @@ class ArcPyAnalysis:
         self.sf = 0.99              # (--) default safety factor
 
         self.info = Info(condition)
-        self.lifespans = self.info.lifespan_read()   # definition of lifespans in years from CONDITION/input_definitions.inp
+        self.lifespans = self.info.lifespan_read()  # LIST with definition of lifespans in years from CONDITION/input_definitions.inp
         self.logger = logging.getLogger("logfile")
 
     @fGl.err_info
     @fGl.spatial_license
     def analyse_bio(self, threshold_S0, threshold_d2w_low, threshold_d2w_up):
         # lifespan analysis that forces steep terrain to be equipped with soil bio engineering
-        # features: bioengineering
+        # this is a pseudo design map!
         self.set_extent()
         dem = DEM(self.condition)       # a.s.l.
         d2w = WaterTable(self.condition)
@@ -104,9 +106,9 @@ class ArcPyAnalysis:
             self.ras_bio_m_lf = Con((Float(ras_S0) >= Float(threshold_S0)),
                                     Con((Float(d2w.raster) >= Float(threshold_d2w_up)), Float(max_lf), Float(min_lf)))
 
-            self.raster_info_lf = "ras_bio_v_lf"  # vegetale bioeng.
-            self.raster_dict_lf.update({"ras_bio_v_lf": self.ras_bio_v_lf})
-            self.raster_dict_lf.update({"ras_bio_m_lf": self.ras_bio_m_lf})
+            # self.raster_info_lf = "ras_bio_v_lf"  # vegetale bioeng.
+            self.raster_dict_ds.update({"ras_lf_bio_v": self.ras_bio_v_lf})
+            self.raster_dict_ds.update({"ras_lf_bio_m": self.ras_bio_m_lf})
         else:
             self.logger.info("          * Nothing to do (no Rasters provided).")
 
@@ -236,12 +238,12 @@ class ArcPyAnalysis:
 
         Dcr_raster_list = []
         for i in range(0, h.raster_names.__len__()):
-            if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
+            if (str(u.rasters[i]).__len__() > 0) and (str(h.rasters[i]).__len__() > 0):
                 __ras__ = (Square(u.rasters[i] * self.n) / ((self.s - 1) *
                                                             threshold_taux * Power(h.rasters[i], (1 / 3))))
                 Dcr_raster_list.append(__ras__)
             else:
-                Dcr_raster_list.append("")
+                self.logger.info("          * empty Raster operation for {0} and {1}".format(str(u.rasters[i]), str(h.rasters[i])))
         if any(str(e).__len__() > 0 for e in Dcr_raster_list):
             self.ras_Dcf = self.compare_raster_set(Dcr_raster_list, D85_fines)
             try:
@@ -291,7 +293,7 @@ class ArcPyAnalysis:
                 __ras__ = u.rasters[i] / SquareRoot(self.g * h.rasters[i])
                 Fr_raster_list.append(__ras__)
             else:
-                Fr_raster_list.append("")
+                self.logger.info("          * empty Raster operation for {0} and {1}".format(str(u.rasters[i]), str(h.rasters[i])))
         if any(str(e).__len__() > 0 for e in Fr_raster_list):
             self.ras_Fr = self.compare_raster_set(Fr_raster_list, threshold_Fr)
             try:
@@ -361,12 +363,16 @@ class ArcPyAnalysis:
         Dcr_raster_list = []
         for i in range(0, h.raster_names.__len__()):
             if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
-                __ras__ = (Square(u.rasters[i] * Float(self.n)) / ((Float(self.s) - 1) *
-                                                                   threshold_taux * Power(h.rasters[i], (1 / 3))))
+                __ras__ = (Square(u.rasters[i] * Float(self.n)) / ((self.s - 1) *
+                                                                   threshold_taux * Power(h.rasters[i], (1 / 3)))) / self.sf
                 Dcr_raster_list.append(__ras__)
             else:
-                Dcr_raster_list.append("")
-        if any(str(e).__len__() > 0 for e in Dcr_raster_list) and (str(Dmean.raster).__len__() > 1):
+                try:
+                    self.logger.info("          * empty Raster operation for {0}-years lifespan".format(str(self.lifespans[i])))
+                except:
+                    self.logger.info("          * empty Raster operation (missing lifespan definitions?!)")
+
+        if any(str(e).__len__() > 0 for e in Dcr_raster_list) and (str(Dmean.raster).__len__() > 0):
             self.ras_Dcr = self.compare_raster_set(Dcr_raster_list, Dmean.raster)
             try:
                 self.ras_Dcr.extent  # crashes if CellStatistics failed
@@ -514,7 +520,7 @@ class ArcPyAnalysis:
                                (2 * 2.2 * grains.raster))))) / (self.rho_w * self.g * (self.s - 1) * grains.raster)
                     tx_raster_list.append(__ras__)
                 else:
-                    tx_raster_list.append("")
+                    self.logger.info("          * empty Raster operation for {0} and {1}".format(str(u.rasters[i]), str(h.rasters[i])))
             if any(str(e).__len__() > 0 for e in tx_raster_list):
                 self.ras_taux = self.compare_raster_set(tx_raster_list, threshold_taux)
                 try:
@@ -668,8 +674,8 @@ class ArcPyAnalysis:
             temp_D85 = Con((self.ras_D85 < Dmaxf), self.ras_D85)
             self.ras_D15 = temp_D15
             self.ras_D85 = temp_D85
-            self.raster_dict_ds.update({"ras_D15": self.ras_D15})
-            self.raster_dict_ds.update({"ras_D85": self.ras_D85})
+            self.raster_dict_ds.update({"ras_ds_D15": self.ras_D15})
+            self.raster_dict_ds.update({"ras_ds_D85": self.ras_D85})
 
     @fGl.err_info
     @fGl.spatial_license
@@ -730,7 +736,7 @@ class ArcPyAnalysis:
                 ras_sch_new = reclass
             self.ras_sch = ras_sch_new
 
-            self.raster_info_lf = "ras_sch"
+            self.raster_info_lf = "ras_ds_sch"
             self.raster_dict_lf.update({self.raster_info_lf: self.ras_sch})
 
     @fGl.err_info
@@ -754,7 +760,7 @@ class ArcPyAnalysis:
 
             temp_ras = Con(self.ras_Dst < 300, self.ras_Dst)  # eliminate outliers at structures (PowerHouse, Sills)
             self.ras_Dst = temp_ras
-            self.raster_dict_ds.update({"ras_Dst": self.ras_Dst})
+            self.raster_dict_ds.update({"ras_ds_Dst": self.ras_Dst})
 
     @fGl.err_info
     @fGl.spatial_license
@@ -774,7 +780,7 @@ class ArcPyAnalysis:
             self.ras_Dw = 0.32/0.18 * h.rasters[i] * self.ft2in
             temp_ras = Con(self.ras_Dw < (25 * self.ft2in), self.ras_Dw)  # eliminate outliers at structures (PowerHouse, Sills)
             self.ras_Dw = temp_ras
-            self.raster_dict_ds.update({"ras_Dw": self.ras_Dw})
+            self.raster_dict_ds.update({"ras_ds_Dw": self.ras_Dw})
 
     @fGl.err_info
     @fGl.spatial_license
@@ -837,7 +843,7 @@ class ArcPyAnalysis:
     def save_manager(self, ds, lf, name):
         self.set_extent()
         name = name + '.tif'
-        if lf:
+        if lf and not(self.raster_info_lf == "init"):
             self.save_lifespan(name)
         if ds and lf:
             self.save_design(name)
@@ -853,28 +859,21 @@ class ArcPyAnalysis:
         # map type =  either "lf" or "ds" (str) for lifespan / design maps
         # name = feature ID (str, max. 6 char. for design maps)
 
-        if name.split(".")[0].__len__() > 8:
-            # shorten name if required
-            self.logger.info("   >> Hint: Feature ID (" + str(name) + ")too long - applying instead: " + str(name[:6]))
-            name = name[:8] + '.tif'
-
         try:
             arcpy.gp.overwriteOutput = True
             arcpy.env.workspace = self.cache
             for ras in self.raster_dict_ds.keys():
-                self.logger.info("   >> Saving design map " + ras + " (takes time) ... ")
+                par_name = ras[4:]
+                self.logger.info("   >> Saving design map " + par_name + " (takes time) ... ")
                 try:
                     self.raster_dict_ds[ras].save(self.cache + ras + '.tif')
                 except:
-                    self.logger.info("WARNING: Empty design raster (ds_" + name + ")")
-                if ras[4:].__len__() > 3:
-                    par_name = ras[4:]
-                else:
-                    par_name = ras[4:7]
-                __full_name__ = "ds_" + name.split('.')[0] + "_" + par_name.split('.')[0] + '.tif'
+                    self.logger.info("WARNING: Empty design raster (" + par_name + ")")
+
+                __full_name__ = par_name.split('.')[0] + "_" + name.split('.')[0] + '.tif'
                 if __full_name__.__len__() > 17:
                     __full_name__ = __full_name__[0:13] + '.tif'
-                    self.logger.info("      Preparing Cast: Modified ds raster name.")
+                    self.logger.info("      Preparing Cast: Using shortened Raster name (%s)." % __full_name__)
                 self.logger.info("   >> Casting to " + self.output + __full_name__ + " (may take time) ...")
                 if os.path.isfile(self.output + __full_name__):
                     self.logger.info("      >>> Overwriting existing raster.")

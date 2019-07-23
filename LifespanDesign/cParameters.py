@@ -24,8 +24,9 @@ class ParameterContainer:
         self.raster_path = config.dir2conditions
         input_info = Info(condition, par_id)
         self.raster_names = input_info.raster_read()
-        self.flood_dependency_dict = {"chsi": False, "d2w": False, "dem": False, "det": False, "dod": False, "grains": False,
-                                      "h": True, "mu": False, "sidech": False, "u": True, "wild": False}
+        self.flood_dependency_dict = {"chsi": False, "d2w": False, "dem": False, "det": False, "dod": False,
+                                      "grains": False, "h": True, "mu": False, "sidech": False, "u": True,
+                                      "wild": False}
         try:
             self.flood_dependent = self.flood_dependency_dict[par_id]
         except:
@@ -37,7 +38,7 @@ class CHSI(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "chsi")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             self.raster = ""
 
@@ -48,7 +49,7 @@ class DEM(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "dem")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
@@ -61,7 +62,7 @@ class DEMdet(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "det")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
@@ -76,20 +77,19 @@ class DoD(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "dod")
         try:
-            self.raster_scour = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster_scour = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster_scour = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster_scour = ""
         try:
-            self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster_fill = ""
-
 
 class FlowDepth(ParameterContainer):
     # This class stores all information about flow depth Rasters
@@ -97,15 +97,15 @@ class FlowDepth(ParameterContainer):
         ParameterContainer.__init__(self, condition, "h")
         self.rasters = []
         for ras_name in self.raster_names:
-            ras_act = self.raster_path + self.condition + "\\" + ras_name.split(".tif")[0]
+            ras_act = self.raster_path + self.condition + "\\" + ras_name.split(".")[0]
             if arcpy.Exists(ras_act) or os.path.isfile(ras_act + '.tif'):
                 try:
                     self.rasters.append(arcpy.Raster(str(ras_act + '.tif')))
                 except:
-                    pass
-                    # self.rasters.append(arcpy.Raster(ras_act))
+                    self.rasters.append(arcpy.Raster(ras_act))
             else:
                 self.rasters.append("")
+                self.logger.info("ERROR: Could not load %s." % str(ras_act + '.tif'))
 
 
 class FlowVelocity(ParameterContainer):
@@ -114,7 +114,7 @@ class FlowVelocity(ParameterContainer):
         ParameterContainer.__init__(self, condition, "u")
         self.rasters = []
         for ras_name in self.raster_names:
-            ras_act = self.raster_path + self.condition + "\\" + ras_name
+            ras_act = self.raster_path + self.condition + "\\" + ras_name.split(".")[0]
             if arcpy.Exists(ras_act) or os.path.isfile(ras_act + '.tif'):
                 try:
                     self.rasters.append(arcpy.Raster(ras_act + '.tif'))
@@ -122,13 +122,14 @@ class FlowVelocity(ParameterContainer):
                     self.rasters.append(arcpy.Raster(ras_act))
             else:
                 self.rasters.append("")
+                self.logger.info("ERROR: Could not load %s." % str(ras_act + '.tif'))
 
 
 class GrainSizes(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "grains")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
@@ -145,7 +146,7 @@ class MU(ParameterContainer):
 
         self.raster_names = ["mu"]  # overwrites ParameterContainer.raster_names
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
@@ -181,7 +182,7 @@ class SideChannelDelineation(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "sidech")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
@@ -194,7 +195,7 @@ class WaterTable(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "d2w")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
@@ -208,7 +209,7 @@ class Wildcard(ParameterContainer):
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "wild")
         try:
-            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0] + ".tif")
+            self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             try:
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])

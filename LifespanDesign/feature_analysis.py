@@ -27,8 +27,9 @@ def analysis_call(parameter_name, feature, feature_analysis):
         # invoke design raster creation
         if feature.ds:
             if parameter_name == "ds_compare_slopes":
+                # currently not active (define in cParameters/ParamterContainer.__init__())
                 feature_analysis.design_energy_slope()
-            if parameter_name == "ds_filter":
+            if (parameter_name == "ds_filter") and ("fines" in feature.id):
                 if not type(feature.threshold_Dmaxf) is list:
                     feature_analysis.design_filter(feature.threshold_Dmaxf)
             if parameter_name == "ds_stable_grains":
@@ -36,15 +37,26 @@ def analysis_call(parameter_name, feature, feature_analysis):
                     feature_analysis.design_stable_grains(feature.threshold_taux)
                 else:
                     logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
-            if parameter_name == "ds_wood":
-                feature_analysis.design_wood()
-            if parameter_name == "sidech":
+            if (parameter_name == "ds_wood") and ("wood" in feature.id):
+                if feature_analysis.threshold_freq > 0.0:
+                    feature_analysis.design_wood()
+                else:
+                    logger.info("      * Negative: No frequency threshold provided for %s." % parameter_name)
+            if (parameter_name == "lf_bioengineering") and ("bio" in feature.id):
+                if not (type(feature.threshold_S0) is list) and not (
+                        (type(feature.threshold_d2w_low) is list) and (type(feature.threshold_d2w_up) is list)):
+                    logger.info("      * Pseudo design mapping of bioengineering (produces lifespan maps).")
+                    feature_analysis.analyse_bio(feature.threshold_S0, feature.threshold_d2w_up,
+                                                 feature.threshold_d2w_up)
+                else:
+                    logger.info("      * Negative: No thresholds provided for %s (required: d2w min/max, S0)." % parameter_name)
+            if (parameter_name == "sidech") and ("sidech" in feature.id):
                 feature_analysis.design_side_channel()
         else:
             logger.info("      * Design mapping is turned off.")
 
         # invoke lifespan raster creation
-        if parameter_name == "d2w":
+        if (parameter_name == "d2w") and not ("bio" in feature.id):
             if not (type(feature.threshold_d2w_low) is list) and not (type(feature.threshold_d2w_up) is list):
                 feature_analysis.analyse_d2w(feature.threshold_d2w_low, feature.threshold_d2w_up)
             else:
@@ -64,7 +76,7 @@ def analysis_call(parameter_name, feature, feature_analysis):
                 feature_analysis.analyse_fill(feature.threshold_fill)
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
-        if parameter_name == "fine_grains":
+        if (parameter_name == "fine_grains") and ("fines" in feature.id):
             if not (type(feature.threshold_taux) is list) and not (type(feature.threshold_Dmaxf) is list):
                 feature_analysis.analyse_fine_grains(feature.threshold_taux, feature.threshold_Dmaxf)
             else:
@@ -112,11 +124,7 @@ def analysis_call(parameter_name, feature, feature_analysis):
                 feature_analysis.analyse_u(feature.threshold_u)
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
-        if parameter_name == "lf_bioengineering":
-            if not (type(feature.threshold_S0) is list) and not ((type(feature.threshold_d2w_low) is list) and (type(feature.threshold_d2w_up) is list)):
-                feature_analysis.analyse_bio(feature.threshold_S0, feature.threshold_d2w_up, feature.threshold_d2w_up)
-            else:
-                logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
+
     except:
         logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
     return feature_analysis
@@ -144,8 +152,8 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
             freq = feature.threshold_freq
             logger.info("   >> Customary frequency threshold = " + str(freq))
         except:
-            freq = 0
-        pot_err_msg = "frequence threshold verification"
+            freq = 0.0
+        pot_err_msg = "frequency threshold verification"
         feature_analysis.verify_threshold_freq(freq)
         try:
             sf = feature.sf
@@ -327,7 +335,6 @@ def raster_maker(condition, reach_ids, *args):
                          wildcard, manning_n, extent_type)
         if reach_extents == "MAXOF":
             break
-
 
     logger.info("RASTERS FINISHED.")
 
