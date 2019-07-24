@@ -13,7 +13,7 @@ except:
 try:
     from rpy2 import robjects
 except:
-    print("ExceptionERROR: Missing package (rpy2).")
+    print("WARNING: Missing package (rpy2 - required for RiverBuilder).")
 
 
 class RiverBuilder:
