@@ -112,7 +112,7 @@ class WLE:
                     # default uses spherical semivariogram using 12 nearest points to interpolate
                     arcpy.Kriging_3d(in_point_features=pts_wse, z_field="grid_code",
                                      out_surface_raster=os.path.join(self.cache, "ras_wle_dem"),
-                                     semiVariogram_props="Spherical",
+                                     semiVariogram_props="Gaussian",
                                      cell_size=cell_size)
                     # out_variance_prediction_raster=os.path.join(self.cache, "ras_wle_var") ***
                     ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
