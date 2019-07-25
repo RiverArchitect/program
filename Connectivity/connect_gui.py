@@ -66,6 +66,7 @@ class MainGui(sg.RaModuleGui):
         self.b_connect = tk.Button(self, text="Run Connectivity Analysis", width=50,
                                    command=lambda: self.run_connectivity())
         self.b_connect.grid(sticky=tk.W, row=5, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.b_connect["state"] = "disabled"
 
         self.complete_menus()
 
@@ -148,6 +149,7 @@ class MainGui(sg.RaModuleGui):
         except:
             pass
         self.b_show_fish["state"] = target_state
+        self.b_connect["state"] = target_state
 
     def complete_menus(self):
         # FISH SPECIES DROP DOWN
