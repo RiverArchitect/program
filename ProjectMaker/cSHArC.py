@@ -30,10 +30,12 @@ class SHArC:
         self.result = 0.0
         self.unit = unit
         if self.unit == "us":
-            self.area_unit = "ACRES_US"
+            self.area_unit = "SQUARE_FEET_US"
+            self.unit_str = "acres"
             self.ft2ac = config.ft2ac
         else:
             self.area_unit = "SQUARE_METERS"
+            self.unit_str = "m2"
             self.ft2ac = 1.0
 
         self.xlsx_out = ""
@@ -148,7 +150,7 @@ class SHArC:
 
         self.cache_count += 1
         self.result = area * self.ft2ac
-        self.logger.info("   * result: " + str(area * self.ft2ac) + " " + self.area_unit)
+        self.logger.info("   * result: " + str(area * self.ft2ac) + " " + self.unit_str)
 
     @fGl.err_info
     @fGl.spatial_license
