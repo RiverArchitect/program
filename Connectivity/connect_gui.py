@@ -39,32 +39,34 @@ class MainGui(sg.RaModuleGui):
         self.fish_applied = {}
 
         self.l_prompt = tk.Label(self, text="Select Condition and Aquatic Ambiance")
-        self.l_prompt.grid(sticky=tk.W, row=2, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.l_prompt.grid(sticky=tk.W, row=0, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
         # select condition
-        self.l_condition = tk.Label(self, text="Condition: \n")
-        self.l_condition.grid(sticky=tk.W, row=3, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.b_v_condition = tk.Button(self, text="Select",
+        self.l_condition = tk.Label(self, text="Select condition:")
+        self.l_condition.grid(sticky=tk.W, row=1, column=0, padx=self.xd, pady=self.yd)
+        self.combo_c = ttk.Combobox(self)
+        self.combo_c.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
+        self.combo_c['values'] = tuple(fGl.get_subdir_names(config.dir2conditions))
+        self.b_s_condition = tk.Button(self, fg="red", text="Select",
                                        command=lambda: self.select_condition())
-        self.b_v_condition.grid(sticky=tk.W, row=3, column=5, padx=self.xd, pady=self.yd)
-        self.sb_condition = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.sb_condition.grid(sticky=tk.W, row=3, column=4, padx=0, pady=self.yd)
-        self.lb_condition = tk.Listbox(self, height=3, width=14, yscrollcommand=self.sb_condition.set)
-        for e in self.condition_list:
-            self.lb_condition.insert(tk.END, e)
-        self.lb_condition.grid(sticky=tk.W, row=3, column=3, padx=self.xd, pady=self.yd)
-        self.sb_condition.config(command=self.lb_condition.yview)
+        self.b_s_condition.grid(sticky=tk.W, row=1, column=2, padx=self.xd, pady=self.yd)
+        self.l_inpath_curr = tk.Label(self, fg="gray60", text="Source: " + config.dir2conditions)
+        self.l_inpath_curr.grid(sticky=tk.W, row=2, column=0, columnspan=3, padx=self.xd, pady=self.yd)
 
-        self.l_inpath_curr = tk.Label(self, fg="red", text="No Condition Selected")
-        self.l_inpath_curr.grid(sticky=tk.W, row=4, column=0, columnspan=6, padx=0, pady=self.yd)
-
+        # select aquatic ambiance
+        self.b_show_fish = tk.Button(self, width=10, fg="RoyalBlue3", bg="white",
+                                     text="Show selected Aquatic Ambiance(s)",
+                                     command=lambda: self.shout_dict(self.fish_applied))
+        self.b_show_fish.grid(sticky=tk.EW, row=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_show_fish["state"] = "disabled"
         self.l_aqua = tk.Label(self, fg="red", text="Select Aquatic Ambiance (at least one)")
-        self.l_aqua.grid(sticky=tk.W, row=5, column=0, columnspan=6, padx=0, pady=self.yd)
+        self.l_aqua.grid(sticky=tk.W, row=3, column=2, columnspan=2, padx=0, pady=self.yd)
 
         # run analysis
-        self.b_connect = tk.Button(self, text="Run Analysis",
+        self.b_connect = tk.Button(self, text="Run Connectivity Analysis", width=50,
                                    command=lambda: self.run_connectivity())
-        self.b_connect.grid(sticky=tk.W, row=6, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.b_connect.grid(sticky=tk.W, row=5, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.b_connect["state"] = "disabled"
 
         self.complete_menus()
 
@@ -74,16 +76,21 @@ class MainGui(sg.RaModuleGui):
                 ca = cCA.ConnectivityAnalysis(self.condition, species, lifestage, self.unit) # *** add out dir arg
 
     def select_condition(self):
-        items = self.lb_condition.curselection()
-        self.condition = [self.condition_list[int(item)] for item in items][0]
-        self.dir_input_ras = config.dir2conditions + self.condition + "\\"
-        self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
-        fGl.chk_dir(self.out_dir)
-
-        if os.path.exists(self.dir_input_ras):
-            self.l_inpath_curr.config(fg="forest green", text="Selected: " + str(self.dir_input_ras))
-        else:
-            self.l_inpath_curr.config(fg="red", text="SELECTION ERROR                                 ")
+        try:
+            self.condition = self.combo_c.get()
+            input_dir = config.dir2conditions + str(self.condition)
+            if os.path.exists(input_dir):
+                self.b_s_condition.config(fg="forest green", text="Selected: " + self.condition)
+                return ""
+            else:
+                self.b_s_condition.config(fg="red", text="ERROR")
+                self.errors = True
+                self.verified = False
+                return "Invalid file structure (non-existent directory /01_Conditions/CONDITION/)."
+        except:
+            self.errors = True
+            self.verified = False
+            return "Invalid entry for \'Condition\'."
 
     def make_fish_menu(self, rebuild):
         # rebuild = True -> rebuilt menu mode
@@ -141,7 +148,8 @@ class MainGui(sg.RaModuleGui):
                         target_state = "disabled"
         except:
             pass
-
+        self.b_show_fish["state"] = target_state
+        self.b_connect["state"] = target_state
 
     def complete_menus(self):
         # FISH SPECIES DROP DOWN
