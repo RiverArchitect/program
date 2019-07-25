@@ -468,8 +468,7 @@ class MainGui(sg.RaModuleGui):
     def verify_variables(self):
         self.get_variables()
         error_msges = []
-        if not (self.version[0] == "v"):
-            error_msges.append("Project version must start with small letter \'v\'.")
+
         if not (self.version.__len__() == 3):
             error_msges.append("Project version string must have three digits (v + number + number).")
         if self.prj_name.get().split(" ").__len__() > 1:

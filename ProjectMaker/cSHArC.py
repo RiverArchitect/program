@@ -30,7 +30,7 @@ class SHArC:
         self.result = 0.0
         self.unit = unit
         if self.unit == "us":
-            self.area_unit = "SQUARE_FEET_US"
+            self.area_unit = "ACRES_US"
             self.ft2ac = config.ft2ac
         else:
             self.area_unit = "SQUARE_METERS"
@@ -81,7 +81,7 @@ class SHArC:
                 fGl.chk_dir(self.cache)
             self.logger.info("   * ok")
         except:
-            self.logger.info("WARNING: .cache folder will be removed by package controls.")
+            self.logger.info("       .cache folder will be removed by package controls.")
 
     @fGl.spatial_license
     def get_usable_area(self, csi_raster=str()):
