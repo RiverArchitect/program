@@ -24,6 +24,6 @@ exit
 :err_msg
 	@echo off
 	@echo: 
-	@echo ERROR: Cannot find ArcPro's Python installation. Make sure ArcPro is installed on your computer.
+	@echo ERROR: Cannot find ArcGIS Pro's Python installation. Make sure ArcGIS Pro is installed on your computer.
 	pause
 	exit
