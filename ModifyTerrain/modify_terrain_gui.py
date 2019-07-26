@@ -226,8 +226,12 @@ class MainGui(sg.RaModuleGui):
                                              feat_in_dir=feat, reach_ids=self.reach_ids_applied)
             modification()
             self.prevent_popup = True
-
+            try:
+                fGl.rm_dir(modification.cache)
+            except:
+                showinfo("WARNING", "DELETE .CACHE FOLDER MANUALLY (%s)." % str(modification.cache))
             self.master.bell()
+
             tk.Button(self, width=25, bg="forest green", text="Terrain modification finished. Click to quit.",
                       command=lambda: self.quit_tab()).grid(sticky=tk.EW, row=8, column=0, columnspan=2,
                                                             padx=self.xd, pady=self.yd)

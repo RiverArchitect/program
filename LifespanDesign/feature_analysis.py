@@ -185,7 +185,10 @@ def analysis(feature, condition, reach_extents, habitat, output_dir, unit_system
     try:
         fGl.rm_dir(feature_analysis.cache)  # dump cache after feature analysis
     except:
-        logger.info("WARNING: Could not remove .cache folder.")
+        try:
+            logger.info("WARNING: Could not remove .cache (%s) folder." % str(feature_analysis.cache))
+        except:
+            logger.info("WARNING: Could not remove .cache folder.")
 
 
 def map_maker(*args, **kwargs):

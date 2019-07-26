@@ -28,7 +28,7 @@ class PopUpStab(object):
         top = self.top = tk.Toplevel(master)
         msg0 = "Manning\'s n and the critical dimensionless bed shear (Shields) Tau_x,cr stress determine grain stability.\n"
         msg1 = "Please refer to the Wiki for more details:\n"
-        msg2 = "     https://github.com/RiverArchitect/Welcome/wiki/LifespanDesign#inpras"
+        msg2 = "     https://github.com/RiverArchitect/RA_wiki/LifespanDesign#inpras"
         msg3 = "River Architect uses an internal conversion factor to convert between US customary and metric units.\n"
         self.n_usr = tk.DoubleVar()
         self.txcr_usr = tk.DoubleVar()

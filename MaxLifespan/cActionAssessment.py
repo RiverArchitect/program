@@ -36,7 +36,7 @@ class ArcPyContainer:
             if args[1]:
                 self.features = cFA.Manager(condition, feature_type, args[1])  # feature class object
         except:
-            self.features = cFA.Manager(condition, feature_type)  # feature class object
+            self.features = cFA.Manager(condition, feature_type, config.dir2lf + "Output//" + self.condition)  # feature class object
         self.raster_dict = {}
         try:
             # one zero-raster that is updated, another wont be updated

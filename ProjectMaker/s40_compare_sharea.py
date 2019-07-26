@@ -169,3 +169,8 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
 
     if not error:
         fGl.open_file(dir2pp + xlsx_out_name)
+
+    try:
+        fGl.rm_dir(sha.cache)
+    except:
+        logger.info("DELETE .CACHE FOLDER MANUALLY (%s)." % str(sha.cache))

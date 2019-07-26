@@ -164,11 +164,17 @@ class HHSIgui(object):
                 self.b_run.config(bg="salmon", text="Re-run (generate habitat condition)")
         except:
             pass
+        msg = "COMPUTATION FINISHED - Check logfile (logfile.log)."
         try:
             hhsi.clear_cache()
+            try:
+                fGl.rm_dir(hhsi.cache)
+            except:
+                pass
+            msg = str("WARNING: Remove .cache (%s) folder manually \n\n" % str(hhsi.cache)) + msg
         except:
             pass
-        showinfo("COMPUTATION FINISHED", "Check logfile (logfile.log).")
+        showinfo("INFO", msg)
 
     def select_condition(self):
         items = self.lb_condition.curselection()
@@ -182,10 +188,8 @@ class HHSIgui(object):
         self.prepare_discharge_file()
         self.remake_buttons()
 
-
     def user_message(self, msg):
         showinfo("INFO", msg)
 
     def __call__(self, *args, **kwargs):
         self.top.mainloop()
-

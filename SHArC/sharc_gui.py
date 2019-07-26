@@ -10,7 +10,7 @@ except:
 
 try:
     # import own routines
-    import cHSI as chsi
+    import cHSI
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
@@ -136,13 +136,13 @@ class MainGui(sg.RaModuleGui):
         self.b_select_bshp["state"] = "disabled"
 
         self.b_csi_nc = tk.Button(self, fg="cyan4", width=30, bg="white", text="Combine HSI rasters (pure hydraulic)",
-                                  command=lambda: self.start_app("chsi", cover=False))
+                                  command=lambda: self.start_app("cHSI", cover=False))
         self.b_csi_nc.grid(sticky=tk.EW, row=8, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_csi_nc["state"] = "disabled"
 
         self.b_csi_c = tk.Button(self, fg="gold4", width=30, bg="white",
                                  text="Combine HSI rasters (hydraulic and cover)",
-                                 command=lambda: self.start_app("chsi", cover=True))
+                                 command=lambda: self.start_app("cHSI", cover=True))
         self.b_csi_c.grid(sticky=tk.EW, row=14, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_csi_c["state"] = "disabled"
 
@@ -158,7 +158,6 @@ class MainGui(sg.RaModuleGui):
                                   command=lambda: self.set_sharea())
         self.b_sha_th.grid(sticky=tk.EW, row=16, rowspan=4, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_sha_th["state"] = "disabled"
-
 
         # Q-UA analyses section
         tk.Label(self, text="").grid(sticky=tk.W, row=18, column=0, columnspan=self.max_columnspan)  # dummy
@@ -511,20 +510,29 @@ class MainGui(sg.RaModuleGui):
             except:
                 msg = "Failed importing (cover) HSI GUI."
 
-        if app_name == "chsi":
+        if app_name == "cHSI":
             try:
                 if self.cover_applies:
-                    combine_hsi = chsi.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
+                    combine_hsi = cHSI.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
                     self.cb_use_cov["state"] = "normal"
                     self.cb_use_cov.select()
                 else:
-                    combine_hsi = chsi.CHSI(self.chsi_condition_hy, self.cover_applies, self.unit)
+                    combine_hsi = cHSI.CHSI(self.chsi_condition_hy, self.cover_applies, self.unit)
                 if not self.apply_boundary.get():
                     ans = combine_hsi.launch_chsi_maker(self.fish_applied, self.combine_method, "")
                 else:
                     ans = combine_hsi.launch_chsi_maker(self.fish_applied, self.combine_method, self.bound_shp)
-                combine_hsi.clear_cache()
+
                 self.master.bell()
+                try:
+                    combine_hsi.clear_cache()
+                    try:
+                        fGl.rm_dir(combine_hsi.cache)
+                    except:
+                        pass
+                except:
+                    showinfo("WARNING", "Remove .cache (%s) folder manually." % str(combine_hsi.cache))
+
                 if not (ans == "OK"):
                     showinfo("WARNING", "No HSI rasters were available for the selected fish species - lifestage.")
                 else:
@@ -538,18 +546,26 @@ class MainGui(sg.RaModuleGui):
         if app_name == "sharea":
             try:
                 if self.cover_applies_sharea.get():
-                    sharea = chsi.CHSI(self.chsi_condition_cov, True, self.unit)
+                    sharea = cHSI.CHSI(self.chsi_condition_cov, True, self.unit)
                 else:
                     try:
                         if not self.cover_applies:
-                            sharea = chsi.CHSI(self.chsi_condition_hy, False, self.unit)
+                            sharea = cHSI.CHSI(self.chsi_condition_hy, False, self.unit)
                         else:
-                            sharea = chsi.CHSI(self.chsi_condition_cov, True, self.unit)
+                            sharea = cHSI.CHSI(self.chsi_condition_cov, True, self.unit)
                     except:
                         showinfo("INFO", "Using \'WITH COVER\' option (hydraulic only condition is empty).")
-                        sharea = chsi.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
+                        sharea = cHSI.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
                 self.xlsx_condition = sharea.calculate_sha(self.sharea_threshold, self.fish_applied)
-                sharea.clear_cache()
+
+                try:
+                    sharea.clear_cache()
+                    try:
+                        fGl.rm_dir(sharea.cache)
+                    except:
+                        pass
+                except:
+                    showinfo("WARNING", "Remove .cache (%s) folder manually." % str(sharea.cache))
 
                 if self.xlsx_condition.__len__() > 0:
                     webbrowser.open(config.dir2sh + "SHArea\\")

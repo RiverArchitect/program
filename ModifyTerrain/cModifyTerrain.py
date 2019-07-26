@@ -25,7 +25,6 @@ class ModifyTerrain:
         self.all_rasters = []  # will get assigned an arcpy.ListRasters() list
         self.cache = config.dir2mt + ".cache%s\\" % str(random.randint(1000000, 9999999))
         fGl.chk_dir(self.cache)
-        fGl.clean_dir(self.cache)
         self.features = cDef.FeatureDefinitions()
         self.condition = condition
         self.current_reach_id = ""

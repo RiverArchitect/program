@@ -235,6 +235,10 @@ class CovHSIgui(object):
             del cov_hsi
             try:
                 fGl.clean_dir(os.path.dirname(os.path.realpath(__file__)) + "\\.cache\\")
+                try:
+                    fGl.rm_dir(cov_hsi.cache)
+                except:
+                    pass
             except:
                 print("WARNING: Could not clean up cache.")
         self.top.bell()
