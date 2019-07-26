@@ -33,8 +33,6 @@ class Graphy:
     def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh, path2_target):
 
         self.logger = logging.getLogger("logfile")
-        self.cache = config.dir2co + ".cache\\%s" % str(random.randint(1000000, 9999999))
-        fGl.chk_dir(self.cache)
 
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
@@ -231,6 +229,7 @@ class Graphy:
                                                      x_cell_size=self.cell_size,
                                                      value_to_nodata=np.nan)
         # *** set disconnectd areas to -999
+        # Con(~IsNull(h_interp) & IsNull(shortest_path_ras), -999, shortest_path_ras)
         # *** revise disconnected areas calculation; there could be more disconnected areas due to velocity condition
         self.logger.info("OK")
         return shortest_path_ras

@@ -1,7 +1,7 @@
 try:
-    import sys, os, logging, random
+    import sys, os, logging, random, shutil
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
+    print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random, shutil).")
 try:
     import cGraph
 except:
@@ -12,6 +12,7 @@ try:
     import cFish as cFi
     import fGlobal as fGl
     import cMakeTable as cMkT
+    import cInputOutput as cIO
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 
@@ -45,15 +46,20 @@ class ConnectivityAnalysis:
         self.condition = condition
         self.dir2condition = config.dir2conditions + self.condition + "\\"
 
+        self.units = units
+        self.q_units = 'cfs' if self.units == "us" else 'm^3/s'
+        self.length_units = 'ft' if self.units == "us" else 'm'
+        self.u_units = self.length_units + '/s'
+        self.area_units = self.length_units + '^2'
+
         self.species = species
         self.lifestage = lifestage
         # read in fish data (minimum depth needed, max swimming speed, ...)
         self.h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
-        self.logger.info("minimum swimming depth = %s" % self.h_min)
+        self.logger.info("minimum swimming depth = %s %s" % (self.h_min, self.length_units))
         self.u_max = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "u_max")
-        self.logger.info("maximum swimming speed  = %s" % self.u_max)
+        self.logger.info("maximum swimming speed  = %s %s" % (self.u_max, self.u_units))
 
-        self.units = units
         try:
             self.out_dir = args[0]
         except:
@@ -84,6 +90,10 @@ class ConnectivityAnalysis:
         self.Q_d_area_percents = {}
         # populated by self.make_disconnect_Q_map()
         self.target = ''
+
+        self.xlsx = os.path.join(self.out_dir, "disconnected_area.xlsx")
+        shutil.copy(config.xlsx_connectivity, self.xlsx)
+        self.xlsx_writer = cIO.Write(self.xlsx)
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
@@ -160,8 +170,6 @@ class ConnectivityAnalysis:
         for Q in sorted(self.discharges):
             self.disconnected_areas(Q)
 
-        # *** save Excel worksheet with Q vs. disconnected area plot
-
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
 
@@ -174,7 +182,8 @@ class ConnectivityAnalysis:
 
     def disconnected_areas(self, Q):
         self.logger.info("Computing disconnected areas...")
-        self.logger.info("Discharge: %i" % int(Q))
+        self.logger.info("Discharge: %i %s" % (int(Q), self.q_units))
+
         # get interpolated depth/velocity rasters
         h_ras = Raster(self.Q_h_interp_dict[Q])
 
@@ -209,10 +218,13 @@ class ConnectivityAnalysis:
         areas = sorted(areas, reverse=True)
 
         total_area = sum(areas)
-        self.logger.info("Total navigable wetted area: %.2f" % total_area)
+        self.logger.info("Total navigable wetted area: %.2f %s" % (total_area, self.area_units))
         disconnected_area = sum(areas[1:])
+        row_num = sorted(self.discharges).index(Q) + 3
+        self.xlsx_writer.write_cell("A", row_num, Q)
+        self.xlsx_writer.write_cell("B", row_num, disconnected_area)
         self.Q_d_area_vals[Q] = disconnected_area
-        self.logger.info("Disconnected wetted area: %.2f" % disconnected_area)
+        self.logger.info("Disconnected wetted area: %.2f %s" % (disconnected_area, self.area_units))
         percent_disconnected = disconnected_area / total_area * 100
         self.Q_d_area_percents[Q] = percent_disconnected
         self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
@@ -225,7 +237,7 @@ class ConnectivityAnalysis:
         out_ras_path = os.path.join(self.out_dir, "Q_disconnect.tif")
         # start with highest Q raster, assign all wetted values to default of 0.
         out_ras = Raster(self.Q_h_interp_dict[max(self.discharges)])
-        out_ras = Con(~IsNull(out_ras), 0)
+        out_ras = Con(~IsNull(out_ras), 0) # *** should mask by thresholds too?
         # starting from lowest Q and working up, assign cell value Q to cells in disconnected areas
         for Q in self.discharges:
             # make copy of areas and remove mainstem
@@ -269,10 +281,10 @@ class ConnectivityAnalysis:
         :param Q: corresponding discharge for finding path
         """
         self.logger.info("Making shortest escape route map...")
-        self.logger.info("Discharge: %i" % int(Q))
+        self.logger.info("Discharge: %i %s" % (int(Q), self.q_units))
         self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
-        self.logger.info("\tminimum swimming depth  = %s" % self.h_min)
-        self.logger.info("\tmaximum swimming speed  = %s" % self.u_max)
+        self.logger.info("\tminimum swimming depth  = %s %s" % (self.h_min, self.length_units))
+        self.logger.info("\tmaximum swimming speed  = %s %s" % (self.u_max, self.u_units))
         path2h_ras = self.Q_h_interp_dict[Q]
         path2u_ras = self.Q_u_interp_dict[Q]
         path2va_ras = self.Q_va_interp_dict[Q]

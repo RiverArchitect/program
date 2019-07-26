@@ -33,3 +33,4 @@ xlsx_mu = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\te
 xlsx_reaches = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\ModifyTerrain\\.templates\\computation_extents.xlsx"
 xlsx_thresholds = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\.templates\\threshold_values.xlsx"
 xlsx_volumes = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\.templates\\volumes_template.xlsx"
+xlsx_connectivity = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\Connectivity\\.templates\\disconnected_area_template.xlsx"
