@@ -109,10 +109,10 @@ class WLE:
             if method == "Kriging":
                 try:
                     self.logger.info("Ordinary Kriging interpolation ...")
-                    # quadratic trend removal with residual GP semivariogram using 12 nearest points to interpolate
+                    # spherical semivariogram using 12 nearest points to interpolate
                     arcpy.Kriging_3d(in_point_features=pts_wse, z_field="grid_code",
                                      out_surface_raster=os.path.join(self.cache, "ras_wle_dem"),
-                                     semiVariogram_props="QuadraticDrift",
+                                     semiVariogram_props="Spherical",
                                      cell_size=cell_size,
                                      search_radius="Variable 12")
                     # out_variance_prediction_raster=os.path.join(self.cache, "ras_wle_var") ***
