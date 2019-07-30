@@ -27,6 +27,7 @@ class WLE:
         path2dem_ras (str): full path to the DEM
         args[0] (str): optional out_dir -- otherwise: out_dir = script_dir
         kwargs["unique_id"] (Boolean): determines if output files have integer discharge value in output file name
+        kwargs["method"] (str): 'IDW', 'Kriging', or 'Nearest Neighbor'. Determines the interpolation scheme. Default 'IDW'.
         """
 
         self.cache = os.path.join(config.dir2gs, ".cache%s" % str(random.randint(1000000, 9999999)))
@@ -45,6 +46,11 @@ class WLE:
         except:
             self.unique_id = False
 
+        try:
+            self.method = kwargs["method"]
+        except:
+            self.method = 'IDW'
+
         if self.unique_id:
             Q = int(os.path.splitext(os.path.basename(self.path2h_ras))[0].split("h")[1])
             self.out_wle = "wle%i.tif" % Q
@@ -59,12 +65,12 @@ class WLE:
 
         self.logger = logging.getLogger("logfile")
 
-    def interpolate_wle(self, method='Kriging'):
+    def interpolate_wle(self):
         """
         Interpolates water level elevation, used as preliminary step for getting depth to groundwater and disconnected wetted areas.
 
         Args:
-            method: 'Kriging' or 'Nearest Neighbor'. Determines the method used to interpolate WLE.
+            self.method: 'Kriging', 'IDW', or 'Nearest Neighbor'. Determines the method used to interpolate WLE.
 
         Saves interpolated WLE raster to self.out_dir (also saves a WLE variance raster if Kriging method is used).
         """
@@ -106,7 +112,7 @@ class WLE:
                 self.logger.info(arcpy.GetMessages(2))
                 return True
 
-            if method == "Kriging":
+            if self.method == "Kriging":
                 try:
                     self.logger.info("Ordinary Kriging interpolation ...")
                     # spherical semivariogram using 12 nearest points to interpolate
@@ -126,7 +132,24 @@ class WLE:
                     self.logger.info(arcpy.GetMessages(2))
                     return True
 
-            elif method == "Nearest Neighbor":
+            elif self.method == "IDW":
+                try:
+                    self.logger.info("IDW interpolation...")
+                    # using IDW power of 2 with 12 nearest neighbors
+                    arcpy.Idw_3d(in_point_features=pts_wse, z_field="grid_code",
+                                 out_raster=os.path.join(self.cache, "ras_wle_dem"),
+                                 cell_size=cell_size,
+                                 search_radius="Variable 12")
+                    ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
+                    self.logger.info("OK")
+                except arcpy.ExecuteError:
+                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
+                    return True
+                except Exception as e:
+                    self.logger.info(arcpy.GetMessages(2))
+                    return True
+
+            elif self.method == "Nearest Neighbor":
                 try:
                     self.logger.info("Converting DEM raster to points ...")
                     pts_dem = arcpy.RasterToPoint_conversion(ras_dem, os.path.join(self.cache, "pts_dem.shp"))
@@ -168,7 +191,7 @@ class WLE:
                     return True
 
             else:
-                self.logger.info("ERROR: invalid method for WSE interpolation: '%s'." % method)
+                self.logger.info("ERROR: invalid method for WSE interpolation: '%s'." % self.method)
                 return True
 
             try:
@@ -176,7 +199,7 @@ class WLE:
                 ras_wle_dem.save(os.path.join(self.out_dir, self.out_wle))
                 self.logger.info("OK")
                 """ ***
-                if method == "Kriging":
+                if self.method == "Kriging":
                     self.logger.info("Saving WLE Kriging variance raster (%s) ..." % os.path.join(self.out_dir, self.out_wle_var))
                     ras_wle_var.save(os.path.join(self.out_dir, self.out_wle_var))
                     self.logger.info("OK")

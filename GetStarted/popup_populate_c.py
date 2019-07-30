@@ -1,6 +1,7 @@
 try:
     import os, sys
     import tkinter as tk
+    from tkinter import ttk
     from tkinter.messagebox import askokcancel, showinfo
     from tkinter.filedialog import *
     import webbrowser
@@ -34,7 +35,7 @@ class PopulateCondition(object):
         # ARRANGE GEOMETRY
         # width and height of the window.
         ww = 650
-        wh = 550
+        wh = 570
         self.xd = 5  # distance holder in x-direction (pixel)
         self.yd = 5  # distance holder in y-direction (pixel)
         # height and location
@@ -71,9 +72,15 @@ class PopulateCondition(object):
         self.b_d2w = tk.Button(top, width=self.col_0_width, bg="white", text="Run d2w creation",
                                command=lambda: self.run_d2w())
         self.b_d2w.grid(sticky=tk.EW, row=6, column=2, padx=self.xd, pady=self.yd)
+        self.l_interp = tk.Label(top, text="Interpolation method:")
+        self.l_interp.grid(sticky=tk.W, row=7, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.c_interp = ttk.Combobox(top, state='readonly')
+        self.c_interp.grid(sticky=tk.W, row=7, column=1, padx=self.xd, pady=self.yd)
+        self.c_interp["values"] = ("IDW", "Kriging", "Nearest Neighbor")
+        self.c_interp.current(0)
         self.l_d2w_dem = tk.Label(top, text="")
-        self.l_d2w_dem.grid(sticky=tk.W, row=7, column=0, columnspan=4, padx=self.xd, pady=self.yd)
-        tk.Label(top, text="").grid(sticky=tk.W, row=8, column=0)  # dummy
+        self.l_d2w_dem.grid(sticky=tk.W, row=8, column=0, columnspan=4, padx=self.xd, pady=self.yd)
+        tk.Label(top, text="").grid(sticky=tk.W, row=9, column=0)  # dummy
 
         # 03 Make detDEM
         self.l_det = tk.Label(top, text="Create detrended DEM Raster (dem_detrend.tif)")
@@ -127,6 +134,7 @@ class PopulateCondition(object):
         self.b_det["state"] = "disabled"
         self.b_mu["state"] = "disabled"
         self.b_sd2w["state"] = "disabled"
+        self.c_interp["state"] = "disabled"
         self.b_sdet["state"] = "disabled"
         self.b_smuh["state"] = "disabled"
         self.b_smuu["state"] = "disabled"
@@ -148,7 +156,7 @@ class PopulateCondition(object):
 
     def run_d2w(self):
         condition = cCC.ConditionCreator(self.dir2condition_act)
-        condition.make_d2w(self.dir2h, self.dir2dem)
+        condition.make_d2w(self.dir2h, self.dir2dem, method=self.c_interp.get())
         self.top.bell()
         try:
             if not condition.error:
@@ -195,6 +203,7 @@ class PopulateCondition(object):
         self.dir2h = askopenfilename(initialdir=self.dir2condition_act, title="Select baseflow depth raster",
                                      filetypes=[('GeoTIFF', '*.tif;*.tiff')])
         self.b_d2w["state"] = "normal"
+        self.c_interp["state"] = "readonly"
         self.b_det["state"] = "normal"
         if self.dir2u.__len__() > 0:
             self.b_mu["state"] = "normal"
