@@ -196,7 +196,7 @@ class ConnectivityAnalysis:
 
         # raster to polygon conversion
         self.logger.info("Converting raster to polygon...")
-        areas_shp_path = os.path.join(self.areas_dir, "areas%i.shp" % int(Q))
+        areas_shp_path = os.path.join(self.areas_dir, "areas%06d.shp" % int(Q))
         arcpy.RasterToPolygon_conversion(bin_h,
                                          areas_shp_path,
                                          "NO_SIMPLIFY"
@@ -292,7 +292,7 @@ class ConnectivityAnalysis:
         cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
         shortest_paths_ras = cg.dynamic_shortest_paths()
         self.logger.info("Saving shortest paths raster...")
-        shortest_paths_ras.save(os.path.join(self.shortest_paths_dir, "path_lengths%i.tif" % int(Q)))
+        shortest_paths_ras.save(os.path.join(self.shortest_paths_dir, "path_lengths%06d.tif" % int(Q)))
         self.logger.info("OK")
 
     def clean_up(self):
