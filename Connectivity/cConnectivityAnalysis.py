@@ -92,8 +92,7 @@ class ConnectivityAnalysis:
         self.target = ''
 
         self.xlsx = os.path.join(self.out_dir, "disconnected_area.xlsx")
-        shutil.copy(config.xlsx_connectivity, self.xlsx)
-        self.xlsx_writer = cIO.Write(self.xlsx)
+        self.xlsx_writer = cIO.Write(config.xlsx_connectivity)
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
@@ -169,6 +168,7 @@ class ConnectivityAnalysis:
         # compute disconnected areas
         for Q in sorted(self.discharges):
             self.disconnected_areas(Q)
+        self.xlsx_writer.save_close_wb(self.xlsx)
 
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
