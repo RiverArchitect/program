@@ -73,6 +73,8 @@ class ConnectivityAnalysis:
         fGl.chk_dir(self.va_interp_dir)
         self.areas_dir = os.path.join(self.out_dir, "areas\\")
         fGl.chk_dir(self.areas_dir)
+        self.disc_areas_dir = os.path.join(self.out_dir, "disc_areas\\")
+        fGl.chk_dir(self.disc_areas_dir)
         self.shortest_paths_dir = os.path.join(self.out_dir, "shortest_paths\\")
         fGl.chk_dir(self.shortest_paths_dir)
         # populated by self.get_hydraulic_rasters()
@@ -242,11 +244,11 @@ class ConnectivityAnalysis:
         for Q in self.discharges:
             # make copy of areas and remove mainstem
             all_areas = self.Q_areas_dict[Q]
-            disconnected_areas = os.path.join(self.cache, "disc_area.shp")
+            disconnected_areas = os.path.join(self.disc_areas_dir, "disc_area%06d.shp" % int(Q))
             arcpy.CopyFeatures_management(all_areas, disconnected_areas)
             max_area = max([value for (key, value) in arcpy.da.SearchCursor(all_areas, ['OID@', 'Area'])])
             exp = "Area = %f" % max_area
-            disconnected_layer = os.path.join(self.cache, "disc_area")
+            disconnected_layer = os.path.join(self.cache, "disc_area%06d" % int(Q))
             # convert shp to feature layer
             arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
             # select largest area (mainstem)
