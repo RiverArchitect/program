@@ -53,10 +53,10 @@ class WLE:
 
         if self.unique_id:
             Q = int(os.path.splitext(os.path.basename(self.path2h_ras))[0].split("h")[1])
-            self.out_wle = "wle%i.tif" % Q
-            self.out_wle_var = "wle%i_var.tif" % Q
-            self.out_h_interp = "h%i_interp.tif" % Q
-            self.out_d2w = "d2w%i.tif" % Q
+            self.out_wle = "wle%06d.tif" % Q
+            self.out_wle_var = "wle%06d_var.tif" % Q
+            self.out_h_interp = "h%06d_interp.tif" % Q
+            self.out_d2w = "d2w%06d.tif" % Q
         else:
             self.out_wle = "wle.tif"
             self.out_wle_var = "wle_var.tif"

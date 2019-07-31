@@ -105,7 +105,7 @@ class Graphy:
                     key = str(i) + ',' + str(j)
                     neighbors, pvecs, pvecs_perp = self.get_neighbors(i, j)
 
-                    for n_i, neighbor in enumerate(neighbors):
+                    for neighbor, pvec, pvec_perp in zip(neighbors, pvecs, pvecs_perp):
                         # check if neighbor index is within array
                         if (0 <= neighbor[0] < self.h_mat.shape[0]) and (0 <= neighbor[1] < self.h_mat.shape[1]):
                             # check if neighbor is nan
@@ -115,7 +115,7 @@ class Graphy:
                                     # check velocity condition
                                     mag_u_a = self.u_mat[i, j]  # magnitude of water velocity
                                     dir_u_a = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
-                                    if self.check_velocity_condition(mag_u_a, dir_u_a, pvecs[n_i], pvecs_perp[n_i]):
+                                    if self.check_velocity_condition(mag_u_a, dir_u_a, pvec, pvec_perp):
                                         neighbor_key = str(neighbor[0]) + ',' + str(neighbor[1])
                                         try:
                                             self.graph[key] = self.graph[key] + [neighbor_key]
