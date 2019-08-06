@@ -86,10 +86,10 @@ class ConnectivityAnalysis:
         self.Q_h_interp_dict = {}
         self.Q_u_interp_dict = {}
         self.Q_va_interp_dict = {}
+        # populated by self.make_shortest_paths_map(Q)
+        self.Q_escape_dict = {}
         # populated by self.disconnected_areas(Q)
         self.Q_areas_dict = {}
-        self.Q_d_area_vals = {}
-        self.Q_d_area_percents = {}
         # populated by self.make_disconnect_Q_map()
         self.target = ''
 
@@ -98,6 +98,8 @@ class ConnectivityAnalysis:
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
+        self.get_target_raster()
+
         self.connectivity_analysis()
 
     def get_hydraulic_rasters(self):
@@ -126,22 +128,20 @@ class ConnectivityAnalysis:
             h_interp_path = os.path.join(self.h_interp_dir, h_interp_basename)
             u_interp_path = os.path.join(self.u_interp_dir, u_interp_basename)
             va_interp_path = os.path.join(self.va_interp_dir, va_interp_basename)
+            dem_path = self.dir2condition + "dem.tif"
             # check if interpolated depth already exists
-            if h_interp_basename in os.listdir(self.dir2condition):
-                h_ras = Raster(os.path.join(self.dir2condition, h_interp_basename))
-                h_ras.save(h_interp_path)  # save copy to output dir
-            elif h_interp_basename in os.listdir(self.h_interp_dir):
+            if h_interp_basename in os.listdir(self.h_interp_dir):
                 h_ras = Raster(h_interp_path)
             else:
                 # if interpolated depth raster does not already exist, create one
                 self.logger.info("%s not found in %s. Creating..." % (h_interp_basename, self.h_interp_dir))
                 h_path = self.Q_h_dict[Q]
-                dem_path = self.dir2condition + "dem.tif"
                 wle = cWL.WLE(h_path, dem_path, self.h_interp_dir, unique_id=True)
                 wle.calculate_h()
                 h_ras = Raster(h_interp_path)
                 self.logger.info("OK")
             # in new interpolated area set velocity and velocity angle = 0
+            arcpy.env.cellSize = dem_path  # make all interpolated rasters have DEM cell size
             u_ras = Raster(self.Q_u_dict[Q])
             va_ras = Raster(self.Q_va_dict[Q])
             u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
@@ -153,7 +153,58 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
-    @fGl.err_info
+    def get_target_raster(self):
+        """
+        Produces the target to be used for finding shortest paths (largest polygon at low flow)
+        """
+        self.logger.info("Creating target area raster...")
+        Q_min = min(self.discharges)
+        # get interpolated depth raster
+        h_ras = Raster(self.Q_h_interp_dict[Q_min])
+        self.logger.info("Masking depth raster with threshold...")
+        # mask according to fish data
+        mask_h = Con(h_ras > self.h_min, h_ras)
+        # integer type masked raster for polygon conversion
+        bin_h = Con(h_ras > self.h_min, 1)
+        self.logger.info("OK")
+        # raster to polygon conversion
+        self.logger.info("Converting raster to polygon...")
+        areas_shp_path = os.path.join(self.cache, "areas%06d.shp" % int(Q_min))
+        arcpy.RasterToPolygon_conversion(bin_h,
+                                         areas_shp_path,
+                                         "NO_SIMPLIFY"
+                                         )
+        self.logger.info("OK")
+        self.logger.info("Calculating areas...")
+        arcpy.AddField_management(areas_shp_path, "Area", "DOUBLE")
+        if self.units == "us":
+            exp = "!SHAPE.AREA@SQUAREFEET!"
+        elif self.units == "si":
+            exp = "!SHAPE.AREA@SQUAREMETERS!"
+        arcpy.CalculateField_management(areas_shp_path, "Area", exp)
+        self.logger.info("OK")
+        # make copy of areas and remove mainstem
+        all_areas = areas_shp_path
+        disconnected_areas = os.path.join(self.cache, "disc_area%06d.shp" % int(Q_min))
+        arcpy.CopyFeatures_management(all_areas, disconnected_areas)
+        max_area = max([value for (key, value) in arcpy.da.SearchCursor(all_areas, ['OID@', 'Area'])])
+        exp = "Area = %f" % max_area
+        disconnected_layer = os.path.join(self.cache, "disc_area%06d" % int(Q_min))
+        # convert shp to feature layer
+        arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
+        # select largest area (mainstem)
+        arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
+        arcpy.env.extent = Raster(self.Q_h_interp_dict[Q_min])  # target needs matching extent so matrices align
+        target_lyr = os.path.join(self.cache, "target")
+        self.target = os.path.join(self.out_dir, "target.tif")
+        arcpy.MakeFeatureLayer_management(disconnected_layer, target_lyr, exp)
+        # convert target feature layer to raster
+        cell_size = arcpy.GetRasterProperties_management(self.Q_h_interp_dict[Q_min], 'CELLSIZEX').getOutput(0)
+        arcpy.FeatureToRaster_conversion(target_lyr, 'gridcode', self.target, cell_size)
+        # delete feature layer (no longer needed, also removes schema lock issue)
+        arcpy.Delete_management(disconnected_layer)
+        self.logger.info("OK.")
+
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
         """ *** fix multiprocessing hang
@@ -167,6 +218,11 @@ class ConnectivityAnalysis:
         except:
             self.logger.info("ERROR: Multiprocessing failed, proceeding with serial processing.")
         """
+
+        # make shortest escape route length map
+        for Q in sorted(self.discharges):
+            self.make_shortest_paths_map(Q)
+
         # compute disconnected areas
         for Q in sorted(self.discharges):
             self.disconnected_areas(Q)
@@ -175,60 +231,79 @@ class ConnectivityAnalysis:
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
 
-        # make shortest escape route length map
-        for Q in sorted(self.discharges):
-            self.make_shortest_paths_map(Q)
-
         self.clean_up()
         self.logger.info("\nFinished.")
+
+    def make_shortest_paths_map(self, Q):
+        """
+        Produces a raster where each cell value is the length of the least
+        cost path back to the threshold masked low flow polygon.
+        :param Q: corresponding discharge for finding path
+        """
+        self.logger.info("Making shortest escape route map...")
+        self.logger.info("Discharge: %i %s" % (int(Q), self.q_units))
+        self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
+        self.logger.info("\tminimum swimming depth  = %s %s" % (self.h_min, self.length_units))
+        self.logger.info("\tmaximum swimming speed  = %s %s" % (self.u_max, self.u_units))
+        path2h_ras = self.Q_h_interp_dict[Q]
+        path2u_ras = self.Q_u_interp_dict[Q]
+        path2va_ras = self.Q_va_interp_dict[Q]
+
+        cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
+        shortest_paths_ras = cg.dynamic_shortest_paths()
+        self.logger.info("Saving shortest paths raster...")
+        out_ras_name = os.path.join(self.shortest_paths_dir, "path_lengths%06d.tif" % int(Q))
+        shortest_paths_ras.save(out_ras_name)
+        self.Q_escape_dict[Q] = out_ras_name
+        self.logger.info("OK")
 
     def disconnected_areas(self, Q):
         self.logger.info("Computing disconnected areas...")
         self.logger.info("Discharge: %i %s" % (int(Q), self.q_units))
 
-        # get interpolated depth/velocity rasters
+        # get interpolated depth raster
+        self.logger.info("Retrieving interpolated depth raster...")
         h_ras = Raster(self.Q_h_interp_dict[Q])
+        # get escape route raster
+        self.logger.info("Retrieving escape route raster...")
+        escape_ras = Raster(self.Q_escape_dict[Q])
 
-        self.logger.info("Masking depth raster with threshold...")
-        # mask according to fish data
-        mask_h = Con(h_ras > self.h_min, h_ras)
-        # integer type masked raster for polygon conversion
-        bin_h = Con(h_ras > self.h_min, 1)
-        self.logger.info("OK")
+        # get disconnected area raster
+        self.logger.info("Computing disconnected area raster...")
+        disc_ras = Con((~IsNull(h_ras)) & (~escape_ras >= 0), 1)
+        total_ras = Con(~IsNull(h_ras), 1)
 
-        # raster to polygon conversion
-        self.logger.info("Converting raster to polygon...")
-        areas_shp_path = os.path.join(self.areas_dir, "areas%06d.shp" % int(Q))
-        arcpy.RasterToPolygon_conversion(bin_h,
-                                         areas_shp_path,
-                                         "NO_SIMPLIFY"
-                                         )
-        self.Q_areas_dict[Q] = areas_shp_path
-        self.logger.info("OK")
+        self.logger.info("Converting rasters to polygons...")
+        disc_area_path = os.path.join(self.disc_areas_dir, "disc_area%06d.shp" % int(Q))
+        total_area_path = os.path.join(self.areas_dir, "area%06d.shp" % int(Q))
+        arcpy.RasterToPolygon_conversion(disc_ras, disc_area_path, "NO_SIMPLIFY")
+        arcpy.RasterToPolygon_conversion(total_ras, total_area_path, "NO_SIMPLIFY")
 
-        # compute fraction of area that is disconnected/not navigable
-        arcpy.AddField_management(areas_shp_path, "Area", "DOUBLE")
+        self.logger.info("Calculating areas...")
+        arcpy.AddField_management(disc_area_path, "Area", "DOUBLE")
+        arcpy.AddField_management(total_area_path, "Area", "DOUBLE")
+
         if self.units == "us":
             exp = "!SHAPE.AREA@SQUAREFEET!"
         elif self.units == "si":
             exp = "!SHAPE.AREA@SQUAREMETERS!"
-        arcpy.CalculateField_management(areas_shp_path, "Area", exp)
 
-        areas = arcpy.da.TableToNumPyArray(areas_shp_path, ("Area"))
-        areas = [area[0] for area in areas]
-        # sort highest to lowest
-        areas = sorted(areas, reverse=True)
+        arcpy.CalculateField_management(disc_area_path, "Area", exp)
+        arcpy.CalculateField_management(total_area_path, "Area", exp)
 
-        total_area = sum(areas)
-        self.logger.info("Total navigable wetted area: %.2f %s" % (total_area, self.area_units))
-        disconnected_area = sum(areas[1:])
+        disc_areas = arcpy.da.TableToNumPyArray(disc_area_path, ("Area"))
+        total_areas = arcpy.da.TableToNumPyArray(total_area_path, ("Area"))
+        disc_areas = [area[0] for area in disc_areas]
+        total_areas = [area[0] for area in total_areas]
+
+        disc_area = sum(disc_areas)
+        total_area = sum(total_areas)
+
         row_num = sorted(self.discharges).index(Q) + 3
         self.xlsx_writer.write_cell("A", row_num, Q)
-        self.xlsx_writer.write_cell("B", row_num, disconnected_area)
-        self.Q_d_area_vals[Q] = disconnected_area
-        self.logger.info("Disconnected wetted area: %.2f %s" % (disconnected_area, self.area_units))
-        percent_disconnected = disconnected_area / total_area * 100
-        self.Q_d_area_percents[Q] = percent_disconnected
+        self.xlsx_writer.write_cell("B", row_num, disc_area)
+        self.logger.info("Disconnected wetted area: %.2f %s" % (disc_area, self.area_units))
+        percent_disconnected = disc_area / total_area * 100
         self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
 
     def make_disconnect_Q_map(self):
@@ -253,17 +328,6 @@ class ConnectivityAnalysis:
             arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
             # select largest area (mainstem)
             arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
-            # if Q = lowest discharge, save target raster
-            if Q == min(self.discharges):
-                self.logger.info("Creating target area raster...")
-                arcpy.env.extent = Raster(self.Q_h_interp_dict[Q])  # target needs matching extent so matrices align
-                target_lyr = os.path.join(self.cache, "target")
-                self.target = os.path.join(self.out_dir, "target.tif")
-                arcpy.MakeFeatureLayer_management(disconnected_layer, target_lyr, exp)
-                # convert target feature layer to raster
-                cell_size = arcpy.GetRasterProperties_management(self.Q_h_interp_dict[Q], 'CELLSIZEX').getOutput(0)
-                arcpy.FeatureToRaster_conversion(target_lyr, 'gridcode', self.target, cell_size)
-                self.logger.info("OK.")
             # delete mainstem polygon to get disconnected areas
             arcpy.DeleteFeatures_management(disconnected_layer)
             # convert back to polygon
@@ -271,31 +335,11 @@ class ConnectivityAnalysis:
             # delete feature layer (no longer needed, also removes schema lock issue)
             arcpy.Delete_management(disconnected_layer)
             # assign Q as value within disconnected area
-            out_ras = Con(~IsNull(arcpy.sa.ExtractByMask(out_ras, disconnected_areas)), Q, out_ras)
+            temp_ras = arcpy.sa.ExtractByMask(out_ras, disconnected_areas)
+            out_ras = Con(~IsNull(temp_ras), Q, out_ras)
 
         out_ras.save(out_ras_path)
         self.logger.info("Saved Q_disconnect raster: %s" % out_ras_path)
-
-    def make_shortest_paths_map(self, Q):
-        """
-        Produces a raster where each cell value is the length of the least
-        cost path back to the threshold masked low flow polygon.
-        :param Q: corresponding discharge for finding path
-        """
-        self.logger.info("Making shortest escape route map...")
-        self.logger.info("Discharge: %i %s" % (int(Q), self.q_units))
-        self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
-        self.logger.info("\tminimum swimming depth  = %s %s" % (self.h_min, self.length_units))
-        self.logger.info("\tmaximum swimming speed  = %s %s" % (self.u_max, self.u_units))
-        path2h_ras = self.Q_h_interp_dict[Q]
-        path2u_ras = self.Q_u_interp_dict[Q]
-        path2va_ras = self.Q_va_interp_dict[Q]
-
-        cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
-        shortest_paths_ras = cg.dynamic_shortest_paths()
-        self.logger.info("Saving shortest paths raster...")
-        shortest_paths_ras.save(os.path.join(self.shortest_paths_dir, "path_lengths%06d.tif" % int(Q)))
-        self.logger.info("OK")
 
     def clean_up(self):
         try:
