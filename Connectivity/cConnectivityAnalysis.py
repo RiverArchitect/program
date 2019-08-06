@@ -89,7 +89,7 @@ class ConnectivityAnalysis:
         # populated by self.make_shortest_paths_map(Q)
         self.Q_escape_dict = {}
         # populated by self.disconnected_areas(Q)
-        self.Q_areas_dict = {}
+        self.Q_disc_areas_dict = {}
         # populated by self.make_disconnect_Q_map()
         self.target = ''
 
@@ -278,6 +278,7 @@ class ConnectivityAnalysis:
         total_area_path = os.path.join(self.areas_dir, "area%06d.shp" % int(Q))
         arcpy.RasterToPolygon_conversion(disc_ras, disc_area_path, "NO_SIMPLIFY")
         arcpy.RasterToPolygon_conversion(total_ras, total_area_path, "NO_SIMPLIFY")
+        self.Q_disc_areas_dict[Q] = disc_area_path
 
         self.logger.info("Calculating areas...")
         arcpy.AddField_management(disc_area_path, "Area", "DOUBLE")
@@ -314,26 +315,10 @@ class ConnectivityAnalysis:
         out_ras_path = os.path.join(self.out_dir, "Q_disconnect.tif")
         # start with highest Q raster, assign all wetted values to default of 0.
         out_ras = Raster(self.Q_h_interp_dict[max(self.discharges)])
-        out_ras = Con(~IsNull(out_ras), 0) # *** should mask by thresholds too?
+        out_ras = Con(~IsNull(out_ras), 0)
         # starting from lowest Q and working up, assign cell value Q to cells in disconnected areas
         for Q in self.discharges:
-            # make copy of areas and remove mainstem
-            all_areas = self.Q_areas_dict[Q]
-            disconnected_areas = os.path.join(self.disc_areas_dir, "disc_area%06d.shp" % int(Q))
-            arcpy.CopyFeatures_management(all_areas, disconnected_areas)
-            max_area = max([value for (key, value) in arcpy.da.SearchCursor(all_areas, ['OID@', 'Area'])])
-            exp = "Area = %f" % max_area
-            disconnected_layer = os.path.join(self.cache, "disc_area%06d" % int(Q))
-            # convert shp to feature layer
-            arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
-            # select largest area (mainstem)
-            arcpy.SelectLayerByAttribute_management(disconnected_layer, "NEW_SELECTION", exp)
-            # delete mainstem polygon to get disconnected areas
-            arcpy.DeleteFeatures_management(disconnected_layer)
-            # convert back to polygon
-            arcpy.FeatureClassToShapefile_conversion(disconnected_layer, self.cache)
-            # delete feature layer (no longer needed, also removes schema lock issue)
-            arcpy.Delete_management(disconnected_layer)
+            disconnected_areas = self.Q_disc_areas_dict[Q]
             # assign Q as value within disconnected area
             temp_ras = arcpy.sa.ExtractByMask(out_ras, disconnected_areas)
             out_ras = Con(~IsNull(temp_ras), Q, out_ras)
