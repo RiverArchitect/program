@@ -180,7 +180,7 @@ class WLE:
                     self.logger.info("Converting nearest neighbor points to raster ...")
                     arcpy.PointToRaster_conversion(in_features=base_join, value_field="grid_cod_1",
                                                    out_rasterdataset=os.path.join(self.cache, "ras_wle_dem"),
-                                                   cell_assignment="MEAN", cellsize=5)
+                                                   cell_assignment="MEAN", cellsize=cell_size)
                     ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
                     self.logger.info("OK")
                 except arcpy.ExecuteError:

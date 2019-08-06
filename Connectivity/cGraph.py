@@ -30,6 +30,7 @@ class Graphy:
     """
     Class for constructing and navigating directed graphs
     """
+
     def __init__(self, path2_h_ras, path2_u_ras, path2_va_ras, h_thresh, u_thresh, path2_target):
 
         self.logger = logging.getLogger("logfile")
@@ -94,7 +95,6 @@ class Graphy:
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
-    @fGl.err_info
     def construct_graph(self):
         """Convert matrices to directed graph"""
         self.logger.info("Constructing graph...")
@@ -125,7 +125,6 @@ class Graphy:
                                             self.inv_graph[neighbor_key] = self.inv_graph[neighbor_key] + [key]
                                         except KeyError:
                                             self.inv_graph[neighbor_key] = [key]
-        self.logger.info("OK")
 
     @staticmethod
     def get_neighbors(i, j):
@@ -140,14 +139,14 @@ class Graphy:
                      (i + 1, j - 1)]
 
         # unit vectors pointing from current node to neighbors
-        pvecs = [(1, 0),
-                 (1 / np.sqrt(2), 1 / np.sqrt(2)),
-                 (0, 1),
+        pvecs = [(-1, 0),
                  (-1 / np.sqrt(2), 1 / np.sqrt(2)),
-                 (-1, 0),
-                 (-1 / np.sqrt(2), -1 / np.sqrt(2)),
+                 (0, 1),
+                 (1 / np.sqrt(2), 1 / np.sqrt(2)),
+                 (1, 0),
+                 (1 / np.sqrt(2), -1 / np.sqrt(2)),
                  (0, -1),
-                 (1 / np.sqrt(2), -1 / np.sqrt(2))]
+                 (-1 / np.sqrt(2), -1 / np.sqrt(2))]
 
         # perpendicular complements to pvecs
         q = deque(pvecs)
@@ -233,4 +232,3 @@ class Graphy:
         # *** revise disconnected areas calculation; there could be more disconnected areas due to velocity condition
         self.logger.info("OK")
         return shortest_path_ras
-
