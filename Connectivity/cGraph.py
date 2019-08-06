@@ -188,7 +188,7 @@ class Graphy:
                     self.end.append(key)
 
     def dynamic_shortest_paths(self):
-        """A dynamic program for finding shortest escape routes; much faster than previous method!"""
+        """A dynamic program for finding shortest escape routes"""
         self.logger.info("Finding escape routes...")
         # set of nodes for which we already know the shortest path length. key=node key, value=number of steps
         known_nodes = {end_node: 0 for end_node in self.end}
@@ -199,11 +199,11 @@ class Graphy:
             self.logger.info("path step: %i" % steps)
             valid_neighbors = False  # gets reset to True if any neighbors are added
             # only nodes added from the previous iteration (used as stepping stones)
-            prev_nodes = [known_node for known_node in known_nodes.keys() if known_nodes[known_node] == steps - 1]
-            for prev_node in prev_nodes:
-                # get all nodes that can reach prev_node
-                if prev_node in self.inv_graph.keys():
-                    neighbors = self.inv_graph[prev_node]
+            current_nodes = [known_node for known_node in known_nodes.keys() if known_nodes[known_node] == steps - 1]
+            for current_node in current_nodes:
+                # get all nodes that can reach current_node
+                if current_node in self.inv_graph.keys():
+                    neighbors = self.inv_graph[current_node]
                     for neighbor in neighbors:
                         # if neighbor is not already in known_nodes
                         if neighbor not in known_nodes.keys():
@@ -227,8 +227,5 @@ class Graphy:
                                                      lower_left_corner=self.ref_pt,
                                                      x_cell_size=self.cell_size,
                                                      value_to_nodata=np.nan)
-        # *** set disconnectd areas to -999
-        # Con(~IsNull(h_interp) & IsNull(shortest_path_ras), -999, shortest_path_ras)
-        # *** revise disconnected areas calculation; there could be more disconnected areas due to velocity condition
         self.logger.info("OK")
         return shortest_path_ras

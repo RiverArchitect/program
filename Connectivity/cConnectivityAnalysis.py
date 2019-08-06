@@ -32,7 +32,8 @@ except:
 try:
     import pathos.multiprocessing as mp
 except:
-    print("WARNING: Missing pathos package (optional, required for multiprocessing).")
+    pass  # *** pass until multiprocessing fixed
+    # print("WARNING: Missing package (pathos - optional, required for multiprocessing).")
 
 
 class ConnectivityAnalysis:
@@ -201,8 +202,9 @@ class ConnectivityAnalysis:
         # convert target feature layer to raster
         cell_size = arcpy.GetRasterProperties_management(self.Q_h_interp_dict[Q_min], 'CELLSIZEX').getOutput(0)
         arcpy.FeatureToRaster_conversion(target_lyr, 'gridcode', self.target, cell_size)
-        # delete feature layer (no longer needed, also removes schema lock issue)
+        # delete intermediate products (no longer needed, also removes schema lock issue)
         arcpy.Delete_management(disconnected_layer)
+        arcpy.Delete_management(disconnected_areas)
         self.logger.info("OK.")
 
     def connectivity_analysis(self):
@@ -270,7 +272,7 @@ class ConnectivityAnalysis:
 
         # get disconnected area raster
         self.logger.info("Computing disconnected area raster...")
-        disc_ras = Con((~IsNull(h_ras)) & (~escape_ras >= 0), 1)
+        disc_ras = Con(IsNull(escape_ras) & ~IsNull(h_ras), 1)
         total_ras = Con(~IsNull(h_ras), 1)
 
         self.logger.info("Converting rasters to polygons...")
