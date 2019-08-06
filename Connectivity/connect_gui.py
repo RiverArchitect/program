@@ -47,6 +47,7 @@ class MainGui(sg.RaModuleGui):
         self.combo_c = ttk.Combobox(self)
         self.combo_c.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
         self.combo_c['values'] = tuple(fGl.get_subdir_names(config.dir2conditions))
+        self.combo_c['state'] = 'readonly'
         self.b_s_condition = tk.Button(self, fg="red", text="Select",
                                        command=lambda: self.select_condition())
         self.b_s_condition.grid(sticky=tk.W, row=1, column=2, padx=self.xd, pady=self.yd)
