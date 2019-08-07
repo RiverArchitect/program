@@ -1,5 +1,6 @@
 try:
     import sys, os, logging, random
+    import datetime as dt
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
@@ -195,9 +196,10 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving WLE raster to:\n%s" % os.path.join(self.out_dir, self.out_wle))
+                self.logger.info("Saving WLE raster to: %s" % os.path.join(self.out_dir, self.out_wle))
                 ras_wle_dem.save(os.path.join(self.out_dir, self.out_wle))
                 self.logger.info("OK")
+                self.save_info_file(os.path.join(self.out_dir, self.out_wle))
                 """ ***
                 if self.method == "Kriging":
                     self.logger.info("Saving WLE Kriging variance raster (%s) ..." % os.path.join(self.out_dir, self.out_wle_var))
@@ -262,9 +264,10 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving interpolated depth raster to:\n%s" % os.path.join(self.out_dir, self.out_h_interp))
+                self.logger.info("Saving interpolated depth raster to:%s" % os.path.join(self.out_dir, self.out_h_interp))
                 ras_h_interp.save(os.path.join(self.out_dir, self.out_h_interp))
                 self.logger.info("OK")
+                self.save_info_file(os.path.join(self.out_dir, self.out_h_interp))
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
                 return True
@@ -317,9 +320,10 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving depth to groundwater raster to:\n%s" % os.path.join(self.out_dir, self.out_d2w))
+                self.logger.info("Saving depth to groundwater raster to: %s" % os.path.join(self.out_dir, self.out_d2w))
                 ras_d2w.save(os.path.join(self.out_dir, self.out_d2w))
                 self.logger.info("OK")
+                self.save_info_file(os.path.join(self.out_dir, self.out_d2w))
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
                 return True
@@ -336,6 +340,16 @@ class WLE:
             self.logger.info("ExceptionERROR: (arcpy).")
             self.logger.info(e.args[0])
             return True
+
+    def save_info_file(self, path):
+        info_path = os.path.join(os.path.dirname(path),
+                                 os.path.basename(path).rsplit(".", 1)[0] + '.info.txt')
+        with open(info_path, "w") as info_file:
+            info_file.write("Interpolation method: %s" % self.method)
+            info_file.write("\nTime created: %s" % dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            info_file.write("\nDepth raster input: %s" % self.path2h_ras.replace("\\", "/"))
+            info_file.write("\nDEM raster input: %s" % self.path2dem_ras.replace("\\", "/"))
+        self.logger.info("Saved info file: %s " % info_path)
 
     def clean_up(self):
         try:

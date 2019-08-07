@@ -221,7 +221,7 @@ class PopulateCondition(object):
         self.dir2condition_act = config.dir2conditions + str([self.condition_list[int(item)] for item in items][0])
         self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2condition_act)
         self.b_sc.config(fg="forest green")
-        self.dir2dem = self.dir2condition_act + "\\dem.tif"
+        self.dir2dem = os.path.join(self.dir2condition_act, "dem.tif")
         if not os.path.isfile(self.dir2dem):
             showinfo("WARNING", self.dir2dem + " does not exist.")
             self.l_d2w_dem.config(fg="firebrick3", text=self.dir2dem + " does not exist.")
