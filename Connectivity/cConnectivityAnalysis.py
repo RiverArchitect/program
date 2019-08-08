@@ -252,7 +252,7 @@ class ConnectivityAnalysis:
         path2va_ras = self.Q_va_interp_dict[Q]
 
         cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
-        shortest_paths_ras = cg.dynamic_shortest_paths()
+        shortest_paths_ras = cg.find_shortest_paths()
         self.logger.info("Saving shortest paths raster...")
         out_ras_name = os.path.join(self.shortest_paths_dir, "path_lengths%06d.tif" % int(Q))
         shortest_paths_ras.save(out_ras_name)
