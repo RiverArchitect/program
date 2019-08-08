@@ -96,6 +96,10 @@ class ConnectivityAnalysis:
 
         self.xlsx = os.path.join(self.out_dir, "disconnected_area.xlsx")
         self.xlsx_writer = cIO.Write(config.xlsx_connectivity)
+        self.xlsx_writer.write_cell("E", 4, self.species)
+        self.xlsx_writer.write_cell("E", 5, self.lifestage)
+        self.xlsx_writer.write_cell("E", 6, self.h_min)
+        self.xlsx_writer.write_cell("E", 7, self.u_max)
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
