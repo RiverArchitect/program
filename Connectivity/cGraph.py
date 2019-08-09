@@ -50,6 +50,8 @@ class Graphy:
         self.va_mat = np.ndarray((0, 0))
         self.graph = {}
         self.inv_graph = {}
+        self.graph_mats = []
+        self.graph_rasters = []
         self.cost_func = "distance"
 
         self.path2_target = path2_target
@@ -92,11 +94,13 @@ class Graphy:
             self.u_mat = arcpy.RasterToNumPyArray(self.u_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
             self.va_mat = arcpy.RasterToNumPyArray(self.va_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
             self.target_mat = arcpy.RasterToNumPyArray(self.target_ras, lower_left_corner=self.ref_pt)  # integer type
+            self.graph_mats = np.zeros((8, 2, *self.h_mat.shape))
+            self.graph_mats[:] = np.nan
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not convert rasters to arrays.")
 
-    def construct_graph(self):
+    def construct_graph(self, graph_vis=False):
         """
         Convert matrices to weighted inverse digraph
         key = to_vertex
@@ -120,13 +124,58 @@ class Graphy:
                                 if (self.h_mat[i, j] > self.h_thresh) and (self.h_mat[neighbor_i] > self.h_thresh):
                                     # check velocity condition
                                     mag_u_w = self.u_mat[i, j]  # magnitude of water velocity
-                                    dir_u_w = self.va_mat[i, j] * np.pi / 180  # angle from north (degrees -> radians)
+                                    dir_u_w = self.va_mat[i, j]  # angle from north
                                     if self.check_velocity_condition(mag_u_w, dir_u_w, octant):
                                         cost = self.get_cost(key, neighbor_key)
+                                        try:
+                                            self.graph[key] = self.graph[key] + [neighbor_key]
+                                        except KeyError:
+                                            self.graph[key] = [neighbor_key]
                                         try:
                                             self.inv_graph[neighbor_key] = self.inv_graph[neighbor_key] + [(key, cost)]
                                         except KeyError:
                                             self.inv_graph[neighbor_key] = [(key, cost)]
+
+        if graph_vis:
+            # outputs for graph visualization
+            self.logger.info("Making rasters for graph visualization...")
+            for key, neighbor_keys in self.graph.items():
+                i1, j1 = list(map(int, key.split(",")))
+                for n, neighbor_key in enumerate(neighbor_keys):
+                    i2, j2 = list(map(int, neighbor_key.split(",")))
+                    self.graph_mats[n, 1, i1, j1] = -(i2 - i1)  # increasing row =  down
+                    self.graph_mats[n, 0, i1, j1] = j2 - j1
+            q = os.path.basename(self.path2_h_ras).replace("h", "").split("_")[0]
+            graph_vis_dir = os.path.join(os.path.dirname(self.path2_target_ras), "graph_vis%s" % q)
+            fGl.chk_dir(graph_vis_dir)
+            for i, graph_mat in enumerate(self.graph_mats):
+                ras_x = arcpy.NumPyArrayToRaster(graph_mat[0],
+                                                 lower_left_corner=self.ref_pt,
+                                                 x_cell_size=self.cell_size,
+                                                 value_to_nodata=np.nan)
+                ras_y = arcpy.NumPyArrayToRaster(graph_mat[1],
+                                                 lower_left_corner=self.ref_pt,
+                                                 x_cell_size=self.cell_size,
+                                                 value_to_nodata=np.nan)
+                ras = arcpy.CompositeBands_management([ras_x, ras_y], os.path.join(graph_vis_dir, "graph_vis%i.tif" % (i+1)))
+
+            i_mat = np.zeros(self.h_mat.shape)
+            j_mat = np.zeros(self.h_mat.shape)
+            for i, row in enumerate(i_mat):
+                for j in range(len(row)):
+                    i_mat[i, j] = i
+                    j_mat[i, j] = j
+            ras_i = arcpy.NumPyArrayToRaster(i_mat,
+                                             lower_left_corner=self.ref_pt,
+                                             x_cell_size=self.cell_size,
+                                             value_to_nodata=np.nan)
+            ras_j = arcpy.NumPyArrayToRaster(j_mat,
+                                             lower_left_corner=self.ref_pt,
+                                             x_cell_size=self.cell_size,
+                                             value_to_nodata=np.nan)
+            ras_i.save(os.path.join(os.path.dirname(self.path2_target_ras), "i_mat%s.tif" % q))
+            ras_j.save(os.path.join(os.path.dirname(self.path2_target_ras), "j_mat%s.tif" % q))
+
         self.logger.info("Merging target vertices...")
         # make copy so we can delete keys of original graph during iteration (not containing "end" key)
         graph_copy = {k: v for k, v in self.inv_graph.items()}
@@ -191,7 +240,7 @@ class Graphy:
             if lower < upper:
                 ranges = [[lower, upper]]
             else:
-                ranges = [[lower, 360], [0, upper]]
+                ranges = [[lower, 180], [-180, upper]]
             # check if travel direction octant overlaps with angle range
             for a, b in ranges:
                 for c, d in octant:
