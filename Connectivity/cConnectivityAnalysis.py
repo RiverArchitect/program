@@ -158,6 +158,7 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
+    @fGl.err_info
     def get_target_raster(self):
         """
         Produces the target to be used for finding shortest paths (largest polygon at low flow)
@@ -211,6 +212,7 @@ class ConnectivityAnalysis:
         arcpy.Delete_management(disconnected_areas)
         self.logger.info("OK.")
 
+    @fGl.err_info
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
         """ *** fix multiprocessing hang
