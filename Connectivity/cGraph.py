@@ -304,7 +304,7 @@ class Graphy:
                     self.end.add(key)
 
     def find_shortest_paths(self):
-        self.logger.info("Finding escape routes...")
+        self.logger.info("Finding least cost paths...")
 
         known_vertices = self.dijkstra()
 
@@ -317,7 +317,7 @@ class Graphy:
             shortest_path_mat[i, j] = known_vertices[known_vertex]
         self.logger.info("OK")
 
-        self.logger.info("Converting escape route lengths array to raster...")
+        self.logger.info("Converting least cost path lengths array to raster...")
         shortest_path_ras = arcpy.NumPyArrayToRaster(shortest_path_mat,
                                                      lower_left_corner=self.ref_pt,
                                                      x_cell_size=self.cell_size,
