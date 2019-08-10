@@ -158,6 +158,7 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
+    @fGl.err_info
     def get_target_raster(self):
         """
         Produces the target to be used for finding shortest paths (largest polygon at low flow)
@@ -211,6 +212,7 @@ class ConnectivityAnalysis:
         arcpy.Delete_management(disconnected_areas)
         self.logger.info("OK.")
 
+    @fGl.err_info
     def connectivity_analysis(self):
         self.logger.info("\n>>> Connectivity Analysis:\n>>> Condition: %s\n>>> Species: %s\n>>> Lifestage: %s" % (self.condition, self.species, self.lifestage))
         """ *** fix multiprocessing hang
@@ -256,7 +258,7 @@ class ConnectivityAnalysis:
         path2va_ras = self.Q_va_interp_dict[Q]
 
         cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
-        shortest_paths_ras = cg.dynamic_shortest_paths()
+        shortest_paths_ras = cg.find_shortest_paths()
         self.logger.info("Saving shortest paths raster...")
         out_ras_name = os.path.join(self.shortest_paths_dir, "path_lengths%06d.tif" % int(Q))
         shortest_paths_ras.save(out_ras_name)
