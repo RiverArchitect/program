@@ -296,12 +296,14 @@ class Graphy:
     def target_to_keys(self):
         """Converts escape target matrix to a list of target vertex keys (self.end) used for graph traversal"""
         # for each active target cell, add corresponding key to list
+        self.logger.info("Converting target area to graph vertices...")
         for i, row in enumerate(self.target_mat):
             for j, val in enumerate(row):
                 # active if cell value = 1
                 if self.target_mat[i, j] == 1:
                     key = str(i) + ',' + str(j)
                     self.end.add(key)
+        self.logger.info("OK")
 
     def find_shortest_paths(self):
         self.logger.info("Finding least cost paths...")
