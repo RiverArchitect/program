@@ -320,6 +320,8 @@ class ConnectivityAnalysis:
         Produces a raster where each cell value is the discharge at which disconnection occurs.
         If the cell is never in a disconnected area polygon, it assumes a default value of 0.
         """
+        self.logger.info("Making Q_disconnect map...")
+        arcpy.env.workspace = self.cache
         out_ras_path = os.path.join(self.out_dir, "Q_disconnect.tif")
         # start with highest Q raster, assign all wetted values to default of 0.
         out_ras = Raster(self.Q_h_interp_dict[max(self.discharges)])
