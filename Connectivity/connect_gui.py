@@ -1,6 +1,7 @@
 try:
     import os, sys
     import tkinter as tk
+    from tkinter import ttk
     from tkinter.messagebox import askokcancel, showinfo
     from tkinter.filedialog import *
     import webbrowser
@@ -21,6 +22,7 @@ try:
     import cFlows as cFl
     import cFish as cFi
     import fGlobal as fGl
+    import cMakeTable as cMkT
 except:
     print("ExceptionERROR: Cannot find riverpy.")
 
@@ -38,36 +40,65 @@ class MainGui(sg.RaModuleGui):
         self.fish = cFi.Fish()
         self.fish_applied = {}
 
+        row = 0
+
         self.l_prompt = tk.Label(self, text="Select Condition and Aquatic Ambiance")
-        self.l_prompt.grid(sticky=tk.W, row=0, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.l_prompt.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
 
         # select condition
         self.l_condition = tk.Label(self, text="Select condition:")
-        self.l_condition.grid(sticky=tk.W, row=1, column=0, padx=self.xd, pady=self.yd)
+        self.l_condition.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
         self.combo_c = ttk.Combobox(self)
-        self.combo_c.grid(sticky=tk.W, row=1, column=1, padx=self.xd, pady=self.yd)
+        self.combo_c.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
         self.combo_c['values'] = tuple(fGl.get_subdir_names(config.dir2conditions))
         self.combo_c['state'] = 'readonly'
         self.b_s_condition = tk.Button(self, fg="red", text="Select",
                                        command=lambda: self.select_condition())
-        self.b_s_condition.grid(sticky=tk.W, row=1, column=2, padx=self.xd, pady=self.yd)
+        self.b_s_condition.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        row += 1
+
         self.l_inpath_curr = tk.Label(self, fg="gray60", text="Source: " + config.dir2conditions)
-        self.l_inpath_curr.grid(sticky=tk.W, row=2, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.l_inpath_curr.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
 
         # select aquatic ambiance
         self.b_show_fish = tk.Button(self, width=10, fg="RoyalBlue3", bg="white",
                                      text="Show selected Aquatic Ambiance(s)",
                                      command=lambda: self.shout_dict(self.fish_applied))
-        self.b_show_fish.grid(sticky=tk.EW, row=3, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_show_fish.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_show_fish["state"] = "disabled"
         self.l_aqua = tk.Label(self, fg="red", text="Select Aquatic Ambiance (at least one)")
-        self.l_aqua.grid(sticky=tk.W, row=3, column=2, columnspan=2, padx=0, pady=self.yd)
+        self.l_aqua.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=0, pady=self.yd)
+        row += 1
 
-        # run analysis
-        self.b_connect = tk.Button(self, text="Run Connectivity Analysis", width=50,
-                                   command=lambda: self.run_connectivity())
-        self.b_connect.grid(sticky=tk.W, row=5, column=0, columnspan=3, padx=self.xd, pady=self.yd)
-        self.b_connect["state"] = "disabled"
+        # Apply flow reduction
+        tk.Label(self, text=" ").grid(row=row, column=0, columnspan=4)  # dummy
+        row += 1
+
+        tk.Label(self, text="", bg="LightBlue1", height=10).grid(sticky=tk.EW, row=row, rowspan=4, column=0,
+                                                                 columnspan=4)  # dummy
+        self.l_flow_red = tk.Label(self, text="Apply flow reduction", bg="LightBlue1")
+        self.l_flow_red.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
+        row += 1
+
+        self.l_q_high = tk.Label(self, text="Q_high:", bg="LightBlue1")
+        self.l_q_high.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.c_q_high = ttk.Combobox(self)
+        self.c_q_high.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.c_q_high['state'] = 'disabled'
+
+        self.l_q_low = tk.Label(self, text="Q_low:", bg="LightBlue1")
+        self.l_q_low.grid(sticky=tk.W, row=row, column=2, padx=self.xd, pady=self.yd)
+        self.c_q_low = ttk.Combobox(self)
+        self.c_q_low.grid(sticky=tk.W, row=row, column=3, padx=self.xd, pady=self.yd)
+        self.c_q_low['state'] = 'disabled'
+        row += 1
+
+        self.b_apply_flow_red = tk.Button(self, text="Apply Flow Reduction", bg="LightBlue1", width=50,
+                                          command=lambda: self.apply_flow_red())
+        self.b_apply_flow_red.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
+        self.b_apply_flow_red['state'] = 'disabled'
 
         self.complete_menus()
 
@@ -75,6 +106,18 @@ class MainGui(sg.RaModuleGui):
         for species in self.fish_applied.keys():
             for lifestage in self.fish_applied[species]:
                 ca = cCA.ConnectivityAnalysis(self.condition, species, lifestage, self.unit) # *** add out dir arg
+                ca.connectivity_analysis()
+
+    def apply_flow_red(self):
+        if self.c_q_high.get() == '' or self.c_q_low.get() == '':
+            self.logger.info("ERROR: Select Q_high and Q_low.")
+            return
+        q_high = float(self.c_q_high.get().split(" ")[0])
+        q_low = float(self.c_q_low.get().split(" ")[0])
+        for species in self.fish_applied.keys():
+            for lifestage in self.fish_applied[species]:
+                ca = cCA.ConnectivityAnalysis(self.condition, species, lifestage, self.unit, q_high=q_high, q_low=q_low)
+                ca.apply_flow_reduction()
 
     def select_condition(self):
         try:
@@ -82,6 +125,19 @@ class MainGui(sg.RaModuleGui):
             input_dir = config.dir2conditions + str(self.condition)
             if os.path.exists(input_dir):
                 self.b_s_condition.config(fg="forest green", text="Selected: " + self.condition)
+
+                # update flow reduction comboboxes
+                mkt = cMkT.MakeFlowTable(self.condition, "", unit=self.unit)
+                discharges = sorted(mkt.discharges)
+                discharges = ["%i %s" %(q, self.q_unit) for q in discharges]
+                self.c_q_high['state'] = 'readonly'
+                self.c_q_high['values'] = discharges
+                self.c_q_high.set('')
+                self.c_q_low['state'] = 'readonly'
+                self.c_q_low['values'] = discharges
+                self.c_q_low.set('')
+                if self.fish_applied != {}:
+                    self.b_apply_flow_red["state"] = "normal"
                 return ""
             else:
                 self.b_s_condition.config(fg="red", text="ERROR")
@@ -125,7 +181,9 @@ class MainGui(sg.RaModuleGui):
                     self.fish_applied.update({species: []})
                 self.fish_applied[species].append(lifestage)
                 self.logger.info(" >> Added ambiance: " + str(species) + " - " + str(lifestage))
-                self.activate_buttons()
+                self.b_show_fish["state"] = "normal"
+                if self.condition not in ["", "none"]:
+                    self.activate_buttons()
                 self.l_aqua.config(text="")
             else:
                 self.activate_buttons(revert=True)
@@ -150,7 +208,7 @@ class MainGui(sg.RaModuleGui):
         except:
             pass
         self.b_show_fish["state"] = target_state
-        self.b_connect["state"] = target_state
+        self.b_apply_flow_red["state"] = target_state
 
     def complete_menus(self):
         # FISH SPECIES DROP DOWN
