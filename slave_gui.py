@@ -33,6 +33,9 @@ class RaModuleGui(tk.Frame):
         self.reach_template_dir = config.dir2mt + ".templates\\"
         self.reader = cRM.Read()
         self.unit = "us"
+        self.q_unit = "cfs"
+        self.h_unit = "ft"
+        self.u_unit = "ft/s"
         self.verified = False
         self.ww = int()  # window width
         self.wh = int()  # window height
@@ -206,3 +209,11 @@ class RaModuleGui(tk.Frame):
             self.master.bell()
             showinfo("UNIT CHANGE", "Unit system changed to SI (metric).")
         self.unit = new_unit
+        if self.unit == "si":
+            self.q_unit = "cms"
+            self.h_unit = "m"
+            self.u_unit = "m/s"
+        else:
+            self.q_unit = "cfs"
+            self.h_unit = "ft"
+            self.u_unit = "ft/s"
