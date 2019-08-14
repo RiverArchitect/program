@@ -71,8 +71,6 @@ class ConnectivityAnalysis:
         fGl.chk_dir(self.u_interp_dir)
         self.va_interp_dir = os.path.join(self.out_dir, "va_interp\\")
         fGl.chk_dir(self.va_interp_dir)
-        self.shortest_paths_dir = os.path.join(self.out_dir, "shortest_paths\\")
-        fGl.chk_dir(self.shortest_paths_dir)
 
         try:
             self.q_high = kwargs['q_high']
@@ -82,6 +80,8 @@ class ConnectivityAnalysis:
             self.q_high = self.q_low = None
         fGl.chk_dir(self.out_dir)
         # these directories depend on applied flow reduction
+        self.shortest_paths_dir = os.path.join(self.out_dir, "shortest_paths\\")
+        fGl.chk_dir(self.shortest_paths_dir)
         self.areas_dir = os.path.join(self.out_dir, "areas\\")
         fGl.chk_dir(self.areas_dir)
         self.disc_areas_dir = os.path.join(self.out_dir, "disc_areas\\")
@@ -363,8 +363,8 @@ class ConnectivityAnalysis:
         self.make_disconnect_Q_map()
 
         total_disc_area = self.get_total_disc_area()
-        disc_area = total_disc_area[max(self.discharges)]
-        self.logger.info("Area disconnected by flow reduction: %.2f %s" % (disc_area, self.area_units))
+        disc_area = total_disc_area[min(self.discharges)]
+        self.logger.info("Cumulative area disconnected by flow reduction: %.2f %s" % (disc_area, self.area_units))
 
         # create .info.txt file with run information
         self.flow_red_info(disc_area)
@@ -383,7 +383,7 @@ class ConnectivityAnalysis:
             info_file.write("\nQ_low: %06d %s" % (self.q_low, self.q_units))
             info_file.write("\nApplied species: %s" % self.species)
             info_file.write("\nApplied lifestage: %s" % self.lifestage)
-            info_file.write("\nDisconnected area: %i %s" % (disc_area, self.area_units))
+            info_file.write("\nCumulative disconnected area: %i %s" % (disc_area, self.area_units))
         self.logger.info("Saved info file: %s " % info_path)
 
     def clean_up(self):
