@@ -167,26 +167,6 @@ class WLE:
                     self.logger.info(arcpy.GetMessages(2))
                     return True
 
-            elif self.method == "Thin-plate Spline":
-                try:
-                    self.logger.info("Thin-plate spline interpolation...")
-                    # using standard thin-plate spline with 12 nearest neighbors
-                    arcpy.Spline_3d(in_point_features=pts_wse, z_field="grid_code",
-                                    out_raster=os.path.join(self.cache, "ras_wle_dem"),
-                                    cell_size=cell_size,
-                                    spline_type="TENSION",
-                                    weight=0,
-                                    number_points=12)
-                    ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
-                    self.logger.info("OK")
-                except arcpy.ExecuteError:
-                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
-                    return True
-                except Exception as e:
-                    self.logger.info(arcpy.GetMessages(2))
-                    return True
-
-
             else:
                 self.logger.info("ERROR: invalid method for WSE interpolation: '%s'." % self.method)
                 return True

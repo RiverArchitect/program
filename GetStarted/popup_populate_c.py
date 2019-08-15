@@ -76,7 +76,7 @@ class PopulateCondition(object):
         self.l_interp.grid(sticky=tk.W, row=7, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.c_interp = ttk.Combobox(top, state='readonly')
         self.c_interp.grid(sticky=tk.W, row=7, column=1, padx=self.xd, pady=self.yd)
-        self.c_interp["values"] = ("IDW", "Kriging", "Thin-plate Spline", "Nearest Neighbor")
+        self.c_interp["values"] = ("IDW", "Kriging", "Nearest Neighbor")
         self.c_interp.current(0)
         self.l_d2w_dem = tk.Label(top, text="")
         self.l_d2w_dem.grid(sticky=tk.W, row=8, column=0, columnspan=4, padx=self.xd, pady=self.yd)
