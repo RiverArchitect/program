@@ -152,36 +152,12 @@ class WLE:
 
             elif self.method == "Nearest Neighbor":
                 try:
-                    self.logger.info("Converting DEM raster to points ...")
-                    pts_dem = arcpy.RasterToPoint_conversion(ras_dem, os.path.join(self.cache, "pts_dem.shp"))
-                    self.logger.info("OK")
-                except arcpy.ExecuteError:
-                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
-                    return True
-                except Exception as e:
-                    self.logger.info(arcpy.GetMessages(2))
-                    return True
-
-                try:
-                    self.logger.info("Finding nearest neighbors ...")
-                    base_join = arcpy.SpatialJoin_analysis(target_features=pts_dem, join_features=pts_wse,
-                                                           out_feature_class=arcpy.FeatureSet,
-                                                           join_operation='JOIN_ONE_TO_MANY',
-                                                           join_type='KEEP_ALL',
-                                                           match_option='CLOSEST')
-                    self.logger.info("OK")
-                except arcpy.ExecuteError:
-                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
-                    return True
-                except Exception as e:
-                    self.logger.info(arcpy.GetMessages(2))
-                    return True
-
-                try:
-                    self.logger.info("Converting nearest neighbor points to raster ...")
-                    arcpy.PointToRaster_conversion(in_features=base_join, value_field="grid_cod_1",
-                                                   out_rasterdataset=os.path.join(self.cache, "ras_wle_dem"),
-                                                   cell_assignment="MEAN", cellsize=cell_size)
+                    self.logger.info("Nearest Neighbor interpolation...")
+                    # using IDW with 1 nearest neighbor
+                    arcpy.Idw_3d(in_point_features=pts_wse, z_field="grid_code",
+                                 out_raster=os.path.join(self.cache, "ras_wle_dem"),
+                                 cell_size=cell_size,
+                                 search_radius="Variable 1")
                     ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
                     self.logger.info("OK")
                 except arcpy.ExecuteError:
@@ -190,6 +166,26 @@ class WLE:
                 except Exception as e:
                     self.logger.info(arcpy.GetMessages(2))
                     return True
+
+            elif self.method == "Thin-plate Spline":
+                try:
+                    self.logger.info("Thin-plate spline interpolation...")
+                    # using standard thin-plate spline with 12 nearest neighbors
+                    arcpy.Spline_3d(in_point_features=pts_wse, z_field="grid_code",
+                                    out_raster=os.path.join(self.cache, "ras_wle_dem"),
+                                    cell_size=cell_size,
+                                    spline_type="TENSION",
+                                    weight=0,
+                                    number_points=12)
+                    ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
+                    self.logger.info("OK")
+                except arcpy.ExecuteError:
+                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
+                    return True
+                except Exception as e:
+                    self.logger.info(arcpy.GetMessages(2))
+                    return True
+
 
             else:
                 self.logger.info("ERROR: invalid method for WSE interpolation: '%s'." % self.method)
