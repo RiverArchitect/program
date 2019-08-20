@@ -59,6 +59,11 @@ class ConnectivityAnalysis:
         self.logger.info("maximum swimming speed  = %s %s" % (self.u_max, self.u_units))
 
         try:
+            self.method = kwargs['method']
+        except:
+            self.method = "IDW"
+
+        try:
             self.out_dir = args[0]
         except:
             self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
@@ -144,14 +149,13 @@ class ConnectivityAnalysis:
             u_interp_path = os.path.join(self.u_interp_dir, u_interp_basename)
             va_interp_path = os.path.join(self.va_interp_dir, va_interp_basename)
             dem_path = self.dir2condition + "dem.tif"
-            # check if interpolated depth already exists
-            if h_interp_basename in os.listdir(self.h_interp_dir):
-                h_ras = Raster(h_interp_path)
+            # check if interpolated depth already exists and uses selected interpolation method
+            if self.check_interp_ras(h_interp_path):
+                    h_ras = Raster(h_interp_path)
             else:
-                # if interpolated depth raster does not already exist, create one
-                self.logger.info("%s not found in %s. Creating..." % (h_interp_basename, self.h_interp_dir))
+                # create interpolated depth raster
                 h_path = self.Q_h_dict[Q]
-                wle = cWL.WLE(h_path, dem_path, self.h_interp_dir, unique_id=True)
+                wle = cWL.WLE(h_path, dem_path, self.h_interp_dir, unique_id=True, method=self.method)
                 wle.calculate_h()
                 h_ras = Raster(h_interp_path)
                 self.logger.info("OK")
@@ -167,6 +171,27 @@ class ConnectivityAnalysis:
             self.Q_u_interp_dict[Q] = u_interp_path
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
+
+    def check_interp_ras(self, h_interp_path):
+        # checks if interpolated raster already exists using selected interpolation method
+        if os.path.exists(h_interp_path):
+            info_path = h_interp_path.replace(".tif", ".info.txt")
+            try:
+                with open(info_path) as f:
+                    method_line = f.readlines()[0]
+                    method = method_line.split(": ")[1]
+                    method = method.replace("\n", "")
+                    if method == self.method:
+                        return True
+                    else:
+                        self.logger.info("Existing raster %s uses different interpolation method than selected. Re-interpolating..." % h_interp_path)
+                        return False
+            except:
+                return False
+        else:
+            self.logger.info("Existing %s not found. Creating..." % h_interp_path)
+            return False
+
 
     @fGl.err_info
     def get_target_raster(self):
