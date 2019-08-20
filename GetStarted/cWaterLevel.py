@@ -262,6 +262,26 @@ class WLE:
         # return Boolean False if successful.
         return False
 
+    def check_interp_ras(self, h_interp_path):
+        # checks if interpolated raster already exists using selected interpolation method
+        if os.path.exists(h_interp_path):
+            info_path = h_interp_path.replace(".tif", ".info.txt")
+            try:
+                with open(info_path) as f:
+                    method_line = f.readlines()[0]
+                    method = method_line.split(": ")[1]
+                    method = method.replace("\n", "")
+                    if method == self.method:
+                        return True
+                    else:
+                        self.logger.info("Existing raster %s uses different interpolation method than selected. Re-interpolating..." % h_interp_path)
+                        return False
+            except:
+                return False
+        else:
+            self.logger.info("Existing %s not found. Creating..." % h_interp_path)
+            return False
+
     def calculate_h(self):
         try:
             arcpy.CheckOutExtension('Spatial')  # check out license
@@ -270,7 +290,7 @@ class WLE:
 
             # check if interpolated WLE already exists
             path2wle_ras = os.path.join(self.out_dir, self.out_wle)
-            if not os.path.exists(path2wle_ras):
+            if not self.check_interp_ras(path2wle_ras):
                 self.interpolate_wle()
             else:
                 self.logger.info("Using existing interpolated WLE raster ...")
@@ -331,7 +351,7 @@ class WLE:
 
             # check if interpolated WLE already exists
             path2wle_ras = os.path.join(self.out_dir, self.out_wle)
-            if not os.path.exists(path2wle_ras):
+            if not self.check_interp_ras(path2wle_ras):
                 self.interpolate_wle()
             else:
                 self.logger.info("Using existing interpolated WLE raster ...")
