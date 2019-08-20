@@ -111,26 +111,57 @@ class WLE:
                 return True
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(e.args[0])
                 return True
 
             if self.method == "Kriging":
                 try:
                     self.logger.info("Ordinary Kriging interpolation ...")
-                    # spherical semivariogram using 12 nearest points to interpolate
-                    arcpy.Kriging_3d(in_point_features=pts_wse, z_field="grid_code",
-                                     out_surface_raster=os.path.join(self.cache, "ras_wle_dem"),
-                                     semiVariogram_props="Spherical",
-                                     cell_size=cell_size,
-                                     search_radius="Variable 12")
+                    # Spherical semivariogram using 12 nearest points to interpolate
+                    ras_wle_dem = Kriging(in_point_features=pts_wse, z_field="grid_code",
+                                          kriging_model=KrigingModelOrdinary("Spherical",
+                                                                             lagSize=cell_size),
+                                          cell_size=cell_size,
+                                          search_radius="Variable 12")
+                    ras_wle_dem.save(os.path.join(self.cache, "ras_wle_dem"))
                     # out_variance_prediction_raster=os.path.join(self.cache, "ras_wle_var") ***
                     ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
                     # ras_wle_var = arcpy.Raster(os.path.join(self.cache, "ras_wle_var")) ***
                     self.logger.info("OK")
+
                 except arcpy.ExecuteError:
+                    if "010079" in str(arcpy.GetMessages(2)):
+                        self.logger.info("Could not fit semivariogram, increasing lag size and retrying...")
+                        empty_bins = True
+                        itr = 2
+                        while empty_bins:
+                            try:
+                                ras_wle_dem = Kriging(in_point_features=pts_wse, z_field="grid_code",
+                                                      kriging_model=KrigingModelOrdinary("Spherical",
+                                                                                         lagSize=cell_size * itr),
+                                                      cell_size=cell_size,
+                                                      search_radius="Variable 12")
+                                try:
+                                    ras_wle_dem.save(os.path.join(self.cache, "ras_wle_dem"))
+                                    # out_variance_prediction_raster=os.path.join(self.cache, "ras_wle_var") ***
+                                    ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
+                                    # ras_wle_var = arcpy.Raster(os.path.join(self.cache, "ras_wle_var")) ***
+                                    self.logger.info("OK")
+                                    empty_bins = False
+                                except:
+                                    self.logger.info("ERROR: Failed to produce interpolated raster.")
+                                    return True
+                            except:
+                                self.logger.info("Still could not fit semivariogram, increasing lag and retrying...")
+                                itr *= 2
+                                if itr > 16:
+                                    break
+
                     self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
                     return True
                 except Exception as e:
                     self.logger.info(arcpy.GetMessages(2))
+                    self.logger.info(e.args[0])
                     return True
 
             elif self.method == "IDW":
@@ -148,40 +179,17 @@ class WLE:
                     return True
                 except Exception as e:
                     self.logger.info(arcpy.GetMessages(2))
+                    self.logger.info(e.args[0])
                     return True
 
             elif self.method == "Nearest Neighbor":
                 try:
-                    self.logger.info("Converting DEM raster to points ...")
-                    pts_dem = arcpy.RasterToPoint_conversion(ras_dem, os.path.join(self.cache, "pts_dem.shp"))
-                    self.logger.info("OK")
-                except arcpy.ExecuteError:
-                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
-                    return True
-                except Exception as e:
-                    self.logger.info(arcpy.GetMessages(2))
-                    return True
-
-                try:
-                    self.logger.info("Finding nearest neighbors ...")
-                    base_join = arcpy.SpatialJoin_analysis(target_features=pts_dem, join_features=pts_wse,
-                                                           out_feature_class=arcpy.FeatureSet,
-                                                           join_operation='JOIN_ONE_TO_MANY',
-                                                           join_type='KEEP_ALL',
-                                                           match_option='CLOSEST')
-                    self.logger.info("OK")
-                except arcpy.ExecuteError:
-                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
-                    return True
-                except Exception as e:
-                    self.logger.info(arcpy.GetMessages(2))
-                    return True
-
-                try:
-                    self.logger.info("Converting nearest neighbor points to raster ...")
-                    arcpy.PointToRaster_conversion(in_features=base_join, value_field="grid_cod_1",
-                                                   out_rasterdataset=os.path.join(self.cache, "ras_wle_dem"),
-                                                   cell_assignment="MEAN", cellsize=cell_size)
+                    self.logger.info("Nearest Neighbor interpolation...")
+                    # using IDW with 1 nearest neighbor
+                    arcpy.Idw_3d(in_point_features=pts_wse, z_field="grid_code",
+                                 out_raster=os.path.join(self.cache, "ras_wle_dem"),
+                                 cell_size=cell_size,
+                                 search_radius="Variable 1")
                     ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
                     self.logger.info("OK")
                 except arcpy.ExecuteError:
@@ -189,6 +197,31 @@ class WLE:
                     return True
                 except Exception as e:
                     self.logger.info(arcpy.GetMessages(2))
+                    self.logger.info(e.args[0])
+                    return True
+
+            elif self.method == "EBK":
+                try:
+                    self.logger.info("Empirical Bayesian Kriging interpolation...")
+                    search_nbrhood = arcpy.SearchNeighborhoodStandardCircular(nbrMin=12, nbrMax=12)
+                    arcpy.EmpiricalBayesianKriging_ga(in_features=pts_wse,
+                                                      z_field="grid_code",
+                                                      out_raster=os.path.join(self.cache, "ras_wle_dem"),
+                                                      cell_size=cell_size,
+                                                      transformation_type="EMPIRICAL",
+                                                      number_semivariograms=100,
+                                                      search_neighborhood=search_nbrhood,
+                                                      output_type="PREDICTION",
+                                                      semivariogram_model_type="EXPONENTIAL"
+                                                      )
+                    ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
+                    self.logger.info("OK")
+                except arcpy.ExecuteError:
+                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
+                    return True
+                except Exception as e:
+                    self.logger.info(arcpy.GetMessages(2))
+                    self.logger.info(e.args[0])
                     return True
 
             else:
@@ -212,6 +245,7 @@ class WLE:
                 return True
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(e.args[0])
                 return True
 
         except arcpy.ExecuteError:
@@ -261,6 +295,7 @@ class WLE:
                 return True
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(e.args[0])
                 return True
 
             try:
@@ -269,10 +304,13 @@ class WLE:
                 self.logger.info("OK")
                 self.save_info_file(os.path.join(self.out_dir, self.out_h_interp))
             except arcpy.ExecuteError:
+                self.logger.info("ERROR: Failed to save interpolated depth raster.")
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
                 return True
             except Exception as e:
+                self.logger.info("ERROR: Failed to save interpolated depth raster.")
                 self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(e.args[0])
                 return True
 
             arcpy.CheckInExtension('Spatial')
@@ -317,6 +355,7 @@ class WLE:
                 return True
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(e.args[0])
                 return True
 
             try:
@@ -329,6 +368,7 @@ class WLE:
                 return True
             except Exception as e:
                 self.logger.info(arcpy.GetMessages(2))
+                self.logger.info(e.args[0])
                 return True
 
             arcpy.CheckInExtension('Spatial')

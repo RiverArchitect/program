@@ -95,6 +95,16 @@ class MainGui(sg.RaModuleGui):
         self.c_q_low['state'] = 'disabled'
         row += 1
 
+        self.l_interp = tk.Label(self, text="Interpolation method:", bg="LightBlue1")
+        self.l_interp.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.c_interp = ttk.Combobox(self)
+        self.c_interp.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.c_interp['state'] = 'readonly'
+        self.c_interp['values'] = ["IDW", "EBK", "Kriging", "Nearest Neighbor"]
+        self.c_interp.set("IDW")
+
+        row += 1
+
         self.b_apply_flow_red = tk.Button(self, text="Apply Flow Reduction", bg="LightBlue1", width=50,
                                           command=lambda: self.apply_flow_red())
         self.b_apply_flow_red.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
@@ -116,7 +126,8 @@ class MainGui(sg.RaModuleGui):
         q_low = float(self.c_q_low.get().split(" ")[0])
         for species in self.fish_applied.keys():
             for lifestage in self.fish_applied[species]:
-                ca = cCA.ConnectivityAnalysis(self.condition, species, lifestage, self.unit, q_high=q_high, q_low=q_low)
+                ca = cCA.ConnectivityAnalysis(self.condition, species, lifestage, self.unit, q_high=q_high, q_low=q_low,
+                                              method=self.c_interp.get())
                 ca.apply_flow_reduction()
 
     def select_condition(self):
