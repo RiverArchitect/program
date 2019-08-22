@@ -174,7 +174,7 @@ class ConnectivityAnalysis:
     @fGl.err_info
     def get_target_raster(self):
         """
-        Produces the target to be used for finding shortest paths (largest polygon at low flow)
+        Produces the target to be used for finding shortest paths (largest polygon at low flow deeper than h_min)
         """
         self.logger.info("Creating target area raster...")
         Q_min = min(self.discharges)
