@@ -120,8 +120,8 @@ class Graphy:
                         if (0 <= neighbor_i[0] < self.h_mat.shape[0]) and (0 <= neighbor_i[1] < self.h_mat.shape[1]):
                             # check if neighbor is nan
                             if not np.isnan(self.h_mat[neighbor_i]):
-                                # check if depth > threshold (at current location and neighbor location)
-                                if (self.h_mat[i, j] > self.h_thresh) and (self.h_mat[neighbor_i] > self.h_thresh):
+                                # check if depth > threshold (at neighbor location)
+                                if self.h_mat[neighbor_i] > self.h_thresh:
                                     # check velocity condition
                                     mag_u_w = self.u_mat[i, j]  # magnitude of water velocity
                                     dir_u_w = self.va_mat[i, j]  # angle from north
@@ -286,6 +286,10 @@ class Graphy:
                     if neighbor in known_vertices.keys():  # *** avoid KeyError
                         if known_vertices[neighbor] is None:
                             heappush(queue, (path_len + edge_len, neighbor))
+                    else:  # neighbor can reach v but not reachable --> not a key of inv_graph (can leave but not enter)
+                        known_vertices[neighbor] = None
+                        self.inv_graph[neighbor] = []  # avoids KeyError
+                        heappush(queue, (path_len + edge_len, neighbor))
 
         del known_vertices["end"]
         known_vertices = {**known_vertices, **{end_vertex: 0 for end_vertex in self.end}}
