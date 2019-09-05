@@ -61,17 +61,17 @@ class RaGui(tk.Frame):
 
         self.tab_names = ['Get Started',
                           'Lifespan',
-                          'Terraforming',
-                          'Eco-Morphology',
+                          'Morphology',
+                          'Ecohydraulics',
                           'Project Maker']
 
         self.sub_tab_parents = ['Lifespan',
-                                'Terraforming',
-                                'Eco-Morphology']
+                                'Morphology',
+                                'Ecohydraulics']
 
         self.sub_tab_names = [['Lifespan Design', 'Max Lifespan'],
                               ['Modify Terrain', 'Volume Assessment'],
-                              ['SHArC', 'Connectivity']]
+                              ['Habitat Area (SHArC)', 'Habitat Connectivity']]
 
         # working directory suffixes for each module
         self.tab_dir_names = ['\\GetStarted\\',
@@ -94,10 +94,10 @@ class RaGui(tk.Frame):
         # sub tabs initialized, with parents being associated top-level tabs
         self.sub_tab_list = [[LifespanDesign.lifespan_design_gui.FaGui(self.tabs['Lifespan']),
                               MaxLifespan.action_gui.ActionGui(self.tabs['Lifespan'])],
-                             [ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Terraforming']),
-                              VolumeAssessment.volume_gui.MainGui(self.tabs['Terraforming'])],
-                             [SHArC.sharc_gui.MainGui(self.tabs['Eco-Morphology']),
-                              Connectivity.connect_gui.MainGui(self.tabs['Eco-Morphology'])]]
+                             [ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Morphology']),
+                              VolumeAssessment.volume_gui.MainGui(self.tabs['Morphology'])],
+                             [SHArC.sharc_gui.MainGui(self.tabs['Ecohydraulics']),
+                              Connectivity.connect_gui.MainGui(self.tabs['Ecohydraulics'])]]
 
         self.sub_tab_names = dict(zip(self.sub_tab_parents, self.sub_tab_names))
         self.sub_tabs = dict(zip(self.sub_tab_parents, self.sub_tab_list))
