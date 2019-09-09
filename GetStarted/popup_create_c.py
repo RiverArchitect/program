@@ -118,6 +118,8 @@ class OptionalFrame(tk.Frame):
         self.b_sback.grid(sticky=tk.EW, row=20, column=0, padx=self.xd, pady=self.yd)
         self.l_back_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_back_info.grid(sticky=tk.W, row=20, column=1, padx=self.xd, pady=self.yd)
+        self.c_back_align = tk.Checkbutton(self, text="Use to align input rasters")
+        self.c_back_align.grid(sticky=tk.W, row=20, column=2, padx=self.xd, pady=self.yd)
         self.l_back = tk.Label(self, fg="tan4", text="No Background Raster defined.")
         self.l_back.grid(sticky=tk.W, row=21, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=22, column=0)  # dummy
@@ -148,6 +150,7 @@ class CreateCondition(object):
         self.str_h = tk.StringVar()
         self.str_u = tk.StringVar()
         self.str_va = tk.StringVar()
+        self.align_rasters = tk.BooleanVar()
         self.top.iconbitmap(config.code_icon)
 
         # ARRANGE GEOMETRY
@@ -193,6 +196,7 @@ class CreateCondition(object):
         self.optional.b_sscour.config(command=lambda: self.select_scour())
         self.optional.b_sfill.config(command=lambda: self.select_fill())
         self.optional.b_sback.config(command=lambda: self.select_back())
+        self.optional.c_back_align.config(variable=self.align_rasters)
 
         # 09 CREATE CONDITION
         self.b_create_c = tk.Button(top, width=self.col_0_width, bg="white", text="CREATE CONDITION",
@@ -228,11 +232,19 @@ class CreateCondition(object):
         if self.dir2back.__len__() > 2:
             new_condition.save_tif(self.dir2back, "back")
 
+        if self.align_rasters.get():
+            snap_ras = os.path.join(self.dir2back, "back.tif")
+            new_condition.fix_alignment(snap_ras, self.dir2new_condition)
+
+        new_condition.check_alignment(self.dir2new_condition)
+
         self.top.bell()
         try:
             if not new_condition.error:
                 fGl.open_folder(self.dir2new_condition)
                 self.l_run_info.config(fg="forest green", text="Condition successfully created.")
+            if new_condition.warning:
+                self.l_run_info.config(fg="gold4", text="Condition created with warnings (see logfile).")
             else:
                 self.l_run_info.config(fg="red", text="Condition creation failed.")
         except:
