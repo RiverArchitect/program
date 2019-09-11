@@ -33,9 +33,11 @@ class ConditionCreator:
     def __init__(self, dir2condition):
         self.condition = os.path.basename(dir2condition.strip("\\").strip("/"))
         self.dir2condition = dir2condition  # string of the condition to be created
+        self.cache = os.path.join(config.dir2conditions, ".cache")
         self.error = False
         self.warning = False
         self.logger = logging.getLogger("logfile")
+        fGl.chk_dir(self.cache)
 
     def create_discharge_table(self):
         try:
@@ -184,20 +186,53 @@ class ConditionCreator:
         except:
             self.logger.info("ERROR: The selected folder does not contain any Raster containing the defined string.")
 
+    @staticmethod
+    def check_alignment_pair(ras1, ras2):
+        """Checks if a pair of rasters are aligned."""
+        cell_sizes = []
+        coordsyss = []
+        mod_corners = []
+        cells_match = True
+        coords_match = True
+        corners_match = True
+        for path in [ras1, ras2]:
+            cell_size_x = float(arcpy.GetRasterProperties_management(path, 'CELLSIZEX')[0])
+            cell_size_y = float(arcpy.GetRasterProperties_management(path, 'CELLSIZEY')[0])
+            cell_size = str(cell_size_x) + ', ' + str(cell_size_y)
+            cell_sizes.append(cell_size)
+
+            extent = arcpy.Describe(path).Extent
+
+            coordsys = extent.spatialReference.name
+            coordsyss.append(coordsys)
+
+            xmin = extent.XMin
+            ymin = extent.YMin
+            mod_corners.append((xmin % cell_size_x, ymin % cell_size_y))
+        if len(set(cell_sizes)) != 1:
+            cells_match = False
+        if len(set(coordsyss)) != 1:
+            coords_match = False
+        if len(set(mod_corners)) != 1:
+            corners_match = False
+        return cells_match, coords_match, corners_match
+
     def check_alignment(self, dir2new_condition):
-        """Checks if all inputs have same cell size/alignment."""
+        """Checks if all inputs in directory have same cell size/alignment."""
         self.logger.info("Checking alignment of input files...")
         paths = []
         cell_sizes = []
         coordsyss = []
-        corners = []
+        mod_corners = []
         for root, subdir, filenames in os.walk(dir2new_condition):
             for filename in filenames:
                 if filename.endswith(".tif"):
                     path = os.path.join(root, filename)
                     paths.append(path)
 
-                    cell_size = arcpy.GetRasterProperties_management(path, 'CELLSIZEX')[0]
+                    cell_size_x = float(arcpy.GetRasterProperties_management(path, 'CELLSIZEX')[0])
+                    cell_size_y = float(arcpy.GetRasterProperties_management(path, 'CELLSIZEY')[0])
+                    cell_size = str(cell_size_x) + ', ' + str(cell_size_y)
                     cell_sizes.append(cell_size)
 
                     extent = arcpy.Describe(path).Extent
@@ -207,7 +242,7 @@ class ConditionCreator:
 
                     xmin = extent.XMin
                     ymin = extent.YMin
-                    corners.append((xmin, ymin))
+                    mod_corners.append((xmin % cell_size_x, ymin % cell_size_y))
 
         aligned = True
         if len(set(cell_sizes)) != 1:
@@ -224,12 +259,12 @@ class ConditionCreator:
                 self.logger.info("The following rasters have coordinate system %s:" % str(coordsys))
                 self.logger.info([x for i, x in enumerate(paths) if coordsyss[i] == coordsys])
 
-        if len(set(corners)) != 1:
+        if len(set(mod_corners)) != 1:
             aligned = False
             self.logger.info("WARNING: Not all inputs share same extent.")
-            for corner in set(corners):
-                self.logger.info("The following rasters have lower left corner %s:" % str(corner))
-                self.logger.info([x for i, x in enumerate(paths) if corners[i] == corner])
+            for corner in set(mod_corners):
+                self.logger.info("The following rasters have lower left corner (modulo cell size) %s:" % str(corner))
+                self.logger.info([x for i, x in enumerate(paths) if mod_corners[i] == corner])
 
         if aligned:
             self.logger.info("Input rasters are aligned properly.")
@@ -242,57 +277,118 @@ class ConditionCreator:
             snap_raster: raster used to set the cell size, snapping, and coordinate system of all other rasters.
             dir2new_condition: directory containing all rasters to be aligned.
         """
-        for root, subdir, filenames in os.walk(dir2new_condition):
+        self.logger.info("Aligning input rasters to %s..." % snap_raster)
+        error = False
+        # sorted so we handle h before u and va for proper null/zero depth handling
+        for root, dirs, filenames in sorted(os.walk(dir2new_condition)):
             for filename in filenames:
                 if filename.endswith(".tif"):
+                    # try:
                     misaligned_raster = os.path.join(root, filename)
 
-                    resample_ras = misaligned_raster
+                    # check if raster needs to be aligned.
+                    cells_match, coords_match, corners_match = self.check_alignment_pair(snap_raster, misaligned_raster)
 
-                    # if depth or velocity, set null values to zero for resampling interpolation accuracy
-                    if misaligned_raster.startswith("h") or misaligned_raster.startswith("u"):
-                        resample_ras = Con(IsNull(misaligned_raster), 0, misaligned_raster)
+                    if not (cells_match and coords_match and corners_match):
+                        resample_ras = misaligned_raster
 
-                    # if velocity angle, convert to vx and vy for smooth resampling
-                    if misaligned_raster.startswith("va"):
-                        va_x = Sin(misaligned_raster)
-                        va_y = Cos(misaligned_raster)
-                        resample_ras = [va_x, va_y]
+                        # if depth or velocity, set null values to zero for resampling interpolation accuracy
+                        if filename.startswith("h") or filename.startswith("u"):
+                            resample_ras = Con(IsNull(misaligned_raster), 0, misaligned_raster)
 
-                    # set selected raster as environment snap raster and output coordinate system
-                    arcpy.env.snapRaster = snap_raster
-                    arcpy.env.outputCoordinateSystem = Raster(snap_raster).spatialReference
-                    # resample using selected raster as cell size, bilinear interpolation method
-                    if type(resample_ras) == list:
-                        for i, ras in enumerate(resample_ras):
-                            out_ras_path = os.path.join(self.cache, "resample_ras%i.tif" % i)
-                            arcpy.Resample_management(ras, out_ras_path, cell_size=snap_raster, resampling_type="BILINEAR")
-                    else:
-                        out_ras_path = os.path.join(self.cache, "resample_ras.tif")
-                        arcpy.Resample_management(resample_ras, out_ras_path, cell_size=snap_raster, resampling_type="BILINEAR")
+                        # if velocity angle, convert to x and y for smooth resampling
+                        if filename.startswith("va"):
+                            va_x = Sin(Raster(misaligned_raster) * np.pi/180)
+                            va_y = Cos(Raster(misaligned_raster) * np.pi/180)
+                            resample_ras = [va_x, va_y]
 
-                    # if velocity angle, convert components back to angle
-                    if misaligned_raster.startswith("va"):
-                        out_ras_path = os.path.join(self.cache, "resample_ras.tif")
-                        x_ras = Raster(os.path.join(self.cache, "resample_ras1.tif"))
-                        y_ras = Raster(os.path.join(self.cache, "resample_ras2.tif"))
-                        # upper half of plane
-                        temp_ras1 = Con(y_ras > 0, ATan(x_ras/y_ras) * 180/np.pi)
-                        # 4th quadrant
-                        temp_ras2 = Con(x_ras > 0 & y_ras < 0, 180 + ATan(x_ras/y_ras) * 180/np.pi, temp_ras1)
-                        # 3rd quadrant
-                        temp_ras3 = Con(x_ras < 0 & y_ras < 0, -(180 + ATan(x_ras/y_ras) * 180/np.pi), temp_ras2)
-                        # if x = 0 and y < 0, set to 180
-                        temp_ras4 = Con(x_ras == 0 & y_ras < 0, 180, temp_ras3)
-                        # if y = 0, set to 90 or -90  depending on sign of x
-                        temp_ras5 = Con(y_ras == 0 & x_ras > 0, 90, temp_ras4)
-                        temp_ras6 = Con(y_ras == 0 & x_ras < 0, -90, temp_ras5)
-                        # if x = 0 and y = 0, cannot get average angle
-                        temp_ras7 = Con(y_ras == 0 & x_ras == 0, np.nan, temp_ras6)
-                        temp_ras7.save(out_ras_path)
-                    # overwrite misaligned raster with resampled raster
-                    out_ras = Raster(out_ras_path)
-                    out_ras.save(misaligned_raster)
+                        # set selected raster as environment snap raster and output coordinate system
+                        arcpy.env.snapRaster = snap_raster
+                        arcpy.env.outputCoordinateSystem = Raster(snap_raster).spatialReference
+                        # get cell size
+                        cell_size_x = arcpy.GetRasterProperties_management(snap_raster, 'CELLSIZEX')[0]
+                        cell_size_y = arcpy.GetRasterProperties_management(snap_raster, 'CELLSIZEY')[0]
+                        cell_size = str(cell_size_x) + ' ' + str(cell_size_y)
+
+                        # resample using selected raster as cell size, bilinear interpolation method
+                        if filename.startswith("va"):
+                            for i, ras in enumerate(resample_ras):
+                                out_ras_path = os.path.join(self.cache, "resample_ras%i.tif" % i)
+                                if cells_match and corners_match:
+                                    # just change coordinate system
+                                    arcpy.Resample_management(ras, out_ras_path, cell_size=cell_size,
+                                                              resampling_type="NEAREST")
+                                else:
+                                    arcpy.Resample_management(ras, out_ras_path, cell_size=cell_size,
+                                                              resampling_type="BILINEAR")
+                        else:
+                            out_ras_path = os.path.join(self.cache, "resample_ras.tif")
+                            if cells_match and corners_match:
+                                # just change coordinate system
+                                arcpy.Resample_management(resample_ras, out_ras_path, cell_size=cell_size,
+                                                          resampling_type="NEAREST")
+                            else:
+                                arcpy.Resample_management(resample_ras, out_ras_path, cell_size=cell_size,
+                                                          resampling_type="BILINEAR")
+
+                        # if velocity angle, convert components back to angle
+                        if filename.startswith("va"):
+                            out_ras_path = os.path.join(self.cache, "resample_ras.tif")
+                            x_ras = Raster(os.path.join(self.cache, "resample_ras0.tif"))
+                            y_ras = Raster(os.path.join(self.cache, "resample_ras1.tif"))
+
+                            # convert vx and vy to array
+                            vx_mat = arcpy.RasterToNumPyArray(x_ras, nodata_to_value=np.nan)
+                            vy_mat = arcpy.RasterToNumPyArray(y_ras, nodata_to_value=np.nan)
+                            # compute vector angles
+                            va_mat = np.empty(np.shape(vx_mat))
+                            va_mat[:] = np.nan
+                            for i in range(len(vx_mat)):
+                                for j in range(len(vx_mat[i])):
+                                    va_mat[i, j] = fGl.va_from_xy(vx_mat[i, j], vy_mat[i, j])
+                            # save va raster
+                            ref_pt = arcpy.Point(x_ras.extent.XMin, x_ras.extent.YMin)
+                            va_ras = arcpy.NumPyArrayToRaster(va_mat, lower_left_corner=ref_pt,
+                                                              x_cell_size=float(cell_size_x),
+                                                              y_cell_size=float(cell_size_y),
+                                                              value_to_nodata=np.nan)
+                            va_ras.save(out_ras_path)
+                            del x_ras, y_ras  # clean up
+
+                        # convert zero depths back to null
+                        if filename.startswith("h"):
+                            h = SetNull(out_ras_path, out_ras_path, "VALUE <= 0")
+                            h.save(out_ras_path)
+
+                        # convert velocity and velocity angle back to null where depth is null
+                        if filename.startswith("u") or filename.startswith("va"):
+                            h = Raster(os.path.join(root, filename.replace('u', 'h').replace('va', 'h')))
+                            out_ras = SetNull(h, out_ras_path, "VALUE <= 0")
+                            out_ras.save(out_ras_path)
+
+                        # overwrite misaligned raster with resampled raster
+                        out_ras = Raster(out_ras_path)
+                        out_ras.save(misaligned_raster)
+                    # except Exception as e:
+                        """
+                        self.logger.info(e)
+                        self.logger.info("Failed to align input raster %s." % filename)
+                        error = True
+                        """
+        if not error:
+            self.logger.info("Aligned successfully.")
+        else:
+            self.logger.info("Finished alignment with errors (see logfile).")
+        self.clean_up()
+
+    def clean_up(self):
+        try:
+            self.logger.info(" * Cleaning up ...")
+            fGl.clean_dir(self.cache)
+            fGl.rm_dir(self.cache)
+            self.logger.info(" * OK")
+        except:
+            self.logger.info(" * Failed to clean up .cache folder.")
 
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = ConditionCreator (%s)" % os.path.dirname(__file__))

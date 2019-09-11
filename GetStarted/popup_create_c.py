@@ -1,7 +1,7 @@
 try:
     import os, sys
     import tkinter as tk
-    from tkinter.messagebox import askokcancel, showinfo
+    from tkinter.messagebox import askokcancel, showinfo, showwarning
     from tkinter.filedialog import *
     import webbrowser
 except:
@@ -119,10 +119,11 @@ class OptionalFrame(tk.Frame):
         self.l_back_info = tk.Label(self, fg="gray35", text="(optional)")
         self.l_back_info.grid(sticky=tk.W, row=20, column=1, padx=self.xd, pady=self.yd)
         self.c_back_align = tk.Checkbutton(self, text="Use to align input rasters")
-        self.c_back_align.grid(sticky=tk.W, row=20, column=2, padx=self.xd, pady=self.yd)
+        self.c_back_align.grid(sticky=tk.W, row=21, column=0, padx=self.xd, pady=self.yd)
+        self.c_back_align["state"] = "disabled"
         self.l_back = tk.Label(self, fg="tan4", text="No Background Raster defined.")
-        self.l_back.grid(sticky=tk.W, row=21, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=22, column=0)  # dummy
+        self.l_back.grid(sticky=tk.W, row=22, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=23, column=0)  # dummy
 
         for wid in self.winfo_children():
             try:
@@ -156,7 +157,7 @@ class CreateCondition(object):
         # ARRANGE GEOMETRY
         # width and height of the window.
         ww = 490
-        wh = 860
+        wh = 890
         self.xd = 5  # distance holder in x-direction (pixel)
         self.yd = 5  # distance holder in y-direction (pixel)
         # height and location
@@ -216,7 +217,7 @@ class CreateCondition(object):
         if not os.path.exists(self.dir2new_condition):
             os.makedirs(self.dir2new_condition)
         else:
-            showinfo("WARNING", "The defined condition already exists and files may be overwritten. Make sure to SAVE IMPORTANT FILE from the existing condition BEFORE CLICKING OK.")
+            showinfo("WARNING", "The defined condition already exists and files may be overwritten. Make sure to SAVE IMPORTANT FILES from the existing condition BEFORE CLICKING OK.")
         new_condition = cCC.ConditionCreator(self.dir2new_condition)
         new_condition.transfer_rasters_from_folder(self.dir2h, "h", str(self.str_h.get()))
         new_condition.transfer_rasters_from_folder(self.dir2u, "u", str(self.str_u.get()))
@@ -233,20 +234,22 @@ class CreateCondition(object):
             new_condition.save_tif(self.dir2back, "back")
 
         if self.align_rasters.get():
-            snap_ras = os.path.join(self.dir2back, "back.tif")
+            snap_ras = os.path.join(self.dir2new_condition, "back.tif")
             new_condition.fix_alignment(snap_ras, self.dir2new_condition)
 
         new_condition.check_alignment(self.dir2new_condition)
 
         self.top.bell()
         try:
-            if not new_condition.error:
+            if new_condition.error:
+                self.l_run_info.config(fg="red", text="Condition creation failed.")
+            elif new_condition.warning:
+                self.l_run_info.config(fg="gold4", text="Condition created with warnings (see logfile).")
+                showwarning("WARNING", "Input rasters are not properly aligned (see logfile). Rasters can be aligned by inputting a background raster and selecting the checkbox \"Use to align input rasters\".")
+            else:
                 fGl.open_folder(self.dir2new_condition)
                 self.l_run_info.config(fg="forest green", text="Condition successfully created.")
-            if new_condition.warning:
-                self.l_run_info.config(fg="gold4", text="Condition created with warnings (see logfile).")
-            else:
-                self.l_run_info.config(fg="red", text="Condition creation failed.")
+
         except:
             pass
         msg0 = "Condition created. Next:\n (1) Return to the Main Window and\n (2) Use \'Populate Condition\' to create geomorphic unit, depth to groundwater and detrended DEM rasters."
@@ -257,6 +260,10 @@ class CreateCondition(object):
         showinfo("INFO", "Select a Background Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).")
         self.dir2back = askopenfilename(initialdir=self.dir2grains, title="Select Background raster")
         self.optional.l_back.config(fg="forest green", text=self.dir2back)
+        if self.dir2back != '':
+            self.optional.c_back_align["state"] = "normal"
+        else:
+            self.optional.c_back_align["state"] = "disabled"
 
     def select_dem(self):
         showinfo("INFO", "Select a DEM Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).")

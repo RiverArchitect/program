@@ -1,5 +1,6 @@
 try:
     import os, logging, sys, glob, webbrowser, time
+    import numpy as np
     from collections import Iterable  # used in the flatten function
     from bisect import bisect_left
 except:
@@ -525,6 +526,28 @@ def tuple2num(arg):
     # call: tuple2num((2,3))
     new = arg[0] + arg[1] * 10 ** (-1 * len(str(arg[1])))
     return new
+
+
+def va_from_xy(vx, vy):
+    # calculates vector angle from north given x and y components
+    if np.isnan(vx) or np.isnan(vy):
+        return np.nan
+    if vx == 0:
+        if vy >= 0:
+            return 0
+        else:
+            return 180
+    if vy == 0:
+        if vx > 0:
+            return 90
+        else:
+            return -90
+    if vy > 0:
+        return np.degrees(np.arctan(vx/vy))
+    elif vx > 0:
+        return -np.degrees(np.arctan(vy/vx)) + 90
+    else:
+        return -np.degrees(np.arctan(vy/vx)) - 90
 
 
 def verify_shp_file(shapefile):
