@@ -64,7 +64,7 @@ class MainGui(sg.RaModuleGui):
         try:
             import popup_analyze_q as pcq
         except:
-            showinfo("Oups ...", "Cannot find discharge analysis routines -  check RA installation.")
+            showinfo("Oups ...", "Cannot find discharge analysis routines -  check RA installation.", parent=self)
             return -1
         new_window = pcq.FlowAnalysis(self.master)
         self.b_analyze_Q["state"] = "disabled"
@@ -75,7 +75,7 @@ class MainGui(sg.RaModuleGui):
         try:
             import popup_create_c as pcc
         except:
-            showinfo("Oups ...", "Cannot find condition creation routines -  check RA installation.")
+            showinfo("Oups ...", "Cannot find condition creation routines -  check RA installation.", parent=self)
             return -1
         new_window = pcc.CreateCondition(self.master)
         self.b_create_c["state"] = "disabled"
@@ -87,7 +87,7 @@ class MainGui(sg.RaModuleGui):
         try:
             import popup_create_c_sub as pccs
         except:
-            showinfo("Oups ...", "Cannot find sub-condition creation routines -  check RA installation.")
+            showinfo("Oups ...", "Cannot find sub-condition creation routines -  check RA installation.", parent=self)
             return -1
         new_window = pccs.CreateSubCondition(self.master)
         self.b_create_sub_c["state"] = "disabled"
@@ -116,7 +116,7 @@ class MainGui(sg.RaModuleGui):
         try:
             import popup_populate_c as ppc
         except:
-            showinfo("Oups ...", "Cannot find condition population routines -  check RA installation.")
+            showinfo("Oups ...", "Cannot find condition population routines -  check RA installation.", parent=self)
             return -1
         new_window = ppc.PopulateCondition(self.master)
         self.b_populate_c["state"] = "disabled"

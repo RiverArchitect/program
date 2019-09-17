@@ -120,7 +120,7 @@ class FlowAnalysis(object):
                 fGl.open_file(flow_duration_xlsx)
                 self.b_q_dur.config(fg="forest green")
             else:
-                showinfo("ERROR", "Review error messages (console / logfile.log).")
+                showinfo("ERROR", "Review error messages (console / logfile.log).", parent=self.top)
                 self.b_q_dur.config(fg="firebrick3", text="Re-try flow duration creation")
         except:
             pass
@@ -152,7 +152,8 @@ class FlowAnalysis(object):
         self.dir2condition_act = config.dir2conditions + self.condition  # INFO: dir2new_condition may not end with "\\"!
         if os.path.isfile(self.dir2condition_act + "\\flow_definitions.xlsx"):
             run = tk.messagebox.askyesno("Create new?",
-                                         "%s already exists.\nDo you want to create another flow_definitions.xlsx?" % self.dir2condition_act)
+                                         "%s already exists.\nDo you want to create another flow_definitions.xlsx?" % self.dir2condition_act,
+                                         parent=self.top)
         else:
             run = True
         if run:
@@ -167,7 +168,7 @@ class FlowAnalysis(object):
             if run and not condition4flows.error:
                 msg0 = "Analysis complete.\n"
                 msg1 = "Complete discharge (flood) return periods in the discharges workbook."
-                showinfo("INFO", msg0 + msg1)
+                showinfo("INFO", msg0 + msg1, parent=self.top)
                 fGl.open_file(self.flows_xlsx)
             if run and condition4flows.error:
                 self.b_sc.config(fg="firebrick3", text="Analysis failed")
@@ -192,7 +193,7 @@ class FlowAnalysis(object):
     def select_flow_series_xlsx(self):
         self.flow_series_xlsx = askopenfilename(initialdir=config.dir2flows + "\\InputFlowSeries",
                                                 title="Select flow series workbook (xlsx)",
-                                                filetypes=[("Workbooks", "*.xlsx")])
+                                                filetypes=[("Workbooks", "*.xlsx")], parent=self.top)
         b_text = str(self.flow_series_xlsx)
         if b_text.__len__() > 50:
             b_text = "... \\" + str(self.flow_series_xlsx).split("/")[-1].split("\\")[-1]

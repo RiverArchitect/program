@@ -148,7 +148,7 @@ class PopulateCondition(object):
         self.top.destroy()
 
     def open_mu_xlsx(self):
-        showinfo("INFO", "Do not forget to save changes ...")
+        showinfo("INFO", "Do not forget to save changes ...", parent=self.top)
         try:
             webbrowser.open(config.xlsx_mu)
         except:
@@ -194,14 +194,15 @@ class PopulateCondition(object):
             pass
 
     def select_dem(self):
-        showinfo("INFO", "Select a DEM Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).")
+        showinfo("INFO", "Select a DEM Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).",
+                 parent=self.top)
         self.dir2dem = askopenfilename(initialdir=".", title="Select DEM raster")
 
     def select_h(self):
         msg = "Select the flow depth raster corresponding to the required discharge / baseflow (?)."
-        showinfo("INFO", msg)
+        showinfo("INFO", msg, parent=self.top)
         self.dir2h = askopenfilename(initialdir=self.dir2condition_act, title="Select baseflow depth raster",
-                                     filetypes=[('GeoTIFF', '*.tif;*.tiff')])
+                                     filetypes=[('GeoTIFF', '*.tif;*.tiff')], parent=self.top)
         self.b_d2w["state"] = "normal"
         self.c_interp["state"] = "readonly"
         self.b_det["state"] = "normal"
@@ -210,9 +211,9 @@ class PopulateCondition(object):
 
     def select_u(self):
         msg = "Select the flow velocity raster corresponding to baseflow."
-        showinfo("INFO", msg)
+        showinfo("INFO", msg, parent=self.top)
         self.dir2u = askopenfilename(initialdir=self.dir2condition_act, title="Select baseflow velocity raster",
-                                     filetypes=[('GeoTIFF', '*.tif;*.tiff')])
+                                     filetypes=[('GeoTIFF', '*.tif;*.tiff')], parent=self.top)
         if self.dir2h.__len__() > 0:
             self.b_mu["state"] = "normal"
 
@@ -223,7 +224,7 @@ class PopulateCondition(object):
         self.b_sc.config(fg="forest green")
         self.dir2dem = os.path.join(self.dir2condition_act, "dem.tif")
         if not os.path.isfile(self.dir2dem):
-            showinfo("WARNING", self.dir2dem + " does not exist.")
+            showinfo("WARNING", self.dir2dem + " does not exist.", parent=self.top)
             self.l_d2w_dem.config(fg="firebrick3", text=self.dir2dem + " does not exist.")
             self.l_det_dem.config(fg="firebrick3", text=self.dir2dem + " does not exist.")
         else:

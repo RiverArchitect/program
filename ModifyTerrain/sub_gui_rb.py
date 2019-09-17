@@ -128,9 +128,9 @@ class SubFrame(tk.Frame):
             success = True
         if success:
             self.add_variability_fun_dict[par].config(fg="forest green")
-            showinfo("INFO", "Added {0} as {1}".format(fun_str, self.input_file.par_name_dict[par].split("*")[0]))
+            showinfo("INFO", "Added {0} as {1}".format(fun_str, self.input_file.par_name_dict[par].split("*")[0]), parent=self)
         else:
-            showinfo("ERROR", "Could not append function.")
+            showinfo("ERROR", "Could not append function.", parent=self)
 
     def make_user_functions(self):
         sub_frame = PopUpUserFunction(self, self.user_function_count_dict)
@@ -211,7 +211,7 @@ class SubFrame(tk.Frame):
         _f = open(config.dir2rb + "messages\\" + par + ".txt", "r")
         msg = str(_f.read().splitlines()[0])
         _f.close()
-        showinfo(self.input_file.par_name_dict[par], msg)
+        showinfo(self.input_file.par_name_dict[par], msg, parent=self)
 
     def update_subreach_opts(self):
         self.make_widgets()
@@ -286,12 +286,12 @@ class CreateInput(object):
                     try:
                         self.user_input[par] = "TZ(%s)" % str(self.f_req.tko_spec_dict[par][1].get())
                     except:
-                        showinfo("WARNING", "Cross-sectional shape = TZ but no n value is selected.")
+                        showinfo("WARNING", "Cross-sectional shape = TZ but no n value is selected.", parent=self)
             except:
                 if "user_functions" in par:
                     self.user_input.update({par: "\n".join([str(s) for s in list(self.f_req.user_functions_applied)])})
                 else:
-                    showinfo("WARNING", "Could not read input for %s." % str(self.f_req.input_file.par_name_dict[par]))
+                    showinfo("WARNING", "Could not read input for %s." % str(self.f_req.input_file.par_name_dict[par]), parent=self)
 
     def run_file_maker(self):
         file_name = self.e_fn.get()
@@ -299,13 +299,13 @@ class CreateInput(object):
             showinfo("INFO", "Enter NEW FILE NAME.")
             return -1
         if file_name + ".txt" in fGl.file_names_in_dir(config.dir2rb):
-            showinfo("INFO", "File already exists. Choose different name or delete existing file from %s." % config.dir2rb)
+            showinfo("INFO", "File already exists. Choose different name or delete existing file from %s." % config.dir2rb, parent=self)
             return -1
         self.get_user_input()
         self.f_req.input_file.make_file(file_name, self.user_input)
         self.user_input = {}
         self.b_run.config(text="CREATE ANOTHER INPUT FILE")
-        showinfo("Finished", "Created %s." % str(config.dir2rb + file_name + ".txt"))
+        showinfo("Finished", "Created %s." % str(config.dir2rb + file_name + ".txt"), parent=self)
         webbrowser.open(config.dir2rb + file_name + ".txt")
 
     def __call__(self, *args, **kwargs):

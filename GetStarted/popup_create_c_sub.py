@@ -117,8 +117,8 @@ class CreateSubCondition(object):
         msg2 = "              If \'gridcode\' cannot be found, the third Field or the FID Field is used.\n"
         msg3 = "              Ensure that the third Field contains On-Off Integers only, where 0=Outside and 1=Inside boundary.\n"
         msg4 = "\nIf Raster: Ensure that the Raster contains On-Off Integers only, where 0=Outside and 1=Inside boundary."
-        showinfo("INFO", msg0 + msg1 + msg2 + msg3 + msg4)
-        self.dir2bound = askopenfilename(initialdir=self.dir2src_condition, title="Select Boundary raster")
+        showinfo("INFO", msg0 + msg1 + msg2 + msg3 + msg4, parent=self.top)
+        self.dir2bound = askopenfilename(initialdir=self.dir2src_condition, title="Select Boundary raster", parent=self.top)
         if self.dir2bound.__len__() > 50:
             label_name = self.dir2bound[0:20] + " ... " + self.dir2bound[27:-1]
         else:

@@ -254,11 +254,11 @@ class CreateCondition(object):
             pass
         msg0 = "Condition created. Next:\n (1) Return to the Main Window and\n (2) Use \'Populate Condition\' to create geomorphic unit, depth to groundwater and detrended DEM rasters."
         msg1 = "\n\nEnsure that the Rasters are correctly defined in LifespanDesign/.templates/input_definitions.inp."
-        showinfo("INFO", msg0 + msg1)
+        showinfo("INFO", msg0 + msg1, parent=self.top)
 
     def select_back(self):
-        showinfo("INFO", "Select a Background Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).")
-        self.dir2back = askopenfilename(initialdir=self.dir2grains, title="Select Background raster")
+        showinfo("INFO", "Select a Background Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).", parent=self.top)
+        self.dir2back = askopenfilename(initialdir=self.dir2grains, title="Select Background raster", parent=self.top)
         self.optional.l_back.config(fg="forest green", text=self.dir2back)
         if self.dir2back != '':
             self.optional.c_back_align["state"] = "normal"
@@ -267,47 +267,47 @@ class CreateCondition(object):
 
     def select_dem(self):
         showinfo("INFO", "Select a DEM Raster file (if this is a GRID Raster, select the corresponding .aux.xml file).")
-        self.dir2dem = askopenfilename(initialdir=self.dir2u, title="Select DEM raster")
+        self.dir2dem = askopenfilename(initialdir=self.dir2u, title="Select DEM raster", parent=self.top)
         self.mandatory.l_dem.config(fg="forest green", text=self.dir2dem)
 
     def select_fill(self):
         msg0 = "Select a FILL Raster file (if this is a GRID Raster, select the corresponding .aux.xml file)."
         msg1 = "\n\nU.S. costomary: in FEET.\n S.I. metric: METERS."
-        showinfo("INFO", msg0 + msg1)
-        self.dir2fill = askopenfilename(initialdir=self.dir2scour, title="Select FILL raster")
+        showinfo("INFO", msg0 + msg1, parent=self.top)
+        self.dir2fill = askopenfilename(initialdir=self.dir2scour, title="Select FILL raster", parent=self.top)
         self.optional.l_fill.config(fg="forest green", text=self.dir2fill)
 
     def select_grains(self):
         msg0 = "Select a Grain size Raster file (if this is a GRID Raster, select the corresponding .aux.xml file)."
         msg1 = "\n\nS.I. (metric): Grain sizes must be in METERS."
         msg2 = "\n\nU.S. customary units: Grain sizes must be in FEET (US)."
-        showinfo("INFO", msg0 + msg1 + msg2)
-        self.dir2grains = askopenfilename(initialdir=self.dir2dem, title="Select Grain size raster")
+        showinfo("INFO", msg0 + msg1 + msg2, parent=self.top)
+        self.dir2grains = askopenfilename(initialdir=self.dir2dem, title="Select Grain size raster", parent=self.top)
         self.mandatory.l_grain.config(fg="forest green", text=self.dir2grains)
 
     def select_h(self):
         msg = self.user_raster_info()
-        showinfo("INFO", msg)
+        showinfo("INFO", msg, parent=self.top)
         self.dir2h = askdirectory(initialdir=self.dir2u) + "/"
         self.mandatory.l_h_folder.config(fg="forest green", text=str(self.dir2h))
 
     def select_scour(self):
         msg0 = "Select a SCOUR Raster file (if this is a GRID Raster, select the corresponding .aux.xml file)."
         msg1 = "\n\nU.S. customary: in FEET.\n S.I. metric: METERS."
-        showinfo("INFO", msg0 + msg1)
-        self.dir2scour = askopenfilename(initialdir=self.dir2grains, title="Select SCOUR raster")
+        showinfo("INFO", msg0 + msg1, parent=self.top)
+        self.dir2scour = askopenfilename(initialdir=self.dir2grains, title="Select SCOUR raster", parent=self.top)
         self.optional.l_scour.config(fg="forest green", text=self.dir2scour)
 
     def select_u(self):
         msg = self.user_raster_info()
-        showinfo("INFO", msg)
-        self.dir2u = askdirectory(initialdir=self.dir2h) + "/"
+        showinfo("INFO", msg, parent=self.top)
+        self.dir2u = askdirectory(initialdir=self.dir2h, parent=self.top) + "/"
         self.mandatory.l_u_folder.config(fg="forest green", text=str(self.dir2u))
 
     def select_va(self):
         msg = self.user_raster_info()
-        showinfo("INFO", msg)
-        self.dir2va = askdirectory(initialdir=self.dir2u) + "/"
+        showinfo("INFO", msg, parent=self.top)
+        self.dir2va = askdirectory(initialdir=self.dir2u, parent=self.top) + "/"
         self.optional.l_va_folder.config(fg="forest green", text=str(self.dir2va))
 
     def user_info(self, variable_name):
@@ -316,7 +316,7 @@ class CreateCondition(object):
             msg0 = "Only Rasters containing the entered string will be copied to the new condition folder."
             msg1 = "\n\n" + self.user_raster_info()
             msg = msg0 + msg1
-        showinfo("INFO", msg)
+        showinfo("INFO", msg, parent=self.top)
 
     def user_raster_info(self):
         msg0 = "Select folder with hydrodynamic (depth/velocity) Rasters containing a defined string.\n"
