@@ -66,6 +66,7 @@ class MainGui(sg.RaModuleGui):
         self.xlsx_condition = []
 
         self.apply_boundary = tk.BooleanVar()
+        self.apply_wua = tk.BooleanVar()
         self.external_flow_series = tk.BooleanVar()
         self.cover_applies_sharea = tk.BooleanVar()
 
@@ -120,9 +121,15 @@ class MainGui(sg.RaModuleGui):
         self.cb_use_cov = tk.Checkbutton(self, fg="gold4", text="Use cover CHSI (requires COVER HSI conditions)",
                                          variable=self.cover_applies_sharea,
                                          onvalue=True, offvalue=False)
-        self.cb_use_cov.grid(sticky=tk.W, row=16, column=0, columnspan=self.max_columnspan, padx=self.xd,
+        self.cb_use_cov.grid(sticky=tk.W, row=16, column=0, columnspan=2, padx=self.xd,
                              pady=self.yd)
         self.cb_use_cov["state"] = "disabled"
+        self.cb_use_wua = tk.Checkbutton(self, fg="gold4", text="Use weighted usable area",
+                                         variable=self.apply_wua,
+                                         onvalue=True, offvalue=False, command=lambda: self.set_wua())
+        self.cb_use_wua.grid(sticky=tk.W, row=16, column=3, columnspan=2, padx=self.xd,
+                             pady=self.yd)
+        self.cb_use_wua["state"] = "disabled"
 
         # BUTTONS
         self.b_show_fish = tk.Button(self, width=self.side_pnl_width, fg="RoyalBlue3", bg="white",
@@ -408,6 +415,7 @@ class MainGui(sg.RaModuleGui):
             # update SHArea buttons
             if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\"):
                 self.b_sha_th["state"] = "normal"
+                self.cb_use_wua["state"] = "normal"
                 if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
                     self.b_sharc["state"] = "normal"
 
@@ -427,6 +435,7 @@ class MainGui(sg.RaModuleGui):
                 if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
                     self.b_sharc["state"] = "normal"
                     self.cb_use_cov["state"] = "normal"
+                    self.cb_use_wua["state"] = "normal"
 
     def set_fish(self, species, *lifestage):
         try:
@@ -462,6 +471,11 @@ class MainGui(sg.RaModuleGui):
 
         if float(self.sharea_threshold) > 1.0:
             showinfo("WARNING", "The CHSI threshold value for SHArea calcula-\ntion needs to be smaller than 1.0.")
+
+    def set_wua(self):
+        self.sharea_threshold = float(0.0)
+        showinfo("INFO", "The CHSI threshold value is set to 0.")
+        self.b_sha_th.config(text="Set SHArea\nthreshold\nCurrent: CHSI = " + str(self.sharea_threshold))
 
     def shout_dict(self, the_dict):
         msg = "Selected Ambiance(s):"
@@ -556,7 +570,8 @@ class MainGui(sg.RaModuleGui):
                     except:
                         showinfo("INFO", "Using \'WITH COVER\' option (hydraulic only condition is empty).")
                         sharea = cHSI.CHSI(self.chsi_condition_cov, self.cover_applies, self.unit)
-                self.xlsx_condition = sharea.calculate_sha(self.sharea_threshold, self.fish_applied)
+
+                self.xlsx_condition = sharea.calculate_sha(self.sharea_threshold, self.fish_applied, self.apply_wua.get())
 
                 try:
                     sharea.clear_cache()

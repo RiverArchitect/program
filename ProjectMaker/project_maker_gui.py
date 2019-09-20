@@ -92,6 +92,7 @@ class MainGui(sg.RaModuleGui):
 
         self.get_condition_lists()
 
+        self.apply_wua = tk.BooleanVar()
         self.cover_app_pre = tk.BooleanVar()
         self.cover_app_post = tk.BooleanVar()
         self.prj_name = tk.StringVar()
@@ -186,12 +187,15 @@ class MainGui(sg.RaModuleGui):
         self.b_show_fish = tk.Button(self, width=14, background="white", text="Show selected fish", command=lambda: self.help_info("fish_selected"))
         self.b_show_fish.grid(sticky=tk.E, row=22, column=2, padx=self.xd, pady=self.yd)
         self.cb_cover_pre = tk.Checkbutton(self, text="Optional: Apply cover to pre-project", variable=self.cover_app_pre, onvalue=True, offvalue=False)
-        self.cb_cover_pre.grid(sticky=tk.W, row=23, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.cb_cover_pre.grid(sticky=tk.W, row=23, column=0, padx=self.xd, pady=self.yd)
         self.cb_cover_pre.deselect()
         self.cb_cover_post = tk.Checkbutton(self, text="Optional: Apply cover to post-project",
                                             variable=self.cover_app_post, onvalue=True, offvalue=False)
-        self.cb_cover_post.grid(sticky=tk.W, row=23, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        self.cb_cover_post.grid(sticky=tk.W, row=23, column=1, columnspan=2, padx=self.xd, pady=self.yd)
         self.cb_cover_post.deselect()
+        self.cb_apply_wua = tk.Checkbutton(self, text="Use WUA", variable=self.apply_wua, onvalue=True, offvalue=False)
+        self.cb_apply_wua.grid(sticky=tk.E, row=23, column=2, padx=self.xd, pady=self.yd)
+        self.cb_apply_wua.deselect()
         self.l_condition_i = tk.Label(self, text="2) Select pre-project condition: ")
         self.l_condition_i.grid(sticky=tk.W, row=25, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_i = tk.Scrollbar(self, orient=tk.VERTICAL)
@@ -460,7 +464,7 @@ class MainGui(sg.RaModuleGui):
                     showinfo("ERROR", "Select condition after terraforming.")
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.fish_applied, self.prj_name.get(), self.unit, self.version)
+                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.fish_applied, self.prj_name.get(), self.unit, self.version, self.apply_wua.get())
                 self.b_s40.config(text="Net gain in SHArea calculation OK", fg="forest green")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")

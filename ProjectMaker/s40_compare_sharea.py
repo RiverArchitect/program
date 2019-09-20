@@ -14,7 +14,7 @@ except:
     print("ExceptionERROR: Missing own packages (riverpy).")
 
 
-def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cover_post=bool(), fish=str(), prj_name=str(), unit=str(), version=str()):
+def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cover_post=bool(), fish=str(), prj_name=str(), unit=str(), version=str(), apply_wua=bool()):
     """ calculates pre- and post implementation SHArea
     version = "v10"             # type() =  3-char str: vII
     prj_name = "MyProject"               # (corresponding to folder name)
@@ -132,7 +132,7 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
                             else:
                                 ex_pr_pdf.append(0.0)
                         conditions_sha.append(
-                                sha.calculate_wua([pr for pr in ex_pr_pdf], [l[2] for l in result_matrix]))
+                                sha.calculate_sha([pr for pr in ex_pr_pdf], [l[2] for l in result_matrix]))
                     except:
                         logger.info("ERROR: Could not transfer SHArea data for " + str(species) + " - " + str(ls))
                         error = True

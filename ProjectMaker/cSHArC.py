@@ -28,6 +28,11 @@ class SHArC:
         self.logger = logging.getLogger("logfile")
         self.ras_project = None
         self.result = 0.0
+        self.cell_size = 0.0
+        self.cell_area = 0.0
+        self.mean_csi = 0.0
+        self.wua = 0.0
+        self.hhs = 0.0
         self.unit = unit
         if self.unit == "us":
             self.area_unit = "SQUARE_FEET_US"
@@ -40,7 +45,7 @@ class SHArC:
 
         self.xlsx_out = ""
 
-    def calculate_wua(self, exceedance_pr, usable_area):
+    def calculate_sha(self, exceedance_pr, usable_area):
         # exceedance_pr = LIST of discharge exceedance probabilities
         # usable_area =  LIST of usable habitat area corresponding to exceedance_pr
         area = []
@@ -86,7 +91,7 @@ class SHArC:
             self.logger.info("       .cache folder will be removed by package controls.")
 
     @fGl.spatial_license
-    def get_usable_area(self, csi_raster=str()):
+    def get_usable_area(self, csi_raster=str(), apply_wua=False):
         # wua_threshold =  FLOAT -- value between 0.0 and 1.0
         self.set_env()
         arcpy.env.workspace = self.cache
@@ -98,6 +103,8 @@ class SHArC:
 
         self.logger.info("   * snapping to ProjectArea.shp within CHSI raster (%s)..." % csi_raster)
         ras4shp = Con(~IsNull(self.ras_project), Con(~IsNull(ras_csi), Int(1)))
+        if apply_wua:
+            ras4wua = Con(~IsNull(self.ras_project), Con(~IsNull(ras_csi), Float(ras_csi)))
 
         self.logger.info("   * converting snapped CHSI raster to Polygon shapefile:")
         try:
@@ -128,10 +135,15 @@ class SHArC:
                                                          area_unit=self.area_unit)
             self.logger.info("   * summing up area ...")
             area = 0.0
+            if apply_wua:
+                mean_csi = float(arcpy.GetRasterProperties_management(ras4wua, property_type="MEAN")[0])
+                self.logger.info("       * weighing area with cHSI = %s ..." % str(mean_csi))
+            else:
+                mean_csi = 1.0
             with arcpy.da.UpdateCursor(shp_name, "F_AREA") as cursor:
                 for row in cursor:
                     try:
-                        area += float(row[0])
+                        area += float(row[0]) * mean_csi
                     except:
                         self.logger.info("       WARNING: Bad value (" + str(row) + ")")
         except arcpy.ExecuteError:
@@ -151,6 +163,7 @@ class SHArC:
         self.cache_count += 1
         self.result = area * self.ft2ac
         self.logger.info("   * result: " + str(area * self.ft2ac) + " " + self.unit_str)
+
 
     @fGl.err_info
     @fGl.spatial_license

@@ -52,7 +52,7 @@ class CHSI:
             self.u_discharge = "m3"
             self.ft2ac = 1
 
-    def calculate_sha(self, sha_threshold, fish):
+    def calculate_sha(self, sha_threshold, fish, apply_weighing=False):
         # SHArea_threshold =  FLOAT -- value between 0.0 and 1.0
         # fish = DICT -- fish.keys()==species_names; fish.values()==lifestages
         arcpy.CheckOutExtension('Spatial')
@@ -118,10 +118,15 @@ class CHSI:
                         arcpy.CalculateGeometryAttributes_management(shp_name, geometry_property=[["F_AREA", "AREA"]],
                                                                      area_unit=self.area_unit)
                         self.logger.info("         ... summing up area ...")
+                        if apply_weighing:
+                            mean_csi = float(arcpy.GetRasterProperties_management(rel_ras, property_type="MEAN")[0])
+                            self.logger.info("       * weighing area with cHSI = %s ..." % str(mean_csi))
+                        else:
+                            mean_csi = 1.0
                         with arcpy.da.UpdateCursor(shp_name, "F_AREA") as cursor:
                             for row in cursor:
                                 try:
-                                    area += float(row[0])
+                                    area += float(row[0]) * mean_csi
                                 except:
                                     self.logger.info("       WARNING: Bad value (" + str(row) + ")")
                     except arcpy.ExecuteError:
