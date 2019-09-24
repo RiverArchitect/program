@@ -575,12 +575,15 @@ class CovHSI(HHSI):
 
         self.cover_type = str(geofile_name).split(".")[0]
         self.cell_size = float()  # initialization for points to raster export variable
-        if self.units == "us":
-            self.geofile_dict = {"substrate": "dmean_ft.tif", "boulders": "boulders.shp", "cobbles": "dmean_ft.tif",
-                                 "wood": "wood.shp", "plants": "plants.shp"}
-        else:
-            self.geofile_dict = {"substrate": "dmean.tif", "boulders": "boulders.shp", "cobbles": "dmean.tif",
-                                 "wood": "wood.shp", "plants": "plants.shp"}
+        # get name of dmean raster (dmean.tif or dmean_ft.tif)
+        dmean_name = "dmean.tif"
+        for root, subdirs, files in os.walk(raster_input_path):
+            for filename in files:
+                if "dmean" in filename and filename.endswith(".tif"):
+                    dmean_name = filename
+
+        self.geofile_dict = {"substrate": dmean_name, "boulders": "boulders.shp", "cobbles": dmean_name,
+                             "wood": "wood.shp", "plants": "plants.shp"}
 
         if not (self.geofile_dict[self.cover_type][-4:-1] == ".sh"):
             try:
