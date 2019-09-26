@@ -174,7 +174,6 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
-    @fGl.err_info
     def get_hsi_rasters(self, cover=False):
         """Weight disconnected areas by cHSI to quantify stranding risk.
         Note: must have already created cHSI rasters using SHArC module.
@@ -189,7 +188,7 @@ class ConnectivityAnalysis:
         cover_code = "cover" if cover else "no_cover"
         chsi_dir = os.path.join(config.dir2sh, "CHSI\\%s\\%s" % (self.condition, cover_code))
         if not os.path.exists(chsi_dir):
-            self.logger.info("ERROR: Could not find cHSI directory. Create cHSI rasters first using SHArC module." % chsi_dir)
+            self.logger.info("ERROR: Could not find cHSI directory. Create cHSI rasters first using SHArC module.")
         self.Q_chsi_dict = {}
 
         try:
@@ -350,19 +349,22 @@ class ConnectivityAnalysis:
         Produces raster of habitat area disconnected by flow reduction, weighted by cHSI.
         """
         self.logger.info("Making stranding risk map...")
-        total_disc_hab_ras_path = os.path.join(self.out_dir, "disconnected_habitat.tif")
-        for Q in sorted(self.discharges, reverse=True):
-            disc_hab_ras_path = os.path.join(self.disc_areas_dir, "disc_hab_%s%06d.tif" % (self.lifestage_code, int(Q)))
-            disc_hab_ras = Raster(disc_hab_ras_path)
-            if Q == self.q_high:
-                # initialize total disconnected habitat area raster
-                total_disc_hab_ras = Raster(disc_hab_ras)
-            else:
-                # add new disconnected habitat area
-                total_disc_hab_ras = Con(~IsNull(disc_hab_ras), disc_hab_ras, total_disc_hab_ras)
+        try:
+            total_disc_hab_ras_path = os.path.join(self.out_dir, "disconnected_habitat.tif")
+            for Q in sorted(self.discharges, reverse=True):
+                disc_hab_ras_path = os.path.join(self.disc_areas_dir, "disc_hab_%s%06d.tif" % (self.lifestage_code, int(Q)))
+                disc_hab_ras = Raster(disc_hab_ras_path)
+                if Q == self.q_high:
+                    # initialize total disconnected habitat area raster
+                    total_disc_hab_ras = Raster(disc_hab_ras)
+                else:
+                    # add new disconnected habitat area
+                    total_disc_hab_ras = Con(~IsNull(disc_hab_ras), disc_hab_ras, total_disc_hab_ras)
 
-        total_disc_hab_ras.save(total_disc_hab_ras_path)
-        self.logger.info("Saved stranding risk raster: %s" % total_disc_hab_ras_path)
+            total_disc_hab_ras.save(total_disc_hab_ras_path)
+            self.logger.info("Saved stranding risk raster: %s" % total_disc_hab_ras_path)
+        except:
+            self.logger.info("ERROR: Failed to produce stranding risk map. Ensure cHSI rasters have been created using the SHArC module.")
 
     def make_disconnect_Q_map(self):
         """
