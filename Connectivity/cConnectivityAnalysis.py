@@ -52,6 +52,7 @@ class ConnectivityAnalysis:
 
         self.species = species
         self.lifestage = lifestage
+        self.lifestage_code = self.species.lower()[:2] + self.lifestage.lower()[:2]
         # read in fish data (minimum depth needed, max swimming speed, ...)
         self.h_min = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "h_min")
         self.logger.info("minimum swimming depth = %s %s" % (self.h_min, self.length_units))
@@ -100,6 +101,8 @@ class ConnectivityAnalysis:
         self.Q_h_interp_dict = {}
         self.Q_u_interp_dict = {}
         self.Q_va_interp_dict = {}
+        # populated by self.get_hsi_rasters()
+        self.Q_chsi_dict = {}
         # populated by self.make_shortest_paths_map(Q)
         self.Q_escape_dict = {}
         # populated by self.disconnected_areas(Q)
@@ -116,6 +119,7 @@ class ConnectivityAnalysis:
 
         self.get_hydraulic_rasters()
         self.get_interpolated_rasters()
+        self.get_hsi_rasters()
         self.get_target_raster()
 
     def get_hydraulic_rasters(self):
@@ -170,6 +174,35 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
+    @fGl.err_info
+    def get_hsi_rasters(self, cover=False):
+        """Weight disconnected areas by cHSI to quantify stranding risk.
+        Note: must have already created cHSI rasters using SHArC module.
+        """
+        self.logger.info("Getting cHSI rasters from SHArC module output...")
+        self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
+        if cover:
+            self.logger.info("Getting hydraulic + cover cHSI...")
+        else:
+            self.logger.info("Getting hydraulic cHSI (no cover)...")
+
+        cover_code = "cover" if cover else "no_cover"
+        chsi_dir = os.path.join(config.dir2sh, "CHSI\\%s\\%s" % (self.condition, cover_code))
+        if not os.path.exists(chsi_dir):
+            self.logger.info("ERROR: Could not find cHSI directory. Create cHSI rasters first using SHArC module." % chsi_dir)
+        self.Q_chsi_dict = {}
+
+        try:
+            for root, subdirs, files in os.walk(chsi_dir):
+                for filename in files:
+                    if self.lifestage_code in filename and filename.endswith(".tif"):
+                        q = int(filename.split(self.lifestage_code)[1].replace(".tif", ""))
+                        if self.q_low <= q <= self.q_high:
+                            self.Q_chsi_dict[q] = os.path.join(chsi_dir, filename)
+            if len(self.Q_chsi_dict) < len(self.discharges):
+                self.logger.info("ERROR: Could not find cHSI rasters for all discharges to be analyzed.")
+        except:
+            self.logger.info("ERROR: Failed to retrieve cHSI rasters.")
 
     @fGl.err_info
     def get_target_raster(self):
@@ -269,6 +302,15 @@ class ConnectivityAnalysis:
         # disconnected area = portion of total area with null escape route
         disc_ras = Con(IsNull(escape_ras) & ~IsNull(total_ras), 1)
 
+        # cHSI weighted disconnected habitat area (using cHSI at discharge self.q_high before flow reduction)
+        try:
+            self.logger.info("Weighting disconnected area by cHSI...")
+            disc_hab_ras = disc_ras * Raster(self.Q_chsi_dict[self.q_high])
+            disc_hab_ras_path = os.path.join(self.disc_areas_dir, "disc_hab_%s%06d.tif" % (self.lifestage_code, int(Q)))
+            disc_hab_ras.save(disc_hab_ras_path)
+        except KeyError:
+            self.logger.info("ERROR: Could not find cHSI raster. Create cHSI rasters first using SHArC module.")
+
         self.logger.info("Converting rasters to polygons...")
         disc_area_path = os.path.join(self.disc_areas_dir, "disc_area%06d.shp" % int(Q))
         total_area_path = os.path.join(self.areas_dir, "area%06d.shp" % int(Q))
@@ -302,6 +344,25 @@ class ConnectivityAnalysis:
         self.logger.info("Disconnected wetted area: %.2f %s" % (disc_area, self.area_units))
         percent_disconnected = disc_area / total_area * 100
         self.logger.info("Percent of area disconnected: %.2f" % percent_disconnected)
+
+    def make_stranding_risk_map(self):
+        """
+        Produces raster of habitat area disconnected by flow reduction, weighted by cHSI.
+        """
+        self.logger.info("Making stranding risk map...")
+        total_disc_hab_ras_path = os.path.join(self.out_dir, "disconnected_habitat.tif")
+        for Q in sorted(self.discharges, reverse=True):
+            disc_hab_ras_path = os.path.join(self.disc_areas_dir, "disc_hab_%s%06d.tif" % (self.lifestage_code, int(Q)))
+            disc_hab_ras = Raster(disc_hab_ras_path)
+            if Q == self.q_high:
+                # initialize total disconnected habitat area raster
+                total_disc_hab_ras = Raster(disc_hab_ras)
+            else:
+                # add new disconnected habitat area
+                total_disc_hab_ras = Con(~IsNull(disc_hab_ras), disc_hab_ras, total_disc_hab_ras)
+
+        total_disc_hab_ras.save(total_disc_hab_ras_path)
+        self.logger.info("Saved stranding risk raster: %s" % total_disc_hab_ras_path)
 
     def make_disconnect_Q_map(self):
         """
@@ -361,6 +422,9 @@ class ConnectivityAnalysis:
             self.disconnected_areas(Q)
         # close disconnected area workbook
         self.xlsx_writer.save_close_wb(self.xlsx)
+
+        # make map of disconnected area weighted by cHSI
+        self.make_stranding_risk_map()
 
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
