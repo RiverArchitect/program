@@ -174,7 +174,7 @@ class ConnectivityAnalysis:
             self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
-    def get_hsi_rasters(self, cover=False):
+    def get_hsi_rasters(self, cover=True):
         """Weight disconnected areas by cHSI to quantify stranding risk.
         Note: must have already created cHSI rasters using SHArC module.
         """
@@ -188,20 +188,24 @@ class ConnectivityAnalysis:
         cover_code = "cover" if cover else "no_cover"
         chsi_dir = os.path.join(config.dir2sh, "CHSI\\%s\\%s" % (self.condition, cover_code))
         if not os.path.exists(chsi_dir):
-            self.logger.info("ERROR: Could not find cHSI directory. Create cHSI rasters first using SHArC module.")
-        self.Q_chsi_dict = {}
-
-        try:
-            for root, subdirs, files in os.walk(chsi_dir):
-                for filename in files:
-                    if self.lifestage_code in filename and filename.endswith(".tif"):
-                        q = int(filename.split(self.lifestage_code)[1].replace(".tif", ""))
-                        if self.q_low <= q <= self.q_high:
-                            self.Q_chsi_dict[q] = os.path.join(chsi_dir, filename)
-            if len(self.Q_chsi_dict) < len(self.discharges):
-                self.logger.info("ERROR: Could not find cHSI rasters for all discharges to be analyzed.")
-        except:
-            self.logger.info("ERROR: Failed to retrieve cHSI rasters.")
+            if cover:
+                self.logger.info("WARNING: No hydraulic + cover cHSI directory found. Using pure hydraulic cHSI instead (no cover)...")
+                self.get_hsi_rasters(cover=False)
+            else:
+                self.logger.info("ERROR: Could not find cHSI directory. Create cHSI rasters first using SHArC module.")
+        else:
+            self.Q_chsi_dict = {}
+            try:
+                for root, subdirs, files in os.walk(chsi_dir):
+                    for filename in files:
+                        if self.lifestage_code in filename and filename.endswith(".tif"):
+                            q = int(filename.split(self.lifestage_code)[1].replace(".tif", ""))
+                            if self.q_low <= q <= self.q_high:
+                                self.Q_chsi_dict[q] = os.path.join(chsi_dir, filename)
+                if len(self.Q_chsi_dict) < len(self.discharges):
+                    self.logger.info("ERROR: Could not find cHSI rasters for all discharges to be analyzed.")
+            except:
+                self.logger.info("ERROR: Failed to retrieve cHSI rasters.")
 
     @fGl.err_info
     def get_target_raster(self):
