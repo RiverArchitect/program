@@ -124,12 +124,12 @@ class MainGui(sg.RaModuleGui):
         self.cb_use_cov.grid(sticky=tk.W, row=16, column=0, columnspan=2, padx=self.xd,
                              pady=self.yd)
         self.cb_use_cov["state"] = "disabled"
-        self.cb_use_wua = tk.Checkbutton(self, fg="gold4", text="Use weighted usable area",
-                                         variable=self.apply_wua,
-                                         onvalue=True, offvalue=False, command=lambda: self.set_wua())
-        self.cb_use_wua.grid(sticky=tk.W, row=16, column=3, columnspan=2, padx=self.xd,
-                             pady=self.yd)
-        self.cb_use_wua["state"] = "disabled"
+        # self.cb_use_wua = tk.Checkbutton(self, fg="gold4", text="Use weighted usable area",
+        #                                  variable=self.apply_wua,
+        #                                  onvalue=True, offvalue=False, command=lambda: self.set_wua())
+        # self.cb_use_wua.grid(sticky=tk.W, row=16, column=3, columnspan=2, padx=self.xd,
+        #                      pady=self.yd)
+        # self.cb_use_wua["state"] = "disabled"
 
         # BUTTONS
         self.b_show_fish = tk.Button(self, width=self.side_pnl_width, fg="RoyalBlue3", bg="white",
@@ -415,7 +415,7 @@ class MainGui(sg.RaModuleGui):
             # update SHArea buttons
             if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\"):
                 self.b_sha_th["state"] = "normal"
-                self.cb_use_wua["state"] = "normal"
+                # self.cb_use_wua["state"] = "normal"
                 if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_hy + "\\no_cover\\"):
                     self.b_sharc["state"] = "normal"
 
@@ -435,7 +435,7 @@ class MainGui(sg.RaModuleGui):
                 if os.path.isdir(config.dir2sh + "CHSI\\" + self.chsi_condition_cov + "\\cover\\"):
                     self.b_sharc["state"] = "normal"
                     self.cb_use_cov["state"] = "normal"
-                    self.cb_use_wua["state"] = "normal"
+                    # self.cb_use_wua["state"] = "normal"
 
     def set_fish(self, species, *lifestage):
         try:
