@@ -73,7 +73,7 @@ class MainGui(sg.RaModuleGui):
         # LABELS
         self.l_side_bar = tk.Label(self, text="", bg="white", height=55, width=self.side_pnl_width + self.xd)
         self.l_side_bar.grid(sticky=tk.W, row=0, rowspan=30, column=self.max_columnspan, padx=self.xd, pady=self.yd)
-        self.l_aqua = tk.Label(self, fg="firebrick3", text="Select Aquatic Ambiance (at least one)")
+        self.l_aqua = tk.Label(self, fg="firebrick3", text="Select Physical Habitat (at least one)")
         self.l_aqua.grid(sticky=tk.W, row=0, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.l_combine = tk.Label(self, text="Select HSI combination method: ")
         self.l_combine.grid(sticky=tk.W, row=2, column=0, columnspan=1, padx=self.xd, pady=self.yd)
@@ -133,7 +133,7 @@ class MainGui(sg.RaModuleGui):
 
         # BUTTONS
         self.b_show_fish = tk.Button(self, width=self.side_pnl_width, fg="RoyalBlue3", bg="white",
-                                     text="Show selected\nAquatic Ambiance(s)",
+                                     text="Show selected\nPhysical Habitat(s)",
                                      command=lambda: self.shout_dict(self.fish_applied))
         self.b_show_fish.grid(sticky=tk.EW, row=0, rowspan=2, column=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.b_show_fish["state"] = "disabled"
@@ -176,10 +176,10 @@ class MainGui(sg.RaModuleGui):
                                       onvalue=True, offvalue=False, bg="LightBlue1")
         self.cb_extq.grid(sticky=tk.W, row=20, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
         self.cb_extq.deselect()
-        self.b_qua = tk.Button(self, bg="LightBlue1", text="Discharge - Aquatic Ambiance Area Curve",
+        self.b_qua = tk.Button(self, bg="LightBlue1", text="Discharge - Physical Habitat Area Curve",
                                command=lambda: self.make_qua(input_type="statistic"))
         self.b_qua.grid(sticky=tk.EW, row=21, column=0, columnspan=1, padx=self.xd, pady=self.yd)
-        self.b_quat = tk.Button(self, bg="LightBlue1", text="Time series - Aquatic Ambiance Area",
+        self.b_quat = tk.Button(self, bg="LightBlue1", text="Time series - Physical Habitat Area",
                                 command=lambda: self.make_qua(input_type="time_series"))
         self.b_quat.grid(sticky=tk.EW, row=21, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_qua["state"] = "disabled"
@@ -190,7 +190,7 @@ class MainGui(sg.RaModuleGui):
     def complete_menus(self):
         # MAKE FISH SPECIES DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Select Aquatic Ambiance", menu=self.fishmenu)  # attach it to the menubar
+        self.mbar.add_cascade(label="Select Physical Habitat", menu=self.fishmenu)  # attach it to the menubar
         self.fishmenu.add_command(label="DEFINE FISH SPECIES", command=lambda: self.fish.edit_xlsx())
         self.fishmenu.add_command(label="RE-BUILD MENU", command=lambda: self.make_fish_menu(rebuild=True))
         self.fishmenu.add_command(label="_____________________________")
@@ -289,7 +289,7 @@ class MainGui(sg.RaModuleGui):
                                               command=lambda arg1=f_spec, arg2=lf_stage: self.set_fish(arg1, arg2))
         else:
             self.fish.assign_fish_names()
-            self.logger.info(" >> Rebuilding Aquatic Ambiance menu ...")
+            self.logger.info(" >> Rebuilding Physical Habitat menu ...")
             entry_count = 6
             for f_spec in self.fish.species_dict.keys():
                 lf_stages = self.fish.species_dict[f_spec]
@@ -454,7 +454,7 @@ class MainGui(sg.RaModuleGui):
                 self.activate_buttons(revert=True)
                 self.fish_applied = {}
                 self.logger.info(" >> All species cleared.")
-                self.l_aqua.config(text="Select Aquatic Ambiance for fish (at least one)")
+                self.l_aqua.config(text="Select Physical Habitat for fish (at least one)")
         else:
             self.fish_applied = self.fish.species_dict
             self.logger.info(" >> All available ambiances added.")
@@ -481,7 +481,7 @@ class MainGui(sg.RaModuleGui):
         msg = "Selected Ambiance(s):"
         for k in the_dict.keys():
             msg = msg + "\n\n > " + str(k) + " - \n   - " + "\n   - ".join(the_dict[k])
-        showinfo("Aquatic Ambiance Info", msg)
+        showinfo("Physical Habitat Info", msg)
 
     def start_app(self, app_name, *args, **kwargs):
         # parse optional arguments
@@ -494,7 +494,7 @@ class MainGui(sg.RaModuleGui):
 
         # shout if no fish was selected
         if self.fish_applied.__len__() == 0:
-            showinfo("ATTENTION", "Select Aquatic Ambiance for fish!")
+            showinfo("ATTENTION", "Select Physical Habitat for fish!")
             return -1
 
         # instantiate app

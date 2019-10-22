@@ -62,13 +62,13 @@ class MainGui(sg.RaModuleGui):
         self.l_inpath_curr.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
-        # select aquatic ambiance
+        # select Physical Habitat
         self.b_show_fish = tk.Button(self, width=10, fg="RoyalBlue3", bg="white",
-                                     text="Show selected Aquatic Ambiance(s)",
+                                     text="Show selected Physical Habitat(s)",
                                      command=lambda: self.shout_dict(self.fish_applied))
         self.b_show_fish.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_show_fish["state"] = "disabled"
-        self.l_aqua = tk.Label(self, fg="red", text="Select Aquatic Ambiance (at least one)")
+        self.l_aqua = tk.Label(self, fg="red", text="Select Physical Habitat (at least one)")
         self.l_aqua.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=0, pady=self.yd)
         row += 1
 
@@ -171,7 +171,7 @@ class MainGui(sg.RaModuleGui):
                                               command=lambda arg1=f_spec, arg2=lf_stage: self.set_fish(arg1, arg2))
         else:
             self.fish.assign_fish_names()
-            self.logger.info(" >> Rebuilding Aquatic Ambiance menu ...")
+            self.logger.info(" >> Rebuilding Physical Habitat menu ...")
             entry_count = 6
             for f_spec in self.fish.species_dict.keys():
                 lf_stages = self.fish.species_dict[f_spec]
@@ -200,7 +200,7 @@ class MainGui(sg.RaModuleGui):
                 self.activate_buttons(revert=True)
                 self.fish_applied = {}
                 self.logger.info(" >> All species cleared.")
-                self.l_aqua.config(text="Select Aquatic Ambiance (at least one)")
+                self.l_aqua.config(text="Select Physical Habitat (at least one)")
         else:
             self.fish_applied = self.fish.species_dict
             self.logger.info(" >> All available ambiances added.")
@@ -224,7 +224,7 @@ class MainGui(sg.RaModuleGui):
     def complete_menus(self):
         # FISH SPECIES DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Select Aquatic Ambiance", menu=self.fishmenu)  # attach it to the menubar
+        self.mbar.add_cascade(label="Select Physical Habitat", menu=self.fishmenu)  # attach it to the menubar
         self.fishmenu.add_command(label="DEFINE FISH SPECIES", command=lambda: self.fish.edit_xlsx())
         self.fishmenu.add_command(label="RE-BUILD MENU", command=lambda: self.make_fish_menu(rebuild=True))
         self.fishmenu.add_command(label="_____________________________")

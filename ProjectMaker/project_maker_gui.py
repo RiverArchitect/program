@@ -182,7 +182,7 @@ class MainGui(sg.RaModuleGui):
 
         self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN SEASONAL USABLE HABITAT AREA ")
         self.l_placeholder3.grid(sticky=tk.EW, row=21, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
-        self.l_choose_fish = tk.Label(self, text="1) Select at least one fish species-lifestage (Aquatic Ambiance).")
+        self.l_choose_fish = tk.Label(self, text="1) Select at least one fish species-lifestage (Physical Habitat).")
         self.l_choose_fish.grid(sticky=tk.W, row=22, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_show_fish = tk.Button(self, width=14, background="white", text="Show selected fish", command=lambda: self.help_info("fish_selected"))
         self.b_show_fish.grid(sticky=tk.E, row=22, column=2, padx=self.xd, pady=self.yd)
@@ -227,7 +227,7 @@ class MainGui(sg.RaModuleGui):
     def complete_menus(self):
         # FISH SPECIES-LIFESTAGE DROP DOWN
         self.fishmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
-        self.mbar.add_cascade(label="Aquatic Ambiance",
+        self.mbar.add_cascade(label="Physical Habitat",
                               menu=self.fishmenu)  # attach it to the menubar
         self.fishmenu.add_command(label="VARIABLES REQUIRED", foreground="gray50",
                                   command=lambda: self.help_info("fish"))
@@ -293,7 +293,7 @@ class MainGui(sg.RaModuleGui):
         if app_name == "s40":
             msges.append("Seasonal Habitat Area (SHArea) calculation requires:\n")
             msges.append("- ProjectArea.shp (Polygon)")
-            msges.append("- Aquatic ambiance for target fish-lifestage (upper left corner of the window - source: RiverArchitect/.site_packages/templates/Fish.xlsx).")
+            msges.append("- Physical Habitat for target fish-lifestage (upper left corner of the window - source: RiverArchitect/.site_packages/templates/Fish.xlsx).")
             msges.append("- CHSI conditions defined by folder in /SHArC/CHSI/\n")
 
         showinfo("Module Info", "\n".join(msges))

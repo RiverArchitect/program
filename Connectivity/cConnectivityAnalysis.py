@@ -179,7 +179,7 @@ class ConnectivityAnalysis:
         Note: must have already created cHSI rasters using SHArC module.
         """
         self.logger.info("Getting cHSI rasters from SHArC module output...")
-        self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
+        self.logger.info("Physical Habitat: %s - %s" % (self.species, self.lifestage))
         if cover:
             self.logger.info("Getting hydraulic + cover cHSI...")
         else:
@@ -270,7 +270,7 @@ class ConnectivityAnalysis:
         """
         self.logger.info("Making shortest escape route map...")
         self.logger.info("Discharge: %i %s" % (int(Q), self.q_units))
-        self.logger.info("Aquatic ambiance: %s - %s" % (self.species, self.lifestage))
+        self.logger.info("Physical Habitat: %s - %s" % (self.species, self.lifestage))
         self.logger.info("\tminimum swimming depth  = %s %s" % (self.h_min, self.length_units))
         self.logger.info("\tmaximum swimming speed  = %s %s" % (self.u_max, self.u_units))
         path2h_ras = self.Q_h_interp_dict[Q]

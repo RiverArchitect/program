@@ -76,7 +76,7 @@ class HHSIgui(object):
         self.sb_condition.config(command=self.lb_condition.yview)
 
         # BUTTONS
-        iflow = "Flow data are looked up from the selected Condition and Aquatic Ambiance"
+        iflow = "Flow data are looked up from the selected Condition and Physical Habitat"
         self.l_flowdur = tk.Label(top, bg="white", text=iflow)
         self.l_flowdur.grid(sticky=tk.EW, row=1, column=0, columnspan=self.max_columnspan, padx=self.xd, pady=self.yd)
 
