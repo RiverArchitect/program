@@ -121,7 +121,7 @@ class MainGui(sg.RaModuleGui):
         self.l_site_name.grid(sticky=tk.W, row=4, column=0, padx=self.xd, pady=self.yd)
         self.e_site_name = tk.Entry(self, width=self.w_e, textvariable=self.prj_name)
         self.e_site_name.grid(sticky=tk.EW, row=4, column=1, padx=self.xd, pady=self.yd)
-        self.l_site_name_help = tk.Label(self, fg="gray26", text="(CamelCase string, no spaces, example: MySite)")
+        self.l_site_name_help = tk.Label(self, fg="gray26", text="(String, no spaces, example: MySite)")
         self.l_site_name_help.grid(sticky=tk.W, row=4, column=2, padx=self.xd, pady=self.yd)
 
         self.b_val_var = tk.Button(self, text="VALIDATE VARIABLES", command=lambda: self.verify_variables())
@@ -157,7 +157,7 @@ class MainGui(sg.RaModuleGui):
 
         self.l_placeholder2 = tk.Label(self, fg="white", background="gray45", text="TERRAIN STABILIZATION")
         self.l_placeholder2.grid(sticky=tk.EW, row=14, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
-        self.l_ter_cr = tk.Label(self, text="Critical lifespan:")
+        self.l_ter_cr = tk.Label(self, text="Target lifespan of surface grains:")
         self.l_ter_cr.grid(sticky=tk.W, row=15, column=0, padx=self.xd, pady=self.yd)
         self.e_ter_cr = tk.Entry(self, width=self.w_e, textvariable=self.ter_cr)
         self.e_ter_cr.grid(sticky=tk.EW, row=15, column=1, padx=self.xd, pady=self.yd)
@@ -180,7 +180,7 @@ class MainGui(sg.RaModuleGui):
         self.b_s30_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s30"))
         self.b_s30_help.grid(sticky=tk.E, row=20, column=2, padx=self.xd, pady=self.yd * 2)
 
-        self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN SEASONAL USABLE HABITAT AREA ")
+        self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN SEASONAL HABITAT AREA ")
         self.l_placeholder3.grid(sticky=tk.EW, row=21, column=0, columnspan=3, padx=self.xd, pady=self.yd * 2)
         self.l_choose_fish = tk.Label(self, text="1) Select at least one fish species-lifestage (Physical Habitat).")
         self.l_choose_fish.grid(sticky=tk.W, row=22, column=0, columnspan=2, padx=self.xd, pady=self.yd)
@@ -411,6 +411,9 @@ class MainGui(sg.RaModuleGui):
                     return -1
                 dir2ml_pl = config.dir2ml + "Output\\Rasters\\" + condition_pl + "\\"
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
+                if float(self.vege_cr.get()) > float(self.vege_stab_cr.get()):
+                    showinfo("CORRECTION REQUIRED", "The stabilization lifespan must be larger or equal to the minimum lifespans of plants.")
+                    return -1
                 best_plant_dir = s20.main(dir2ml_pl, self.vege_cr.get(), self.prj_name.get(), self.unit, self.version)
                 try:
                     lf_req = float(self.vege_stab_cr.get())

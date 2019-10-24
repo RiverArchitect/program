@@ -124,7 +124,6 @@ def analysis_call(parameter_name, feature, feature_analysis):
                 feature_analysis.analyse_u(feature.threshold_u)
             else:
                 logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
-
     except:
         logger.info("      * Negative: No thresholds provided for %s." % parameter_name)
     return feature_analysis

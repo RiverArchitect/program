@@ -56,25 +56,29 @@ def main(best_plant_dir=str(), lf_dir=str(), crit_lf=float(), prj_name=str(), un
         logger.info(" >> Vegetation plantings OK.")
         logger.info(" -- OK (MaxLifespan raster read)\n")
     except:
-        logger.info("ERROR: Could not find MaxLifespan Rasters.")
+        logger.info("ERROR: Could not find max. lifespan Rasters.")
         return -1
+
+    logger.info("Looking up specific bioengineering lifespan rasters ...")
+    logger.info(best_plant_dir + "lf_wood.tif")
     try:
-        logger.info("Looking up specific bioengineering lifespan rasters ...")
-        logger.info(best_plant_dir + "lf_wood.tif")
-        try:
-            lf_wood = arcpy.Raster(lf_dir + "lf_wood.tif")
-        except:
-            lf_wood = arcpy.Raster(lf_dir + "lf_wood")
+        lf_wood = arcpy.Raster(lf_dir + "lf_wood.tif")
         logger.info(" >> Added Streamwood.")
-        try:
-            lf_bio = arcpy.Raster(lf_dir + "lf_bio.tif")
-        except:
-            lf_bio = arcpy.Raster(lf_dir + "lf_bio")
-        logger.info(" >> Added Other bioengineering.")
-        logger.info(" -- OK (Bioengineering raster read)\n")
     except:
-        logger.info("ERROR: Could not find Bioengineering (other) Rasters (%s)." % lf_dir)
-        return -1
+        lf_wood = Float(0)
+        logger.info("WARNING: Could not find Lifespan Raster (%slf_wood.tif)." % lf_dir)
+        logger.info("         > Go to the Lifespan Tab and create lifespan rasters for the Bioengineering feature group.")
+        logger.info("         > Applying 0-lifespans instead.")
+    
+    try:
+        lf_bio = arcpy.Raster(lf_dir + "lf_bio_v_bio.tif")
+        logger.info(" >> Added Other bioengineering.")        
+    except:
+        lf_bio = Float(0)
+        logger.info("WARNING: Could not find Lifespan Raster (%slf_bio_v_bio.tif)." % lf_dir)
+        logger.info("         > Go to the Lifespan Tab and create lifespan rasters for the Bioengineering feature group.")
+        logger.info("         > Applying 0-lifespans instead.")
+    logger.info(" -- OK (Bioengineering raster read)")
 
     # EVALUATE BEST STABILIZATION FEATURES
     try:

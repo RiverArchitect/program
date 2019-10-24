@@ -90,15 +90,15 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
     try:
         lf_wood = arcpy.Raster(lf_dir + "lf_wood.tif")
     except:
-        lf_wood = 0.0
-        logger.info("ERROR: Could not find Lifespan Raster (%slf_wood.tif) -- continue anyway ..." % lf_dir)
+        lf_wood = Float(0.0)
+        logger.info("WARNING: Could not find Lifespan Raster (%slf_wood.tif) -- continue anyway using 0-wood-lifespans ..." % lf_dir)
 
     logger.info("Retrieving bioengineering lifespan Raster ...")
     try:
-        lf_bio = arcpy.Raster(lf_dir + "lf_bio.tif")
+        lf_bio = arcpy.Raster(lf_dir + "lf_bio_v_bio.tif")
     except:
-        lf_bio = 0.0
-        logger.info("ERROR: Could not find Lifespan Raster (%slf_bio.tif) -- continue anyway ..." % lf_dir)
+        lf_bio = Float(0.0)
+        logger.info("WARNING: Could not find Lifespan Raster (%slf_bio.tif) -- continue anyway using 0-bio-lifespans ..." % lf_dir)
     logger.info(" -- OK (Rasters read)\n")
 
     # EVALUATE BEST STABILIZATION FEATURES
@@ -172,7 +172,6 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
 
         logger.info(" >> Converting terrain_boulder_stab.tif to layer ...")
         t_boulder_shp = shp_dir + "Terrain_boulder_stab.shp"
-        # arcpy.MakeRasterLayer_management(ras_dir + "terrain_stab.tif", shp_dir + "Terrain_boulder_stab")
         try:
             arcpy.RasterToPolygon_conversion(Int(best_boulders + 1.0), t_boulder_shp, "NO_SIMPLIFY")
             if not fGl.verify_shp_file(t_stab_shp):
@@ -181,20 +180,6 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
             if not conversion_success:
                 logger.info("No stabilization requirement identified. Returning without action.")
                 return -1
-        # try:
-        #     field_list = arcpy.ListFields(t_boulder_shp)  # get a list of fields for each feature class
-        #     for field in field_list:  # loop through each field
-        #         if "grid" in field.lower():  # look for the name elev
-        #             print(field)
-        #             arcpy.AlterField_management(t_boulder_shp, field, 'BoulderSize', 'BoulderSize')
-        # except:
-        #     logger.info(" COULD NOt RENAME FIELD")
-
-        # logger.info("Merging Bioengineering ({}) and Boulder ({}) shapefiles ...".format(t_stab_shp, t_boulder_shp))
-        # try:
-        #     arcpy.Append_management([t_boulder_shp], t_stab_shp, "TEST")
-        # except:
-        #     logger.info("WARNING: Merge operation failed (empty shapefiles?).")
 
         logger.info(" >> Calculating area statistics ... ")
         try:

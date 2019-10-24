@@ -30,7 +30,7 @@ class ArcPyAnalysis:
         # args[2] = FLOAT defining mannings n in s/m^(1/3)
         self.raster_info_lf = ""
         self.condition = str(condition)
-        self.cache = config.dir2lf + ".cache%s\\" % str(random.randint(1000000, 9999999))
+        self.cache = config.dir2lf + ".cache%s\\" % str(random.randint(100, 999))
         fGl.chk_dir(self.cache)
         self.extent_type = "standard"
         self.threshold_freq = 0.0
@@ -363,8 +363,8 @@ class ArcPyAnalysis:
         Dcr_raster_list = []
         for i in range(0, h.raster_names.__len__()):
             if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
-                __ras__ = (Square(u.rasters[i] * Float(self.n)) / ((self.s - 1) *
-                                                                   threshold_taux * Power(h.rasters[i], (1 / 3)))) / self.sf
+                __ras__ = (Square(u.rasters[i] * Float(self.n)) / (Float(self.s - 1) *
+                                                                   threshold_taux * Power(h.rasters[i], (1 / 3)))) / Float(self.sf)
                 Dcr_raster_list.append(__ras__)
             else:
                 try:
@@ -637,10 +637,6 @@ class ArcPyAnalysis:
         r_index = 0
         for ras in raster_set:
             try:
-                try:
-                    float(threshold)
-                except:
-                    continue
                 if str(ras).__len__() > 1:
                     __ras__.append(Float(Con(Float(ras) >= Float(threshold),
                                              Float(self.lifespans[r_index]))))

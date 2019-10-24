@@ -41,11 +41,12 @@ class CHSI(ParameterContainer):
             self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0].split(".")[0] + ".tif")
         except:
             self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class DEM(ParameterContainer):
     # This class stores all information about DEM Rasters
-
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "dem")
         try:
@@ -55,6 +56,8 @@ class DEM(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class DEMdet(ParameterContainer):
@@ -68,12 +71,13 @@ class DEMdet(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class DoD(ParameterContainer):
     # This class stores all information about the topographic change Rasters
     # Instantiate an object by: myDoD = DoD() in feet
-
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "dod")
         try:
@@ -90,6 +94,9 @@ class DoD(ParameterContainer):
                 self.raster_fill = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster_fill = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+
 
 class FlowDepth(ParameterContainer):
     # This class stores all information about flow depth Rasters
@@ -106,6 +113,8 @@ class FlowDepth(ParameterContainer):
             else:
                 self.rasters.append("")
                 self.logger.info("ERROR: Could not load %s." % str(ras_act + '.tif'))
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class FlowVelocity(ParameterContainer):
@@ -123,6 +132,8 @@ class FlowVelocity(ParameterContainer):
             else:
                 self.rasters.append("")
                 self.logger.info("ERROR: Could not load %s." % str(ras_act + '.tif'))
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class GrainSizes(ParameterContainer):
@@ -135,6 +146,8 @@ class GrainSizes(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class MU(ParameterContainer):
@@ -152,6 +165,8 @@ class MU(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
     def read_mus(self):
         mu_xlsx = cIO.Read(config.xlsx_mu)
@@ -188,6 +203,8 @@ class SideChannelDelineation(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class WaterTable(ParameterContainer):
@@ -201,11 +218,12 @@ class WaterTable(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class Wildcard(ParameterContainer):
     # This class stores all information about depth to groundwater table Rasters
-
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "wild")
         try:
@@ -215,3 +233,5 @@ class Wildcard(ParameterContainer):
                 self.raster = arcpy.Raster(self.raster_path + self.condition + "\\" + self.raster_names[0])
             except:
                 self.raster = ""
+        self.logger.info(
+            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
