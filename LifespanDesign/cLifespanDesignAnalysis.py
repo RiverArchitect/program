@@ -638,8 +638,7 @@ class ArcPyAnalysis:
         for ras in raster_set:
             try:
                 if str(ras).__len__() > 1:
-                    __ras__.append(Float(Con(Float(ras) >= Float(threshold),
-                                             Float(self.lifespans[r_index]))))
+                    __ras__.append(Float(Con(Float(ras) >= Float(threshold), Float(self.lifespans[r_index]))))
             except:
                 self.logger.error("ERROR: Incoherent data in " + str(ras) + " (raster comparison).")
                 self.logger.info("ERROR HINT: Verify Raster definitions in 01_Conditions/%s/input_definitions.inp." % self.condition)

@@ -90,7 +90,7 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
                         logger.info("ERROR: Could not access " + str(xc))
                         error = True
                     try:
-                        logger.info("    -> Looking up discharge information (RiverArchitect/SHArC)...")
+                        logger.info("    -> Looking up discharge information (RiverArchitect/SHArC/SHArea/)...")
                         discharges = xlsx_info.read_float_column_short("B", 4)
                         exceedance_pr = xlsx_info.read_float_column_short("E", 4)
 
@@ -132,7 +132,7 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
                             else:
                                 ex_pr_pdf.append(0.0)
                         conditions_sha.append(
-                                sha.calculate_sha([pr for pr in ex_pr_pdf], [l[2] for l in result_matrix]))
+                                sha.calculate_sha([pr for pr in ex_pr_pdf], [res[2] for res in result_matrix]))
                     except:
                         logger.info("ERROR: Could not transfer SHArea data for " + str(species) + " - " + str(ls))
                         error = True
@@ -162,15 +162,11 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
                     error = True
 
         sha.clear_cache()
-
     except:
         logger.info("ERROR: Could not run SHArea analysis.")
         return -1
 
     if not error:
         fGl.open_file(dir2pp + xlsx_out_name)
-
-    try:
-        fGl.rm_dir(sha.cache)
-    except:
-        logger.info("DELETE .CACHE FOLDER MANUALLY (%s)." % str(sha.cache))
+        
+    return sha.cache

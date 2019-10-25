@@ -64,6 +64,7 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
         except:
             logger.info("ERROR: Could not create Raster of the project area.")
             return -1
+
     try:
         hy_condition = lf_dir.split("_lyr")[0].split("\\")[-1].split("/")[-1]
         logger.info("Looking up hydraulic Rasters for %s ..." % hy_condition)
@@ -99,7 +100,7 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
     except:
         lf_bio = Float(0.0)
         logger.info("WARNING: Could not find Lifespan Raster (%slf_bio.tif) -- continue anyway using 0-bio-lifespans ..." % lf_dir)
-    logger.info(" -- OK (Rasters read)\n")
+    logger.info(" -- OK (Lifespan Rasters read)\n")
 
     # EVALUATE BEST STABILIZATION FEATURES
     tar_lf = fGl.get_closest_val_in_list(lifespans, crit_lf)
@@ -110,6 +111,7 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
                                                                                                         hy_condition))
     try:
         logger.info("Calculating required stable grains sizes to yield a lifespan of %s years ..." % str(tar_lf))
+        arcpy.env.extent = max_lf_grains.extent
         i = lifespans.index(int(tar_lf))
         stab_grain_ras = Con(~IsNull(project_ras), Float(Square(u.rasters[i] * Float(n_m)) / ((Float(s_sed) - 1.0) * Float(txcr) * Power(h.rasters[i], (1 / 3)))))
     except arcpy.ExecuteError:
@@ -138,7 +140,7 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
                                                             Int(feature_dict["Angular boulders (instream)"]))))
         best_boulders = Con(max_lf_grains <= crit_lf, Con(IsNull(best_stab_i), Float(stab_grain_ras)))
         best_stab = Con(IsNull(best_stab_i), Con(~IsNull(best_boulders), Int(feature_dict["Angular boulders (instream)"])), Int(best_stab_i))
-        logger.info(" -- OK (Stabilization assessment.)\n")
+        logger.info(" -- OK (Stabilization assessment)\n")
     except:
         logger.info("ERROR: Best stabilization assessment failed.")
         return -1
@@ -153,7 +155,7 @@ def main(lf_dir=str(), crit_lf=float(), prj_name=str(), unit=str(), version=str(
     try:
         logger.info("Saving results Raster " + ras_dir + "terrain_boulder_stab.tif")
         best_boulders.save(ras_dir + "terrain_boulder_stab.tif")
-        logger.info(" -- OK (Raster saved.)\n")
+        logger.info(" -- OK (Stabilization Rasters saved)\n")
     except:
         logger.info("ERROR: Result geofile saving failed.")
 

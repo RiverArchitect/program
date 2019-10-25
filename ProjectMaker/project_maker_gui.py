@@ -424,7 +424,7 @@ class MainGui(sg.RaModuleGui):
                          self.prj_name.get(), self.unit, self.version)
                 self.b_s20.config(text="Plantings OK", fg="forest green")
             except:
-                showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
+                showinfo("ERROR", "Select (highlight) at least one Max Lifespan condition.\n\nClose all relevant geofiles and the cost master workbook (xlsx).")
 
         if app_name == "s30":
             try:
@@ -453,7 +453,7 @@ class MainGui(sg.RaModuleGui):
         if app_name == "s40":
             try:
                 if self.fish_applied.__len__() == 0:
-                    showinfo("ATTENTION", "Select at least one fish species - lifestage!")
+                    showinfo("ATTENTION", "Select at least one Physical Habitat of a fish species - lifestage!")
                     return -1
                 if self.cover_app_pre.get() or self.cover_app_post.get():
                     msg1 = "Make sure that cover cHSI rasters are available in SHArC/CHSI/"
@@ -467,8 +467,12 @@ class MainGui(sg.RaModuleGui):
                     showinfo("ERROR", "Select condition after terraforming.")
                     return -1
                 showinfo("INFO", c_msg1 + c_msg2 + c_msg3 + c_msg4)
-                s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.fish_applied, self.prj_name.get(), self.unit, self.version, self.apply_wua.get())
+                cache2del = s40.main(self.condition_init, self.condition_proj, self.cover_app_pre.get(), self.cover_app_post.get(), self.fish_applied, self.prj_name.get(), self.unit, self.version, self.apply_wua.get())
                 self.b_s40.config(text="Net gain in SHArea calculation OK", fg="forest green")
+                try:
+                    fGl.rm_dir(cache2del)
+                except:
+                    showinfo("CHECK", "Calculation OK, but the cache folder (%s) needs to be deleted manually." % str(showinfo))
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
