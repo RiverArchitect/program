@@ -423,6 +423,7 @@ class MainGui(sg.RaModuleGui):
                 s21.main(best_plant_dir,  config.dir2lf + "Output\\Rasters\\" + condition_pl + "\\", lf_req,
                          self.prj_name.get(), self.unit, self.version)
                 self.b_s20.config(text="Plantings OK", fg="forest green")
+                showinfo("INFO", "Calulation finished. VERIFY CELL LINKS IN WORKBOOK! Make sure that cell links in column F of the COSTS tab link to the correct cells in the FROM_GEODATA tab.")
             except:
                 showinfo("ERROR", "Select (highlight) at least one Max Lifespan condition.\n\nClose all relevant geofiles and the cost master workbook (xlsx).")
 
@@ -445,8 +446,9 @@ class MainGui(sg.RaModuleGui):
                     showinfo("ERROR", "Wrong format of critical lifespan (must be numeric).")
                     return -1
                 s30.main(dir2lf_ter, lf_req, self.prj_name.get(), self.unit, self.version, self.n, self.txcr)
-
                 self.b_s30.config(text="Stabilize terrain OK", fg="forest green")
+                showinfo("INFO",
+                         "Calulation finished. VERIFY CELL LINKS IN WORKBOOK! Make sure that cell links in column F of the COSTS tab link to the correct cells in the FROM_GEODATA tab.")
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
