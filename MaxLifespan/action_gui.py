@@ -118,7 +118,6 @@ class ActionGui(sg.RaModuleGui):
         self.cb_lyt = tk.Checkbutton(self, fg="SteelBlue", text="Create maps and layouts after making geofiles",
                                      variable=self.mapping, onvalue=True, offvalue=False)
         self.cb_lyt.grid(sticky=tk.W, row=8, column=0, columnspan=5, padx=self.xd, pady=self.yd)
-        self.cb_lyt.select()  # select by default
 
     def set_base_ras(self):
         self.dir_base_ras = askopenfilename(defaultextension=".tif", initialdir=config.dir2conditions,

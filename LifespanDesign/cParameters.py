@@ -42,7 +42,7 @@ class CHSI(ParameterContainer):
         except:
             self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class DEM(ParameterContainer):
@@ -57,7 +57,7 @@ class DEM(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class DEMdet(ParameterContainer):
@@ -72,7 +72,7 @@ class DEMdet(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class DoD(ParameterContainer):
@@ -95,7 +95,7 @@ class DoD(ParameterContainer):
             except:
                 self.raster_fill = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class FlowDepth(ParameterContainer):
@@ -114,7 +114,7 @@ class FlowDepth(ParameterContainer):
                 self.rasters.append("")
                 self.logger.info("ERROR: Could not load %s." % str(ras_act + '.tif'))
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class FlowVelocity(ParameterContainer):
@@ -133,7 +133,7 @@ class FlowVelocity(ParameterContainer):
                 self.rasters.append("")
                 self.logger.info("ERROR: Could not load %s." % str(ras_act + '.tif'))
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class GrainSizes(ParameterContainer):
@@ -147,7 +147,7 @@ class GrainSizes(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class MU(ParameterContainer):
@@ -166,7 +166,7 @@ class MU(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
     def read_mus(self):
         mu_xlsx = cIO.Read(config.xlsx_mu)
@@ -204,7 +204,7 @@ class SideChannelDelineation(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class WaterTable(ParameterContainer):
@@ -219,7 +219,7 @@ class WaterTable(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
 
 
 class Wildcard(ParameterContainer):
@@ -234,4 +234,4 @@ class Wildcard(ParameterContainer):
             except:
                 self.raster = ""
         self.logger.info(
-            "          Source(s): " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
+            "      * Source: " + self.raster_path + self.condition + "\\" + " --".join(self.raster_names))
