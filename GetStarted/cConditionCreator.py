@@ -120,7 +120,10 @@ class ConditionCreator:
         if type_id == "fill":
             return "fill.tif"
         if (type_id == "h") or (type_id == "u") or (type_id == "va"):
-            return os.path.splitext(input_raster_name)[0] + ".tif"
+            if not (str(os.path.splitext(input_raster_name)[0][0]) == type_id):
+                return type_id + os.path.splitext(input_raster_name)[0] + ".tif"
+            else:
+                return os.path.splitext(input_raster_name)[0] + ".tif"
         if type_id == "dmean":
             return "dmean.tif"
         if type_id == "scour":
@@ -138,7 +141,7 @@ class ConditionCreator:
         except:
             pass
         target_raster_name = self.make_raster_name(os.path.basename(dir2inp_ras), type_id)
-        self.logger.info("   - loading " + dir2inp_ras)
+        self.logger.info("     * " + dir2inp_ras)
         try:
             arcpy.CheckOutExtension('Spatial')
             arcpy.env.overwriteOutput = True
@@ -156,12 +159,12 @@ class ConditionCreator:
             return -1
         # convert 0 to NoData for depth rasters
         if not no_data and type_id == "h":
-            self.logger.info("     * eliminate 0 data ... ")
+            self.logger.info("     * eliminating 0 data ... ")
             ras4tif = Con(Float(input_ras) > 0.000, Float(input_ras))
 
         else:
             ras4tif = input_ras
-        self.logger.info("   - saving " + self.dir2condition + target_raster_name)
+        self.logger.info("     * saving " + self.dir2condition + target_raster_name)
         try:
             ras4tif.save(self.dir2condition + target_raster_name)
             self.logger.info("     * OK")

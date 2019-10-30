@@ -288,7 +288,7 @@ class CreateCondition(object):
     def select_h(self):
         msg = self.user_raster_info()
         showinfo("INFO", msg, parent=self.top)
-        self.dir2h = askdirectory(initialdir=self.dir2u) + "/"
+        self.dir2h = askdirectory(initialdir=self.dir2u, parent=self.top) + "/"
         self.mandatory.l_h_folder.config(fg="forest green", text=str(self.dir2h))
 
     def select_scour(self):
