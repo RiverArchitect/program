@@ -235,7 +235,7 @@ class CreateCondition(object):
 
         if self.align_rasters.get():
             snap_ras = os.path.join(self.dir2new_condition, "back.tif")
-            new_condition.fix_alignment(snap_ras, self.dir2new_condition)
+            new_condition.fix_alignment(snap_ras)
 
         new_condition.check_alignment(self.dir2new_condition)
 
@@ -245,7 +245,7 @@ class CreateCondition(object):
                 self.l_run_info.config(fg="red", text="Condition creation failed.")
             elif new_condition.warning:
                 self.l_run_info.config(fg="gold4", text="Condition created with warnings (see logfile).")
-                showwarning("WARNING", "Input rasters are not properly aligned (see logfile). Rasters can be aligned by inputting a background raster and selecting the checkbox \"Use to align input rasters\".")
+                showwarning("WARNING", "Input rasters are not properly aligned (see logfile). Rasters can be aligned by inputting a background raster and selecting the checkbox \"Use to align input rasters\", or by using the \"Align Input Rasters\" tool from the GetStarted menu.")
             else:
                 fGl.open_folder(self.dir2new_condition)
                 self.l_run_info.config(fg="forest green", text="Condition successfully created.")

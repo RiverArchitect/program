@@ -274,16 +274,16 @@ class ConditionCreator:
         else:
             self.warning = True
 
-    def fix_alignment(self, snap_raster, dir2new_condition):
+    def fix_alignment(self, snap_raster):
         """Aligns all rasters according to cell size, coordinate system and extent of given raster.
         Args:
             snap_raster: raster used to set the cell size, snapping, and coordinate system of all other rasters.
-            dir2new_condition: directory containing all rasters to be aligned.
         """
         self.logger.info("Aligning input rasters to %s..." % snap_raster)
         error = False
+        arcpy.env.overwriteOutput = True
         # sorted so we handle h before u and va for proper null/zero depth handling
-        for root, dirs, filenames in sorted(os.walk(dir2new_condition)):
+        for root, dirs, filenames in sorted(os.walk(self.dir2condition)):
             for filename in filenames:
                 if filename.endswith(".tif"):
                     # try:
@@ -380,8 +380,10 @@ class ConditionCreator:
                         """
         if not error:
             self.logger.info("Aligned successfully.")
+            return 0
         else:
             self.logger.info("Finished alignment with errors (see logfile).")
+            return -1
         self.clean_up()
 
     def clean_up(self):

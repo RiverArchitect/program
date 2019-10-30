@@ -12,6 +12,7 @@ try:
     import slave_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import fGlobal as fGl
+    import cConditionCreator as cCC
     import config
 except:
     print("ExceptionERROR: Cannot find package files (RP/fGlobal.py).")
@@ -48,6 +49,8 @@ class MainGui(sg.RaModuleGui):
         self.b_make_inp = tk.Button(self, width=30, bg="white", text="Make Input File", command=lambda: self.make_inp())
         self.b_make_inp.grid(sticky=tk.EW, row=4, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
+        self.b_align = tk.Button(self, width=30, bg="white", text="Align Input Rasters", command=lambda: self.align_inp())
+        self.b_align.grid(sticky=tk.EW, row=5, column=0, columnspan=2, padx=self.xd, pady=self.yd)
 
         # MAKE PLACEHOLDER FILL
         logo = tk.PhotoImage(file=os.path.dirname(os.path.abspath(__file__))+"\\.templates\\welcome.gif")
@@ -106,6 +109,17 @@ class MainGui(sg.RaModuleGui):
         self.master.wait_window(new_window.top)
         self.b_make_inp["state"] = "normal"
         del new_window
+
+    def align_inp(self):
+        try:
+            import popup_align_rasters as par
+        except:
+            showinfo("Oups ...", "Cannot find discharge analysis routines -  check RA installation.")
+            return -1
+        new_window = par.AlignRasters(self.master)
+        self.b_align["state"] = "disabled"
+        self.master.wait_window(new_window.top)
+        self.b_align["state"] = "normal"
 
     def gui_quit(self):
         answer = askyesno("Info", "River Architect must be restarted in order to finalize register dataset.\nPlease confirm closing River Architect?")
