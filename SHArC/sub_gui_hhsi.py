@@ -135,7 +135,7 @@ class HHSIgui(object):
                                            spreadsheet_handle.wb_out_name.split(".xlsx")[0] + "_cov.xlsx")
 
                 if error_msg.__len__() > 0:
-                    error_msg.insert(0, "VERIFY THAT RiverArchitect/00_Flows/%s/ contains valid xlsx files!\n" % self.condition)
+                    error_msg.insert(0, "VERIFY THAT RiverArchitect/00_Flows/{0}/flow_duration_{1}.xlsx exists\n".format(self.condition, str(fsn)))
                     showinfo("ERRORS FOUND", "\n".join(error_msg))
 
     def remake_buttons(self):
