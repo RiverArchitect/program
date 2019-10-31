@@ -14,7 +14,7 @@ except:
     print("ExceptionERROR: Missing own packages (riverpy).")
 
 
-def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cover_post=bool(), fish=str(), prj_name=str(), unit=str(), version=str(), apply_wua=bool()):
+def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cover_post=bool(), fish={}, prj_name=str(), unit=str(), version=str(), apply_wua=bool()):
     """ calculates pre- and post implementation SHArea
     version = "v10"             # type() =  3-char str: vII
     prj_name = "MyProject"               # (corresponding to folder name)
@@ -73,7 +73,7 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
                 fili = str(species).lower()[0:2] + str(ls)[0:2]
                 xlsx_conditions = [condition_initial + "_sharea_" + fili + ".xlsx",
                                    condition_project + "_sharea_" + fili + ".xlsx"]
-                xlsx_sha = cIO.Write(xlsx_sha_template)
+                xlsx_sha = cIO.Write(xlsx_sha_template, worksheet_no=0)
                 xlsx_sha_name = dir2pp + "Geodata\\SHArea_" + fili + ".xlsx"
                 conditions_sha = []
 

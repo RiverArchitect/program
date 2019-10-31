@@ -474,7 +474,7 @@ class MainGui(sg.RaModuleGui):
                 try:
                     fGl.rm_dir(cache2del)
                 except:
-                    showinfo("CHECK", "Calculation OK, but the cache folder (%s) needs to be deleted manually." % str(showinfo))
+                    showinfo("CHECK", "Cache folder (%s) needs to be deleted manually." % str(cache2del))
             except:
                 showinfo("ERROR", "Close all relevant geofiles and the cost master workbook (xlsx).")
 
