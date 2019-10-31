@@ -289,12 +289,13 @@ class ConditionCreator:
                     # try:
                     misaligned_raster = os.path.join(root, filename)
 
+
                     # check if raster needs to be aligned.
                     cells_match, coords_match, corners_match = self.check_alignment_pair(snap_raster, misaligned_raster)
 
                     if not (cells_match and coords_match and corners_match):
                         resample_ras = misaligned_raster
-
+                        self.logger.info(" * aligning %s..." % str(misaligned_raster))
                         # if depth or velocity, set null values to zero for resampling interpolation accuracy
                         if filename.startswith("h") or filename.startswith("u"):
                             resample_ras = Con(IsNull(misaligned_raster), 0, misaligned_raster)
@@ -378,13 +379,13 @@ class ConditionCreator:
                         self.logger.info("Failed to align input raster %s." % filename)
                         error = True
                         """
+        self.clean_up()
         if not error:
             self.logger.info("Aligned successfully.")
             return 0
         else:
             self.logger.info("Finished alignment with errors (see logfile).")
             return -1
-        self.clean_up()
 
     def clean_up(self):
         try:
