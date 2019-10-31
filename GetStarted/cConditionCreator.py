@@ -120,7 +120,7 @@ class ConditionCreator:
         if type_id == "fill":
             return "fill.tif"
         if (type_id == "h") or (type_id == "u") or (type_id == "va"):
-            if not (str(os.path.splitext(input_raster_name)[0][0]) == type_id):
+            if not str(os.path.splitext(input_raster_name)[0]).startswith(type_id):
                 return type_id + os.path.splitext(input_raster_name)[0] + ".tif"
             else:
                 return os.path.splitext(input_raster_name)[0] + ".tif"
