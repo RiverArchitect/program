@@ -130,10 +130,16 @@ class FlowAnalysis(object):
         if rebuild:
             self.eco_flow_type_applied = {}
             self.eco_flow_type_list = []
-            e = 0
-            for lbe in self.lb_type:
-                self.lb_type.delete(e)
-                e += 1
+            try:
+                e = 0
+                for lbe in self.lb_type:
+                    self.lb_type.delete(e)
+                    e += 1
+            except:
+                pass
+            del self.lb_type
+            self.lb_type = tk.Listbox(self.top, height=3, width=25, yscrollcommand=self.sb_type.set)
+            self.lb_type.grid(sticky=tk.EW, row=7, column=1, padx=0, pady=self.yd)
 
         for f_spec in self.eco_flow_type.species_dict.keys():
             lf_stages = self.eco_flow_type.species_dict[f_spec]
@@ -177,6 +183,8 @@ class FlowAnalysis(object):
 
     def select_eco_type(self):
         items = self.lb_type.curselection()
+        print(items)
+        print(self.eco_flow_type_list)
         selected = [str(self.eco_flow_type_list[item]) for item in items][0]
         f_spec = selected.split(' - ')[0]
         lfs = selected.split(' - ')[-1]
