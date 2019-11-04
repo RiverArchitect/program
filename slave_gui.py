@@ -51,7 +51,7 @@ class RaModuleGui(tk.Frame):
             self.master = self.winfo_toplevel()
         self.pack(expand=True, fill=tk.BOTH)
 
-        # tkinter standard object initiatin
+        # tkinter standard object
         self.l_reaches = tk.Label(self)
 
         self.make_standard_menus()
@@ -97,6 +97,20 @@ class RaModuleGui(tk.Frame):
             self.reach_lookup_needed = True  # tells build_reachmenu that lookup of modified spreasheet info is needed
         except:
             showinfo("ERROR", "Cannot open the file\n" + config.dir2mt + ".templates\\computation_extents.xlsx")
+
+    def del_cache(self):
+        if askokcancel("Continue?", "This action will close River Architect and delete all .cache folders from the RiverArchitect/ folder tree.\n Continue?"):
+            self.master.destroy()
+            tk.Frame.quit(self)
+            folder_tree = []
+            [folder_tree.append(x[0]) for x in os.walk(config.dir2ra)]
+            for f in folder_tree:
+                if ".cache" in str(f).lower():
+                    try:
+                        os.rmdir(f)
+                        self.logger.info("Deleted %s." % str(f))
+                    except:
+                        self.logger.info("ERROR: Could not remove %s." % str(f))
 
     def make_reach_menu(self, reachmenu):
         # reachmenu = tk.Menu object
@@ -144,6 +158,12 @@ class RaModuleGui(tk.Frame):
         self.mbar.add_cascade(label="Units", menu=self.unitmenu)  # attach it to the menubar
         self.unitmenu.add_command(label="[current]  U.S. customary", background="pale green")
         self.unitmenu.add_command(label="[             ]  SI (metric)", command=lambda: self.unit_change())
+
+        # TOOLS DROP DOWN
+        self.toolsmenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
+        self.mbar.add_cascade(label="Tools", menu=self.toolsmenu)  # attach it to the menubar
+        self.toolsmenu.add_command(label="Delete .cache folders", command=lambda: self.del_cache())
+        # self.toolsmenu.add_command(label="Open rename files script", command=lambda: self.call_idle(config.dir2ra + Tools/rename_files.py))
 
         # CLOSE DROP DOWN
         self.closemenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
