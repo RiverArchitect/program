@@ -183,8 +183,6 @@ class FlowAnalysis(object):
 
     def select_eco_type(self):
         items = self.lb_type.curselection()
-        print(items)
-        print(self.eco_flow_type_list)
         selected = [str(self.eco_flow_type_list[item]) for item in items][0]
         f_spec = selected.split(' - ')[0]
         lfs = selected.split(' - ')[-1]
