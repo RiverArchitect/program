@@ -152,7 +152,7 @@ class MainGui(sg.RaModuleGui):
         self.b_s20 = tk.Button(self, text="Place best vegetation plantings", command=lambda: self.start_app("s2X"))
         self.b_s20.grid(sticky=tk.EW, row=13, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_s20["state"] = "disabled"
-        self.b_s20_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s2X"))
+        self.b_s20_help = tk.Button(self, width=14, fg="blue", bg="white", text="Info (help)", command=lambda: self.help_info("s2X"))
         self.b_s20_help.grid(sticky=tk.E, row=13, column=2, padx=self.xd, pady=self.yd * 2)
 
         self.l_placeholder2 = tk.Label(self, fg="white", background="gray45", text="TERRAIN STABILIZATION")
@@ -177,7 +177,7 @@ class MainGui(sg.RaModuleGui):
         self.b_s30 = tk.Button(self, text="Stabilize terrain", command=lambda: self.start_app("s30"))
         self.b_s30.grid(sticky=tk.EW, row=20, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_s30["state"] = "disabled"
-        self.b_s30_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s30"))
+        self.b_s30_help = tk.Button(self, width=14, fg="blue", bg="white", text="Info (help)", command=lambda: self.help_info("s30"))
         self.b_s30_help.grid(sticky=tk.E, row=20, column=2, padx=self.xd, pady=self.yd * 2)
 
         self.l_placeholder3 = tk.Label(self, fg="white", background="gray45", text=" NET GAIN IN SEASONAL HABITAT AREA ")
@@ -196,7 +196,7 @@ class MainGui(sg.RaModuleGui):
         # self.cb_apply_wua = tk.Checkbutton(self, text="Use WUA", variable=self.apply_wua, onvalue=True, offvalue=False)
         # self.cb_apply_wua.grid(sticky=tk.E, row=23, column=2, padx=self.xd, pady=self.yd)
         # self.cb_apply_wua.deselect()
-        self.l_condition_i = tk.Label(self, text="2) Select pre-project condition: ")
+        self.l_condition_i = tk.Label(self, text="2) Select pre-project condition (SHArC/SHArea): ")
         self.l_condition_i.grid(sticky=tk.W, row=25, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_i = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_i.grid(sticky=tk.W, row=25, column=2, padx=0, pady=self.yd)
@@ -207,7 +207,7 @@ class MainGui(sg.RaModuleGui):
         self.b_select_c_i = tk.Button(self, width=14, background="white", text="Confirm Selection",
                                       command=lambda: self.select_condition("chsi_initial"))
         self.b_select_c_i.grid(sticky=tk.E, row=25, column=2, padx=self.xd, pady=self.yd)
-        self.l_condition_p = tk.Label(self, text="3) Select post-project condition: ")
+        self.l_condition_p = tk.Label(self, text="3) Select post-project condition (SHArC/SHArea): ")
         self.l_condition_p.grid(sticky=tk.W, row=28, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_p = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_p.grid(sticky=tk.W, row=28, column=2, padx=0, pady=self.yd)
@@ -221,8 +221,8 @@ class MainGui(sg.RaModuleGui):
         self.b_s40 = tk.Button(self, text="Calculate Net gain in Seasonal Habitat Area (SHArea)", command=lambda: self.start_app("s40"))
         self.b_s40.grid(sticky=tk.EW, row=30, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         self.b_s40["state"] = "disabled"
-        self.b_s40_help = tk.Button(self, width=14, bg="white", text="Info (help)", command=lambda: self.help_info("s40"))
-        self.b_s40_help.grid(sticky=tk.E, row=30, column=2, padx=self.xd, pady=self.yd)
+        self.b_s40_help = tk.Button(self, width=14, fg="blue", bg="white", text="Info (help)", command=lambda: self.help_info("s40"))
+        self.b_s40_help.grid(sticky=tk.E, row=23, column=2, padx=self.xd, pady=self.yd)
 
     def complete_menus(self):
         # FISH SPECIES-LIFESTAGE DROP DOWN
@@ -239,11 +239,11 @@ class MainGui(sg.RaModuleGui):
         self.condition_pl_list = []  # reset plant condition list
         self.condition_ter_list = []  # reset terrain stab. condition list
 
-        dir2HE = config.dir2sh + "CHSI\\"
+        dir2HE = config.dir2sh + "SHArea\\"
         full_list = [d for d in os.listdir(dir2HE) if os.path.isdir(os.path.join(dir2HE, d))]
         for f in full_list:
-            self.condition_i_list.append(str(f))  # pre-project propositions
-            self.condition_p_list.append(str(f))  # post-project propositions
+            self.condition_i_list.append(str(f).split("Rasters_")[-1])  # pre-project habitat conditions
+            self.condition_p_list.append(str(f).split("Rasters_")[-1])  # post-project habitat conditions
 
         dir2mlf_ras = config.dir2ml + "Output\\Rasters\\"
         ap_list = [d for d in os.listdir(dir2mlf_ras) if os.path.isdir(os.path.join(dir2mlf_ras, d))]
@@ -281,7 +281,7 @@ class MainGui(sg.RaModuleGui):
             msges.append("- Max. Lifespan Maps for plants (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
             msges.append("    (max_lf_plants.tif)")
             msges.append("- Max. Lifespan Maps for bioengineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
-            msges.append("    (lf_wood.tif, lf_bio.tif)\n")
+            msges.append("    (lf_wood.tif, lf_bio_v_bio.tif, lf_bio_m_bio.tif)\n")
 
         if app_name == "s30":
             msges.append("Stabilization requirements:\n")
@@ -294,7 +294,7 @@ class MainGui(sg.RaModuleGui):
             msges.append("Seasonal Habitat Area (SHArea) calculation requires:\n")
             msges.append("- ProjectArea.shp (Polygon)")
             msges.append("- Physical Habitat for target fish-lifestage (upper left corner of the window - source: RiverArchitect/.site_packages/templates/Fish.xlsx).")
-            msges.append("- CHSI conditions defined by folder in /SHArC/CHSI/\n")
+            msges.append("- CHSI Rasters with THRESHOLD applied from Ecohydraulics/SHArC with products in /SHArC/SHArea/Rasters_CONDITION\n")
 
         showinfo("Module Info", "\n".join(msges))
 
