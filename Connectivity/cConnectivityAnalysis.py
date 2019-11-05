@@ -354,7 +354,7 @@ class ConnectivityAnalysis:
         """
         self.logger.info("Making stranding risk map...")
         try:
-            total_disc_hab_ras_path = os.path.join(self.out_dir, "disconnected_habitat.tif")
+            total_disc_hab_ras_path = os.path.join(self.out_dir, "disconnected_habitat_%s.tif" % self.lifestage_code)
             for Q in sorted(self.discharges, reverse=True):
                 disc_hab_ras_path = os.path.join(self.disc_areas_dir, "disc_hab_%s%06d.tif" % (self.lifestage_code, int(Q)))
                 disc_hab_ras = Raster(disc_hab_ras_path)
