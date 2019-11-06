@@ -101,6 +101,7 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
         logger.info(" >> Saving crop ... ")
         max_lf_crop.save(ras_dir + "max_lf_pl_c.tif")
         logger.info(" -- OK ")
+        occupied_px_ras = ""
         for aras in action_ras.keys():
             plant_ras = action_ras[aras]
             if not('.tif' in str(aras)):
@@ -111,6 +112,12 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
                 aras_no_end = aras.split('.tif')[0]
             logger.info(" >> Applying MaxLifespan Raster({}) where lifespan > {} years.".format(str(plant_ras), str(min_lf)))
             __temp_ras__ = Con((~IsNull(prj_area) & ~IsNull(plant_ras)), Con((Float(max_lf_plants) >= min_lf), (max_lf_plants * plant_ras)))
+            if arcpy.Exists(occupied_px_ras):
+                logger.info(" >> Reducing to relevant pixels only ... ")
+                __temp_ras__ = Con(IsNull(occupied_px_ras), __temp_ras__)
+                occupied_px_ras = Con(~IsNull(occupied_px_ras), occupied_px_ras,  __temp_ras__)
+            else:
+                occupied_px_ras = __temp_ras__
             logger.info(" >> Saving raster ... ")
             __temp_ras__.save(ras_dir + aras_tif)
             logger.info(" >> Converting to shapefile (polygon for area statistics) ... ")
