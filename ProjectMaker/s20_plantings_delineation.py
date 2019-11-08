@@ -104,14 +104,14 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
         logger.info("ExecuteERROR: (arcpy).")
         logger.info(arcpy.GetMessages(2))
         arcpy.AddError(arcpy.GetMessages(2))
+        arcpy.CreateRasterDataset_management(ras_dir, "PlantExisting.tif", "1", "8_BIT_UNSIGNED", "World_Mercator.prj",
+                                             "3", "", "PYRAMIDS -1 NEAREST JPEG",
+                                             "128 128", "NONE", "")
     except Exception as e:
         logger.info("ExceptionERROR: (arcpy).")
         logger.info(e.args[0])
         arcpy.AddError(e.args[0])
     except:
-        arcpy.CreateRasterDataset_management(ras_dir, "PlantExisting.tif", "1", "8_BIT_UNSIGNED", "World_Mercator.prj",
-                                             "3", "", "PYRAMIDS -1 NEAREST JPEG",
-                                             "128 128", "NONE", "")
         logger.info("WARNING: PlantExisting.shp is corrupted or non-existent.")
     logger.info(" >> Loading existing plant raster ...")
     existing_plants = arcpy.Raster(ras_dir + "PlantExisting.tif")
@@ -143,6 +143,7 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
                 occupied_px_ras = Con(~IsNull(occupied_px_ras), occupied_px_ras,  __temp_ras__)
             else:
                 occupied_px_ras = __temp_ras__
+                __temp_ras__ = Con(IsNull(existing_plants), __temp_ras__)
             logger.info(" >> Saving raster ... ")
             __temp_ras__.save(ras_dir + aras_tif)
             logger.info(" >> Converting to shapefile (polygon for area statistics) ... ")
