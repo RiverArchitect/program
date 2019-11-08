@@ -66,6 +66,7 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
         logger.info(" -- OK (read Rasters)\n")
     except:
         logger.info("ERROR: Could not find action Rasters.")
+        return -1
 
     # CONVERT PROJECT SHAPEFILE TO RASTER
     try:
@@ -73,7 +74,7 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
         arcpy.env.workspace = shp_dir
         arcpy.PolygonToRaster_conversion("ProjectArea.shp", "AreaCode", ras_dir + "ProjectArea.tif",
                                          cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
-        logger.info(" -- OK. Loading Project raster ...")
+        logger.info(" -- OK. Loading project raster ...")
         arcpy.env.workspace = path2pp + "Geodata\\"
         prj_area = arcpy.Raster(ras_dir + "ProjectArea.tif")
         logger.info(" -- OK (Shapefile2Raster conversion)\n")
@@ -91,13 +92,37 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
         logger.info("ExceptionERROR: (arcpy) Conversion failed.")
         return -1
 
+    # CONVERT EXISTING PLANTS SHAPEFILE TO RASTER
+    try:
+        logger.info("Converting PlantExisting.shp Shapefile to Raster ...")
+        arcpy.env.workspace = shp_dir
+        arcpy.PolygonToRaster_conversion(shp_dir + "PlantExisting.shp", "gridcode", ras_dir + "PlantExisting.tif",
+                                         cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
+        arcpy.env.workspace = path2pp + "Geodata\\"
+        logger.info(" -- OK (Shapefile2Raster conversion)\n")
+    except arcpy.ExecuteError:
+        logger.info("ExecuteERROR: (arcpy).")
+        logger.info(arcpy.GetMessages(2))
+        arcpy.AddError(arcpy.GetMessages(2))
+    except Exception as e:
+        logger.info("ExceptionERROR: (arcpy).")
+        logger.info(e.args[0])
+        arcpy.AddError(e.args[0])
+    except:
+        arcpy.CreateRasterDataset_management(ras_dir, "PlantExisting.tif", "1", "8_BIT_UNSIGNED", "World_Mercator.prj",
+                                             "3", "", "PYRAMIDS -1 NEAREST JPEG",
+                                             "128 128", "NONE", "")
+        logger.info("WARNING: PlantExisting.shp is corrupted or non-existent.")
+    logger.info(" >> Loading existing plant raster ...")
+    existing_plants = arcpy.Raster(ras_dir + "PlantExisting.tif")
+
     # RETAIN RELEVANT PLANTINGS ONLY
     shp_4_stats = {}
     try:
         logger.info("Analyzing optimum plant types in project area ...")
         logger.info(" >> Cropping maximum lifespan Raster ... ")
         arcpy.env.extent = prj_area.extent
-        max_lf_crop = Con((~IsNull(prj_area) & ~IsNull(max_lf_plants)), Float(max_lf_plants))
+        max_lf_crop = Con((~IsNull(prj_area) & ~IsNull(max_lf_plants)), Con(IsNull(existing_plants), Float(max_lf_plants)))
         logger.info(" >> Saving crop ... ")
         max_lf_crop.save(ras_dir + "max_lf_pl_c.tif")
         logger.info(" -- OK ")
@@ -114,7 +139,7 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
             __temp_ras__ = Con((~IsNull(prj_area) & ~IsNull(plant_ras)), Con((Float(max_lf_plants) >= min_lf), (max_lf_plants * plant_ras)))
             if arcpy.Exists(occupied_px_ras):
                 logger.info(" >> Reducing to relevant pixels only ... ")
-                __temp_ras__ = Con(IsNull(occupied_px_ras), __temp_ras__)
+                __temp_ras__ = Con((IsNull(occupied_px_ras) & IsNull(existing_plants)), __temp_ras__)
                 occupied_px_ras = Con(~IsNull(occupied_px_ras), occupied_px_ras,  __temp_ras__)
             else:
                 occupied_px_ras = __temp_ras__
@@ -144,14 +169,14 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
         logger.info(" -- OK (Shapefile and raster analyses)\n")
         logger.info("Calculating area statistics of plants to be cleared for construction ...")
         try:
-            arcpy.AddField_management(shp_dir + "PlantDelineation.shp", "F_AREA", "FLOAT", 9)
+            arcpy.AddField_management(shp_dir + "PlantClearing.shp", "F_AREA", "FLOAT", 9)
         except:
-            logger.info("    * cannot add field F_AREA to %s (already exists?)" % str(shp_dir + "PlantDelineation.shp"))
+            logger.info("    * cannot add field F_AREA to %s (already exists?)" % str(shp_dir + "PlantClearing.shp"))
         try:
-            arcpy.CalculateGeometryAttributes_management(shp_dir + "PlantDelineation.shp",
+            arcpy.CalculateGeometryAttributes_management(shp_dir + "PlantClearing.shp",
                                                          geometry_property=[["F_AREA", "AREA"]],
                                                          area_unit=area_units)
-            shp_4_stats.update({"clearing": shp_dir + "PlantDelineation.shp"})
+            shp_4_stats.update({"clearing": shp_dir + "PlantClearing.shp"})
         except:
             shp_4_stats.update({"clearing": config.dir2pm + ".templates\\area_dummy.shp"})
             logger.info("    * no clearing applicable ")
