@@ -95,10 +95,15 @@ class MainGui(sg.RaModuleGui):
         self.c_q_low['state'] = 'disabled'
         row += 1
 
+        self.l_dt = tk.Label(self, text="Time period (mins):", bg="LightBlue1")
+        self.l_dt.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.e_dt = tk.Entry(self)
+        self.e_dt.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+
         self.l_interp = tk.Label(self, text="Interpolation method:", bg="LightBlue1")
-        self.l_interp.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.l_interp.grid(sticky=tk.W, row=row, column=2, padx=self.xd, pady=self.yd)
         self.c_interp = ttk.Combobox(self)
-        self.c_interp.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.c_interp.grid(sticky=tk.W, row=row, column=3, padx=self.xd, pady=self.yd)
         self.c_interp['state'] = 'readonly'
         self.c_interp['values'] = ["IDW", "EBK", "Kriging", "Nearest Neighbor"]
         self.c_interp.set("IDW")
@@ -124,9 +129,14 @@ class MainGui(sg.RaModuleGui):
             return
         q_high = float(self.c_q_high.get().split(" ")[0])
         q_low = float(self.c_q_low.get().split(" ")[0])
+        dt = float(self.e_dt.get())
         for species in self.fish_applied.keys():
             for lifestage in self.fish_applied[species]:
-                ca = cCA.ConnectivityAnalysis(self.condition, species, lifestage, self.unit, q_high=q_high, q_low=q_low,
+                ca = cCA.ConnectivityAnalysis(self.condition,
+                                              species, lifestage,
+                                              self.unit,
+                                              q_high=q_high, q_low=q_low,
+                                              dt=dt,
                                               method=self.c_interp.get())
                 ca.apply_flow_reduction()
 

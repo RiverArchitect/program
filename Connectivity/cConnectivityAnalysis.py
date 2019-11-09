@@ -11,6 +11,7 @@ except:
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
+    import cFlows as cFl
     import cFish as cFi
     import fGlobal as fGl
     import cMakeTable as cMkT
@@ -84,6 +85,12 @@ class ConnectivityAnalysis:
             self.out_dir = os.path.join(self.out_dir, "flow_red_%06d_%06d" % (self.q_high, self.q_low))
         except:
             self.q_high = self.q_low = None
+
+        try:
+            self.dt = kwargs['dt']
+        except:
+            self.dt = None
+
         fGl.chk_dir(self.out_dir)
         # these directories depend on applied flow reduction
         self.shortest_paths_dir = os.path.join(self.out_dir, "shortest_paths\\")
@@ -391,6 +398,50 @@ class ConnectivityAnalysis:
         out_ras.save(out_ras_path)
         self.logger.info("Saved Q_disconnect raster: %s" % out_ras_path)
 
+    def get_disc_frequency(self):
+        """
+        Get frequency of disconnection from hydrologic record: average number of disconnections per season
+        """
+        sfp = cFl.SeasonalFlowProcessor()
+        disc_freqs = {}
+        for q in self.discharges:
+            # calculate num. of disconnections/num. of seasons on record
+            disc_freq = -999
+            disc_freqs[q] = disc_freq
+
+    def get_ramping_rates(self, method='linear'):
+        """
+        Then dh/dt = dh/dQ * dQ/dt yields estimated ramping rate before disconnection occurs.
+        method: currently only linear interpolation available, may add other method to estimate dh/dQ in future
+        Ramping rates in length unit (ft or m) per minute
+        """
+        self.logger.info("Estimating ramping rates...")
+        ramp_ras_name = os.path.join(self.out_dir, "ramping_rate_%imin.tif" % self.dt)
+        max_q = max(self.discharges)
+        min_q = min(self.discharges)
+        q_disc_ras = Raster(os.path.join(self.out_dir, "Q_disconnect.tif"))
+        ramp_rate_ras = Con(q_disc_ras != 0, 0)
+        # difference h rasters
+        for q1, q2 in list(zip(sorted(self.discharges), sorted(self.discharges)[1:])):
+            if method == 'linear':
+                # get dh/dQ by linear interpolation
+                dh = Raster(self.Q_h_interp_dict[q2]) - Raster(self.Q_h_interp_dict[q1])
+                dQ = q2 - q1
+                dh_dQ = dh/dQ
+            elif method == 'rating':
+                # ***get dh/dQ from applying rating curve
+                pass
+            dt = self.dt * (max_q-min_q)/(q2 - q1)
+            dQ_dt = dQ/dt
+            dh_dt = dh_dQ * dQ_dt  # length units/hr
+            ramp_rate_ras = Con(q_disc_ras == q1, dh_dt, ramp_rate_ras)
+            if q2 == max_q:
+                # use backward difference for ramping rate at highest discharge
+                ramp_rate_ras = Con(q_disc_ras == q2, dh_dt, ramp_rate_ras)
+
+        ramp_rate_ras.save(ramp_ras_name)
+        self.logger.info("Saved ramping rate raster: %s" % ramp_ras_name)
+
     def get_total_disc_area(self):
         """Uses Q_disconnect map to create a list of cumulative stranded area as flows are reduced"""
         q_disc_ras = Raster(os.path.join(self.out_dir, "Q_disconnect.tif"))
@@ -434,6 +485,9 @@ class ConnectivityAnalysis:
 
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
+
+        # make ramping rate map
+        self.get_ramping_rates()
 
         total_disc_area = self.get_total_disc_area()
         disc_area = total_disc_area[min(self.discharges)]
