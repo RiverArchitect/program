@@ -507,7 +507,7 @@ class HHSI:
     def nested_con_raster_calc(self, ras, curve_data):
         arcpy.env.extent = "MAXOF"
         # curve_data = [[x-values], [y-values(hsi)]]
-        __ras__ = [ras * 0]  # initial raster assignment
+        __ras__ = [ras * 0.0]  # initial raster assignment
         index = 0
         i_par_prev = 0.0
         i_hsi_prev = curve_data[1][0]
@@ -520,15 +520,15 @@ class HHSI:
             try:
                 __ras__.append(Float(Con((Float(ras) >= Float(i_par_prev)) & (Float(ras) < Float(i_par)), (
                                          Float(i_hsi_prev) + (
-                                          (Float(ras) - Float(i_par_prev)) / (Float(i_par) - Float(i_par_prev)) * Float(
-                                            curve_data[1][index] - i_hsi_prev))), Float(0.0))))
+                                          (Float(ras) - Float(i_par_prev)) / (Float(i_par) - Float(i_par_prev)) * (
+                                            Float(curve_data[1][index]) - Float(i_hsi_prev)))), Float(0.0))))
             except:
                 self.logger.info("WARNING: Invalid curve data (Fish.xlsx): PAR={0}, HSI={1}.".format(str(i_par_prev), str(i_hsi_prev)))
             i_hsi_prev = curve_data[1][index]
             i_par_prev = i_par
             index += 1
 
-        return Float(CellStatistics(__ras__, "SUM", "DATA"))
+        return Float(CellStatistics(__ras__, "MAXIMUM", "DATA"))
 
     def read_hyd_rasters(self):
         # uses negotiated HHSI script

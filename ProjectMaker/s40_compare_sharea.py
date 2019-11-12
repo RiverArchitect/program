@@ -73,7 +73,7 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
                 fili = str(species).lower()[0:2] + str(ls)[0:2]
                 xlsx_conditions = [condition_initial + "_sharea_" + fili + ".xlsx",
                                    condition_project + "_sharea_" + fili + ".xlsx"]
-                xlsx_sha = cIO.Write(xlsx_sha_template, worksheet_no=0)
+                xlsx_sha = cIO.Write(xlsx_sha_template, worksheet_no=0, data_only=False)
                 xlsx_sha_name = dir2pp + "Geodata\\SHArea_" + fili + ".xlsx"
                 conditions_sha = []
 
@@ -152,7 +152,7 @@ def main(condition_initial=str(), condition_project=str(), cover_pre=bool(), cov
 
                 try:
                     logger.info(" >> Transferring results (net SHArea gain) to cost table ...")
-                    xlsx_costs = cIO.Write(xlsx_tar_costs)
+                    xlsx_costs = cIO.Write(xlsx_tar_costs, data_only=False)
                     xlsx_costs.write_cell("G", 3, float(conditions_sha[1] - conditions_sha[0]))
                     xlsx_out_name = prj_name + "_assessment_" + version + "_" + fili + ".xlsx"
                     xlsx_costs.save_close_wb(dir2pp + xlsx_out_name)
