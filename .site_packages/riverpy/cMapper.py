@@ -231,6 +231,9 @@ class Mapper:
         self.logger.info("    * Creating PDF %s ..." % pdf_name)
         try:
             os.remove(pdf_name) if os.path.isfile(pdf_name) else print()
+        except:
+            pass
+        try:
             __outputPDF__ = arcpy.mp.PDFDocumentCreate(pdf_name)
             __tempPDFs__ = []
             __count__ = 0
