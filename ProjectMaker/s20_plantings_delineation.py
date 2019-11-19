@@ -218,8 +218,7 @@ def main(maxlf_dir=str(), min_lf=float(), prj_name=str(), unit=str(), version=st
             arcpy.TableToTable_conversion(shp_4_stats[ts], quant_dir, "plant_" + ts + ".txt")
             stat_files.update({ts: quant_dir + "plant_" + ts + ".txt"})
         except:
-            logger.info("    !! EXPORT FAILED")
-            return -1
+            logger.info("    !! EXPORT FAILED (empty %s ?)" % str(ts))
     logger.info(" -- OK (Table export)\n")
 
     arcpy.CheckInExtension('Spatial')

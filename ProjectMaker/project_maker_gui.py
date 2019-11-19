@@ -415,17 +415,28 @@ class MainGui(sg.RaModuleGui):
                     showinfo("CORRECTION REQUIRED", "The stabilization lifespan must be larger or equal to the minimum lifespans of plants.")
                     return -1
                 best_plant_dir = s20.main(dir2ml_pl, self.vege_cr.get(), self.prj_name.get(), self.unit, self.version)
-                try:
-                    lf_req = float(self.vege_stab_cr.get())
-                except:
-                    showinfo("ERROR", "Wrong format of critical lifespan (must be numeric).")
-                    return -1
+            except:
+                showinfo("ERROR",
+                         "Select (highlight) at least one Max Lifespan condition.\n\nClose all relevant geofiles and the cost master workbook (xlsx).")
+                return -1
+
+            try:
+                lf_req = float(self.vege_stab_cr.get())
+            except:
+                showinfo("ERROR", "Wrong format of critical lifespan (must be numeric).")
+                return -1
+            try:
                 s21.main(best_plant_dir,  config.dir2lf + "Output\\Rasters\\" + condition_pl + "\\", lf_req,
                          self.prj_name.get(), self.unit, self.version)
                 self.b_s20.config(text="Plantings OK", fg="forest green")
                 showinfo("INFO", "Calulation finished. VERIFY CELL LINKS IN WORKBOOK! Make sure that cell links in column F of the COSTS tab link to the correct cells in the FROM_GEODATA tab.")
             except:
-                showinfo("ERROR", "Select (highlight) at least one Max Lifespan condition.\n\nClose all relevant geofiles and the cost master workbook (xlsx).")
+                showinfo("WARNING", "Could not load Max Lifespan maps for bioengineering.\n\nRun Lifespan module for bioengineering for the selected condition first.")
+
+            try:
+                fGl.open_file("{0}{1}_{2}\\{1}_assessment_{2}.xlsx".format(config.dir2pm, self.prj_name.get(), self.version))
+            except:
+                pass
 
         if app_name == "s30":
             try:

@@ -23,7 +23,6 @@ def main(best_plant_dir=str(), lf_dir=str(), crit_lf=float(), prj_name=str(), un
     """
     logger = logging.getLogger("logfile")
     logger.info("STABILIZING PLANTS ----- ----- ----- -----")
-    error = False
     if unit == "us":
         area_units = "SQUARE_FEET_US"
         ft2_to_acres = config.ft2ac 
@@ -162,7 +161,6 @@ def main(best_plant_dir=str(), lf_dir=str(), crit_lf=float(), prj_name=str(), un
             write_dict[inv_feature_dict[int(row[0])]] += row[1]
         except:
             logger.info("      --- Unknown key: " + str(int(row[0])))
-            error = True
 
     if unit == "us":
         logger.info(" >> Converting ft2 to acres ...")
@@ -186,9 +184,6 @@ def main(best_plant_dir=str(), lf_dir=str(), crit_lf=float(), prj_name=str(), un
                 logger.info(str(shp) + " is locked. Remove manually to avoid confusion.")
     arcpy.env.workspace = dir2pp + "Geodata\\"
     logger.info(" -- OK (Clean up)\n")
-
-    if not error:
-        fGl.open_file(xlsx_target)
 
 
 if __name__ == "__main__":
