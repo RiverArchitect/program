@@ -55,6 +55,7 @@ class ConditionCreator:
                     flows.get_fish_seasons(fish, lfs)
             output_xlsx = flows.make_flow_duration(condition)
             flows.make_condition_flow2d_duration(condition)
+            flows.make_disc_freq(condition)
             return output_xlsx
         except:
             self.error = True

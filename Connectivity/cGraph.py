@@ -38,6 +38,10 @@ class Graphy:
         self.path2_h_ras = path2_h_ras
         self.path2_u_ras = path2_u_ras
         self.path2_va_ras = path2_va_ras
+        if self.path2_u_ras == '' and self.path2_va_ras == '':
+            self.analyze_v = False
+        else:
+            self.analyze_v = True
         self.path2_target_ras = path2_target
         self.h_thresh = h_thresh
         self.u_thresh = u_thresh
@@ -74,10 +78,11 @@ class Graphy:
         try:
             self.logger.info("Reading depth raster %s" % self.path2_h_ras)
             self.h_ras = Raster(self.path2_h_ras)
-            self.logger.info("Reading velocity raster %s" % self.path2_u_ras)
-            self.u_ras = Raster(self.path2_u_ras)
-            self.logger.info("Reading velocity angle raster %s" % self.path2_va_ras)
-            self.va_ras = Raster(self.path2_va_ras)
+            if self.analyze_v:
+                self.logger.info("Reading velocity raster %s" % self.path2_u_ras)
+                self.u_ras = Raster(self.path2_u_ras)
+                self.logger.info("Reading velocity angle raster %s" % self.path2_va_ras)
+                self.va_ras = Raster(self.path2_va_ras)
             self.logger.info("Reading target area raster %s" % self.path2_target)
             self.target_ras = Raster(self.path2_target)
             self.logger.info("OK")
@@ -91,8 +96,9 @@ class Graphy:
         self.logger.info("Converting rasters to arrays...")
         try:
             self.h_mat = arcpy.RasterToNumPyArray(self.h_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
-            self.u_mat = arcpy.RasterToNumPyArray(self.u_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
-            self.va_mat = arcpy.RasterToNumPyArray(self.va_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
+            if self.analyze_v:
+                self.u_mat = arcpy.RasterToNumPyArray(self.u_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
+                self.va_mat = arcpy.RasterToNumPyArray(self.va_ras, lower_left_corner=self.ref_pt, nodata_to_value=np.nan)
             self.target_mat = arcpy.RasterToNumPyArray(self.target_ras, lower_left_corner=self.ref_pt)  # integer type
             self.graph_mats = np.zeros((8, 2, *self.h_mat.shape))
             self.graph_mats[:] = np.nan
@@ -123,8 +129,12 @@ class Graphy:
                                 # check if depth > threshold (at neighbor location)
                                 if self.h_mat[neighbor_i] > self.h_thresh:
                                     # check velocity condition
-                                    mag_u_w = self.u_mat[i, j]  # magnitude of water velocity
-                                    dir_u_w = self.va_mat[i, j]  # angle from north
+                                    if self.analyze_v:
+                                        mag_u_w = self.u_mat[i, j]  # magnitude of water velocity
+                                        dir_u_w = self.va_mat[i, j]  # angle from north
+                                    else:
+                                        mag_u_w = 0
+                                        dir_u_w = 0
                                     if self.check_velocity_condition(mag_u_w, dir_u_w, octant):
                                         cost = self.get_cost(key, neighbor_key)
                                         try:

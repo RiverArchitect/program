@@ -2,12 +2,14 @@ try:
     import sys, os, logging, random, shutil
     import numpy as np
     import datetime as dt
+    from tkinter.messagebox import askyesno
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random, shutil).")
 try:
     import cGraph
+    # *** import cRatingCurves
 except:
-    print("ExceptionERROR: Cannot import cGraph (check Connectivity directory)")
+    print("ExceptionERROR: Cannot import cGraph or cRatingCurves (check Connectivity directory)")
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
@@ -59,6 +61,7 @@ class ConnectivityAnalysis:
         self.logger.info("minimum swimming depth = %s %s" % (self.h_min, self.length_units))
         self.u_max = cFi.Fish().get_travel_threshold(self.species, self.lifestage, "u_max")
         self.logger.info("maximum swimming speed  = %s %s" % (self.u_max, self.u_units))
+        self.analyze_v = True
 
         try:
             self.method = kwargs['method']
@@ -139,7 +142,16 @@ class ConnectivityAnalysis:
                 self.discharges = [q for q in self.discharges if self.q_low <= q <= self.q_high]
             self.Q_h_dict = {Q: self.dir2condition + mkt.dict_Q_h_ras[Q] for Q in self.discharges}
             self.Q_u_dict = {Q: self.dir2condition + mkt.dict_Q_u_ras[Q] for Q in self.discharges}
-            self.Q_va_dict = {Q: self.dir2condition + mkt.dict_Q_va_ras[Q] for Q in self.discharges}
+            try:
+                self.Q_va_dict = {Q: self.dir2condition + mkt.dict_Q_va_ras[Q] for Q in self.discharges}
+            except:
+                proceed = askyesno('Cannot retrieve velocity angle data',
+                                   'Missing velocity angle data. Proceed without velocity barrier considerations?')
+                self.analyze_v = not proceed
+                if proceed:
+                    self.logger.info("WARNING: Proceeding without velocity barrier considerations.")
+                else:
+                    return
             self.logger.info("OK")
         except:
             self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
@@ -167,18 +179,19 @@ class ConnectivityAnalysis:
             # if not, create new interpolated depth raster
             wle.calculate_h()
             h_ras = Raster(h_interp_path)
+            self.Q_h_interp_dict[Q] = h_interp_path
             self.logger.info("OK")
             # in new interpolated area set velocity and velocity angle = 0
-            arcpy.env.cellSize = dem_path  # make all interpolated rasters have DEM cell size
-            u_ras = Raster(self.Q_u_dict[Q])
-            va_ras = Raster(self.Q_va_dict[Q])
-            u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
-            va_ras = Con(IsNull(va_ras) & (h_ras > 0), 0, va_ras)
-            u_ras.save(u_interp_path)
-            va_ras.save(va_interp_path)
-            self.Q_h_interp_dict[Q] = h_interp_path
-            self.Q_u_interp_dict[Q] = u_interp_path
-            self.Q_va_interp_dict[Q] = va_interp_path
+            if self.analyze_v:
+                arcpy.env.cellSize = dem_path  # make all interpolated rasters have DEM cell size
+                u_ras = Raster(self.Q_u_dict[Q])
+                va_ras = Raster(self.Q_va_dict[Q])
+                u_ras = Con(IsNull(u_ras) & (h_ras > 0), 0, u_ras)
+                va_ras = Con(IsNull(va_ras) & (h_ras > 0), 0, va_ras)
+                u_ras.save(u_interp_path)
+                va_ras.save(va_interp_path)
+                self.Q_u_interp_dict[Q] = u_interp_path
+                self.Q_va_interp_dict[Q] = va_interp_path
         self.logger.info("OK")
 
     def get_hsi_rasters(self, cover=True):
@@ -281,9 +294,12 @@ class ConnectivityAnalysis:
         self.logger.info("\tminimum swimming depth  = %s %s" % (self.h_min, self.length_units))
         self.logger.info("\tmaximum swimming speed  = %s %s" % (self.u_max, self.u_units))
         path2h_ras = self.Q_h_interp_dict[Q]
-        path2u_ras = self.Q_u_interp_dict[Q]
-        path2va_ras = self.Q_va_interp_dict[Q]
-
+        if self.analyze_v:
+            path2u_ras = self.Q_u_interp_dict[Q]
+            path2va_ras = self.Q_va_interp_dict[Q]
+        else:
+            path2u_ras = ''
+            path2va_ras = ''
         cg = cGraph.Graphy(path2h_ras, path2u_ras, path2va_ras, self.h_min, self.u_max, self.target)
         shortest_paths_ras = cg.find_shortest_paths()
         self.logger.info("Saving shortest paths raster...")
@@ -402,12 +418,41 @@ class ConnectivityAnalysis:
         """
         Get frequency of disconnection from hydrologic record: average number of disconnections per season
         """
-        sfp = cFl.SeasonalFlowProcessor()
-        disc_freqs = {}
-        for q in self.discharges:
-            # calculate num. of disconnections/num. of seasons on record
-            disc_freq = -999
-            disc_freqs[q] = disc_freq
+        # read workbook
+        disc_freq_xlsx_name = os.path.join(config.dir2ra,
+                                           '00_Flows\\%s\\disc_freq_%s.xlsx' % (self.condition, self.lifestage_code))
+        if os.path.exists(disc_freq_xlsx_name):
+            try:
+                disc_freq_wb = cIO.Read(disc_freq_xlsx_name)
+                disc_freq_c1 = disc_freq_wb.read_column("A", 3)
+                disc_freq_c2 = disc_freq_wb.read_column("B", 3)
+                disc_freqs = dict(zip(disc_freq_c1, disc_freq_c2))
+                disc_freq_wb.close_wb()
+            except:
+                self.logger.info("ERROR: Could not read disconnection frequency data. Make sure to Analyze Flows with the Start Menu.")
+                return -1
+        return disc_freqs
+
+    def make_disc_freq_map(self):
+        self.logger.info("Making disconnection frequency map...")
+        try:
+            disc_freqs = self.get_disc_frequency()
+            arcpy.env.workspace = self.cache
+            out_ras_path = os.path.join(self.out_dir, "disc_freq_%s.tif" % self.lifestage_code)
+            # start with highest Q raster, assign all wetted values to default of 0.
+            out_ras = Raster(self.Q_h_dict[max(self.discharges)])
+            out_ras = Con(~IsNull(out_ras), 0)
+            # starting from lowest Q and working up, assign cell value disc_freq[Q] to cells in disconnected areas
+            for Q in self.discharges:
+                disconnected_areas = self.Q_disc_areas_dict[Q]
+                # assign Q as value within disconnected area
+                temp_ras = arcpy.sa.ExtractByMask(out_ras, disconnected_areas)
+                out_ras = Con(~IsNull(temp_ras), disc_freqs[Q], out_ras)
+            out_ras.save(out_ras_path)
+        except:
+            self.logger.info("ERROR: Could not create disconnection frequency map. Make sure to Analyze Flows with the Start Menu.")
+            return -1
+        self.logger.info("Saved disconnection frequency raster: %s" % out_ras_path)
 
     def get_ramping_rates(self, method='linear'):
         """
@@ -423,16 +468,19 @@ class ConnectivityAnalysis:
         ramp_rate_ras = Con(q_disc_ras != 0, 0)
         # difference h rasters
         for q1, q2 in list(zip(sorted(self.discharges), sorted(self.discharges)[1:])):
+            dQ_dt = (max_q - min_q) / self.dt
             if method == 'linear':
                 # get dh/dQ by linear interpolation
                 dh = Raster(self.Q_h_interp_dict[q2]) - Raster(self.Q_h_interp_dict[q1])
                 dQ = q2 - q1
                 dh_dQ = dh/dQ
+            """ ***
             elif method == 'rating':
                 # ***get dh/dQ from applying rating curve
+                dem = self.dir2condition + "dem.tif"
+                cRC = cRatingCurves.RatingCurves(dem, self.Q_h_interp_dict, q_disc_ras)
                 pass
-            dt = self.dt * (max_q-min_q)/(q2 - q1)
-            dQ_dt = dQ/dt
+            """
             dh_dt = dh_dQ * dQ_dt  # length units/hr
             ramp_rate_ras = Con(q_disc_ras == q1, dh_dt, ramp_rate_ras)
             if q2 == max_q:
@@ -459,8 +507,6 @@ class ConnectivityAnalysis:
         """
         Analyzes effects of a reduction in flows from Q_high to Q_low.
 
-        *** make new target for Q_low, only interpolate needed rasters when initializing CA object
-
         Outputs:
             -shortest path rasters for Q_high and Q_low (and all model discharges in between)
             -disconnected area: the wetted area which is connected at Q_high but disconnected at Q_low
@@ -485,6 +531,9 @@ class ConnectivityAnalysis:
 
         # make map of Qs where areas disconnect
         self.make_disconnect_Q_map()
+
+        # make map of associated disconnection frequencies
+        self.make_disc_freq_map()
 
         # make ramping rate map
         self.get_ramping_rates()

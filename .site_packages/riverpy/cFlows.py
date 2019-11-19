@@ -129,11 +129,13 @@ class SeasonalFlowProcessor:
         self.date_column = []
         self.flow_column = []
         self.flow_matrix = []  # rows=n-days, cols=m-years
+        self.season_flow_lists = {}
         self.logger = logging.getLogger("logfile")
         self.min_year = 9999
         self.max_year = 1
         self.season_years = int()
         self.xlsx_template = config.dir2ra + "00_Flows\\templates\\flow_duration_template.xlsx"
+        self.disc_xlsx_template = config.dir2ra + "00_Flows\\templates\\disc_freq_template.xlsx"
         self.read_flow_series(input_xlsx)
 
     def add_years(self, curr_date, number_of_years):
@@ -169,7 +171,7 @@ class SeasonalFlowProcessor:
                 self.logger.info("ERROR: Invalid date assignment (Fish.xlsx).")
                 continue
             try:
-                data4export = self.make_flow_season_data(start_date, end_date)
+                data4export = self.make_flow_season_data(fish, start_date, end_date)
                 self.export_dict.update({fish: data4export})
             except:
                 self.logger.info("ERROR: Could not process flow series.")
@@ -225,7 +227,8 @@ class SeasonalFlowProcessor:
                 self.logger.info("ERROR: Could not write flow duration curve data (2D flows).")
                 continue
 
-    def make_flow_season_data(self, start_date, end_date, **kwargs):
+    def make_flow_season_data(self, fish, start_date, end_date, **kwargs):
+        # fish = 4 character string for species/lifestage
         # start_date = datetime.datetime(YEAR, MONTH, DAY) of season start
         # end_date = datetime.datetime(YEAR, MONTH, DAY) of season end
         # **kwargs: mean_daily = False (default) - applies daily averages rather than all flows
@@ -290,6 +293,8 @@ class SeasonalFlowProcessor:
                         self.logger.info("WARNING: %s is not a number." % str(flow))
         season_flow_list.sort(reverse=True)
 
+        self.season_flow_lists[fish] = season_flows
+
         data4export = []
         __row_tar__ = 1
         n_flows = season_flow_list.__len__()
@@ -300,6 +305,61 @@ class SeasonalFlowProcessor:
                 pass
             __row_tar__ += 1
         return data4export
+
+    def make_disc_freq(self, condition):
+        """
+        Computes frequency that each model discharge is exceeded then dropped within season
+        """
+        self.logger.info("Computing disconnection frequencies...")
+        disc_freqs = {}
+        flow_data = cMT.MakeFlowTable(condition, "*")
+        flows_2d = flow_data.discharges
+        for fish in self.fish_seasons.keys():
+            disc_freqs[fish] = []
+            season_flows = self.season_flow_lists[fish]
+            for q in flows_2d:
+                count = 0
+                for season in season_flows:
+                    for q1, q2 in list(zip(season, season[1:])):
+                        if q2 <= q < q1:
+                            count += 1
+                disc_freqs[fish].append([q, count/len(season_flows)])
+
+        # output to xlsx
+        self.logger.info("Writing disconnection frequencies to workbook...")
+        self.write_disc_freq2xlsx(condition, disc_freqs)
+
+    def write_disc_freq2xlsx(self, condition, disc_freqs):
+        fG.chk_dir(config.dir2ra + "00_Flows\\" + condition + "\\")
+        for fish in self.fish_seasons.keys():
+            export_xlsx_name = config.dir2ra + "00_Flows\\" + condition + "\\disc_freq_" + str(fish) + ".xlsx"
+            self.logger.info("   * writing to " + export_xlsx_name)
+            try:
+                xlsx_write = cIO.Write(self.disc_xlsx_template)
+            except:
+                self.logger.info("ERROR: Could not open workbook (%s)." % self.xlsx_template)
+                continue
+            # xlsx_write.open_wb(export_xlsx_name, 0)
+            self.logger.info("   * writing data ...")
+            try:
+                xlsx_write.write_cell("E", 4, fish)
+                xlsx_write.write_cell("E", 5, " Month:" + str(self.fish_seasons[fish]["start"]["month"]) + " Day:" + str(self.fish_seasons[fish]["start"]["day"]))
+                xlsx_write.write_cell("E", 6, " Month:" + str(self.fish_seasons[fish]["end"]["month"]) + " Day:" + str(self.fish_seasons[fish]["end"]["day"]))
+                xlsx_write.write_cell("E", 7, self.min_year)
+                xlsx_write.write_cell("E", 8, self.max_year)
+                xlsx_write.write_matrix("A", 3, disc_freqs[fish])
+            except:
+                self.logger.info("")
+
+            try:
+                self.logger.info("   * saving workbook ... ")
+                xlsx_write.save_close_wb(export_xlsx_name)
+            except:
+                self.logger.info("ERROR: Failed to save %s" % export_xlsx_name)
+        try:
+            return export_xlsx_name
+        except:
+            return -1
 
     def read_flow_series(self, input_xlsx):
         try:
