@@ -340,3 +340,7 @@ class Graphy:
                                                      value_to_nodata=np.nan)
         self.logger.info("OK")
         return shortest_path_ras
+
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = Graph (Module: Connectivity)")
+        print(dir(self))
