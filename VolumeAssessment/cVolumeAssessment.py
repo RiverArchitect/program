@@ -19,12 +19,12 @@ class VolumeAssessment:
         # reach_ids = list of reach names to limit the analysis
 
         # general directories and parameters
-        self.cache = config.dir2mt + ".cache%s\\" % str(random.randint(1000000, 9999999))
+        self.cache = config.dir2va + ".cache%s\\" % str(random.randint(1000000, 9999999))
         self.vol_name = mod_ras_dir.split(":\\")[-1].split(":/")[-1].split("01_Conditions\\")[-1].split("01_Conditions/")[-1].split(".tif")[0].replace("\\", "_").replace("/", "_").replace("_dem", "")
         fGl.chk_dir(self.cache)
         fGl.clean_dir(self.cache)
         self.logger = logging.getLogger("logfile")
-        self.output_ras_dir = config.dir2mt + "Output\\%s\\" % self.vol_name
+        self.output_ras_dir = config.dir2va + "Output\\%s\\" % self.vol_name
         fGl.chk_dir(self.output_ras_dir)
         fGl.clean_dir(self.output_ras_dir)
         self.rasters = []
