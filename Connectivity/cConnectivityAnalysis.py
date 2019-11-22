@@ -383,7 +383,7 @@ class ConnectivityAnalysis:
                 disc_hab_ras = Raster(disc_hab_ras_path)
                 if Q == self.q_high:
                     # initialize total disconnected habitat area raster
-                    total_disc_hab_ras = Raster(disc_hab_ras)
+                    total_disc_hab_ras = disc_hab_ras
                 else:
                     # add new disconnected habitat area
                     total_disc_hab_ras = Con(~IsNull(disc_hab_ras), disc_hab_ras, total_disc_hab_ras)
