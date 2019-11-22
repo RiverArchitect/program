@@ -86,7 +86,7 @@ class CHSI:
                         continue
                     dsc = arcpy.Describe(ras_csi)
                     coord_sys = dsc.SpatialReference
-                    rel_ras = Con(Float(ras_csi) >= float(sha_threshold), Float(ras_csi))
+                    rel_ras = Con(Float(ras_csi) > float(sha_threshold), Float(ras_csi))
                     self.logger.info("       * saving SHArea-CHSI raster: " + self.path_sha_ras + str(csi))
                     try:
                         rel_ras.save(self.path_sha_ras + str(csi))
