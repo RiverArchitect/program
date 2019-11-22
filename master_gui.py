@@ -47,6 +47,25 @@ except:
     print("ERROR: Could not import Connectivity.")
 
 
+class ResizingCanvas(tk.Canvas):
+    def __init__(self, parent, **kwargs):
+        Canvas.__init__(self, parent, **kwargs)
+        self.bind("<Configure>", self.on_resize)
+        self.height = self.winfo_reqheight()
+        self.width = self.winfo_reqwidth()
+
+    def on_resize(self, event):
+        # determine the ratio of old width/height to new width/height
+        wscale = float(event.width) / self.width
+        hscale = float(event.height) / self.height
+        self.width = event.width
+        self.height = event.height
+        # resize the canvas
+        self.config(width=self.width, height=self.height)
+        # rescale all the objects tagged with the "all" tag
+        self.scale("all", 0, 0, wscale, hscale)
+
+
 class RaGui(tk.Frame):
     # master GUI for all RiverArchitect modules
     def __init__(self, master=None):
@@ -135,4 +154,8 @@ class RaGui(tk.Frame):
 
 
 if __name__ == '__main__':
-    RaGui().mainloop()
+    # RaGui().mainloop()
+    # root = tk.Tk()
+    RiverArchitect = RaGui(tk.Tk())
+    flex_window = ResizingCanvas(RiverArchitect.mainloop(), width=700, height=490)
+    flex_window.pack(fill=BOTH, expand=YES)
