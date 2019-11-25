@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# Filename: functions_global.py
 try:
     import os, logging, sys
     import datetime as dt

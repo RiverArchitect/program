@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # Filename: cPoolRiffle.py
-from __future__ import division  # required to enforce correct division
 import cHydraulic as chy
 from math import *
 import numpy as np

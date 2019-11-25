@@ -1,7 +1,5 @@
 #!/usr/bin/python
 # Filename: cHydraulic.py
-from __future__ import division  # required to enforce correct division
-
 
 class Hydraulic:
     def __init__(self, channel_slope, D50, *args, **kwargs):

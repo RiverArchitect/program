@@ -1,5 +1,3 @@
-from __future__ import division
-
 try:
     import webbrowser, os
     import calendar
