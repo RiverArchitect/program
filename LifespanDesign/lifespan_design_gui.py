@@ -210,7 +210,7 @@ class FaGui(sg.RaModuleGui):
         self.featmenu.add_command(label="_____________________________")
         self.featmenu.add_command(label="Group layer: Terraforming", command=lambda: self.define_feature("framework"))
         self.featmenu.add_command(label="Group layer: Plantings", command=lambda: self.define_feature("plants"))
-        self.featmenu.add_command(label="Group layer: Bioengineering", command=lambda: self.define_feature("toolbox"))
+        self.featmenu.add_command(label="Group layer: Nature-based (other)", command=lambda: self.define_feature("toolbox"))
         self.featmenu.add_command(label="Group layer: Connectivity", command=lambda: self.define_feature("complementary"))
         self.featmenu.add_command(label="CLEAR ALL", command=lambda: self.define_feature("clear"))
 

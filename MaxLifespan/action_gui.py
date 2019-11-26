@@ -132,7 +132,7 @@ class ActionGui(sg.RaModuleGui):
         # add menu entries
         self.featmenu.add_command(label="Group layer: Terraforming", command=lambda: self.define_feature("Terraforming"))
         self.featmenu.add_command(label="Group layer: Plantings", command=lambda: self.define_feature("Plantings"))
-        self.featmenu.add_command(label="Group layer: Bioengineering", command=lambda: self.define_feature("Bioengineering"))
+        self.featmenu.add_command(label="Group layer: Nature-based (other)", command=lambda: self.define_feature("Bioengineering"))
         self.featmenu.add_command(label="Group layer: Connectivity", command=lambda: self.define_feature("Connectivity"))
         self.featmenu.add_command(label="CLEAR", command=lambda: self.define_feature("clear"))
 

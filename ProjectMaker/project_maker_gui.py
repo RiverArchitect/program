@@ -163,7 +163,7 @@ class MainGui(sg.RaModuleGui):
         self.e_ter_cr.grid(sticky=tk.EW, row=15, column=1, padx=self.xd, pady=self.yd)
         self.l_ter_cr_help = tk.Label(self, fg="gray26", text=" years (float number, example: 2.5)")
         self.l_ter_cr_help.grid(sticky=tk.W, row=15, column=2, padx=self.xd, pady=self.yd)
-        self.l_condition_ter = tk.Label(self, text="Select bioeng. MaxLifespan Condition: ")
+        self.l_condition_ter = tk.Label(self, text="Select nat. eng. MaxLifespan Condition: ")
         self.l_condition_ter.grid(sticky=tk.W, row=18, column=0, padx=self.xd, pady=self.yd)
         self.sb_condition_ter = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.sb_condition_ter.grid(sticky=tk.W, row=18, column=2, padx=0, pady=self.yd)
@@ -275,19 +275,19 @@ class MainGui(sg.RaModuleGui):
 
         if app_name == "s2X":
             msges.append("Plant delineation requirements:\n")
-            msges.append("- Critical lifespan determines what plantings require stabilization with bioengineering features")
+            msges.append("- Critical lifespan determines what plantings require stabilization with nature-based engineering features")
             msges.append("- ProjectArea.shp (Polygon)")
             msges.append("- PlantDelineation.shp (Polygon)")
             msges.append("- Max. Lifespan Maps for plants (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
             msges.append("    (max_lf_plants.tif)")
-            msges.append("- Max. Lifespan Maps for bioengineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
+            msges.append("- Max. Lifespan Maps for other nature-based engineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
             msges.append("    (lf_wood.tif, lf_bio_v_bio.tif, lf_bio_m_bio.tif)\n")
 
         if app_name == "s30":
             msges.append("Stabilization requirements:\n")
-            msges.append("- Critical lifespan determines what plantings require stabilization with bioengineering features")
+            msges.append("- Critical lifespan determines what plantings require stabilization with nature-based engineering (other) features")
             msges.append("- ProjectArea.shp (Polygon)")
-            msges.append("- Max. Lifespan Maps for bioengineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
+            msges.append("- Max. Lifespan Maps for other nature-based engineering (lyr20) exist in /MaxLifespan/Output/Rasters/CONDITION/")
             msges.append("    (lf_grains.tif)\n")
 
         if app_name == "s40":
@@ -431,7 +431,7 @@ class MainGui(sg.RaModuleGui):
                 self.b_s20.config(text="Plantings OK", fg="forest green")
                 showinfo("INFO", "Calulation finished. VERIFY CELL LINKS IN WORKBOOK! Make sure that cell links in column F of the COSTS tab link to the correct cells in the FROM_GEODATA tab.")
             except:
-                showinfo("WARNING", "Could not load Max Lifespan maps for bioengineering.\n\nRun Lifespan module for bioengineering for the selected condition first.")
+                showinfo("WARNING", "Could not load Max Lifespan maps for nature-based engineering.\n\nRun Lifespan module for nature-based engineering for the selected condition first.")
 
             try:
                 fGl.open_file("{0}{1}_{2}\\{1}_assessment_{2}.xlsx".format(config.dir2pm, self.prj_name.get(), self.version))
