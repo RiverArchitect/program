@@ -1,11 +1,11 @@
 # River Architect ![logo](https://github.com/sschwindt/RiverArchitect/raw/master/images/logo_small.ico)
-[River Architect](https://github.com/sschwindt/RiverArchitect/raw/master/docs/RiverArchitect.pdf) is a Python3-based open-source code that supports river designers with a set of GUI modules (the last stable Python2 version can be downloaded [here][8] with sample data). The current core functionalities are:
+[River Architect](https://github.com/sschwindt/RiverArchitect/raw/master/docs/RiverArchitect.pdf) is an [<font color="blue">open-access, peer-reviewed (Journal SoftwareX)</font>](https://doi.org/10.1016/j.softx.2020.100438), and Python3-based open-source software that supports river engineers and ecologists with a set of GUI modules (the last stable Python2 version can be downloaded [here][8] with sample data). The current core functionalities are:
 
  * Lifespan mapping of stream design features according to [Schwindt et al. (2019)][1] with the [LifespanDesign](https://github.com/sschwindt/RiverArchitect/wiki/LifespanDesign) and [MaxLifespan](https://github.com/sschwindt/RiverArchitect/wiki/MaxLifespan) modules.   
 
  * Terraforming concepts with the [ModifyTerrain](https://github.com/sschwindt/RiverArchitect/wiki/ModifyTerrain) module using threshold value-based DEM modifications or the sophisticated [River Builder](https://github.com/sschwindt/RiverArchitect/wiki/RiverBuilder).
 
- * Evaluate ecohydraulic and morphological site and river assets within the Eco-Morphology modules for [calculating Seasonal Habitat Area](https://github.com/sschwindt/RiverArchitect/wiki/SHArC) and optimizing [habitat connectivity](https://github.com/sschwindt/RiverArchitect/wiki/Connectivity).
+ * Evaluate ecohydraulic and morphological site and river assets within the Eco-Morphology modules for [calculating Seasonal Habitat Area](https://github.com/sschwindt/RiverArchitect/wiki/SHArC) and assessing [fish stranding risk(habitat connectivity)](https://github.com/sschwindt/RiverArchitect/wiki/Connectivity).
 
  * Generate construction plans, cost estimates, and variant efficiency metrics with the [ProjectMaker](https://github.com/sschwindt/RiverArchitect/wiki/ProjectMaker) module.
  
