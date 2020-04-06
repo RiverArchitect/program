@@ -466,13 +466,13 @@ class ConnectivityAnalysis:
         min_q = min(self.discharges)
         q_disc_ras = Raster(os.path.join(self.out_dir, "Q_disconnect.tif"))
         ramp_rate_ras = Con(q_disc_ras != 0, 0)
+        dQ_dt = (max_q - min_q) / self.dt
         # difference h rasters
         for q1, q2 in list(zip(sorted(self.discharges), sorted(self.discharges)[1:])):
-            dQ_dt = (max_q - min_q) / self.dt
             if method == 'linear':
                 # get dh/dQ by linear interpolation
-                dh = Raster(self.Q_h_interp_dict[q2]) - Raster(self.Q_h_interp_dict[q1])
-                dQ = q2 - q1
+                dh = Raster(self.Q_h_interp_dict[max_q]) - Raster(self.Q_h_interp_dict[q1])
+                dQ = max_q - q1
                 dh_dQ = dh/dQ
             """ ***
             elif method == 'rating':
@@ -481,17 +481,14 @@ class ConnectivityAnalysis:
                 cRC = cRatingCurves.RatingCurves(dem, self.Q_h_interp_dict, q_disc_ras)
                 pass
             """
-            dh_dt = dh_dQ * dQ_dt  # length units/hr
+            dh_dt = dh_dQ * dQ_dt  # depth units/min
             ramp_rate_ras = Con(q_disc_ras == q1, dh_dt, ramp_rate_ras)
-            if q2 == max_q:
-                # use backward difference for ramping rate at highest discharge
-                ramp_rate_ras = Con(q_disc_ras == q2, dh_dt, ramp_rate_ras)
 
         ramp_rate_ras.save(ramp_ras_name)
         self.logger.info("Saved ramping rate raster: %s" % ramp_ras_name)
 
     def get_total_disc_area(self):
-        """Uses Q_disconnect map to create a list of cumulative stranded area as flows are reduced"""
+        """Uses Q_disconnect map to create a list of cumulative disconnected area as flows are reduced"""
         q_disc_ras = Raster(os.path.join(self.out_dir, "Q_disconnect.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(q_disc_ras, 'CELLSIZEX').getOutput(0))
         disc_areas_dict = {}
@@ -500,6 +497,10 @@ class ConnectivityAnalysis:
             cum_disc_area = Con(q_disc_ras >= Q, 1)
             mat = arcpy.RasterToNumPyArray(cum_disc_area, nodata_to_value=0)
             disc_areas_dict[Q] = np.sum(mat) * (cell_size**2)
+            # save to wb
+            row_num = sorted(self.discharges).index(Q) + 3
+            self.xlsx_writer.write_cell("A", row_num, Q)
+            self.xlsx_writer.write_cell("B", row_num, disc_areas_dict[Q])
         return disc_areas_dict
 
     @fGl.err_info
@@ -539,6 +540,7 @@ class ConnectivityAnalysis:
         self.get_ramping_rates()
 
         total_disc_area = self.get_total_disc_area()
+        self.xlsx_writer.save_close_wb(self.xlsx)
         disc_area = total_disc_area[min(self.discharges)]
         self.logger.info("Cumulative area disconnected by flow reduction: %.2f %s" % (disc_area, self.area_units))
 
