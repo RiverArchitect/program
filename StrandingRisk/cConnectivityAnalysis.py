@@ -9,7 +9,7 @@ try:
     import cGraph
     # *** import cRatingCurves
 except:
-    print("ExceptionERROR: Cannot import cGraph or cRatingCurves (check Connectivity directory)")
+    print("ExceptionERROR: Cannot import cGraph or cRatingCurves (check StrandingRisk directory)")
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
@@ -572,5 +572,5 @@ class ConnectivityAnalysis:
             self.logger.info("Failed to clean up .cache folder.")
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = ConnectivityAnalysis (Module: Connectivity)")
+        print("Class Info: <type> = ConnectivityAnalysis (Module: StrandingRisk)")
         print(dir(self))

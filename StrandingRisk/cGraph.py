@@ -342,5 +342,5 @@ class Graphy:
         return shortest_path_ras
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = Graph (Module: Connectivity)")
+        print("Class Info: <type> = Graph (Module: StrandingRisk)")
         print(dir(self))
