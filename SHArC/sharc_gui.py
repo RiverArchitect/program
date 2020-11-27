@@ -12,7 +12,7 @@ try:
     # import own routines
     import cHSI
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
-    import slave_gui as sg
+    import child_gui as sg
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import cFlows as cFl

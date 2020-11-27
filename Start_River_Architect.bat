@@ -17,7 +17,7 @@ IF %_propy%=="" (
 )
 
 @echo on
-call %_propy% "%cd%\master_gui.py"
+call %_propy% "%cd%\parent_gui.py"
 
 exit
 

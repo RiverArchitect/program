@@ -15,7 +15,7 @@ try:
     import cConnectivityAnalysis as cCA
     # import slave gui
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
-    import slave_gui as sg
+    import child_gui as sg
     # load routines from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
