@@ -45,6 +45,10 @@ try:
     import StrandingRisk
 except:
     print("ERROR: Could not import StrandingRisk.")
+try:
+    import RiparianRecruitment
+except:
+    print("Error: Could not import RiparianRecruitment.")
 
 
 class ResizingCanvas(tk.Canvas):
@@ -90,13 +94,13 @@ class RaGui(tk.Frame):
 
         self.sub_tab_names = [['Lifespan Design', 'Max Lifespan'],
                               ['Modify Terrain', 'Volume Assessment'],
-                              ['Habitat Area (SHArC)', 'Stranding Risk']]
+                              ['Habitat Area (SHArC)', 'Stranding Risk', 'Riparian Recruitment']]
 
         # working directory suffixes for each module
         self.tab_dir_names = ['\\GetStarted\\',
                               ['\\LifespanDesign\\', '\\MaxLifespan\\'],
                               ['\\ModifyTerrain\\', '\\VolumeAssessment\\'],
-                              ['\\SHArC\\', '\\StrandingRisk\\'],
+                              ['\\SHArC\\', '\\StrandingRisk\\', '\\RiparianRecruitment\\'],
                               '\\ProjectMaker\\']
 
         # Frames initialized by module, with parent being tab container
@@ -116,7 +120,8 @@ class RaGui(tk.Frame):
                              [ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Morphology']),
                               VolumeAssessment.volume_gui.MainGui(self.tabs['Morphology'])],
                              [SHArC.sharc_gui.MainGui(self.tabs['Ecohydraulics']),
-                              StrandingRisk.connect_gui.MainGui(self.tabs['Ecohydraulics'])]]
+                              StrandingRisk.connect_gui.MainGui(self.tabs['Ecohydraulics']),
+                              RiparianRecruitment.recruitment_gui.MainGui(self.tabs['Ecohydraulics'])]]
 
         self.sub_tab_names = dict(zip(self.sub_tab_parents, self.sub_tab_names))
         self.sub_tabs = dict(zip(self.sub_tab_parents, self.sub_tab_list))

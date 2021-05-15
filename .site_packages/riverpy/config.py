@@ -7,6 +7,7 @@ code_icon = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\
 
 dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\"
 dir2co = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\StrandingRisk\\"
+dir2rp = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\"
 dir2conditions = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\01_Conditions\\"
 dir2flows = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\00_Flows\\"
 dir2gs = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\GetStarted\\"
