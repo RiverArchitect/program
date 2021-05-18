@@ -7,6 +7,7 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import fGlobal as fGl
+    import fRasterCalcs as fRc
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 try:
@@ -28,42 +29,59 @@ except:
 
 class RecruitmentPotential:
 
-    def __init__(self, *args, **kwargs):
-        # Create a temporary cache folder for, e.g., geospatial analyses; use self.clear_cache() function to delete
-        self.cache = os.path.dirname(__file__) + "\\.cache%s\\" % str(random.randint(10000, 99999))
-        chk_dir(self.cache)  # from fGlobal
+    def __init__(self, condition, units, *args, **kwargs):
 
         # Enable logger
         self.logger = logging.getLogger("logfile")
-
-        self.unit = unit
-        if self.unit == "us":
-            self.area_unit = "SQUARE_FEET_US"
-            self.u_length = "ft"
-            self.u_discharge = "cfs"
-            self.ft2ac = 1 / 43560
-        else:
-            self.area_unit = "SQUARE_METERS"
-            self.u_length = "m"
-            self.u_discharge = "m3"
-            self.ft2ac = 1
-
+        # Create a temporary cache folder for, e.g., geospatial analyses; use self.clear_cache() function to delete
+        self.cache = os.path.dirname(__file__) + "\\.cache%s\\" % str(random.randint(10000, 99999))
+        chk_dir(self.cache)  # from fGlobal
         # set arcpy environment and enable overwrite
         arcpy.env.workspace = self.cache
         arcpy.env.overwriteOutput = True
-
         # define condition (i.e. DEM)
         self.condition = condition
         self.dir2condition = config.dir2conditions + self.condition + "\\"
 
+        try:
+            __n__ = float(args[2])
+        except:
+            __n__ = 0.0473934
+
+        # define units
+        self.units = units
+        self.area_units = "ft^2" if self.units == 'us' else 'm^2'
+        self.length_units = 'ft' if self.units == 'us' else 'm'
+        self.u_units = self.length_units + '/s'
+        self.ft2ac = config.ft2ac if self.units == 'us' else 1
+        self.ft2m = config.ft2m if self.units == 'us' else 1
+        self.ft2in = 12 if self.units == 'us' else 1 # (in/ft) conversion factor for US customary units
+                                                     # else dummy conversion in SI
+        self.n = __n__ / 1.49 if self.units == 'us' else __n__  # (s/ft^(1/3)) global Manning's n where k =1.49 converts
+                                                                # to US customary, else (s/m^(1/3)) global Manning's n
+        self.n_label = "s/ft^(1/3)" if self.units == 'us' else "s/m^(1/3)"
+        self.rho_w = 1.937 if self.units == 'us' else 1000 # slug/ft^3 for US customary units, else kg/m^3 for SI units
+        self.g = 9.81 / self.ft2m if self.units == 'us' else 9.81 # (ft/s^22) gravity acceleration for US customary
+                                                                  # units, else (m/s^2)
+        self.s = 2.68  # (--) relative grain density (ratio of rho_s and rho_w)
+        self.sf = 0.99  # (--) default safety factor
+
         # define flow data
         self.flow_data = flow_data
+
+        try:
+            self.out_dir = args[0]
+        except:
+            self.out_dir = config.dir2co + "Output\\" + self.condition + "\\"
 
         self.get_hydraulic_rasters()
         self.bed_prep_time_raster()
         self.recession_rate_raster()
         self.dry_season_raster()
         self.recruitment_area_raster()
+
+    def ras_taux(self, ):
+
 
     @fGl.err_info
     @fGl.spatial_license
