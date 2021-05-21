@@ -25,7 +25,7 @@ dir2sh = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\
 dir2va = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\"
 
 ft2ac = float(1 / 43560)
-m2ft = 0.3048
+ft2m = 0.3048
 
 empty_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\oups.txt"
 xlsx_aqua = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\Fish.xlsx"

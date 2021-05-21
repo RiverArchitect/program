@@ -36,9 +36,9 @@ class RiverBuilder:
             self.logger.info("         Setting unit_system default to \'us\'.")
 
         if self.units == "us":
-            self.m2ft = config.m2ft
+            self.ft2m = config.ft2m
         else:
-            self.m2ft = 1.0
+            self.ft2m = 1.0
 
     def run_riverbuilder(self, input_file_name):
         # input_file_name = STR of RiverBuilder Input.txt file that must be stored in self.dir

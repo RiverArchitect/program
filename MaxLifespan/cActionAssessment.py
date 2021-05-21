@@ -56,7 +56,7 @@ class ArcPyContainer:
             unit_system = "us"
 
         if unit_system == "us":
-            self.ft2m = config.m2ft  # this is correctly assigned
+            self.ft2m = config.ft2m  # this is correctly assigned
             self.ft2in = 12  # (in/ft) conversion factor for U.S. customary units
         else:
             self.ft2m = 1.0

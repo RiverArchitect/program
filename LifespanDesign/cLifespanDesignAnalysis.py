@@ -58,7 +58,7 @@ class ArcPyAnalysis:
             __n__ = 0.0473934
 
         if unit_system == "us":
-            self.ft2m = config.m2ft  # this is correctly assigned!
+            self.ft2m = config.ft2m  # this is correctly assigned!
             self.ft2in = 12  # (in/ft) conversion factor for U.S. customary units
             self.n = __n__ / 1.49  # (s/ft^(1/3)) global Manning's n where k =1.49 converts to US customary
             self.n_label = "s/ft^(1/3)"
