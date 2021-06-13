@@ -32,8 +32,28 @@ def unit_constants(units):
     return rho_w, g
 
 
-def calculate_tau(h_ras, u_ras, grain_ras, s, units):
+def calculate_taux(h_ras, u_ras, grain_ras, s, units):
     rho_w, g = unit_constants(units)
-    tau_ras = (rho_w * Square(u_ras / (5.75 * Log10(12.2 * h_ras
+    taux_ras = (rho_w * Square(u_ras / (5.75 * Log10(12.2 * h_ras
                                                     /(2 * 2.2 * grain_ras))))) / (rho_w * g * (s - 1) * grain_ras)
-    return tau_ras
+    return taux_ras
+
+def compare_raster_set(raster_set, threshold):
+    __ras__ = []
+    r_index = 0
+    for ras in raster_set:
+        try:
+            if str(ras).__len__() > 1:
+                __ras__.append(Float(Con(Float(ras) >= Float(threshold), Float(self.lifespans[r_index]))))
+        except:
+            self.logger.error("ERROR: Incoherent data in " + str(ras) + " (raster comparison).")
+            self.logger.info("ERROR HINT: Verify Raster definitions in 01_Conditions/%s/input_definitions.inp." % self.condition)
+        r_index += 1
+    try:
+        if __ras__.__len__() > 1:
+            return Float(CellStatistics(__ras__, "MINIMUM", "DATA"))
+        else:
+            self.logger.info("          * Nothing to do (CellStatistics returns None-types)")
+            return None
+    except:
+        self.logger.error("ERROR: Could not calculate CellStatistics (Raster comparison).")
