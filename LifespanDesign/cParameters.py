@@ -193,7 +193,7 @@ class MU(ParameterContainer):
 
 
 class SideChannelDelineation(ParameterContainer):
-    # This class stores all information about depth to groundwater table Rasters
+    # This class stores all information about depth to water table Rasters
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "sidech")
         try:
@@ -208,7 +208,7 @@ class SideChannelDelineation(ParameterContainer):
 
 
 class WaterTable(ParameterContainer):
-    # This class stores all information about depth to groundwater table Rasters
+    # This class stores all information about depth to water table Rasters
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "d2w")
         try:
@@ -223,7 +223,7 @@ class WaterTable(ParameterContainer):
 
 
 class Wildcard(ParameterContainer):
-    # This class stores all information about depth to groundwater table Rasters
+    # This class stores all information about depth to water table Rasters
     def __init__(self, condition):
         ParameterContainer.__init__(self, condition, "wild")
         try:

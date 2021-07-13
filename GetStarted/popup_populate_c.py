@@ -64,7 +64,7 @@ class PopulateCondition(object):
         tk.Label(top, text="").grid(sticky=tk.W, row=4, column=0)  # dummy
 
         # 02 Make d2w
-        self.l_d2w = tk.Label(top, text="Create Depth to Groundwater Raster (d2w.tif)")
+        self.l_d2w = tk.Label(top, text="Create Depth to water table Raster (d2w.tif)")
         self.l_d2w.grid(sticky=tk.W, row=5, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.b_sd2w = tk.Button(top, width=self.col_0_width*2, bg="white", text="Select minimum flow depth raster",
                                 command=lambda: self.select_h())        

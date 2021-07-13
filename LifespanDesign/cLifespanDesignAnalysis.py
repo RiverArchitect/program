@@ -115,12 +115,12 @@ class ArcPyAnalysis:
     @fGl.err_info
     @fGl.spatial_license
     def analyse_d2w(self, threshold_low, threshold_up):
-        # delineation of depth to groundwater table
+        # delineation of depth to water table
         # convert threshold value units
         threshold_low = threshold_low / self.ft2m
         threshold_up = threshold_up / self.ft2m
         self.set_extent()
-        self.logger.info("      >>> Analyzing depth to groundwater.")
+        self.logger.info("      >>> Analyzing depth to water table.")
         d2w = WaterTable(self.condition)
         if str(d2w.raster).__len__() > 1:
             if not(self.raster_dict_lf.items().__len__() > 0):

@@ -252,7 +252,7 @@ class CreateCondition(object):
 
         except:
             pass
-        msg0 = "Condition created. Next:\n (1) Return to the Main Window and\n (2) Use \'Populate Condition\' to create geomorphic unit, depth to groundwater and detrended DEM rasters."
+        msg0 = "Condition created. Next:\n (1) Return to the Main Window and\n (2) Use \'Populate Condition\' to create geomorphic unit, depth to water table and detrended DEM rasters."
         msg1 = "\n\nEnsure that the Rasters are correctly defined in LifespanDesign/.templates/input_definitions.inp."
         showinfo("INFO", msg0 + msg1, parent=self.top)
 

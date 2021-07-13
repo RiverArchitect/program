@@ -68,7 +68,7 @@ class WLE:
 
     def interpolate_wle(self):
         """
-        Interpolates water level elevation, used as preliminary step for getting depth to groundwater and disconnected wetted areas.
+        Interpolates water level elevation, used as preliminary step for getting depth to water table and disconnected wetted areas.
 
         Args:
             self.method: 'Kriging', 'IDW', or 'Nearest Neighbor'. Determines the method used to interpolate WLE.
@@ -367,7 +367,7 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Calculating depth to groundwater raster ...")
+                self.logger.info("Calculating depth to water table raster ...")
                 ras_d2w = Con((ras_wle > 0), (ras_dem - ras_wle))
                 self.logger.info("OK")
             except arcpy.ExecuteError:
@@ -379,7 +379,7 @@ class WLE:
                 return True
 
             try:
-                self.logger.info("Saving depth to groundwater raster to: %s" % os.path.join(self.out_dir, self.out_d2w))
+                self.logger.info("Saving depth to water table raster to: %s" % os.path.join(self.out_dir, self.out_d2w))
                 ras_d2w.save(os.path.join(self.out_dir, self.out_d2w))
                 self.logger.info("OK")
                 self.save_info_file(os.path.join(self.out_dir, self.out_d2w))

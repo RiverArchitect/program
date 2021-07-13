@@ -81,7 +81,7 @@ class MakeInputFile:
         f.write('Flow depth (h) = {0} #[Comma separated LIST]\n'.format(", ".join(self.h_rasters)))
         f.write('Grain sizes (D mean) = {0} #[STRING]\n'.format(self.dmean))
         f.write('Morphological units (mu) = mu #[STRING]\n')
-        f.write('Depth to groundwater table (d2w) = d2w #[STRING]\n')
+        f.write('Depth to water table (d2w) = d2w #[STRING]\n')
         f.write('DEM = dem #[STRING] \n')
         f.write('Side channel = sidech #[STRING] side channel delineation raster\n')
         f.write('Wildcard raster = wild #[STRING] any raster for spatial analysis confinement\n')
