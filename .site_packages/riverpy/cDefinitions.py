@@ -3,11 +3,14 @@ import sys, os
 try:
     sys.path.append(os.path.dirname(__file__))
     import config
+    from collections import defaultdict
     import cReachManager as cRM
     sys.path.append(config.dir2oxl)
     import openpyxl as oxl
 except:
     print("ExceptionERROR: Cannot find riverpy (%s)." % os.path.dirname(__file__))
+
+main_dict = defaultdict(list)
 
 
 class FeatureReader:
@@ -15,7 +18,6 @@ class FeatureReader:
     def __init__(self):
         self.row_feat_names = 4
         self.row_feat_ids = 5
-
         self.path2lf = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
         self.thresh_xlsx = self.path2lf + ".templates\\threshold_values.xlsx"
         try:
@@ -35,14 +37,28 @@ class FeatureReader:
     def close_wb(self):
         self.wb.close()
 
+    def get_columns(self, name):
+        # Returns columns dynamically for merged parent rows
+        max_col = self.ws.max_column
+        for i in range(5, max_col + 1):
+            cell_obj = self.ws.cell(row=2, column=i).value
+            if cell_obj != None:
+                value = cell_obj
+                if not (i in main_dict[value]):
+                    main_dict[value].append(i)
+            else:
+                if not (i in main_dict[value]):
+                    main_dict[value].append(i)
+        return main_dict[name]
+
     def get_feat_id(self, column_list):
         feature_id_list = []
         for col in column_list:
             try:
-                cell_value = str(self.ws[str(col) + str(self.row_feat_ids)].value)
+                cell_value = str(self.ws.cell(row=self.row_feat_ids, column=col).value)
             except:
                 cell_value = ""
-                print("FeatureReader: Failed to read values from threshold_values.xlsx (return empty).")
+                print("FeatureReader feature id: Failed to read values from threshold_values.xlsx (return empty).")
             feature_id_list.append(cell_value)
         return feature_id_list
 
@@ -50,10 +66,10 @@ class FeatureReader:
         feature_list = []
         for col in column_list:
             try:
-                cell_value = str(self.ws[str(col) + str(self.row_feat_names)].value)
+                cell_value = str(self.ws.cell(row=self.row_feat_names, column=col).value)
             except:
                 cell_value = ""
-                print("FeatureReader: Failed to read values from threshold_values.xlsx (return empty).")
+                print("FeatureReader feature name: Failed to read values from threshold_values.xlsx (return empty).")
             feature_list.append(cell_value)
         return feature_list
 
@@ -69,17 +85,16 @@ class FeatureDefinitions:
             use_cust = args[0]
         except:
             use_cust = True  # Default value
-
+        self.read_user_input = FeatureReader()
         # Modify feature/plantings IDs, names and columns with thresholds types in the next lines
-        self.threshold_cols_framework = ["E", "F", "G", "H", "I"]
-        self.threshold_cols_plants = ["J", "K", "L", "M"]
-        self.threshold_cols_toolbox = ["N", "O", "P"]
-        self.threshold_cols_complement = ["Q", "R", "S"]
-        self.fill_cols = ["E", "H", "I", "S", "O", "Q", "R"]  # columns with terrain filling feature IDs
-        self.excavate_cols = ["E", "F", "G", "H", "I"]  # columns with terrain lowering feature IDs
+        self.threshold_cols_framework = self.read_user_input.get_columns('TERRAFORMING')
+        self.threshold_cols_plants = self.read_user_input.get_columns('VEGETATION SEEDLINGS/SAPLINGS')
+        self.threshold_cols_toolbox = self.read_user_input.get_columns('NATURE-BASED (OTHER)')
+        self.threshold_cols_complement = self.read_user_input.get_columns('CONNECTIVITY')
+        self.fill_cols = [5, 8, 9, 25, 21, 23, 24]  # columns with terrain filling feature IDs
+        self.excavate_cols = [5, 6, 7, 8, 9]  # columns with terrain lowering feature IDs
 
         # DO NOT MODIFY ANYTHING DOWN HERE
-        self.read_user_input = FeatureReader()
         self.id_list_framework = self.read_user_input.get_feat_id(self.threshold_cols_framework)
         self.id_list_plants = self.read_user_input.get_feat_id(self.threshold_cols_plants)
         self.id_list_toolbox = self.read_user_input.get_feat_id(self.threshold_cols_toolbox)
