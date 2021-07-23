@@ -23,9 +23,9 @@ class ThresholdDirector:
             self.feat_id = ""
             self.features = ""
 
-        self.thresh_row_dict = {"d2w_low": 7, "d2w_up": 8, "det_low": 9, "det_up": 10, "u": 12, "h": 11, "Fr": 13,
-                                "D": 14, "freq": 15, "mu_bad": 16, "mu_good": 17, "mu_method": 18, "sf": 19,
-                                "inverse_tcd": 21, "fill": 22, "scour": 23, "S0": 20, "taux": 6, "lf": 24, "ds": 25,
+        self.thresh_row_dict = {"d2w_low": 8, "d2w_up": 9, "det_low": 10, "det_up": 11, "u": 13, "h": 12, "Fr": 14,
+                                "D": 15, "freq": 16, "mu_bad": 17, "mu_good": 18, "mu_method": 19, "sf": 20,
+                                "inverse_tcd": 22, "fill": 23, "scour": 24, "S0": 21, "taux": 7, "lf": 25, "ds": 26,
                                 "name": 4}
         self.unit_conv_candidates = ["d2w_low", "d2w_up", "det_low", "det_up", "u", "h", "D", "fill", "scour"]
         self.thresh_xlsx = config.xlsx_thresholds
@@ -46,7 +46,7 @@ class ThresholdDirector:
 
         # identify unit system
         try:
-            unit_cell = self.ws["E28"].value
+            unit_cell = self.ws["E30"].value
             if str(unit_cell).lower() == "u.s. customary":
                 self.ft2m = 0.3047992
             else:
@@ -60,8 +60,7 @@ class ThresholdDirector:
 
     def get_thresh_value(self, thresh_type):
         try:
-            cell_value = self.ws[str(self.features.thresh_col_dict[self.feat_id]) +
-                                 str(self.thresh_row_dict[thresh_type])].value
+            cell_value = self.ws.cell(row=self.thresh_row_dict[thresh_type], column=self.features.thresh_col_dict[self.feat_id]).value
         except:
             cell_value = -1
             self.logger.info("ERROR: Failed to read values from threshold_values.xlsx (return -1).")
