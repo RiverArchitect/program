@@ -74,7 +74,7 @@ class FeatureContainer:
         self.feat_lyr_type = self.set_feat_layer_type()
 
         if not sub_feature:
-            if self.feats.col_name_dict[feature_name] in ["Q", "R", "J", "K", "L", "M"]:
+            if self.feats.col_name_dict[feature_name] in [24, 25, 11, 12, 13, 14]:
                 self.sub = True
             else:
                 self.feature = Feature(self.id)

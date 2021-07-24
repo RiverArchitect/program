@@ -10,12 +10,15 @@ try:
 except:
     print("ExceptionERROR: Cannot find riverpy (%s)." % os.path.dirname(__file__))
 
-main_dict = defaultdict(list)
+
 
 
 class FeatureReader:
     # Reads threshold values from file as a function of feature name
     def __init__(self):
+        self.main_dict = defaultdict(list)
+        self.all_row = {}
+        self.row_dict = {}
         self.row_feat_names = 4
         self.row_feat_ids = 5
         self.path2lf = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\"
@@ -37,6 +40,37 @@ class FeatureReader:
     def close_wb(self):
         self.wb.close()
 
+    def get_rows(self):
+        # Returns rows dynamically from threshold_values file
+        max_row = self.ws.max_row
+        for i in range(6, max_row + 1):
+            cell_obj = self.ws.cell(row=i, column=2).value
+            if not (cell_obj in self.all_row):
+                self.all_row[cell_obj] = i
+        self.row_dict['d2w_low'] = self.all_row['Depth to water table (min)']
+        self.row_dict['d2w_up'] = self.all_row['Depth to water table (max)']
+        self.row_dict['det_low'] = self.all_row['Detrended DEM (min)']
+        self.row_dict['det_up'] = self.all_row['Detrended DEM (max)']
+        self.row_dict['u'] = self.all_row['Flow velocity']
+        self.row_dict['h'] = self.all_row['Flow depth']
+        self.row_dict['Fr'] = self.all_row['Froude number']
+        self.row_dict['D'] = self.all_row['Grain size']
+        self.row_dict['freq'] = self.all_row['Design map frequency threshold']
+        self.row_dict['mu_bad'] = self.all_row['Morphological Units: avoidance']
+        self.row_dict['mu_good'] = self.all_row['Morphological Units: relevance']
+        self.row_dict['mu_method'] = self.all_row['Morphological Units: application \n(0 = avoidance, 1 = relevance)']
+        self.row_dict['sf'] = self.all_row['Safety factor']
+        self.row_dict['inverse_tcd'] = self.all_row['Topographic change: inverse relevance']
+        self.row_dict['scour'] = self.all_row['Topographic change: scour rate']
+        self.row_dict['fill'] = self.all_row['Topographic change: fill rate']
+        self.row_dict['S0'] = self.all_row['Terrain slope']
+        self.row_dict['taux'] = self.all_row['Critical dimensionless bed shear stress']
+        self.row_dict['lf'] = self.all_row['Apply Lifespan Mapping']
+        self.row_dict['ds'] = self.all_row['Apply Design Mapping']
+        self.row_dict['unit'] = self.all_row['CHOOSE UNIT SYSTEM:']
+        self.row_dict['name'] = 4
+        return self.row_dict
+
     def get_columns(self, name):
         # Returns columns dynamically for merged parent rows
         max_col = self.ws.max_column
@@ -44,12 +78,12 @@ class FeatureReader:
             cell_obj = self.ws.cell(row=2, column=i).value
             if cell_obj != None:
                 value = cell_obj
-                if not (i in main_dict[value]):
-                    main_dict[value].append(i)
+                if not (i in self.main_dict[value]):
+                    self.main_dict[value].append(i)
             else:
-                if not (i in main_dict[value]):
-                    main_dict[value].append(i)
-        return main_dict[name]
+                if not (i in self.main_dict[value]):
+                    self.main_dict[value].append(i)
+        return self.main_dict[name]
 
     def get_feat_id(self, column_list):
         feature_id_list = []

@@ -18,15 +18,17 @@ class ThresholdDirector:
             import cDefinitions as cDef  # contains reach and feature definitions
             self.feat_id = args[0]
             self.features = cDef.FeatureDefinitions()
+            self.feature_reader = cDef.FeatureReader()
         except:
             self.logger.info("ERROR: Invalid feature ID.")
             self.feat_id = ""
             self.features = ""
-
-        self.thresh_row_dict = {"d2w_low": 8, "d2w_up": 9, "det_low": 10, "det_up": 11, "u": 13, "h": 12, "Fr": 14,
-                                "D": 15, "freq": 16, "mu_bad": 17, "mu_good": 18, "mu_method": 19, "sf": 20,
-                                "inverse_tcd": 22, "fill": 23, "scour": 24, "S0": 21, "taux": 7, "lf": 25, "ds": 26,
-                                "name": 4}
+        self.all_row = {}
+        self.thresh_row_dict = self.feature_reader.get_rows()
+        # self.thresh_row_dict = {"d2w_low": 8, "d2w_up": 9, "det_low": 10, "det_up": 11, "u": 13, "h": 12, "Fr": 14,
+        #                         "D": 15, "freq": 16, "mu_bad": 17, "mu_good": 18, "mu_method": 19, "sf": 20,
+        #                         "inverse_tcd": 22, "fill": 23, "scour": 24, "S0": 21, "taux": 7, "lf": 25, "ds": 26,
+        #                         "name": 4}
         self.unit_conv_candidates = ["d2w_low", "d2w_up", "det_low", "det_up", "u", "h", "D", "fill", "scour"]
         self.thresh_xlsx = config.xlsx_thresholds
 
@@ -46,7 +48,7 @@ class ThresholdDirector:
 
         # identify unit system
         try:
-            unit_cell = self.ws["E30"].value
+            unit_cell = self.ws.cell(row=self.thresh_row_dict['unit'], column=5).value
             if str(unit_cell).lower() == "u.s. customary":
                 self.ft2m = 0.3047992
             else:
