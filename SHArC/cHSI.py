@@ -605,7 +605,7 @@ class CovHSI(HHSI):
 
     def convert_shp2raster(self, shapefile):
         cov_raster = "cov_ras.tif"  # name of the temporarily used cover raster
-        arcpy.PolygonToRaster_conversion(shapefile, "cover.tif", self.cache + cov_raster,
+        arcpy.PolygonToRaster_conversion(shapefile, "cover", self.cache + cov_raster,
                                          cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
         return arcpy.Raster(self.cache + cov_raster)
 
