@@ -605,8 +605,12 @@ class CovHSI(HHSI):
 
     def convert_shp2raster(self, shapefile):
         cov_raster = "cov_ras.tif"  # name of the temporarily used cover raster
-        arcpy.PolygonToRaster_conversion(shapefile, "cover", self.cache + cov_raster,
-                                         cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
+        try:
+            arcpy.PolygonToRaster_conversion(shapefile, "cover", self.cache + cov_raster,
+                                             cell_assignment="CELL_CENTER", priority_field="NONE", cellsize=1)
+        except:
+            self.logger.info(
+                "ERROR: Could not perform polygon to raster conversion for: (" + shapefile + ").")
         return arcpy.Raster(self.cache + cov_raster)
 
     def crop_input_raster(self, fish_species, fish_lifestage, depth_raster_path):
