@@ -53,11 +53,11 @@ class WLE:
             self.method = 'IDW'
 
         if self.unique_id:
-            Q = int(os.path.splitext(os.path.basename(self.path2h_ras))[0].split("h")[1])
-            self.out_wle = "wle%06d.tif" % Q
-            self.out_wle_var = "wle%06d_var.tif" % Q
-            self.out_h_interp = "h%06d_interp.tif" % Q
-            self.out_d2w = "d2w%06d.tif" % Q
+            Q = fGl.read_Q_str(self.path2h_ras, prefix='h')
+            self.out_wle = f'wle{fGl.write_Q_str(Q)}.tif'
+            self.out_wle_var = f'wle{fGl.write_Q_str(Q)}_var.tif'
+            self.out_h_interp = f'h{fGl.write_Q_str(Q)}_interp.tif'
+            self.out_d2w = f'd2w{fGl.write_Q_str(Q)}.tif'
         else:
             self.out_wle = "wle.tif"
             self.out_wle_var = "wle_var.tif"

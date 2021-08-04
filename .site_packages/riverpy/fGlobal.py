@@ -4,7 +4,8 @@ try:
     from collections import Iterable  # used in the flatten function
     from bisect import bisect_left
 except:
-    print("ExceptionERROR: Missing fundamental packages (required: bisect, collections, os, sys, glob, logging, time, webbrowser).")
+    print(
+        "ExceptionERROR: Missing fundamental packages (required: bisect, collections, os, sys, glob, logging, time, webbrowser).")
 
 try:
     import arcpy
@@ -150,6 +151,7 @@ def err_info(func):
         except:
             logger.info("ERROR: (arcpy).")
             logger.info(arcpy.GetMessages())
+
     return wrapper
 
 
@@ -179,9 +181,9 @@ def get_closest_val_in_list(usr_list, target_num):
     before = usr_list[pos - 1]
     after = usr_list[pos]
     if after - target_num < target_num - before:
-       return after
+        return after
     else:
-       return before
+        return before
 
 
 def get_credits():
@@ -245,7 +247,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
         if tt in features.threshold_cols_complement:
             type_int_list.append(3)
     try:
-        feat_lyr_type = int(sum(type_int_list)/type_int_list.__len__())
+        feat_lyr_type = int(sum(type_int_list) / type_int_list.__len__())
     except:
         feat_lyr_type = 0
 
@@ -268,10 +270,11 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
                         break
                     else:
                         file_names = []
-                        [file_names.append(fn) for fn in os.listdir(test_dir) if os.path.isfile(os.path.join(test_dir, fn))]
+                        [file_names.append(fn) for fn in os.listdir(test_dir) if
+                         os.path.isfile(os.path.join(test_dir, fn))]
                         for f_id in feat_id_list:
                             for f_n in file_names:
-                                if not(f_id in f_n):
+                                if not (f_id in f_n):
                                     files_exist = False  # if any analyzed feature is not yet present, this folder is OK
                                     output_dir = test_dir
                                     break
@@ -289,7 +292,7 @@ def make_output_dir(condition, reach_ids, habitat_analysis, relevant_feat_names)
     else:
         output_dir = config.dir2lf + "Output\\Rasters\\" + str(condition) + reach_name + "_hab\\"
 
-    if not("output_dir" in locals()):
+    if not ("output_dir" in locals()):
         print("No reach or feature layer or habitat_analysis information.")
         print("--> Output folder name corresponds to input condition.")
         output_dir = config.dir2lf + "Output\\Rasters\\" + str(condition) + "\\"
@@ -306,7 +309,8 @@ def open_file(full_file_path):
             webbrowser.open(_f)
             msg = ""
         except:
-            msg = "Cannot open " + str(_f) + ". Ensure that your OS has a defined standard application for relevant file types (e.g., .inp or .xlsx)."
+            msg = "Cannot open " + str(
+                _f) + ". Ensure that your OS has a defined standard application for relevant file types (e.g., .inp or .xlsx)."
     else:
         msg = "The file \'\n" + str(_f) + "\'\n does not exist. Check MaxLifespan directory."
     return msg
@@ -404,6 +408,23 @@ def read_txt(file_name):
     return data
 
 
+def read_Q_str(file_name, prefix):
+    """ Reads the discharge as 6.3 digits float number from a file_name
+    Args:
+        file_name (str): A file name including file directory
+        prefix (str): Any file name prefix before the discharge value; for example 'h', 'u', 'va', 'h_interp'
+    Returns:
+        float: 6.3f digits float value of discharge
+    """
+    try:
+        return float(os.path.splitext(os.path.basename(file_name))[0].split(prefix)[1].replace('_', '.'))
+    except ValueError as e:
+        raise ValueError('Cannot parse discharge from file name %s (%s)' % (file_name, e))
+
+def write_Q_str(num):
+    return f'{num:010.3f}'.replace('.', '_')
+
+
 def rm_dir(directory):
     # Deletes everything reachable from the directory named in 'directory', and the directory itself
     # assuming there are no symbolic links.
@@ -456,7 +477,7 @@ def rm_raster(full_path):
 def shp2raster(shp_name, out_raster_name=str(), field_name=str(), cellsize=1):
     # shp_name = STR of full path to POLYGON
     # out_raster_name = STR to fill path of output (TIF) Raster
-    if out_raster_name.__len__() < 1 or not(out_raster_name.endswith(".tif")):
+    if out_raster_name.__len__() < 1 or not (out_raster_name.endswith(".tif")):
         out_raster_name = shp_name.split(".")[0] + ".tif"
     arcpy.CheckOutExtension('Spatial')
     if field_name.__len__() < 1:
@@ -492,6 +513,7 @@ def spatial_license(func):
         arcpy.CheckOutExtension('Spatial')
         func(*args, **kwargs)
         arcpy.CheckInExtension('Spatial')
+
     return wrapper
 
 
@@ -543,11 +565,11 @@ def va_from_xy(vx, vy):
         else:
             return -90
     if vy > 0:
-        return np.degrees(np.arctan(vx/vy))
+        return np.degrees(np.arctan(vx / vy))
     elif vx > 0:
-        return -np.degrees(np.arctan(vy/vx)) + 90
+        return -np.degrees(np.arctan(vy / vx)) + 90
     else:
-        return -np.degrees(np.arctan(vy/vx)) - 90
+        return -np.degrees(np.arctan(vy / vx)) - 90
 
 
 def verify_shp_file(shapefile):
@@ -568,9 +590,9 @@ def write_data(folder_dir, file_name, data):
         os.mkdir(folder_dir)
     os.chdir(folder_dir)
 
-    f = open(file_name+'.txt', 'w')
+    f = open(file_name + '.txt', 'w')
     for i in data:
-        line = str(i)+'\n'
+        line = str(i) + '\n'
         f.write(line)
     print('Data written to: \n' + folder_dir + '\\' + str(file_name) + '.csv')
 
@@ -616,4 +638,3 @@ def write_dict2xlsx(data_dict, file, key_col, val_col, start_row):
     wb.save(str(file))
     wb.close()
     logger.info(" -- OK (Write to workbook)")
-

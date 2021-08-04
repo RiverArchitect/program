@@ -41,6 +41,7 @@ class ArcPyAnalysis:
         self.raster_dict_lf = {}
         self.reach_extents = reach_extents
         self.habitat_matching = habitat_analysis
+        self.output_ts = args[0]
         try:
             self.output = args[0]
         except:
@@ -516,8 +517,15 @@ class ArcPyAnalysis:
             tx_raster_list = []
             for i in range(0, h.raster_names.__len__()):
                 if (str(u.rasters[i]).__len__() > 1) and (str(h.rasters[i]).__len__() > 1):
-                    __ras__ = (self.rho_w * Square(u.rasters[i] / (5.75 * Log10(12.2 * h.rasters[i] /
-                               (2 * 2.2 * grains.raster))))) / (self.rho_w * self.g * (self.s - 1) * grains.raster)
+                    _q_ = fGl.read_Q_str(h.raster_names[i], prefix='h')
+                    _name__ = 'tb' + fGl.write_Q_str(_q_) + '.tif'
+                    name__ = 'ts' + fGl.write_Q_str(_q_) + '.tif'
+                    # __ras__ = (self.rho_w * Square(u.rasters[i] / (5.75 * Log10(12.2 * h.rasters[i] /
+                    #          (2 * 2.2 * grains.raster))))) / (self.rho_w * self.g * (self.s - 1) * grains.raster)
+                    _ras__ = Square(u.rasters[i] / (5.75 * Log10(12.2 * h.rasters[i] / (2 * 2.2 * grains.raster))))
+                    arcpy.CopyRaster_management(_ras__, self.output_ts + _name__)
+                    __ras__ = (self.rho_w * _ras__) / (self.rho_w * self.g * (self.s - 1) * grains.raster)
+                    arcpy.CopyRaster_management(__ras__, self.output_ts + name__)
                     tx_raster_list.append(__ras__)
                 else:
                     self.logger.info("          * empty Raster operation for {0} and {1}".format(str(u.rasters[i]), str(h.rasters[i])))

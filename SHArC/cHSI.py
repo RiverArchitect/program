@@ -262,15 +262,15 @@ class CHSI:
                     # find dsi-rasters and match according velocity rasters
                     if str(ras)[0:3] == "dsi":
                         try:
-                            q = int(str(ras).split(fish_shortname)[-1])
+                            q = float(int(str(ras).split(fish_shortname)[-1]))
                         except:
-                            q = int(str(ras).split(fish_shortname)[-1].split('.tif')[0])
+                            q = float(int(str(ras).split(fish_shortname)[-1].split('.tif')[0]))
                         self.logger.info("    --- combining rasters for Q = " + str(q) + " (" + self.combine_method + ") ...")
 
                         # load inundation area Raster (wetted area)
                         try:
                             self.logger.info("        * loading innundated area raster ...")
-                            h_ras_name = "h%0000006d.tif" % int(q)
+                            h_ras_name = f'h{fGl.write_Q_str(q)}.tif'
                             if boundary_shp.__len__() > 0:
                                 self.logger.info("        * clipping to boundary ...")
                                 inundation_ras = Con(~IsNull(boundary_ras), arcpy.Raster(self.path_condition + h_ras_name))
@@ -547,12 +547,12 @@ class HHSI:
                 try:
                     if rn[0] == "h":
                         self.logger.info("     -- Adding flow depth raster: " + str(rn))
-                        _Q_ = float(str(rn).split("h")[1].split(".tif")[0])
+                        _Q_ = fGl.read_Q_str(rn, prefix='h')
                         self.flow_dict_h.update({str(rn): int(_Q_)})
                         self.ras_h.append(str(rn))
                     if rn[0] == "u":
                         self.logger.info("     -- Adding flow velocity raster: " + str(rn))
-                        _Q_ = float(str(rn).split("u")[1].split(".tif")[0])
+                        _Q_ = fGl.read_Q_str(rn, prefix='u')
                         self.flow_dict_u.update({str(rn): int(_Q_)})
                         self.ras_u.append(str(rn))
                 except:

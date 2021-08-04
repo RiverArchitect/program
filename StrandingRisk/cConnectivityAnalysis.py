@@ -165,9 +165,9 @@ class ConnectivityAnalysis:
         self.logger.info("Retrieving interpolated hydraulic rasters...")
         for Q in self.discharges:
             # define paths to interpolated depths and velocities
-            h_interp_basename = "h%06d_interp.tif" % Q
-            u_interp_basename = "u%06d_interp.tif" % Q
-            va_interp_basename = "va%06d_interp.tif" % Q
+            h_interp_basename = f'h{fGl.write_Q_str(Q)}_interp.tif'
+            u_interp_basename = f'u{fGl.write_Q_str(Q)}_interp.tif'
+            va_interp_basename = f'va{fGl.write_Q_str(Q)}_interp.tif'
             h_interp_path = os.path.join(self.h_interp_dir, h_interp_basename)
             u_interp_path = os.path.join(self.u_interp_dir, u_interp_basename)
             va_interp_path = os.path.join(self.va_interp_dir, va_interp_basename)

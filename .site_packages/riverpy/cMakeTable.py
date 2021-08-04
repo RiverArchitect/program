@@ -79,7 +79,7 @@ class MakeFlowTable:
             if rn[0] == "h":
                 self.logger.info("     -- Found flow depth raster: " + str(rn))
                 try:
-                    _Q_ = float(str(rn).split("h")[1].split(".tif")[0])
+                    _Q_ = fGl.read_Q_str(rn, prefix='h')
                     self.discharges.append(_Q_)
                 except:
                     self.logger.info("ERROR: The Raster name is not coherent with the name conventions. Name correction needed.")
