@@ -12,6 +12,7 @@ try:
     import fGlobal as fGl
     import fRasterCalcs as fRc
     import cMakeTable as cMkT
+    import cLifespanDesignAnalysis as cLDA
     from cLogger import Logger
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
@@ -120,6 +121,26 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not retrieve grain size raster...")
             self.grain_ras = None
 
+    def ras_mobile_grain(self):
+        """
+        Create mobile grain rasters with depth and velocity rasters producing mobile grain rasters for all flows modeled.
+        """
+        self.logger.info("Creating mobile grain rasters...")
+        try:
+            # create mobile grain raster using method in cLifespanDesignAnalysis
+            self.logger.info("")
+            for Q in self.discharges:
+                self.logger.info(f'Creating bed mobility raster for Q = {Q}...')
+                h_ras = Raster(self.Q_h_dict[Q])
+                u_ras = Raster(self.Q_u_dict[Q])
+                ras_Dcr = cLDA.analyse_mobile_grains(h_ras, u_ras, s=self.s, units=self.units)
+                out_ras_path = os.path.join(self.out_dir, "mobilegrain_%s.tif" % fGl.write_Q_str(Q))
+                ras_Dcr.save(out_ras_path)
+                self.logger.info(f'Saved: {out_ras_path}')
+        except:
+            self.logger.info("ERROR: Could not create mobile grain raster...")
+            return -1
+        self.logger.info('Saved mobile grain rasters: %s' % out_ras_path)
 
     def ras_taux(self):
         """
@@ -204,8 +225,8 @@ class RecruitmentPotential:
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
 
-#if __name__ == "__main__":
+if __name__ == "__main__":
 
-    #rp = RecruitmentPotential(condition='2017_lbp', units='us')
+    rp = RecruitmentPotential(condition='2017_lbp', units='us')
     #print()
 
