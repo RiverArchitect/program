@@ -68,9 +68,6 @@ class RecruitmentPotential:
         self.n = __n__ / 1.49 if self.units == 'us' else __n__  # (s/ft^(1/3)) global Manning's n where k =1.49 converts
                                                                 # to US customary, else (s/m^(1/3)) global Manning's n
         self.n_label = "s/ft^(1/3)" if self.units == 'us' else "s/m^(1/3)"
-        #self.rho_w = 1.937 if self.units == 'us' else 1000 # slug/ft^3 for US customary units, else kg/m^3 for SI units
-        #self.g = 9.81 / self.ft2m if self.units == 'us' else 9.81 # (ft/s^22) gravity acceleration for US customary
-                                                                  # units, else (m/s^2)
         self.s = 2.68  # (--) relative grain density (ratio of rho_s and rho_w)
         self.sf = 0.99  # (--) default safety factor
 
@@ -87,11 +84,21 @@ class RecruitmentPotential:
 
         self.get_hydraulic_rasters()
         self.get_grain_ras()
-        self.ras_tau()
+        self.ras_taux()
         #self.bed_prep_time_raster()
         #self.recession_rate_raster()
         #self.dry_season_raster()
         #self.recruitment_area_raster()
+
+
+    def import_hyrologic_data(self):
+        self.logger.info('Retrieving hydrologic data...')
+        #try:
+            # import hydrologic data for year of interest, prior two years, and subsequent year
+            # hydrologic data uploaded in date(00/00/0000) and flow (cfs) format (csv)
+        #except:
+            #self.logger.error("ERROR: Could not retrieve hydrologic data.")
+
 
     def get_hydraulic_rasters(self):
         self.logger.info("Retrieving hydraulic rasters...")
@@ -114,10 +121,10 @@ class RecruitmentPotential:
             self.grain_ras = None
 
 
-    def ras_tau(self):
+    def ras_taux(self):
         """
         Calculates dimensionless bed shear stress with depth, velocity, and grain distribution rasters producing
-        tau and taux rasters for all flows modeled.
+        taux rasters for all flows modeled.
         """
 
         self.logger.info("Creating dimensionless bed shear stress rasters...")
@@ -129,34 +136,28 @@ class RecruitmentPotential:
                 self.logger.info(f'Creating dimensionless shear stress raster for Q = {Q}...')
                 h_ras = Raster(self.Q_h_dict[Q])
                 u_ras = Raster(self.Q_u_dict[Q])
-                tau_ras = fRc.calculate_tau(h_ras, u_ras, grain_ras, s=self.s, units=self.units)
-                out_ras_path = os.path.join(self.out_dir, "tau_%s.tif" % fGl.write_Q_str(Q))
-                tau_ras.save(out_ras_path)
+                taux_ras = fRc.calculate_taux(h_ras, u_ras, grain_ras, s=self.s, units=self.units)
+                out_ras_path = os.path.join(self.out_dir, "taux_%s.tif" % fGl.write_Q_str(Q))
+                taux_ras.save(out_ras_path)
                 self.logger.info(f'Saved: {out_ras_path}')
         except:
-            self.logger.info("ERROR: Could not create tau raster...")
+            self.logger.info("ERROR: Could not create taux raster...")
             return -1
-        self.logger.info("Saved tau rasters: %s" % out_ras_path)
-
-    def hydro_detection(self):
-        """
-        Determines seasonal periods using Patterson et al. 2020 functional flow calculator
-        """
-
-        self.logger.info("Determining seasonal periods from hydrologic data...")
-        try:
-            print('determine seasonal periods...')
-        except:
-            self.logger.info("ERROR: Could not retrieve hydraulic rasters.")
+        self.logger.info("Saved taux rasters: %s" % out_ras_path)
 
 
     def bed_prep_time_raster(self):
         """
         Recruitment Box Model, Objective 1: Winter Peak Flows Bed Preparation
-        Retrieves dimensionless bed shear stress and mobile grains rasters or produces them if they do not exist.
+        Retrieves dimensionless bed shear stress.
         Creates bed preparation time raster from mobile grains raster and flow data.
         """
-
+        # import relevant time period to check for bed preparation (years prior and year of interest, July)
+        # taux threshold has been exceeded
+        # import existing vegetation rasters
+        # exclude areas where large vegetation exists
+        # create Q* raster that represents the flows that mobilize grains for each pixel
+        # determine if flow has occurred during relevant time period to prepare the bed
 
     def recession_rate_raster(self):
         """
@@ -164,6 +165,7 @@ class RecruitmentPotential:
         Creates recession rate raster (optimal, at-risk, lethal) from water surface elevation rasters for each day
         at each pixel.
         """
+        #
 
     def dry_season_raster(self):
         """
@@ -175,6 +177,19 @@ class RecruitmentPotential:
         """
         Creates raster of areas where all three objectives of the Recruitment Box Model area met.
         """
+
+    def recruitment_potential(self):
+        """
+        Analyzes the recruitment potential at a given site for a year of interest.
+
+        Outputs:
+            -
+        """
+        self.logger.info("Applying flow data...")
+        self.logger.info("Identifying potential recruitment area...")
+
+        # make rasters of BSS associated with highest flows during bed preparation period
+        self.ras_taux()
 
     def clean_up(self):
             try:
@@ -189,8 +204,8 @@ class RecruitmentPotential:
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
-    rp = RecruitmentPotential(condition='2017_lbp', units='us')
-    print()
+    #rp = RecruitmentPotential(condition='2017_lbp', units='us')
+    #print()
 

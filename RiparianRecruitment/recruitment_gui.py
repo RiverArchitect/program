@@ -76,17 +76,17 @@ class MainGui(cg.RaModuleGui):
 
         # Run riparian recruitment submodule
         self.b_run_rr = tk.Button(self, width=25, fg="RoyalBlue3", bg="white",
-                                  text="Analyze Riparian Recruitment")
+                                  text="Analyze Riparian Recruitment", command=lambda: self.run_recruitment())
         self.b_run_rr.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.b_run_rr['state'] = 'disabled'
 
 
     def run_recruitment(self):
-        if self.condition.get() == '':
+        if self.condition == '':
             self.logger.info("ERROR: Select condition.")
             return
-        if self.flow_data.get() == '':
-            self.logger.info("ERROR: Select file with flow data.")
+        if self.flow_data == '':
+            self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
             return
         rp = cRP.RecruitmentPotential(self.condition, self.unit)
         rp.recruitment_potential()
