@@ -14,6 +14,7 @@ try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import cRecruitmentPotential as cRP
+    import cRecruitmentCriteria as cRC
     # import child gui
     import child_gui as cg
     # load routines from riverpy
@@ -36,8 +37,14 @@ class MainGui(cg.RaModuleGui):
         self.title = "Recruitment Potential"
         self.set_geometry(self.ww, self.wh, self.title)
 
+        # Populated by self.select_condition()
         self.condition = ""
-        self.out_dir = ""
+        #  Populated by self.select_species()
+        self.species = ""
+        # Populated by self.select_flow_data()
+        self.flow_data = ""
+        # Populated by self.select_year()
+        self.selected_year = ""
 
         row = 0
 
@@ -52,9 +59,25 @@ class MainGui(cg.RaModuleGui):
         self.combo_c.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
         self.combo_c['values'] = tuple(fGl.get_subdir_names(config.dir2conditions))
         self.combo_c['state'] = 'readonly'
-        self.b_s_condition = tk.Button(self, fg="red", text="Select",
-                                       command=lambda: self.select_condition())
+        self.b_s_condition = tk.Button(self, fg="red", text="Select", command=lambda: self.select_condition())
         self.b_s_condition.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        row += 1
+
+        # Select species of interest label and button (dropdown)
+        self.l_species = tk.Label(self, text="Select species: ")
+        self.l_species.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.combo_s = ttk.Combobox(self)
+        self.combo_s.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.combo_s['values'] = tuple(cRC.RecruitmentCriteria().get_common_names())
+        self.combo_s['state'] = 'readonly'
+        self.b_s_species = tk.Button(self, fg="red", text="Select", command=lambda: self.select_species())
+        self.b_s_species.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        row += 1
+
+    # Modify recruitment criteria button
+        self.b_mod_cr = tk.Button(self, width=25, bg="white", text="Modify recruitment criteria", command=lambda:
+        self.open_inp_file("recruitment_criteria"))
+        self.b_mod_cr.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         row += 1
 
         self.l_inpath_curr = tk.Label(self, fg="gray60", text="Source: " + config.dir2conditions)
@@ -68,10 +91,16 @@ class MainGui(cg.RaModuleGui):
         self.b_flow_data.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         row += 1
 
-        # Modify recruitment criteria button
-        self.b_mod_cr = tk.Button(self, width=25, bg="white", text="Modify recruitment criteria", command=lambda:
-        self.open_inp_file("recruitment_criteria"))
-        self.b_mod_cr.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        # Select year-of-interest button (dropdown)
+        self.year_of_interest = tk.Label(self, text="Select year-of-interest:")
+        self.year_of_interest.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.combo_y = ttk.Combobox(self)
+        self.combo_y.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.combo_y['values'] = []
+        self.combo_y['state'] = 'disabled'
+        self.b_s_year = tk.Button(self, fg="red", text="Select", command=lambda: self.select_year())
+        self.b_s_year['state'] = 'disabled'
+        self.b_s_year.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         row += 1
 
         # Run riparian recruitment submodule
@@ -79,17 +108,6 @@ class MainGui(cg.RaModuleGui):
                                   text="Analyze Riparian Recruitment", command=lambda: self.run_recruitment())
         self.b_run_rr.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.b_run_rr['state'] = 'disabled'
-
-
-    def run_recruitment(self):
-        if self.condition == '':
-            self.logger.info("ERROR: Select condition.")
-            return
-        if self.flow_data == '':
-            self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
-            return
-        rp = cRP.RecruitmentPotential(self.condition, self.unit)
-        rp.recruitment_potential()
 
 
     def select_condition(self):
@@ -108,33 +126,38 @@ class MainGui(cg.RaModuleGui):
             self.verified = False
             return "Invalid entry for \'Condition\'."
 
+    def select_species(self):
+        try:
+            self.species = self.combo_s.get()
+            self.b_s_species.config(fg="forest green", text="Selected: " + self.species)
+        except:
+            self.errors = True
+            self.verified = False
+            return "Invalid entry for species."
+
 
     def select_flow_data(self):
-        self.flow_data = askopenfilename(initialdir=config.dir2flows,
+        self.flow_data = askopenfilename(initialdir=config.dir2flows + "\\InputFlowSeries",
                                          title="Select flow data for recession rate calculation",
-                                         filetypes=[("Text file", ".csv .txt .xls .xlsx")])
+                                         filetypes=[("Text file", ".csv .xls .xlsx")])
         b_text = str(self.flow_data)
         if b_text.__len__() > 50:
-            b_text = "... \\" + str(self.flow_data).split("/")[-1].split("\\")[-1]
+            b_text = "Selected: ... \\" + os.path.basename(b_text)
+        else:
+            b_text = "Selected: " + b_text
         self.b_flow_data.config(fg="forest green", text=str(b_text))
-        if self.select_flow_data != {}:
+        # populate combobox for year selection if we have selected flow data
+        if self.flow_data != '':
+            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.unit).years_list
+            self.combo_y['values'] = years_list
+            self.combo_y['state'] = 'readonly '
+            self.b_s_year['state'] = 'normal'
+
+    def select_year(self):
+        self.selected_year = self.combo_y.get()
+        if self.combo_y.get() != '':
+            self.b_s_year.config(fg="forest green", text='Selected: ' + self.selected_year)
             self.b_run_rr["state"] = "normal"
-
-
-    def activate_buttons(self, **kwargs):
-        target_state = "normal"
-        # parse optional arguments
-        try:
-            for k in kwargs.items():
-                if "revert" in k[0]:
-                    if k[1]:
-                        # disable buttons if revert = True
-                        target_state = "disabled"
-        except:
-            pass
-        self.b_flow_data["state"] = target_state
-        self.b_run_rr["state"] = target_state
-
 
     def open_inp_file(self, filename, *args):
         # args[0] = STR indicating other modules
@@ -153,6 +176,17 @@ class MainGui(cg.RaModuleGui):
         else:
             showinfo("ERROR ",
                      "The file " + str(_f) + " does not exist.\nUse the Get Started tab to create and input file.")
+
+    def run_recruitment(self):
+        if self.condition == '':
+            self.logger.info("ERROR: Select condition.")
+            return
+        if self.flow_data == '':
+            self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
+            return
+        # passing arguments (users selections) to cRecruitmentPotential
+        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.unit)
+        rp.recruitment_potential()
 
     def __call__(self):
         self.mainloop()

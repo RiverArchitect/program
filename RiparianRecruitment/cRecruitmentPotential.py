@@ -10,10 +10,12 @@ try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import fGlobal as fGl
-    import fRasterCalcs as fRc
+    import fRasterCalcs as fRC
+    import cRecruitmentCriteria as cRC
     import cMakeTable as cMkT
-    import cLifespanDesignAnalysis as cLDA
     from cLogger import Logger
+    import pandas as pd
+    import datetime as dt
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
 try:
@@ -36,7 +38,7 @@ except:
 
 class RecruitmentPotential:
 
-    def __init__(self, condition, units, *args, **kwargs):
+    def __init__(self, condition, flow_data, species, units, *args, **kwargs):
 
         # if __name__ == __main__
         self.logger = Logger("logfile")
@@ -51,6 +53,14 @@ class RecruitmentPotential:
         # define condition (i.e. DEM)
         self.condition = str(condition)
         self.dir2condition = config.dir2conditions + self.condition + "\\"
+        # define flow data file path
+        self.flow_data = flow_data
+        # define species
+        self.species = species
+        # define instance of cRecruitmentCriteria
+        self.rc = cRC.RecruitmentCriteria()
+        # get relevant recruitment criteria data for species of interest
+        self.rc_data = self.rc.species_dict[self.species]
 
         try:
             __n__ = float(args[2])
@@ -64,13 +74,13 @@ class RecruitmentPotential:
         self.u_units = self.length_units + '/s'
         self.ft2ac = config.ft2ac if self.units == 'us' else 1
         self.ft2m = config.ft2m if self.units == 'us' else 1
-        self.ft2in = 12 if self.units == 'us' else 1 # (in/ft) conversion factor for US customary units
-                                                     # else dummy conversion in SI
+        self.ft2in = 12 if self.units == 'us' else 1  # (in/ft) conversion factor for US customary units
+                                                      # else dummy conversion in SI
         self.n = __n__ / 1.49 if self.units == 'us' else __n__  # (s/ft^(1/3)) global Manning's n where k =1.49 converts
                                                                 # to US customary, else (s/m^(1/3)) global Manning's n
         self.n_label = "s/ft^(1/3)" if self.units == 'us' else "s/m^(1/3)"
         self.s = 2.68  # (--) relative grain density (ratio of rho_s and rho_w)
-        self.sf = 0.99  # (--) default safety factor
+        self.taux_cr = 0.047  # (--) critical dimensionless bed shear stress threshold
 
         try:
             self.out_dir = args[0]
@@ -78,27 +88,64 @@ class RecruitmentPotential:
             self.out_dir = config.dir2rp + "Output\\" + self.condition + "\\"
         fGl.chk_dir(self.out_dir)
 
+        # populated by self.import_flow_data()
+        self.flow_df = None
+
+        # populated by self.get_years_list()
+        self.years_list = []
+
         # populated by self.get_hydraulic_rasters()
         self.discharges = []
         self.Q_h_dict = {}
         self.Q_u_dict = {}
 
+        # populated by self.ras_taux()
+        self.Q_taux_dict = {}
+
+        # populated by self.ras_mobile_grain()
+        self.Q_mg_dict = {}
+
+        self.import_flow_data()
+        self.get_years_list()
         self.get_hydraulic_rasters()
         self.get_grain_ras()
         self.ras_taux()
+        self.ras_mobile_grain()
         #self.bed_prep_time_raster()
         #self.recession_rate_raster()
         #self.dry_season_raster()
         #self.recruitment_area_raster()
 
 
-    def import_hyrologic_data(self):
-        self.logger.info('Retrieving hydrologic data...')
-        #try:
-            # import hydrologic data for year of interest, prior two years, and subsequent year
-            # hydrologic data uploaded in date(00/00/0000) and flow (cfs) format (csv)
-        #except:
-            #self.logger.error("ERROR: Could not retrieve hydrologic data.")
+    def import_flow_data(self):
+        self.logger.info('Retrieving flow data...')
+        # read self.flow_data file to dataframe (flow_df)
+        try:
+            if self.flow_data.endswith(".xlsx") or self.flow_data.endswith(".xls"):
+                self.flow_df = pd.read_excel(self.flow_data, index_col=0, skiprows=[1])
+            else:
+                self.flow_df = pd.read_csv(self.flow_data, index_col=0, skiprows=[1])
+        except:
+            self.logger.error("ERROR: Could not retrieve flow data.")
+
+
+    def get_years_list(self):
+        self.logger.info("Creating list of years from flow data...")
+        # create list of years from self.flow_df
+        try:
+            all_years_list = list(set(self.flow_df.index.year))
+            season_start = self.rc_data.loc[self.rc.season_start].VALUE
+            bed_prep_period = self.rc_data.loc[self.rc.bed_prep_period].VALUE
+            for year in all_years_list:
+                # make sure we have period from start date to end date in flow data for year to be valid choice for analysis
+                # starting bed_prep_period years before season start date
+                start_date = dt.datetime(year - bed_prep_period, season_start.month, season_start.day, 0, 0)
+                # ending one year after season start date (minus one day)
+                end_date = dt.datetime(year + 1, season_start.month, season_start.day, 0, 0) - dt.timedelta(days=1)
+                if (start_date in self.flow_df.index) and (end_date in self.flow_df.index):
+                    self.years_list.append(year)
+        except:
+            self.logger.error("ERROR: Could not parse years from flow data.")
 
 
     def get_hydraulic_rasters(self):
@@ -121,26 +168,6 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not retrieve grain size raster...")
             self.grain_ras = None
 
-    def ras_mobile_grain(self):
-        """
-        Create mobile grain rasters with depth and velocity rasters producing mobile grain rasters for all flows modeled.
-        """
-        self.logger.info("Creating mobile grain rasters...")
-        try:
-            # create mobile grain raster using method in cLifespanDesignAnalysis
-            self.logger.info("")
-            for Q in self.discharges:
-                self.logger.info(f'Creating bed mobility raster for Q = {Q}...')
-                h_ras = Raster(self.Q_h_dict[Q])
-                u_ras = Raster(self.Q_u_dict[Q])
-                ras_Dcr = cLDA.analyse_mobile_grains(h_ras, u_ras, s=self.s, units=self.units)
-                out_ras_path = os.path.join(self.out_dir, "mobilegrain_%s.tif" % fGl.write_Q_str(Q))
-                ras_Dcr.save(out_ras_path)
-                self.logger.info(f'Saved: {out_ras_path}')
-        except:
-            self.logger.info("ERROR: Could not create mobile grain raster...")
-            return -1
-        self.logger.info('Saved mobile grain rasters: %s' % out_ras_path)
 
     def ras_taux(self):
         """
@@ -154,17 +181,52 @@ class RecruitmentPotential:
             self.logger.info("Retrieving grain size raster...")
             grain_ras = Raster(self.grain_ras)
             for Q in self.discharges:
-                self.logger.info(f'Creating dimensionless shear stress raster for Q = {Q}...')
-                h_ras = Raster(self.Q_h_dict[Q])
-                u_ras = Raster(self.Q_u_dict[Q])
-                taux_ras = fRc.calculate_taux(h_ras, u_ras, grain_ras, s=self.s, units=self.units)
                 out_ras_path = os.path.join(self.out_dir, "taux_%s.tif" % fGl.write_Q_str(Q))
-                taux_ras.save(out_ras_path)
-                self.logger.info(f'Saved: {out_ras_path}')
+                if os.path.exists(out_ras_path):
+                    self.logger.info(f'Dimensionless shear stress raster already exists ({out_ras_path}). Skipping...')
+                else:
+                    self.logger.info(f'Creating dimensionless shear stress raster for Q = {Q}...')
+                    h_ras = Raster(self.Q_h_dict[Q])
+                    u_ras = Raster(self.Q_u_dict[Q])
+                    taux_ras = fRC.calculate_taux(h_ras, u_ras, grain_ras, s=self.s, units=self.units)
+                    taux_ras.save(out_ras_path)
+                    self.logger.info(f'Saved: {out_ras_path}')
+                # Add taux raster to Q_taux_dict
+                self.logger.info(f'Adding dimensionless shear stress raster to dictionary for Q = {Q}...')
+                self.Q_taux_dict[Q] = out_ras_path
+                self.logger.info('Added to dictionary.')
         except:
             self.logger.info("ERROR: Could not create taux raster...")
             return -1
-        self.logger.info("Saved taux rasters: %s" % out_ras_path)
+
+
+    def ras_mobile_grain(self):
+        """
+        Create mobile grain rasters by comparing taux_ras to the critical threshold value to determine if grains have
+        been mobilized.
+        """
+
+        self.logger.info("Creating mobile grain rasters...")
+        try:
+            # create rasters of cells representing where grains are mobilized based on dimensionless critical threshold
+            self.logger.info("Retrieving taux raster...")
+            for Q in self.discharges:
+                out_ras_path = os.path.join(self.out_dir, "mg_%s.tif" % fGl.write_Q_str(Q))
+                if os.path.exists(out_ras_path):
+                    self.logger.info(f'Mobile grain raster already exists ({out_ras_path}). Skipping...')
+                else:
+                    self.logger.info(f'Creating mobile grain raster for Q = {Q}...')
+                    taux_ras = Raster(self.Q_taux_dict[Q])
+                    ras_mobilegrain = Con(taux_ras >= self.taux_cr, 1)
+                    ras_mobilegrain.save(out_ras_path)
+                    self.logger.info(f'Saved: {out_ras_path}')
+                # Add mobile grain raster to Q_mg_dict
+                self.logger.info(f'Adding mobile grain raster to dictionary for Q = {Q}...')
+                self.Q_mg_dict[Q] = out_ras_path
+                self.logger.info('Added to dictionary.')
+        except:
+            self.logger.info("ERROR: Could not create mobile grain raster...")
+            return -1
 
 
     def bed_prep_time_raster(self):
@@ -225,8 +287,7 @@ class RecruitmentPotential:
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
 
+
 if __name__ == "__main__":
-
-    rp = RecruitmentPotential(condition='2017_lbp', units='us')
-    #print()
-
+    flowdata = 'D:\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_example_data.xlsx'
+    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', units='us')
