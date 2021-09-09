@@ -421,9 +421,6 @@ def read_Q_str(file_name, prefix):
     except ValueError as e:
         raise ValueError('Cannot parse discharge from file name %s (%s)' % (file_name, e))
 
-def write_Q_str(num):
-    return f'{num:010.3f}'.replace('.', '_')
-
 
 def rm_dir(directory):
     # Deletes everything reachable from the directory named in 'directory', and the directory itself
@@ -638,3 +635,7 @@ def write_dict2xlsx(data_dict, file, key_col, val_col, start_row):
     wb.save(str(file))
     wb.close()
     logger.info(" -- OK (Write to workbook)")
+
+
+def write_Q_str(num):
+    return f'{num:010.3f}'.replace('.', '_')
