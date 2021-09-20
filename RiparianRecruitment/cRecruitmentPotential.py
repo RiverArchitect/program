@@ -38,11 +38,8 @@ except:
 
 class RecruitmentPotential:
 
-    def __init__(self, condition, flow_data, species, units, *args, **kwargs):
-
-        # if __name__ == __main__
-        self.logger = Logger("logfile")
-        # Enable logger
+    def __init__(self, condition, flow_data, species, selected_year, units, *args, **kwargs):
+        # initialize logger
         self.logger = logging.getLogger("logfile")
         # Create a temporary cache folder for, e.g., geospatial analyses; use self.clear_cache() function to delete
         self.cache = os.path.dirname(__file__) + "\\.cache%s\\" % str(random.randint(10000, 99999))
@@ -57,6 +54,8 @@ class RecruitmentPotential:
         self.flow_data = flow_data
         # define species
         self.species = species
+        # define selected year
+        self.selected_year = int(selected_year) if len(selected_year) else None
         # define instance of cRecruitmentCriteria
         self.rc = cRC.RecruitmentCriteria()
         # get relevant recruitment criteria data for species of interest
@@ -74,13 +73,34 @@ class RecruitmentPotential:
         self.u_units = self.length_units + '/s'
         self.ft2ac = config.ft2ac if self.units == 'us' else 1
         self.ft2m = config.ft2m if self.units == 'us' else 1
-        self.ft2in = 12 if self.units == 'us' else 1  # (in/ft) conversion factor for US customary units
-                                                      # else dummy conversion in SI
-        self.n = __n__ / 1.49 if self.units == 'us' else __n__  # (s/ft^(1/3)) global Manning's n where k =1.49 converts
-                                                                # to US customary, else (s/m^(1/3)) global Manning's n
+        # (in/ft) conversion factor for US customary units else dummy conversion in SI
+        self.ft2in = 12 if self.units == 'us' else 1
+        # (s/ft^(1/3)) global Manning's n where k =1.49 converts to US customary, else (s/m^(1/3)) global Manning's n
+        self.n = __n__ / 1.49 if self.units == 'us' else __n__
         self.n_label = "s/ft^(1/3)" if self.units == 'us' else "s/m^(1/3)"
-        self.s = 2.68  # (--) relative grain density (ratio of rho_s and rho_w)
-        self.taux_cr = 0.047  # (--) critical dimensionless bed shear stress threshold
+        # relative grain density (ratio of rho_s and rho_w)
+        self.s = 2.68
+        # critical dimensionless bed shear stress threshold for fully prepared bed
+        self.taux_cr_fp = self.rc_data.loc[self.rc.taux_cr_fp].VALUE
+        # critical dimensionless bed shear stress threshold for partially prepared bed
+        self.taux_cr_pp = self.rc_data.loc[self.rc.taux_cr_pp].VALUE
+
+        # populated by self.ras_q_mobile()
+        self.q_mobile_ras_fp = None
+        self.q_mobile_ras_pp = None
+
+        # populated by self.get_analysis_period()
+        self.sd_start = None
+        self.sd_end = None
+        self.bed_prep_period = None
+
+        # populated by self.get_bed_prep_period()
+        self.bp_start_date = None
+        self.bp_end_date = None
+
+        # populated by self.bed_prep_ras()
+        self.foi_df = None
+        self.q_max = None
 
         try:
             self.out_dir = args[0]
@@ -94,10 +114,19 @@ class RecruitmentPotential:
         # populated by self.get_years_list()
         self.years_list = []
 
+        # populated by self.get_flows_list()
+        self.flows_list = []
+
+        # populated by self.make_yoi_dir()
+        self.sub_dir = None
+
         # populated by self.get_hydraulic_rasters()
         self.discharges = []
         self.Q_h_dict = {}
         self.Q_u_dict = {}
+
+        # populated by self.get_grain_ras()
+        self.grain_ras = None
 
         # populated by self.ras_taux()
         self.Q_taux_dict = {}
@@ -106,16 +135,8 @@ class RecruitmentPotential:
         self.Q_mg_dict = {}
 
         self.import_flow_data()
+        self.get_date_range()
         self.get_years_list()
-        self.get_hydraulic_rasters()
-        self.get_grain_ras()
-        self.ras_taux()
-        self.ras_mobile_grain()
-        #self.bed_prep_time_raster()
-        #self.recession_rate_raster()
-        #self.dry_season_raster()
-        #self.recruitment_area_raster()
-
 
     def import_flow_data(self):
         self.logger.info('Retrieving flow data...')
@@ -128,25 +149,55 @@ class RecruitmentPotential:
         except:
             self.logger.error("ERROR: Could not retrieve flow data.")
 
+    def get_date_range(self):
+        self.logger.info("Determining range of dates for relevant recruitment period...")
+        try:
+            self.sd_start = self.rc_data.loc[self.rc.sd_start].VALUE
+            self.sd_end = self.rc_data.loc[self.rc.sd_end].VALUE
+            self.bed_prep_period = self.rc_data.loc[self.rc.bed_prep_period].VALUE
+        except:
+            self.logger.error("ERROR: Could not determine season start date and/or bed prep period, check "
+                              "recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+
+    def get_analysis_period(self, year):
+        try:
+            # make sure we have period from start date to end date in flow data for year to be valid choice for analysis
+            # starting self.bed_prep_period years before season start date
+            analysis_start_date = dt.datetime(year - self.bed_prep_period, self.sd_start.month, self.sd_start.day, 0, 0)
+            # ending one year after season start date (minus one day)
+            analysis_end_date = dt.datetime(year + 1, self.sd_start.month, self.sd_start.day, 0, 0) - dt.timedelta(days=1)
+            return analysis_start_date, analysis_end_date
+        except:
+            self.logger.error("ERROR: Could not determine analysis period.")
+
+    def get_bed_prep_period(self):
+        try:
+            self.bp_start_date = dt.datetime(self.selected_year - self.bed_prep_period, self.sd_start.month, self.sd_start.day, 0, 0)
+            self.bp_end_date = dt.datetime(self.selected_year, self.sd_end.month, self.sd_end.day, 0, 0)
+        except:
+            self.logger.error("ERROR: Could not determine bed prep period.")
 
     def get_years_list(self):
         self.logger.info("Creating list of years from flow data...")
         # create list of years from self.flow_df
         try:
             all_years_list = list(set(self.flow_df.index.year))
-            season_start = self.rc_data.loc[self.rc.season_start].VALUE
-            bed_prep_period = self.rc_data.loc[self.rc.bed_prep_period].VALUE
             for year in all_years_list:
-                # make sure we have period from start date to end date in flow data for year to be valid choice for analysis
-                # starting bed_prep_period years before season start date
-                start_date = dt.datetime(year - bed_prep_period, season_start.month, season_start.day, 0, 0)
-                # ending one year after season start date (minus one day)
-                end_date = dt.datetime(year + 1, season_start.month, season_start.day, 0, 0) - dt.timedelta(days=1)
+                start_date, end_date = self.get_analysis_period(year)
                 if (start_date in self.flow_df.index) and (end_date in self.flow_df.index):
                     self.years_list.append(year)
         except:
             self.logger.error("ERROR: Could not parse years from flow data.")
 
+    def make_yoi_dir(self):
+        # create directory for selected year as a sub-directory of out_dir
+        self.sub_dir = os.path.join(self.out_dir, str(self.selected_year))
+        try:
+            if not os.path.exists(self.sub_dir):
+                self.logger.info("Creating sub-directory (folder) for year-of-interest...")
+                os.mkdir(self.sub_dir)
+        except:
+            self.logger.error("ERROR: Could not create sub-directory (folder) for year-of-interest.")
 
     def get_hydraulic_rasters(self):
         self.logger.info("Retrieving hydraulic rasters...")
@@ -158,7 +209,6 @@ class RecruitmentPotential:
         except:
             self.logger.error("ERROR: Could not retrieve hydraulic rasters.")
 
-
     def get_grain_ras(self):
         self.logger.info("Retrieving grain size raster...")
         try:
@@ -167,7 +217,6 @@ class RecruitmentPotential:
         except:
             self.logger.error("ERROR: Could not retrieve grain size raster...")
             self.grain_ras = None
-
 
     def ras_taux(self):
         """
@@ -199,48 +248,81 @@ class RecruitmentPotential:
             self.logger.info("ERROR: Could not create taux raster...")
             return -1
 
-
-    def ras_mobile_grain(self):
+    def ras_q_mobile(self, prep_level):
         """
-        Create mobile grain rasters by comparing taux_ras to the critical threshold value to determine if grains have
-        been mobilized.
+        Q_mobile is a raster where each cell has a value equal to the lowest discharge where taux >= taux_cr (threshold)
+        Prep level is a string equal to "fp" for "fully prepped" or "pp" for "partially prepped"
         """
-
-        self.logger.info("Creating mobile grain rasters...")
+        if prep_level == "pp":
+            taux_cr = self.taux_cr_pp
+        elif prep_level == "fp":
+            taux_cr = self.taux_cr_fp
+        else:
+            self.logger.info("ERROR: Unexpected prep level encountered, use \"fp\" or \"pp\" only.")
+            return -1
+        self.logger.info("Creating Q_mobile raster...")
         try:
-            # create rasters of cells representing where grains are mobilized based on dimensionless critical threshold
-            self.logger.info("Retrieving taux raster...")
-            for Q in self.discharges:
-                out_ras_path = os.path.join(self.out_dir, "mg_%s.tif" % fGl.write_Q_str(Q))
-                if os.path.exists(out_ras_path):
-                    self.logger.info(f'Mobile grain raster already exists ({out_ras_path}). Skipping...')
-                else:
-                    self.logger.info(f'Creating mobile grain raster for Q = {Q}...')
+            out_ras_path = os.path.join(self.out_dir, f"Q_mobile_{prep_level}_{str(taux_cr).replace('.', '_')}.tif")
+            if os.path.exists(out_ras_path):
+                q_mobile_ras = Raster(out_ras_path)
+                self.logger.info(f'Q_mobile raster already exists ({out_ras_path}). Skipping...')
+            else:
+                q_mobile_ras = None
+                # iterate through discharges in descending order
+                for Q in sorted(self.discharges, reverse=True):
+                    # retrieving taux rasters
+                    self.logger.info(f'Analyzing Q = {Q}...')
                     taux_ras = Raster(self.Q_taux_dict[Q])
-                    ras_mobilegrain = Con(taux_ras >= self.taux_cr, 1)
-                    ras_mobilegrain.save(out_ras_path)
-                    self.logger.info(f'Saved: {out_ras_path}')
-                # Add mobile grain raster to Q_mg_dict
-                self.logger.info(f'Adding mobile grain raster to dictionary for Q = {Q}...')
-                self.Q_mg_dict[Q] = out_ras_path
-                self.logger.info('Added to dictionary.')
+                    # creating Q_mobile raster if there is none created
+                    if q_mobile_ras is None:
+                        q_mobile_ras = Con(taux_ras >= taux_cr, Q)
+                    # overwriting (if still mobilizing for lower flow) values in Q_mobile raster
+                    else:
+                        q_mobile_ras = Con(taux_ras >= taux_cr, Q, q_mobile_ras)
+                q_mobile_ras.save(out_ras_path)
+                self.logger.info(f'Saved Q_mobile raster: {out_ras_path}')
+            if prep_level == "fp":
+                self.q_mobile_ras_fp = q_mobile_ras
+            else:
+                self.q_mobile_ras_pp = q_mobile_ras
         except:
-            self.logger.info("ERROR: Could not create mobile grain raster...")
+            self.logger.info("ERROR: Could not create Q_mobile raster...")
             return -1
 
-
-    def bed_prep_time_raster(self):
+    def bed_prep_raster(self):
         """
         Recruitment Box Model, Objective 1: Winter Peak Flows Bed Preparation
         Retrieves dimensionless bed shear stress.
         Creates bed preparation time raster from mobile grains raster and flow data.
         """
-        # import relevant time period to check for bed preparation (years prior and year of interest, July)
-        # taux threshold has been exceeded
+        self.logger.info("Creating dataframe from flow_df of period of interest...")
+        # determine bed prep period for selected year
+        self.get_bed_prep_period()
+        try:
+            # create flow-of-interest dataframe with bed prep period for selected year
+            self.foi_df = self.flow_df.loc[self.bp_start_date:self.bp_end_date]
+            # determine maximum Q from flows-of-interest
+            self.q_max = int(self.foi_df.max().values[0])
+        except:
+            self.logger.error("ERROR: Could not determine Q max from bed prep period.")
+        # determine if flow has occurred during relevant time period to prepare the bed
+        try:
+            out_ras_path = os.path.join(self.sub_dir, f"bed_prep_ras.tif")
+            if os.path.exists(out_ras_path):
+                bp_ras = Raster(out_ras_path)
+                self.logger.info(f'Bed prep raster already exists ({out_ras_path}). Skipping...')
+            else:
+                bp_ras = None
+            bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_max, 1)
+            bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_max, 2)
+            bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
+            bp_ras.save(out_ras_path)
+            self.logger.info(f'Saved bed prep raster: {out_ras_path}')
+            self.save_info_file(self.sub_dir)
+        except:
+            self.logger.error("ERROR: Could not create bed preparation raster.")
         # import existing vegetation rasters
         # exclude areas where large vegetation exists
-        # create Q* raster that represents the flows that mobilize grains for each pixel
-        # determine if flow has occurred during relevant time period to prepare the bed
 
     def recession_rate_raster(self):
         """
@@ -261,18 +343,30 @@ class RecruitmentPotential:
         Creates raster of areas where all three objectives of the Recruitment Box Model area met.
         """
 
-    def recruitment_potential(self):
-        """
-        Analyzes the recruitment potential at a given site for a year of interest.
+    def save_info_file(self, path):
+        info_path = os.path.join(self.sub_dir, os.path.basename(path).rsplit(".", 1)[0] + '.info.txt')
+        with open(info_path, "w") as info_file:
+            info_file.write(f"Year-of Interest for Recruitment Potential Analysis: {self.selected_year}")
+            info_file.write(f"\nBed Prep Period Start Date: {dt.datetime.strftime(self.bp_start_date, '%Y-%m-%d')}")
+            info_file.write(f"\nBed Prep Period End Date: {dt.datetime.strftime(self.bp_end_date, '%Y-%m-%d')}")
+            info_file.write(f"\nGermination Period Start Date: {dt.datetime.strftime(self.sd_start, '%Y-%m-%d')}")
+            info_file.write(f"\nGermination Period End Date: {dt.datetime.strftime(self.sd_end, '%Y-%m-%d')}")
+            info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Fully Prepared Bed: {self.taux_cr_fp}")
+            info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Partially Prepared Bed: {self.taux_cr_pp}")
+        self.logger.info(f"Saved info file: {info_path}")
 
-        Outputs:
-            -
-        """
-        self.logger.info("Applying flow data...")
-        self.logger.info("Identifying potential recruitment area...")
+    def run_rp(self):
+            self.make_yoi_dir()
+            self.get_hydraulic_rasters()
+            self.get_grain_ras()
+            self.ras_taux()
+            self.ras_q_mobile(prep_level="fp")
+            self.ras_q_mobile(prep_level="pp")
+            self.bed_prep_raster()
+            #self.recession_rate_raster()
+            #self.dry_season_raster()
+            #self.recruitment_area_raster()
 
-        # make rasters of BSS associated with highest flows during bed preparation period
-        self.ras_taux()
 
     def clean_up(self):
             try:
@@ -290,4 +384,5 @@ class RecruitmentPotential:
 
 if __name__ == "__main__":
     flowdata = 'D:\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_example_data.xlsx'
-    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', units='us')
+    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', selected_year=1995, units='us')
+    rp.run_rp()

@@ -48,7 +48,7 @@ class MainGui(cg.RaModuleGui):
 
         row = 0
 
-        self.l_prompt = tk.Label(self, text="Select Condition and Flow Data")
+        self.l_prompt = tk.Label(self, text="Select Condition and Species of Interest")
         self.l_prompt.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
@@ -63,32 +63,38 @@ class MainGui(cg.RaModuleGui):
         self.b_s_condition.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         row += 1
 
+        self.l_inpath_curr = tk.Label(self, fg="gray60", text="Source: " + config.dir2conditions)
+        self.l_inpath_curr.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
+
         # Select species of interest label and button (dropdown)
         self.l_species = tk.Label(self, text="Select species: ")
         self.l_species.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
         self.combo_s = ttk.Combobox(self)
         self.combo_s.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
-        self.combo_s['values'] = tuple(cRC.RecruitmentCriteria().get_common_names())
+        self.combo_s['values'] = cRC.RecruitmentCriteria().common_name_list
         self.combo_s['state'] = 'readonly'
         self.b_s_species = tk.Button(self, fg="red", text="Select", command=lambda: self.select_species())
         self.b_s_species.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
         row += 1
 
-    # Modify recruitment criteria button
+        # Modify recruitment criteria button
         self.b_mod_cr = tk.Button(self, width=25, bg="white", text="Modify recruitment criteria", command=lambda:
         self.open_inp_file("recruitment_criteria"))
-        self.b_mod_cr.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_mod_cr.grid(sticky=tk.W, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
         row += 1
 
-        self.l_inpath_curr = tk.Label(self, fg="gray60", text="Source: " + config.dir2conditions)
-        self.l_inpath_curr.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.l_prompt = tk.Label(self, text="Upload Flow Data and Select Year-of-Interest")
+        self.l_prompt.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
         # Upload flow data button
-        self.b_flow_data = tk.Button(self, width=10, fg="RoyalBlue3", bg="white",
-                                     text="Select Flow Data",
-                                      command=lambda: self.select_flow_data())
-        self.b_flow_data.grid(sticky=tk.EW, row=row, column=0, columnspan=2, padx=self.xd, pady=self.yd)
+        self.l_flow_data = tk.Label(self, text="Upload flow data:")
+        self.l_flow_data.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.b_flow_data = tk.Button(self, fg="RoyalBlue3", bg="white",
+                                     text="Select Flow Data", command=lambda: self.select_flow_data())
+        self.b_flow_data['state'] = 'disabled'
+        self.b_flow_data.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
         # Select year-of-interest button (dropdown)
@@ -100,7 +106,31 @@ class MainGui(cg.RaModuleGui):
         self.combo_y['state'] = 'disabled'
         self.b_s_year = tk.Button(self, fg="red", text="Select", command=lambda: self.select_year())
         self.b_s_year['state'] = 'disabled'
-        self.b_s_year.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)
+        self.b_s_year.grid(sticky=tk.W, row=row, column=2, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
+
+        self.l_prompt = tk.Label(self, text="Upload Vegetation Raster and Grading Limits Raster")
+        self.l_prompt.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
+
+        # Upload vegetation raster button
+        self.veg_ras = tk.Label(self, text="Upload vegetation raster:")
+        self.veg_ras.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.b_veg_ras = tk.Button(self, fg="RoyalBlue3", bg="white",
+                                   text="Select vegetation raster",
+                                   command=lambda: self.select_veg_ras())
+        self.b_veg_ras["state"] = 'disabled'
+        self.b_veg_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
+
+        # Upload grading limits raster button
+        self.grading_ras = tk.Label(self, text="Upload grading limits raster:")
+        self.grading_ras.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.b_grading_ras = tk.Button(self, fg="RoyalBlue3", bg="white",
+                                       text="Select grading limits raster",
+                                       command=lambda: self.select_grading_ras())
+        self.b_grading_ras["state"] = 'disabled'
+        self.b_grading_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
         # Run riparian recruitment submodule
@@ -109,13 +139,15 @@ class MainGui(cg.RaModuleGui):
         self.b_run_rr.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.b_run_rr['state'] = 'disabled'
 
-
     def select_condition(self):
         try:
             self.condition = self.combo_c.get()
             input_dir = config.dir2conditions + str(self.condition)
             if os.path.exists(input_dir):
                 self.b_s_condition.config(fg="forest green", text="Selected: " + self.condition)
+                # activate vegetation and grading limits raster if condition is exists
+                self.b_veg_ras["state"] = 'normal'
+                self.b_grading_ras["state"] = 'normal'
             else:
                 self.b_s_condition.config(fg="red", text="ERROR")
                 self.errors = True
@@ -134,7 +166,10 @@ class MainGui(cg.RaModuleGui):
             self.errors = True
             self.verified = False
             return "Invalid entry for species."
-
+        # activate flow data selection if species is selected
+        if self.species != '':
+            self.b_flow_data['state'] = 'normal'
+            self.set_years_list()
 
     def select_flow_data(self):
         self.flow_data = askopenfilename(initialdir=config.dir2flows + "\\InputFlowSeries",
@@ -146,11 +181,14 @@ class MainGui(cg.RaModuleGui):
         else:
             b_text = "Selected: " + b_text
         self.b_flow_data.config(fg="forest green", text=str(b_text))
+        self.set_years_list()
+
+    def set_years_list(self):
         # populate combobox for year selection if we have selected flow data
         if self.flow_data != '':
-            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.unit).years_list
+            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit).years_list
             self.combo_y['values'] = years_list
-            self.combo_y['state'] = 'readonly '
+            self.combo_y['state'] = 'readonly'
             self.b_s_year['state'] = 'normal'
 
     def select_year(self):
@@ -158,6 +196,28 @@ class MainGui(cg.RaModuleGui):
         if self.combo_y.get() != '':
             self.b_s_year.config(fg="forest green", text='Selected: ' + self.selected_year)
             self.b_run_rr["state"] = "normal"
+
+    def select_veg_ras(self):
+        self.veg_ras = askopenfilename(initialdir=config.dir2conditions + '\\' + self.condition,
+                                       title="Select vegetation raster to subtract from bed preparation calculations",
+                                       filetypes=[("Raster files", ".tif .tiff .flt .asc")])
+        b_text = str(self.veg_ras)
+        if b_text.__len__() > 50:
+            b_text = "Selected: ... \\" + os.path.basename(b_text)
+        else:
+            b_text = "Selected: " + b_text
+        self.b_veg_ras.config(fg="forest green", text=str(b_text))
+
+    def select_grading_ras(self):
+        self.grading_ras = askopenfilename(initialdir=config.dir2conditions + '\\' + self.condition,
+                                           title="Select grading limits raster to consider as \"fully prepared\" bed",
+                                           filetypes=[("Raster files", ".tif .tiff .flt .asc")])
+        b_text = str(self.grading_ras)
+        if b_text.__len__() > 50:
+            b_text = "Selected: ... \\" + os.path.basename(b_text)
+        else:
+            b_text = "Selected: " + b_text
+        self.b_grading_ras.config(fg="forest green", text=str(b_text))
 
     def open_inp_file(self, filename, *args):
         # args[0] = STR indicating other modules
@@ -185,8 +245,8 @@ class MainGui(cg.RaModuleGui):
             self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
             return
         # passing arguments (users selections) to cRecruitmentPotential
-        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.unit)
-        rp.recruitment_potential()
+        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit)
+        rp.run_rp()
 
     def __call__(self):
         self.mainloop()

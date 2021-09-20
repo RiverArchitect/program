@@ -26,10 +26,11 @@ class RecruitmentCriteria:
         self.species_dict = {}
 
         # parameter names in recruitment criteria workbook
-        self.season_start = 'Season start'
-        self.season_end = 'Season end'
+        self.sd_start = 'Season start'
+        self.sd_end = 'Season end'
         self.bed_prep_period = 'Bed preparation period'
-        # ...
+        self.taux_cr_fp = 'Prepared'
+        self.taux_cr_pp = 'Partially prepared'
 
         # read recruitment sheet in recruitment criteria excel file to dataframe, first column assigned as index
         try:
@@ -43,6 +44,7 @@ class RecruitmentCriteria:
 
     def get_species(self):
         # iterate though columns in dataframe skipping 'UNITS' column
+        self.species_list = []
         for col in self.df.columns[1:]:
             # adding each species column to self.species_list with 'UNITS' column
             species_df = self.df[[col, 'UNITS']]
@@ -52,16 +54,15 @@ class RecruitmentCriteria:
 
     def get_common_names(self):
         # iterate through each species in self.species_list
+        self.common_name_list = []
         for species in self.species_list:
             # adding each species common name to self.common_name_list
             self.common_name_list.append(species.loc['Common name'][0])
         return self.common_name_list
 
-
     def create_species_dict(self):
         # create species dictionary with self.common_name_list as keys and self.species_list as values
         self.species_dict = dict(zip(self.common_name_list, self.species_list))
-
 
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentCriteria (%s)" % os.path.dirname(__file__))

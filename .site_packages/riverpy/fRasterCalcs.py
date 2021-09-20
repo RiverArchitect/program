@@ -33,6 +33,9 @@ def unit_constants(units):
 
 
 def calculate_taux(h_ras, u_ras, grain_ras, s, units):
+    '''
+    Dimensionless bed shear stress
+    '''
     rho_w, g = unit_constants(units)
     taux_ras = (rho_w * Square(u_ras / (5.75 * Log10(12.2 * h_ras
                                                     /(2 * 2.2 * grain_ras))))) / (rho_w * g * (s - 1) * grain_ras)
