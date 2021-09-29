@@ -1,12 +1,15 @@
 try:
     import sys, os, random
     import logging
+    from tkinter.messagebox import askyesno
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\")
     from cParameters import *
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\GetStarted\\")
+    import cWaterLevel as cWL
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     import config
     import fGlobal as fGl
@@ -40,6 +43,7 @@ class RecruitmentPotential:
 
     def __init__(self, condition, flow_data, species, selected_year, units, *args, **kwargs):
         # initialize logger
+        self.logger = Logger("logfile")
         self.logger = logging.getLogger("logfile")
         # Create a temporary cache folder for, e.g., geospatial analyses; use self.clear_cache() function to delete
         self.cache = os.path.dirname(__file__) + "\\.cache%s\\" % str(random.randint(10000, 99999))
@@ -124,6 +128,7 @@ class RecruitmentPotential:
         self.discharges = []
         self.Q_h_dict = {}
         self.Q_u_dict = {}
+        self.Q_wse_dict = {}
 
         # populated by self.get_grain_ras()
         self.grain_ras = None
@@ -131,8 +136,11 @@ class RecruitmentPotential:
         # populated by self.ras_taux()
         self.Q_taux_dict = {}
 
-        # populated by self.ras_mobile_grain()
-        self.Q_mg_dict = {}
+        # populated by self.get_dem_ras()
+        self.dem_ras = None
+
+        # populated by self.recession_rate_ras()
+        self.Q_wle_dict = {}
 
         self.import_flow_data()
         self.get_date_range()
@@ -206,8 +214,22 @@ class RecruitmentPotential:
             self.discharges = sorted(mkt.discharges)
             self.Q_h_dict = {Q: self.dir2condition + mkt.dict_Q_h_ras[Q] for Q in self.discharges}
             self.Q_u_dict = {Q: self.dir2condition + mkt.dict_Q_u_ras[Q] for Q in self.discharges}
+
+            if len(mkt.dict_Q_wse_ras) > 0:
+                self.Q_wse_dict = {Q: self.dir2condition + mkt.dict_Q_wse_ras[Q] for Q in self.discharges}
+            else:
+                self.Q_wse_dict = {}
+                msg = "WARNING: WSE rasters not provided for condition. Will use DEM + depth for interpolation instead. Continue?"
+                proceed = askyesno("Missing WSE data",
+                                   "No WSE rasters exist for the selected condition. Use DEM + depth for interpolation instead?")
+                if not proceed:
+                    raise Exception("Use Condition Creator (Get Started tab) to add WSE rasters for the selected condition.")
+                else:
+                    self.logger.info("Proceeding...")
         except:
-            self.logger.error("ERROR: Could not retrieve hydraulic rasters.")
+            msg = "ERROR: Could not retrieve hydraulic rasters."
+            self.logger.error(msg)
+            raise Exception(msg)
 
     def get_grain_ras(self):
         self.logger.info("Retrieving grain size raster...")
@@ -289,11 +311,11 @@ class RecruitmentPotential:
             self.logger.info("ERROR: Could not create Q_mobile raster...")
             return -1
 
-    def bed_prep_raster(self):
+    def bed_prep_ras(self):
         """
         Recruitment Box Model, Objective 1: Winter Peak Flows Bed Preparation
-        Retrieves dimensionless bed shear stress.
-        Creates bed preparation time raster from mobile grains raster and flow data.
+        Retrieves q mobile rasters ('fp' and 'pp') and determines the maximum flow from flow record.
+        Creates bed preparation time raster from q mobile raster by comparing flows to the maximum flow.
         """
         self.logger.info("Creating dataframe from flow_df of period of interest...")
         # determine bed prep period for selected year
@@ -313,8 +335,10 @@ class RecruitmentPotential:
                 self.logger.info(f'Bed prep raster already exists ({out_ras_path}). Skipping...')
             else:
                 bp_ras = None
+            # determine if the maximum flow (Q) in bed prep period is greater than or equqal to q_mobile_ras values
             bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_max, 1)
             bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_max, 2)
+            # combine fully prepped and partially prepped
             bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
             bp_ras.save(out_ras_path)
             self.logger.info(f'Saved bed prep raster: {out_ras_path}')
@@ -324,21 +348,53 @@ class RecruitmentPotential:
         # import existing vegetation rasters
         # exclude areas where large vegetation exists
 
-    def recession_rate_raster(self):
+    def get_dem_ras(self):
+        self.logger.info("Retrieving DEM raster...")
+        try:
+            # defining dem raster location
+            self.dem_ras = os.path.join(self.dir2condition, 'dem.tif')
+            assert os.path.exists(self.dem_ras)
+        except:
+            self.logger.error("ERROR: Could not retrieve DEM raster...")
+            self.dem_ras = None
+
+    def interpolate_wle(self):
+        # interpolate water level elevation using method (WLE) from cWaterLevel
+        try:
+            # if flow-WSE raster dictionary exists, interpolate using WSE rasters rather than with depth rasters
+            if self.Q_wse_dict:
+                for q, wse_ras in self.Q_wse_dict.items():
+                    self.logger.info(f"Q = {q}...")
+                    wle = cWL.WLE(wse_ras, self.dem_ras, self.dir2condition, unique_id=True, input_wse=True, method='IDW')
+                    wle.interpolate_wle()
+            # use depth rasters to interpolate with
+            else:
+                for q, h_ras in self.Q_h_dict.items():
+                    self.logger.info(f"Q = {q}...")
+                    wle = cWL.WLE(h_ras, self.dem_ras, self.dir2condition, unique_id=True, method='IDW')
+                    wle.interpolate_wle()
+            self.Q_wle_dict = {q: os.path.join(self.dir2condition, f'wle{fGl.write_Q_str(q)}.tif') for q in self.discharges}
+        except:
+            self.logger.error("ERROR: Could not interpolate water level elevation...")
+
+    def recession_rate_ras(self):
         """
         Recruitment Box Model, Objective 2: Spring Recession Rates
         Creates recession rate raster (optimal, at-risk, lethal) from water surface elevation rasters for each day
         at each pixel.
         """
-        #
+        # convert WLE rasters to numpy arrays
+        for q, wle_ras in self.Q_wle_dict.items():
+            self.logger.info(f"Q = {q}...")
+            wle_mat = arcpy.RasterToNumPyArray(wle_ras, nodata_to_value=np.nan)
 
-    def dry_season_raster(self):
+    def dry_season_ras(self):
         """
         Recruitment Box Model, Objective 3: Summer Low Flows No Inundation
         Creates raster of recruitment areas that are inundated after spring growth period in summer.
         """
 
-    def recruitment_area_raster(self):
+    def recruitment_area_ras(self):
         """
         Creates raster of areas where all three objectives of the Recruitment Box Model area met.
         """
@@ -362,10 +418,12 @@ class RecruitmentPotential:
             self.ras_taux()
             self.ras_q_mobile(prep_level="fp")
             self.ras_q_mobile(prep_level="pp")
-            self.bed_prep_raster()
-            #self.recession_rate_raster()
-            #self.dry_season_raster()
-            #self.recruitment_area_raster()
+            self.bed_prep_ras()
+            self.get_dem_ras()
+            self.interpolate_wle()
+            self.recession_rate_ras()
+            #self.dry_season_ras()
+            #self.recruitment_area_ras()
 
 
     def clean_up(self):
@@ -384,5 +442,5 @@ class RecruitmentPotential:
 
 if __name__ == "__main__":
     flowdata = 'D:\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_example_data.xlsx'
-    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', selected_year=1995, units='us')
+    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1995', units='us')
     rp.run_rp()

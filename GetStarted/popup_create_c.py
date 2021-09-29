@@ -72,25 +72,44 @@ class OptionalFrame(tk.Frame):
         self.bg_color = "khaki"
         self.config(width=350, height=400, bg=self.bg_color)
 
-
         self.xd = 5
         self.yd = 5
         self.col_0_width = 30
 
+        row = 0
+
+        # WSE rasters
+        self.b_swse = tk.Button(self, width=self.col_0_width, bg="white", text="Select WSE folder")
+        self.b_swse.grid(sticky=tk.EW, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.l_wse_str = tk.Label(self, text="Raster string: ")
+        self.l_wse_str.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.e_wse = tk.Entry(self, width=6)
+        self.e_wse.grid(sticky=tk.EW, row=row, column=2, padx=self.xd, pady=self.yd)
+        self.b_wse_info = tk.Button(self, width=5, bg="white", text="Help")
+        self.b_wse_info.grid(sticky=tk.EW, row=row, column=3, padx=self.xd, pady=self.yd)
+        self.l_wse_info = tk.Label(self, fg="gray35", text="(optional)")
+        self.l_wse_info.grid(sticky=tk.W, row=row, column=4, padx=self.xd, pady=self.yd)
+        row += 1
+        self.l_wse_folder = tk.Label(self, fg="tan4", text="No wse-folder defined.")
+        self.l_wse_folder.grid(sticky=tk.W, row=row, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=13, column=0)  # dummy
+
+        row += 1
+
         # Velocity Direction rasters
         self.b_sva = tk.Button(self, width=self.col_0_width, bg="white", text="Select velocity angle (va) folder")
-        self.b_sva.grid(sticky=tk.EW, row=0, column=0, padx=self.xd, pady=self.yd)
+        self.b_sva.grid(sticky=tk.EW, row=row, column=0, padx=self.xd, pady=self.yd)
         self.l_va_str = tk.Label(self, text="Raster string: ")
-        self.l_va_str.grid(sticky=tk.W, row=0, column=1, padx=self.xd, pady=self.yd)
+        self.l_va_str.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
         self.e_va = tk.Entry(self, width=6)
-        self.e_va.grid(sticky=tk.EW, row=0, column=2, padx=self.xd, pady=self.yd)
+        self.e_va.grid(sticky=tk.EW, row=row, column=2, padx=self.xd, pady=self.yd)
         self.b_va_info = tk.Button(self, width=5, bg="white", text="Help")
-        self.b_va_info.grid(sticky=tk.EW, row=0, column=3, padx=self.xd, pady=self.yd)
+        self.b_va_info.grid(sticky=tk.EW, row=row, column=3, padx=self.xd, pady=self.yd)
         self.l_va_info = tk.Label(self, fg="gray35", text="(optional)")
-        self.l_va_info.grid(sticky=tk.W, row=0, column=4, padx=self.xd, pady=self.yd)
+        self.l_va_info.grid(sticky=tk.W, row=row, column=4, padx=self.xd, pady=self.yd)
+        row += 1
         self.l_va_folder = tk.Label(self, fg="tan4", text="No va-folder defined.")
-
-        self.l_va_folder.grid(sticky=tk.W, row=1, column=0, columnspan=5, padx=self.xd, pady=self.yd)
+        self.l_va_folder.grid(sticky=tk.W, row=row, column=0, columnspan=5, padx=self.xd, pady=self.yd)
         tk.Label(self, text="", bg="khaki").grid(sticky=tk.W, row=13, column=0)  # dummy
 
         # 06 Scour raster
@@ -146,11 +165,13 @@ class CreateCondition(object):
         self.dir2scour = '.'
         self.dir2u = '.'
         self.dir2va = '.'
+        self.dir2wse = '.'
 
         self.new_condition_name = tk.StringVar()
         self.str_h = tk.StringVar()
         self.str_u = tk.StringVar()
         self.str_va = tk.StringVar()
+        self.str_wse = tk.StringVar()
         self.align_rasters = tk.BooleanVar()
         self.top.iconbitmap(config.code_icon)
 
@@ -191,6 +212,7 @@ class CreateCondition(object):
         self.optional = OptionalFrame(self.top, relief=tk.RAISED)
         self.optional.config(bg="khaki")
         self.optional.grid(row=3, column=0, columnspan=3)
+        self.optional.b_swse.config(command=lambda: self.select_wse())
         self.optional.b_sva.config(command=lambda: self.select_va())
         self.optional.e_va.config(textvariable=self.str_va)
         self.optional.b_va_info.config(command=lambda: self.user_info('va'))
@@ -226,6 +248,8 @@ class CreateCondition(object):
 
         if str(self.dir2va).__len__() > 2:
             new_condition.transfer_rasters_from_folder(self.dir2va, "va", str(self.str_va.get()))
+        if str(self.dir2wse).__len__() > 2:
+            new_condition.transfer_rasters_from_folder(self.dir2wse, "wse", str(self.str_wse.get()))
         if self.dir2scour.__len__() > 2:
             new_condition.save_tif(self.dir2scour, "scour")
         if self.dir2fill.__len__() > 2:
@@ -309,6 +333,12 @@ class CreateCondition(object):
         showinfo("INFO", msg, parent=self.top)
         self.dir2va = askdirectory(initialdir=self.dir2u, parent=self.top) + "/"
         self.optional.l_va_folder.config(fg="forest green", text=str(self.dir2va))
+
+    def select_wse(self):
+        msg = self.user_raster_info()
+        showinfo("INFO", msg, parent=self.top)
+        self.dir2wse = askdirectory(initialdir=self.dir2wse, parent=self.top) + "/"
+        self.optional.l_wse_folder.config(fg="forest green", text=str(self.dir2wse))
 
     def user_info(self, variable_name):
         msg = ''

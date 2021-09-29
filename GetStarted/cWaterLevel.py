@@ -48,12 +48,21 @@ class WLE:
             self.unique_id = False
 
         try:
+            self.input_wse = kwargs["input_wse"]
+        except:
+            self.input_wse = False
+
+        try:
             self.method = kwargs["method"]
         except:
             self.method = 'IDW'
 
         if self.unique_id:
-            Q = fGl.read_Q_str(self.path2h_ras, prefix='h')
+            if self.input_wse:
+                prefix = 'wse'
+            else:
+                prefix = 'h'
+            Q = fGl.read_Q_str(self.path2h_ras, prefix=prefix)
             self.out_wle = f'wle{fGl.write_Q_str(Q)}.tif'
             self.out_wle_var = f'wle{fGl.write_Q_str(Q)}_var.tif'
             self.out_h_interp = f'h{fGl.write_Q_str(Q)}_interp.tif'
@@ -94,9 +103,11 @@ class WLE:
 
             try:
                 self.logger.info("Making WSE raster ...")
-                ras_wse = Con(ras_h > 0, (ras_dem + ras_h))
-                temp_dem = Con(((ras_dem > 0) & IsNull(ras_h)), ras_dem)
-                ras_dem = temp_dem
+                if self.input_wse:
+                    self.logger.info(f"WSE raster already given: {self.path2h_ras}")
+                    ras_wse = ras_h
+                else:
+                    ras_wse = Con(ras_h > 0, (ras_dem + ras_h))
                 self.logger.info("OK")
             except:
                 self.logger.info("ERROR: Input rasters contain invalid data.")
