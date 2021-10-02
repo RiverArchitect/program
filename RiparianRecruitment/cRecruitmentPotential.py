@@ -1,7 +1,10 @@
 try:
     import sys, os, random
     import logging
-    from tkinter.messagebox import askyesno
+    from tkinter.messagebox import askyesno, showinfo
+    import pandas as pd
+    import datetime as dt
+    import numpy as np
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, logging, random).")
 
@@ -17,14 +20,8 @@ try:
     import cRecruitmentCriteria as cRC
     import cMakeTable as cMkT
     from cLogger import Logger
-    import pandas as pd
-    import datetime as dt
 except:
     print("ExceptionERROR: Missing RiverArchitect packages (required: riverpy).")
-try:
-    sys.path.append(config.dir2rp)
-except:
-    print("ExceptionERROR: ")
 try:
     import arcpy
 except:
@@ -84,23 +81,25 @@ class RecruitmentPotential:
         self.n_label = "s/ft^(1/3)" if self.units == 'us' else "s/m^(1/3)"
         # relative grain density (ratio of rho_s and rho_w)
         self.s = 2.68
-        # critical dimensionless bed shear stress threshold for fully prepared bed
-        self.taux_cr_fp = self.rc_data.loc[self.rc.taux_cr_fp].VALUE
-        # critical dimensionless bed shear stress threshold for partially prepared bed
-        self.taux_cr_pp = self.rc_data.loc[self.rc.taux_cr_pp].VALUE
+        self.cm2ft = 1 / 30.48
 
         # populated by self.ras_q_mobile()
         self.q_mobile_ras_fp = None
         self.q_mobile_ras_pp = None
 
-        # populated by self.get_analysis_period()
+        # populated by self.get_date_range()
         self.sd_start = None
         self.sd_end = None
+        self.base_flow_start = None
         self.bed_prep_period = None
 
         # populated by self.get_bed_prep_period()
         self.bp_start_date = None
         self.bp_end_date = None
+
+        # populated by self.get_recession_period()
+        self.rec_start_date = None
+        self.rec_end_date = None
 
         # populated by self.bed_prep_ras()
         self.foi_df = None
@@ -139,11 +138,16 @@ class RecruitmentPotential:
         # populated by self.get_dem_ras()
         self.dem_ras = None
 
-        # populated by self.recession_rate_ras()
+        # populated by self.interpolate_wle()
         self.Q_wle_dict = {}
 
+        # populated by self.recession_rate_ras()
+        self.rr_fav_d_mat = []
+        self.rr_stress_d_mat = []
+        self.rr_lethal_d_mat = []
+
         self.import_flow_data()
-        self.get_date_range()
+        self.read_rc_xlsx()
         self.get_years_list()
 
     def import_flow_data(self):
@@ -157,15 +161,65 @@ class RecruitmentPotential:
         except:
             self.logger.error("ERROR: Could not retrieve flow data.")
 
-    def get_date_range(self):
-        self.logger.info("Determining range of dates for relevant recruitment period...")
+    def read_rc_xlsx(self):
         try:
+            self.logger.info("Determining range of dates for relevant recruitment period...")
+            # seed dispersal start date
             self.sd_start = self.rc_data.loc[self.rc.sd_start].VALUE
+            # seed dispersal end date
             self.sd_end = self.rc_data.loc[self.rc.sd_end].VALUE
+            # start of base flow period
+            self.base_flow_start = self.rc_data.loc[self.rc.base_flow_start].VALUE
+            # length of bed preparation period
             self.bed_prep_period = self.rc_data.loc[self.rc.bed_prep_period].VALUE
         except:
-            self.logger.error("ERROR: Could not determine season start date and/or bed prep period, check "
-                              "recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+            self.logger.error("ERROR: Could not determine season start date, base flow start date and/or bed prep period,"
+                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+        try:
+            self.logger.info("Determining bed shear stress criteria...")
+            # critical dimensionless bed shear stress threshold for fully prepared bed
+            self.taux_cr_fp = self.rc_data.loc[self.rc.taux_cr_fp].VALUE
+            # critical dimensionless bed shear stress threshold for partially prepared bed
+            self.taux_cr_pp = self.rc_data.loc[self.rc.taux_cr_pp].VALUE
+        except:
+            self.logger.error("ERROR: Could not determine bed shear stress criteria, "
+                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+        try:
+            self.logger.info("Determining recession rate criteria...")
+            # favorable recession rate criteria
+            rr_fav_cm = self.rc_data.loc[self.rc.rr_fav].VALUE
+            self.rr_fav = rr_fav_cm * self.cm2ft
+            # stressful recession rate criteria
+            rr_stress_cm = self.rc_data.loc[self.rc.rr_stress].VALUE
+            self.rr_stress = rr_stress_cm * self.cm2ft
+            # lethal recession rate criteria
+            rr_lethal_cm = self.rc_data.loc[self.rc.rr_lethal].VALUE
+            self.rr_lethal = rr_lethal_cm * self.cm2ft
+        except:
+            self.logger.error("ERROR: Could not determine recession rate criteria,"
+                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+        try:
+            self.logger.info("Determining elevation criteria...")
+            # favorable elevation criteria
+            self.elev_fav = self.rc_data.loc[self.rc.elev_fav].VALUE
+            # stressful elevation criteria
+            self.elev_stress = self.rc_data.loc[self.rc.elev_stress].VALUE
+            # lethal elevation criteria
+            self.elev_lethal = self.rc_data.loc[self.rc.elev_lethal].VALUE
+        except:
+            self.logger.error("ERROR: Could not determine elevation criteria,"
+                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+        try:
+            self.logger.info("Determining inundation criteria...")
+            # favorable inundation criteria
+            self.inund_fav = self.rc_data.loc[self.rc.inund_fav].VALUE
+            # stressful inundation criteria
+            self.inund_stress = self.rc_data.loc[self.rc.inund_stress].VALUE
+            # lethal inundation criteria
+            self.inund_lethal = self.rc_data.loc[self.rc.inund_lethal].VALUE
+        except:
+            self.logger.error("ERROR: could not determine inundation criteria,"
+                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
 
     def get_analysis_period(self, year):
         try:
@@ -184,6 +238,13 @@ class RecruitmentPotential:
             self.bp_end_date = dt.datetime(self.selected_year, self.sd_end.month, self.sd_end.day, 0, 0)
         except:
             self.logger.error("ERROR: Could not determine bed prep period.")
+
+    def get_recession_period(self):
+        try:
+            self.rec_start_date = dt.datetime(self.selected_year, self.sd_start.month, self.sd_start.day, 0, 0)
+            self.rec_end_date = dt.datetime(self.selected_year, self.base_flow_start.month, self.base_flow_start.day, 0, 0)
+        except:
+            self.logger.error("ERROR: Could not determine recession period.")
 
     def get_years_list(self):
         self.logger.info("Creating list of years from flow data...")
@@ -207,11 +268,22 @@ class RecruitmentPotential:
         except:
             self.logger.error("ERROR: Could not create sub-directory (folder) for year-of-interest.")
 
+    def check_flow_range(self):
+        start, end = self.get_analysis_period(self.selected_year)
+        analysis_flows = self.flow_df[start:end]
+        if max(analysis_flows['Mean daily']) > max(self.discharges) or min(analysis_flows['Mean daily']) < min(self.discharges):
+            proceed = showinfo('WARNING: Mean daily flow range is outside of the modeled flow range for the selected analysis period.'
+                             'Update condition to include required hydraulic rasters or select a different analysis period.')
+            raise Exception('ERROR: Could not complete analysis, missing hydraulic rasters required for selected analysis period.')
+        else:
+            return
+
     def get_hydraulic_rasters(self):
         self.logger.info("Retrieving hydraulic rasters...")
         try:
             mkt = cMkT.MakeFlowTable(self.condition, "", unit=self.units)
             self.discharges = sorted(mkt.discharges)
+            self.check_flow_range()
             self.Q_h_dict = {Q: self.dir2condition + mkt.dict_Q_h_ras[Q] for Q in self.discharges}
             self.Q_u_dict = {Q: self.dir2condition + mkt.dict_Q_u_ras[Q] for Q in self.discharges}
 
@@ -219,7 +291,6 @@ class RecruitmentPotential:
                 self.Q_wse_dict = {Q: self.dir2condition + mkt.dict_Q_wse_ras[Q] for Q in self.discharges}
             else:
                 self.Q_wse_dict = {}
-                msg = "WARNING: WSE rasters not provided for condition. Will use DEM + depth for interpolation instead. Continue?"
                 proceed = askyesno("Missing WSE data",
                                    "No WSE rasters exist for the selected condition. Use DEM + depth for interpolation instead?")
                 if not proceed:
@@ -331,11 +402,10 @@ class RecruitmentPotential:
         try:
             out_ras_path = os.path.join(self.sub_dir, f"bed_prep_ras.tif")
             if os.path.exists(out_ras_path):
-                bp_ras = Raster(out_ras_path)
+                Raster(out_ras_path)
                 self.logger.info(f'Bed prep raster already exists ({out_ras_path}). Skipping...')
-            else:
-                bp_ras = None
-            # determine if the maximum flow (Q) in bed prep period is greater than or equqal to q_mobile_ras values
+                return
+            # determine if the maximum flow (Q) in bed prep period is greater than or equal to q_mobile_ras values
             bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_max, 1)
             bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_max, 2)
             # combine fully prepped and partially prepped
@@ -358,24 +428,70 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not retrieve DEM raster...")
             self.dem_ras = None
 
+    def set_arcpy_env(self):
+        self.logger.info("Setting up arcpy environment...")
+        self.snap_raster = Raster(self.dem_ras)
+        # set selected raster as environment snap raster and output coordinate system
+        arcpy.env.snapRaster = self.snap_raster
+        arcpy.env.outputCoordinateSystem = Raster(self.snap_raster).spatialReference
+        # get cell size
+        self.cell_size_x = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEX')[0]
+        self.cell_size_y = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEY')[0]
+        self.cell_size = str(self.cell_size_x) + ' ' + str(self.cell_size_y)
+
     def interpolate_wle(self):
         # interpolate water level elevation using method (WLE) from cWaterLevel
         try:
             # if flow-WSE raster dictionary exists, interpolate using WSE rasters rather than with depth rasters
-            if self.Q_wse_dict:
-                for q, wse_ras in self.Q_wse_dict.items():
-                    self.logger.info(f"Q = {q}...")
-                    wle = cWL.WLE(wse_ras, self.dem_ras, self.dir2condition, unique_id=True, input_wse=True, method='IDW')
+            q_ras_dict = self.Q_wse_dict if self.Q_wse_dict else self.Q_h_dict
+            input_wse = True if self.Q_wse_dict else self.Q_h_dict
+            for q, ras in q_ras_dict.items():
+                self.logger.info(f"Q = {q}...")
+                wle_path = os.path.join(self.dir2condition, f'wle{fGl.write_Q_str(q)}.tif')
+                self.Q_wle_dict[q] = wle_path
+                wle = cWL.WLE(ras, self.dem_ras, self.dir2condition, unique_id=True, input_wse=input_wse, method='IDW')
+                if not wle.check_interp_ras(wle_path):
                     wle.interpolate_wle()
-            # use depth rasters to interpolate with
-            else:
-                for q, h_ras in self.Q_h_dict.items():
-                    self.logger.info(f"Q = {q}...")
-                    wle = cWL.WLE(h_ras, self.dem_ras, self.dir2condition, unique_id=True, method='IDW')
-                    wle.interpolate_wle()
-            self.Q_wle_dict = {q: os.path.join(self.dir2condition, f'wle{fGl.write_Q_str(q)}.tif') for q in self.discharges}
+                else:
+                    self.logger.info("Using existing interpolated WLE raster ...")
         except:
             self.logger.error("ERROR: Could not interpolate water level elevation...")
+
+    def interp_wle_by_q(self, q):
+        self.logger.info(f"Q = {q}...")
+        q_l_index = np.searchsorted(self.discharges, q)
+        q_u_index = q_l_index + 1
+        q_l = self.discharges[q_l_index]
+        q_u = self.discharges[q_u_index]
+        self.logger.info(f"Closest modeled flows for interpolation: {q_l} - {q_u}")
+        try:
+            q_l_wle_ras = self.Q_wle_dict[q_l]
+            q_u_wle_ras = self.Q_wle_dict[q_u]
+            try:
+                # convert WLE raster to numpy array
+                q_l_wle_mat = arcpy.RasterToNumPyArray(q_l_wle_ras, nodata_to_value=np.nan)
+                q_u_wle_mat = arcpy.RasterToNumPyArray(q_u_wle_ras, nodata_to_value=np.nan)
+                try:
+                    q_wle_mat = q_l_wle_mat + ((q_u_wle_mat - q_l_wle_mat) * (q - q_l) / (q_u - q_l))
+                    return q_wle_mat
+                except:
+                    self.logger.info(f"Failed to interpolate WLE array for Q = {q}.")
+            except:
+                self.logger.info(f"Unable to convert required interpolated WLE rasters into arrays...")
+        except:
+            self.logger.info(f"Unable to retrieve required interpolated WLE rasters...")
+
+    def convert_array2raster(self, mat, ras_path):
+        # set arcpy environment for raster
+        self.set_arcpy_env()
+        # set reference point for array to raster conversion
+        ref_pt = arcpy.Point(self.snap_raster.extent.XMin, self.snap_raster.extent.YMin)
+        ras = arcpy.NumPyArrayToRaster(mat, lower_left_corner=ref_pt,
+                                       x_cell_size=float(self.cell_size_x),
+                                       y_cell_size=float(self.cell_size_y),
+                                       value_to_nodata=np.nan)
+        ras.save(ras_path)
+        self.logger.info(f'Saved converted raster: {ras_path}')
 
     def recession_rate_ras(self):
         """
@@ -383,10 +499,57 @@ class RecruitmentPotential:
         Creates recession rate raster (optimal, at-risk, lethal) from water surface elevation rasters for each day
         at each pixel.
         """
-        # convert WLE rasters to numpy arrays
-        for q, wle_ras in self.Q_wle_dict.items():
-            self.logger.info(f"Q = {q}...")
-            wle_mat = arcpy.RasterToNumPyArray(wle_ras, nodata_to_value=np.nan)
+        self.logger.info("Creating dataframe from flow_df of recession period...")
+        # determine recession rate period for selected year
+        self.get_recession_period()
+        try:
+            # create recession rate flow dataframe with recession start and end dates
+            self.rr_df = self.flow_df.loc[self.rec_start_date - dt.timedelta(days=3):self.rec_end_date]
+        except:
+            self.logger.error("ERROR: Could not create recession rate flow dataframe.")
+        rr_total_d = (len(self.rr_df) - 3)
+        window = []
+        # iterating over groups of 4 consecutive rows
+        for i in range(len(self.rr_df) - 4):
+            slice = self.rr_df.iloc[i: i + 4]
+            qm3, qm2, qm1, q = slice['Mean daily'].values
+            day = slice.index.values[-1]
+            self.logger.info(f'Getting recession rate for {pd.to_datetime(day).strftime("%Y-%m-%d")}...  ')
+            q_wle_mat = self.interp_wle_by_q(q)
+            if i == 0:
+                window.append(self.interp_wle_by_q(qm3))
+                window.append(self.interp_wle_by_q(qm2))
+                window.append(self.interp_wle_by_q(qm1))
+                self.rr_stress_d_mat = np.zeros_like(q_wle_mat)
+                self.rr_lethal_d_mat = np.zeros_like(q_wle_mat)
+            # update window of wle arrays
+            window.append(q_wle_mat)
+            qm3_wle_mat = window.pop(0)
+            # calculate 3-day avg recession rate
+            rr = (q_wle_mat - qm3_wle_mat) / 3
+            # calculate stressful and lethal recession rate total arrays
+            self.rr_stress_d_mat = np.where((self.rr_stress < rr) & (rr <= self.rr_lethal), (self.rr_stress_d_mat + 1), self.rr_stress_d_mat)
+            self.rr_lethal_d_mat = np.where((self.rr_lethal < rr), (self.rr_lethal_d_mat + 1), self.rr_lethal_d_mat)
+        # calculate favorable recession rate days (total) array
+        self.rr_fav_d_mat = rr_total_d - self.rr_stress_d_mat - self.rr_lethal_d_mat
+        # convert recession rate days (total) arrays to rasters
+        self.logger.info('Converting recession rate (days) arrays to rasters...')
+        rr_fav_ras_path = os.path.join(self.sub_dir, f"rr_fav_days_ras.tif")
+        rr_stress_ras_path = os.path.join(self.sub_dir, f"rr_stress_days_ras.tif")
+        rr_lethal_ras_path = os.path.join(self.sub_dir, f"rr_lethal_days_ras.tif")
+        self.convert_array2raster(self.rr_fav_d_mat, rr_fav_ras_path)
+        self.convert_array2raster(self.rr_stress_d_mat, rr_stress_ras_path)
+        self.convert_array2raster(self.rr_lethal_d_mat, rr_lethal_ras_path)
+        # calculate mortality coefficient with recession rate stressful and lethal days totals
+        self.logger.info('Calculating mortality coeffient array...')
+        # calculate arrays as percent of total days
+        self.rr_stress_per_mat = (self.rr_stress_d_mat / rr_total_d) * 100
+        self.rr_lethal_per_mat = (self.rr_lethal_d_mat / rr_total_d) * 100
+        mort_coef_mat = ((self.rr_lethal_per_mat * 3) + (self.rr_stress_per_mat * 1)) / 3
+        # convert mortality coefficient array to raster
+        self.logger.info('Converting mortality coefficient to raster...')
+        mort_coef_ras_path = os.path.join(self.sub_dir, f"mortality_coeff_ras.tif")
+        self.convert_array2raster(mort_coef_mat, mort_coef_ras_path)
 
     def dry_season_ras(self):
         """
@@ -441,6 +604,6 @@ class RecruitmentPotential:
 
 
 if __name__ == "__main__":
-    flowdata = 'D:\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_example_data.xlsx'
-    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1995', units='us')
+    flowdata = 'D:\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB.xlsx'
+    rp = RecruitmentPotential(condition='2017_lbp', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1952', units='us')
     rp.run_rp()
