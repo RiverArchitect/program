@@ -102,8 +102,8 @@ class RecruitmentPotential:
         self.rec_end_date = None
 
         # populated by self.bed_prep_ras()
-        self.foi_df = None
-        self.q_max = None
+        self.bp_flow_df = None
+        self.q_bp_max = None
 
         try:
             self.out_dir = args[0]
@@ -392,10 +392,10 @@ class RecruitmentPotential:
         # determine bed prep period for selected year
         self.get_bed_prep_period()
         try:
-            # create flow-of-interest dataframe with bed prep period for selected year
-            self.foi_df = self.flow_df.loc[self.bp_start_date:self.bp_end_date]
-            # determine maximum Q from flows-of-interest
-            self.q_max = int(self.foi_df.max().values[0])
+            # create bed prep flows dataframe with bed prep period for selected year
+            self.bp_flow_df = self.flow_df.loc[self.bp_start_date:self.bp_end_date]
+            # determine maximum Q from bed prep flows dataframe
+            self.q_bp_max = int(self.bp_flow_df.max().values[0])
         except:
             self.logger.error("ERROR: Could not determine Q max from bed prep period.")
         # determine if flow has occurred during relevant time period to prepare the bed
@@ -406,8 +406,8 @@ class RecruitmentPotential:
                 self.logger.info(f'Bed prep raster already exists ({out_ras_path}). Skipping...')
                 return
             # determine if the maximum flow (Q) in bed prep period is greater than or equal to q_mobile_ras values
-            bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_max, 1)
-            bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_max, 2)
+            bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_bp_max, 1)
+            bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_bp_max, 2)
             # combine fully prepped and partially prepped
             bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
             bp_ras.save(out_ras_path)
@@ -493,6 +493,17 @@ class RecruitmentPotential:
         ras.save(ras_path)
         self.logger.info(f'Saved converted raster: {ras_path}')
 
+    def get_wetted_area(self, h_ras, ras_path):
+        # calculate wetted area raster
+        self.logger.info(f"Calculating wetted area...")
+        try:
+            # convert depth raster to integer raster
+            logging.info(f'Converting depth raster {h_ras} to interger raster...')
+            interger_ras = Con(Raster(h_ras), 1)
+            interger_ras.save(ras_path)
+        except:
+            logging.info(f"Failed to convert depth raster {h_ras} to interger raster...")
+
     def recession_rate_ras(self):
         """
         Recruitment Box Model, Objective 2: Spring Recession Rates
@@ -505,8 +516,18 @@ class RecruitmentPotential:
         try:
             # create recession rate flow dataframe with recession start and end dates
             self.rr_df = self.flow_df.loc[self.rec_start_date - dt.timedelta(days=3):self.rec_end_date]
+            # create seed dispersal flow dataframe with seed dispersal start and end dates
+            self.sd_df = self.flow_df.loc[self.sd_start:self.sd_end]
+            # determine maximum Q from seed dispersal dataframe
+            self.q_sd_max = int(self.rr_df.max().values[0])
         except:
-            self.logger.error("ERROR: Could not create recession rate flow dataframe.")
+            self.logger.error("ERROR: Could not create recession rate or seed dispersal flow dataframe.")
+        q_sd_max_mat = self.interp_wle_by_q(self.q_sd_max)
+        q_sd_max_ras_path = os.path.join(self.cache, f"wle{self.q_sd_max}.tif")
+        self.convert_array2raster(q_sd_max_mat, q_sd_max_ras_path)
+        wa_ras_path = os.path.join(self.sub_dir, f"wetted_area_sd_ras.tif")
+        self.get_wetted_area(q_sd_max_ras_path, wa_ras_path)
+         
         rr_total_d = (len(self.rr_df) - 3)
         window = []
         # iterating over groups of 4 consecutive rows
