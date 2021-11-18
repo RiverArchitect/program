@@ -17,7 +17,7 @@ class RecruitmentCriteria:
     # Read recruitment criteria from file as a function of criteria name
     def __init__(self):
         # set location of recruitment criteria xlsx file
-        self.recruitment_xlsx = config.xlsx_recruitment
+        self.recruitment_xlsx = config.xlsx_recruitment_criteria
         # populated by self.get_species()
         self.species_list = []
         # populated by self.get_common_names()
@@ -32,14 +32,11 @@ class RecruitmentCriteria:
         self.bed_prep_period = 'Bed preparation period'
         self.taux_cr_fp = 'Prepared'
         self.taux_cr_pp = 'Partially prepared'
-        self.rr_fav = 'Favorable rate'
         self.rr_stress = 'Stressful rate'
         self.rr_lethal = 'Lethal rate'
-        self.elev_fav = 'Favorable elevation'
         self.elev_stress = 'Stressful elevation'
         self.elev_lethal = 'Lethal elevation'
-        self.inund_fav = 'Favorable inundation'
-        self.inund_stress = 'Stressful indunation'
+        self.inund_stress = 'Stressful inundation'
         self.inund_lethal = 'Lethal inundation'
 
         # read recruitment sheet in recruitment criteria excel file to dataframe, first column assigned as index

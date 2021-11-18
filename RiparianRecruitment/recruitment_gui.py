@@ -45,6 +45,10 @@ class MainGui(cg.RaModuleGui):
         self.flow_data = ""
         # Populated by self.select_year()
         self.selected_year = ""
+        # Populated by self.select_ex_veg_ras()
+        self.ex_veg_ras = ""
+        # Populated by self.select_grading_ext_ras()
+        self.grading_ext_ras = ""
 
         row = 0
 
@@ -113,24 +117,24 @@ class MainGui(cg.RaModuleGui):
         self.l_prompt.grid(sticky=tk.W, row=row, column=0, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
-        # Upload vegetation raster button
-        self.veg_ras = tk.Label(self, text="Upload vegetation raster:")
-        self.veg_ras.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
-        self.b_veg_ras = tk.Button(self, fg="RoyalBlue3", bg="white",
+        # Upload existing vegetation raster button
+        self.ex_veg_ras = tk.Label(self, text="Upload vegetation raster:")
+        self.ex_veg_ras.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.b_ex_veg_ras = tk.Button(self, fg="RoyalBlue3", bg="white",
                                    text="Select vegetation raster",
-                                   command=lambda: self.select_veg_ras())
-        self.b_veg_ras["state"] = 'disabled'
-        self.b_veg_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
+                                   command=lambda: self.select_ex_veg_ras())
+        self.b_ex_veg_ras["state"] = 'disabled'
+        self.b_ex_veg_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
         # Upload grading limits raster button
-        self.grading_ras = tk.Label(self, text="Upload grading limits raster:")
-        self.grading_ras.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
-        self.b_grading_ras = tk.Button(self, fg="RoyalBlue3", bg="white",
-                                       text="Select grading limits raster",
-                                       command=lambda: self.select_grading_ras())
-        self.b_grading_ras["state"] = 'disabled'
-        self.b_grading_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
+        self.grading_ext_ras = tk.Label(self, text="Upload grading limits raster:")
+        self.grading_ext_ras.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.b_grading_ext_ras = tk.Button(self, fg="RoyalBlue3", bg="white",
+                                               text="Select grading limits raster",
+                                               command=lambda: self.select_grading_ext_ras())
+        self.b_grading_ext_ras["state"] = 'disabled'
+        self.b_grading_ext_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
         # Run riparian recruitment submodule
@@ -146,8 +150,8 @@ class MainGui(cg.RaModuleGui):
             if os.path.exists(input_dir):
                 self.b_s_condition.config(fg="forest green", text="Selected: " + self.condition)
                 # activate vegetation and grading limits raster if condition is exists
-                self.b_veg_ras["state"] = 'normal'
-                self.b_grading_ras["state"] = 'normal'
+                self.b_ex_veg_ras["state"] = 'normal'
+                self.b_grading_ext_ras["state"] = 'normal'
             else:
                 self.b_s_condition.config(fg="red", text="ERROR")
                 self.errors = True
@@ -197,34 +201,34 @@ class MainGui(cg.RaModuleGui):
             self.b_s_year.config(fg="forest green", text='Selected: ' + self.selected_year)
             self.b_run_rr["state"] = "normal"
 
-    def select_veg_ras(self):
-        self.veg_ras = askopenfilename(initialdir=config.dir2conditions + '\\' + self.condition,
+    def select_ex_veg_ras(self):
+        self.ex_veg_ras = askopenfilename(initialdir=config.dir2conditions + '\\' + self.condition,
                                        title="Select vegetation raster to subtract from bed preparation calculations",
                                        filetypes=[("Raster files", ".tif .tiff .flt .asc")])
-        b_text = str(self.veg_ras)
+        b_text = str(self.ex_veg_ras)
         if b_text.__len__() > 50:
             b_text = "Selected: ... \\" + os.path.basename(b_text)
         else:
             b_text = "Selected: " + b_text
-        self.b_veg_ras.config(fg="forest green", text=str(b_text))
+        self.b_ex_veg_ras.config(fg="forest green", text=str(b_text))
 
-    def select_grading_ras(self):
-        self.grading_ras = askopenfilename(initialdir=config.dir2conditions + '\\' + self.condition,
-                                           title="Select grading limits raster to consider as \"fully prepared\" bed",
-                                           filetypes=[("Raster files", ".tif .tiff .flt .asc")])
-        b_text = str(self.grading_ras)
+    def select_grading_ext_ras(self):
+        self.grading_ext_ras = askopenfilename(initialdir=config.dir2conditions + '\\' + self.condition,
+                                               title="Select grading limits raster to consider as \"fully prepared\" bed",
+                                               filetypes=[("Raster files", ".tif .tiff .flt .asc")])
+        b_text = str(self.grading_ext_ras)
         if b_text.__len__() > 50:
             b_text = "Selected: ... \\" + os.path.basename(b_text)
         else:
             b_text = "Selected: " + b_text
-        self.b_grading_ras.config(fg="forest green", text=str(b_text))
+        self.b_grading_ext_ras.config(fg="forest green", text=str(b_text))
 
     def open_inp_file(self, filename, *args):
         # args[0] = STR indicating other modules
         _f = None
         try:
             if "recruitment_criteria" in filename:
-                _f = config.xlsx_recruitment
+                _f = config.xlsx_recruitment_criteria
         except:
             pass
         if os.path.isfile(_f):
@@ -245,7 +249,7 @@ class MainGui(cg.RaModuleGui):
             self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
             return
         # passing arguments (users selections) to cRecruitmentPotential
-        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit)
+        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.ex_veg_ras, self.grading_ext_ras, self.unit)
         rp.run_rp()
 
     def __call__(self):
