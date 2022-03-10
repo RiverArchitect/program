@@ -77,6 +77,11 @@ class MakeFlowTable:
             ras_name_list = [i for i in os.listdir(self.dir_in_ras) if i.endswith('.tif')]
 
         self.logger.info("   * analyzing relevant discharges and matching Rasters ...")
+        self.dict_Q_h_ras = {}
+        self.dict_Q_u_ras = {}
+        self.dict_Q_va_ras = {}
+        self.dict_Q_wse_ras = {}
+
         for rn in ras_name_list:
             if rn[0] == "h":
                 self.logger.info("     -- Found flow depth raster: " + str(rn))
@@ -85,22 +90,26 @@ class MakeFlowTable:
                     self.discharges.append(_Q_)
                 except:
                     self.logger.info("ERROR: The Raster name is not coherent with the name conventions. Name correction needed.")
+                self.dict_Q_h_ras[_Q_] = rn
                 self.h_rasters.append(rn)
             if rn[0] == "u":
                 self.logger.info("     -- Found flow velocity raster: " + str(rn))
+                _Q_ = fGl.read_Q_str(rn, prefix='u')
+                self.dict_Q_u_ras[_Q_] = rn
                 self.u_rasters.append(rn)
             if rn[:2] == "va":
                 self.logger.info("     -- Found flow velocity angle raster: " + str(rn))
+                _Q_ = fGl.read_Q_str(rn, prefix='va')
+                self.dict_Q_va_ras[_Q_] = rn
                 self.va_rasters.append(rn)
             if rn[:3] == "wse":
                 self.logger.info("     -- Found water surface elevation (WSE) raster: " + str(rn))
+                _Q_ = fGl.read_Q_str(rn, prefix='wse')
+                self.dict_Q_wse_ras[_Q_] = rn
                 self.wse_rasters.append(rn)
 
-        # make Q_flowdur-raster dictionary
-        self.dict_Q_h_ras = dict(zip(self.discharges, self.h_rasters))
-        self.dict_Q_u_ras = dict(zip(self.discharges, self.u_rasters))
-        self.dict_Q_va_ras = dict(zip(self.discharges, self.va_rasters))
-        self.dict_Q_wse_ras = dict(zip(self.discharges, self.wse_rasters))
+        if not (len(self.dict_Q_h_ras) == len(self.dict_Q_u_ras)):
+            self.logger.info("ERROR: number of depth rasters found does not match number of velocity rasters found.")
         # order discharges in descending order for flow duration curve
         self.discharges.sort(reverse=True)
 
