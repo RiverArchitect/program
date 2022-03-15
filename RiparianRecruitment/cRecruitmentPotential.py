@@ -39,16 +39,13 @@ except:
 
 class RecruitmentPotential:
 
-    def __init__(self, condition, flow_data, species, selected_year, units, ex_veg_ras=None, grading_ext_ras=None):
+    def __init__(self, condition, flow_data, species, selected_year, units, ex_veg_ras, grading_ext_ras):
         # initialize logger
         self.logger = Logger("logfile")
         self.logger = logging.getLogger("logfile")
         # Create a temporary cache folder for, e.g., geospatial analyses; use self.clear_cache() function to delete
         self.cache = os.path.dirname(__file__) + "\\.cache%s\\" % str(random.randint(10000, 99999))
         fGl.chk_dir(self.cache)  # from fGlobal
-        # set arcpy environment and enable overwrite
-        arcpy.env.workspace = self.cache
-        arcpy.env.overwriteOutput = True
         # define condition (i.e. DEM)
         self.condition = str(condition)
         self.dir2condition = config.dir2conditions + self.condition + "\\"
@@ -67,11 +64,6 @@ class RecruitmentPotential:
         # get relevant recruitment criteria data for species of interest
         self.rc_data = self.rc.species_dict[self.species]
 
-        try:
-            __n__ = float(args[2])
-        except:
-            __n__ = 0.0473934
-
         # define units
         self.units = units
         self.area_units = "ft^2" if self.units == 'us' else 'm^2'
@@ -81,12 +73,12 @@ class RecruitmentPotential:
         self.ft2m = config.ft2m if self.units == 'us' else 1
         # (in/ft) conversion factor for US customary units else dummy conversion in SI
         self.ft2in = 12 if self.units == 'us' else 1
-        # (s/ft^(1/3)) global Manning's n where k =1.49 converts to US customary, else (s/m^(1/3)) global Manning's n
-        self.n = __n__ / 1.49 if self.units == 'us' else __n__
-        self.n_label = "s/ft^(1/3)" if self.units == 'us' else "s/m^(1/3)"
         # relative grain density (ratio of rho_s and rho_w)
         self.s = 2.68
+        # (ft/cm) conversion factor for US customary units else dummy conversion in SI
         self.cm2ft = 1 / 30.48
+        # (ft/mm) conversion factor for US customary units else dummy conversion in SI
+        self.mm2ft = 1 / 304.8
 
         # populated by self.ras_q_mobile()
         self.q_mobile_ras_fp = None
@@ -101,6 +93,9 @@ class RecruitmentPotential:
         # populated by self.get_bed_prep_period()
         self.bp_start_date = None
         self.bp_end_date = None
+        
+        # populated by self.get_grain_size_crit()
+        self.grain_size_crit = None
 
         # populated by self.get_recession_period()
         self.rec_start_date = None
@@ -147,6 +142,11 @@ class RecruitmentPotential:
         # populated by self.get_dem_ras()
         self.dem_ras = None
         self.dem_mat = None
+        self.get_dem_ras()
+
+        # populated by self.get_sd_crop_area()
+        self.crop_area_mat = None
+        self.crop_area_ras = None
 
         # populated by self.interpolate_wle()
         self.Q_wle_dict = {}
@@ -201,6 +201,12 @@ class RecruitmentPotential:
         except:
             self.logger.error("ERROR: Could not determine bed shear stress criteria, "
                               "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+        try:
+            self.logger.info(f'Determining grain size criteria (within grading extents)...')
+            grain_size_crit_mm = self.rc_data.loc[self.rc.grain_size_crit].VALUE
+            self.grain_size_crit = grain_size_crit_mm * self.mm2ft
+        except:
+            self.logger.error("ERROR: Could not determine grain size criteria (for within grading extents).")
         try:
             self.logger.info("Determining recession rate criteria...")
             # stressful recession rate criteria
@@ -324,7 +330,6 @@ class RecruitmentPotential:
         Calculates dimensionless bed shear stress with depth, velocity, and grain distribution rasters producing
         taux rasters for all flows modeled.
         """
-
         self.logger.info("Creating dimensionless bed shear stress rasters...")
         try:
             # get grains raster
@@ -379,7 +384,8 @@ class RecruitmentPotential:
                         q_mobile_ras = Con(taux_ras >= taux_cr, Q)
                     # overwriting (if still mobilizing for lower flow) values in Q_mobile raster
                     else:
-                        q_mobile_ras = Con(taux_ras >= taux_cr, Q, q_mobile_ras)
+                        temp_ras = Con(IsNull(taux_ras), 0, taux_ras)
+                        q_mobile_ras = Con(temp_ras >= taux_cr, Q, q_mobile_ras)
                 q_mobile_ras.save(out_ras_path)
                 self.logger.info(f'Saved Q_mobile raster: {out_ras_path}')
             if prep_level == "fp":
@@ -390,26 +396,74 @@ class RecruitmentPotential:
             self.logger.info("ERROR: Could not create Q_mobile raster...")
             return -1
 
-    def remove_veg_areas(self):
+    def remove_grading_areas(self, ras):
+        try:
+            self.logger.info('Retrieving grading limits raster for selected condition...')
+            # retrieves grading extents raster
+            grading_ext_ras = Raster(self.grading_ext_ras)
+            # retrieves dmean raster
+            grain_ras = Raster(self.grain_ras)
+            # check for dmean greater than grain size set in recruitment criteria worksheet to remove from prepared bed area
+            self.logger.info(f'Assigning value of "fully prepped" to cells where dmean is less than grain size criteria...')
+            self.bp_ras = Con(~IsNull(grading_ext_ras), Con(self.grain_size_crit >= grain_ras, 1, ras), ras)
+        except:
+            self.logger.error(f'Could not retrieve grading limits raster, check that it is in selected condition folder.')
+            return -1
+
+    def remove_veg_areas(self, ras):
         try:
             self.logger.info("Retrieving existing vegetation raster for selected condition...")
             # retrieves existing vegetation raster
-            ex_veg_ras = Raster(self.ex_veg_ras)
+            veg_ras = Raster(self.ex_veg_ras)
             # remove areas where existing vegetation exists
             self.logger.info("Removing areas where there is existing vegetation that will not be removed by flood flows...")
-            self.bp_ras = Con(~IsNull(ex_veg_ras), np.nan, self.bp_ras)
-            self.logger.info("Existing vegetation removed from bed preparation raster...")
+            ras_minus_veg = Con(IsNull(veg_ras), ras)
+            self.logger.info("Existing vegetation removed from raster...")
+            return ras_minus_veg
         except:
             self.logger.error("Could not retrieve existing vegetation raster, check that it is in selected condition folder.")
             return -1
 
-    def remove_grading_areas(self):
+    def get_sd_crop_area(self):
+        """Gets raster representing area between low and high flow wetted areas during seed dispersal."""
+        self.logger.info("Getting wetted area between low/high seed dispersal period flows...")
         try:
-            self.logger.info("Retrieving grading limits raster for selected condition...")
-            # check for dmean greater than 128 mm (large cobble) to remove from prepared bed area
+            # create seed dispersal flow dataframe with seed dispersal start and end dates
+            self.sd_df = self.flow_df.loc[self.sd_start:self.sd_end]
+            # get lowest and highest flows during seed dispersal
+            q_low_sd = self.sd_df['Mean daily'].min()
+            q_high_sd = self.sd_df['Mean daily'].max()
+            # get corresponding WLEs (arrays)
+            q_low_sd_wle_mat = self.interp_wle_by_q(q_low_sd)
+            q_high_sd_wle_mat = self.interp_wle_by_q(q_high_sd)
+            # get corresponding wetted areas (arrays)
+            q_low_sd_wetted_area = self.get_wetted_area(q_low_sd_wle_mat)
+            q_high_sd_wetted_area = self.get_wetted_area(q_high_sd_wle_mat)
+            # set area between low/high flow wetted area to 1, else nan
+            self.crop_area_mat = np.where((q_low_sd_wetted_area != 1) & (q_high_sd_wetted_area == 1), 1, np.nan)
+            # save as raster
+            wa_ras_path = os.path.join(self.sub_dir, f"wa_sd_ras.tif")
+            self.convert_array2ras(self.crop_area_mat, wa_ras_path)
+            # remove existing vegetation that will not be removed by flood flows
+            if self.ex_veg_ras is not None:
+                self.wa_minus_veg_path = os.path.join(self.sub_dir, f"wa_sd_minus_veg.tif")
+                wa_ras = Raster(wa_ras_path)
+                crop_ras = self.remove_veg_areas(wa_ras)
+                crop_ras.save(self.wa_minus_veg_path)
+                self.logger.info('Saving wetted area raster with vegetation removed...')
+            else:
+                self.logger.info(f'No existing vegetation raster provided, skipping area removal.')
+                pass
+            self.crop_area_ras = self.wa_minus_veg_path
+            return
         except:
-            self.logger.error("")
-            return -1
+            self.logger.info("ERROR: Failed to get crop area.")
+
+    def crop_ras_sd_wetted_areas(self, ras):
+        """Crops input raster to area between low flow and high flow wetted areas during seed dispersal period"""
+        crop_area_ras = Raster(self.crop_area_ras)
+        cropped_ras = Con(crop_area_ras == 1, ras)
+        return cropped_ras
 
     def bed_prep_ras(self):
         """
@@ -425,22 +479,27 @@ class RecruitmentPotential:
             self.bp_flow_df = self.flow_df.loc[self.bp_start_date:self.bp_end_date]
             # determine maximum Q from bed prep flows dataframe
             self.q_bp_max = int(self.bp_flow_df.max().values[0])
+            self.logger.info(f'Maximum Q from bed prep period: {self.q_bp_max}')
         except:
             self.logger.error("ERROR: Could not determine Q max from bed prep period.")
         # determine if flow has occurred during relevant time period to prepare the bed
         try:
             self.bp_ras_path = os.path.join(self.sub_dir, f"bed_prep_ras.tif")
             # determine if the maximum flow (Q) in bed prep period is greater than or equal to q_mobile_ras values
-            bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_bp_max, 1)
-            bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_bp_max, 0.5)
+            bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_bp_max, 1, 0)
+            bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_bp_max, 0.5, 0)
             # combine fully prepped and partially prepped
             self.bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
-            # remove existing vegetation that will not be removed by flood flows
-            if self.ex_veg_ras is not None:
-                self.remove_veg_areas()
+            # assign areas in grading extents with grain size smaller than grain size criteria a value of 1
+            if self.grading_ext_ras is not None:
+                self.remove_grading_areas(ras=self.bp_ras)
             else:
-                self.logger.info(f'No existing vegetation raster provided, skipping area removal.')
+                self.logger.info(f'No grading extents raster provided, not assigning "fully prepped" value to area.')
                 pass
+            # excluding area outside of wetted area (during seed dispersal) from bed prep raster
+            self.logger.info(f"Excluding area outside of the maximum wetted area/inside minimum wetted area during "
+                             f"seed dispersal from bed preparation assessment...")
+            self.bp_ras = self.crop_ras_sd_wetted_areas(self.bp_ras)
             self.bp_ras.save(self.bp_ras_path)
             self.logger.info(f'Saved bed prep raster: {self.bp_ras_path}')
             self.save_info_file(self.sub_dir)
@@ -459,15 +518,27 @@ class RecruitmentPotential:
             self.dem_ras = None
             self.dem_mat = None
 
-    def set_arcpy_env(self):
-        self.snap_raster = Raster(self.dem_ras)
-        # set selected raster as environment snap raster and output coordinate system
-        arcpy.env.snapRaster = self.snap_raster
-        arcpy.env.outputCoordinateSystem = Raster(self.snap_raster).spatialReference
-        # get cell size
-        self.cell_size_x = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEX')[0]
-        self.cell_size_y = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEY')[0]
-        self.cell_size = str(self.cell_size_x) + ' ' + str(self.cell_size_y)
+    def _set_arcpy_env(func):
+        def wrapper(self, *args, **kwargs):
+            # configure arcpy environment before calling main function
+            self.logger.info("Configuring arcpy environment...")
+            arcpy.env.workspace = self.cache
+            arcpy.env.overwriteOutput = True
+            self.snap_raster = Raster(self.dem_ras)
+            # set selected raster as environment snap raster and output coordinate system
+            arcpy.env.snapRaster = self.snap_raster
+            arcpy.env.outputCoordinateSystem = Raster(self.snap_raster).spatialReference
+            # set extent to max of inputs
+            arcpy.env.extent = "MAXOF"
+            # get cell size
+            self.cell_size_x = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEX')[0]
+            self.cell_size_y = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEY')[0]
+            self.cell_size = str(self.cell_size_x) + ' ' + str(self.cell_size_y)
+            # call main function
+            self.logger.info("arcpy environment configured.")
+            func(self, *args, **kwargs)
+            # can do stuff after function call here
+        return wrapper
 
     def interpolate_wle(self):
         # interpolate water level elevation using method (WLE) from cWaterLevel
@@ -524,8 +595,6 @@ class RecruitmentPotential:
             self.logger.info(f"Unable to retrieve required interpolated WLE rasters...")
 
     def convert_array2ras(self, mat, ras_path):
-        # set arcpy environment for raster
-        self.set_arcpy_env()
         try:
             # set reference point for array to raster conversion
             self.logger.info(f"Converting array to raster...")
@@ -548,11 +617,10 @@ class RecruitmentPotential:
             h_mat = wle_mat - self.dem_mat
             # convert depth raster to integer raster
             self.logger.info(f'Converting depth array to interger mat...')
-            self.wetted_area_mat = np.where(h_mat > 0, 1, 0)
-            wa_ras_path = os.path.join(self.sub_dir, f"wetted_area_sd_ras.tif")
-            self.convert_array2ras(self.wetted_area_mat, wa_ras_path)
+            wetted_area_mat = np.where(h_mat > 0, 1, 0)
+            return wetted_area_mat
         except:
-            logging.info(f"Failed to convert depth raster to integer raster...")
+            logging.info(f"Failed to convert depth array to integer array...")
 
     def is_inundated(self, q_wle_mat):
         # determine if cell is inundated (WSE > DEM)
@@ -568,7 +636,7 @@ class RecruitmentPotential:
             self.rr_lethal_per_mat = (self.rr_lethal_d_mat / self.rr_total_d) * 100
             mort_coef_mat = ((self.rr_lethal_per_mat * 3) + (self.rr_stress_per_mat * 1)) / 3
             # set null outside max flow wetted area
-            mort_coef_mat = np.where(self.wetted_area_mat == 1, mort_coef_mat, np.nan)
+            mort_coef_mat = np.where(self.crop_area_mat == 1, mort_coef_mat, np.nan)
             # convert mortality coefficient array to raster
             self.logger.info('Converting mortality coefficient to raster...')
             self.mort_coef_ras_path = os.path.join(self.sub_dir, f"mortality_coef_ras.tif")
@@ -665,29 +733,16 @@ class RecruitmentPotential:
         try:
             # interpolating wle of maximum flow during seed dispersal period
             q_sd_max_wle_mat = self.interp_wle_by_q(self.q_sd_max)
-            # calculating wetted area from wle array of maximum flow during seed disperal period
-            self.get_wetted_area(q_sd_max_wle_mat)
             # excluding area outside of wetted area array from recession rate days arrays
-            self.logger.info(f"Excluding area outside of the maximum wetted area during seed dispersal "
-                             f"from recession rate/inundation assessment...")
-            self.rr_fav_d_mat = np.where(self.wetted_area_mat == 1, self.rr_fav_d_mat, np.nan)
-            self.rr_stress_d_mat = np.where(self.wetted_area_mat == 1, self.rr_stress_d_mat, np.nan)
-            self.rr_lethal_d_mat = np.where(self.wetted_area_mat == 1, self.rr_lethal_d_mat, np.nan)
-            self.consec_inund_days_max = np.where(self.wetted_area_mat == 1, self.consec_inund_days_max, np.nan)
-            self.inund_surv_mat = np.where(self.wetted_area_mat == 1, self.inund_surv_mat, np.nan)
+            self.logger.info(f"Excluding area outside of the maximum wetted area/inside minimum wetted area during "
+                             f"seed dispersal from recession rate/inundation assessment...")
+            self.rr_fav_d_mat = np.where(self.crop_area_mat == 1, self.rr_fav_d_mat, np.nan)
+            self.rr_stress_d_mat = np.where(self.crop_area_mat == 1, self.rr_stress_d_mat, np.nan)
+            self.rr_lethal_d_mat = np.where(self.crop_area_mat == 1, self.rr_lethal_d_mat, np.nan)
+            self.consec_inund_days_max = np.where(self.crop_area_mat == 1, self.consec_inund_days_max, np.nan)
+            self.inund_surv_mat = np.where(self.crop_area_mat == 1, self.inund_surv_mat, np.nan)
         except:
             self.logger.info(f'ERROR: Unable to exclude area outside of maximum wetted area during seed dispersal '
-                             f'from recession rate/inundation assessment...')
-        # exclude area that is inundated for entire seed disperal period from recession rate days array
-        try:
-            self.logger.info("Excluding area that is inundated for entire seed dispersal period...")
-            self.rr_fav_d_mat = np.where(inundated_during_sd, np.nan, self.rr_fav_d_mat)
-            self.rr_stress_d_mat = np.where(inundated_during_sd, np.nan, self.rr_stress_d_mat)
-            self.rr_lethal_d_mat = np.where(inundated_during_sd, np.nan, self.rr_lethal_d_mat)
-            self.consec_inund_days_max = np.where(inundated_during_sd, np.nan, self.consec_inund_days_max)
-            self.inund_surv_mat = np.where(inundated_during_sd, np.nan, self.inund_surv_mat)
-        except:
-            self.logger.info('ERROR: Unable to exclude area that is inundated for the entire seed dispersal period '
                              f'from recession rate/inundation assessment...')
         try:
             # convert recession rate days (total) arrays to rasters
@@ -705,8 +760,8 @@ class RecruitmentPotential:
         try:
             # convert inundation arrays (max consecutive days and survival) to rasters
             self.logger.info('Converting max inundation days array to raster...')
-            consec_inund_max_path = os.path.join(self.sub_dir, f"max_inund_days_ras.tif")
-            self.convert_array2ras(self.consec_inund_days_max, consec_inund_max_path)
+            self.consec_inund_max_path = os.path.join(self.sub_dir, f"max_inund_days_ras.tif")
+            self.convert_array2ras(self.consec_inund_days_max, self.consec_inund_max_path)
             self.logger.info('Converting inundation survival array (fav, stress, lethal) to raster...')
             self.inund_surv_path = os.path.join(self.sub_dir, f"inundation_survival.tif")
             self.convert_array2ras(self.inund_surv_mat, self.inund_surv_path)
@@ -729,11 +784,15 @@ class RecruitmentPotential:
         try:
             self.sb_ras_path = os.path.join(self.sub_dir, f"scour_burial_ras.tif")
             # determine if the maximum flow (Q) in scour & burial survival period is greater than or equal to q_mobile_ras values
-            sb_ras_fp = Con(self.q_mobile_ras_fp <= self.q_sb_max, 0)
-            sb_ras_pp = Con(self.q_mobile_ras_pp <= self.q_sb_max, 0.5)
+            sb_ras_fp = Con(self.q_mobile_ras_fp <= self.q_sb_max, 0, 1)
+            sb_ras_pp = Con(self.q_mobile_ras_pp <= self.q_sb_max, 0.5, 1)
             # combine fully prepped and partially prepped to indicate if seedlings have potentially been scoured or buried
-            sb_ras = Con(IsNull(sb_ras_fp), sb_ras_pp, sb_ras_fp)
-            sb_ras.save(self.sb_ras_path)
+            self.sb_ras = Con(IsNull(sb_ras_fp), sb_ras_pp, sb_ras_fp)
+            # excluding area outside of wetted area (during seed dispersal) from scour/burial raster
+            self.logger.info(f"Excluding area outside of the maximum wetted area/inside minimum wetted area during "
+                             f"seed dispersal from scour/burial assessment...")
+            self.sb_ras = self.crop_ras_sd_wetted_areas(self.sb_ras)
+            self.sb_ras.save(self.sb_ras_path)
             self.logger.info(f'Saved scour & burial surival raster: {self.sb_ras_path}')
             self.save_info_file(self.sub_dir)
         except:
@@ -743,14 +802,11 @@ class RecruitmentPotential:
         """
         Creates raster that combined all objectives of the Recruitment Box Model.
         """
-        # set arcpy environment and enable overwrite
-        arcpy.env.workspace = self.cache
-        arcpy.env.overwriteOutput = True
         try:
             self.logger.info(f"Retrieving bed preparation raster...")
             # retrieve bed preparation raster and assign values of 0 (unprepared) to all cells with Null value
             bp_ras = Raster(self.bp_ras_path)
-            bp_ras = Con(IsNull(bp_ras), 0, bp_ras)
+            #bp_ras = Con(IsNull(bp_ras), 0, bp_ras)
             self.logger.info(f"Retrieving mortality coefficient raster...")
             # retrieve mortality coefficient raster and convert coefficient to metric
             mort_coef_ras = Raster(self.mort_coef_ras_path)
@@ -762,7 +818,7 @@ class RecruitmentPotential:
             self.logger.info(f"Retrieving scour & burial survival raster...")
             # retrieve scour & burial survival raster and assign values of 1 (unprepared) to all cells with null value
             sb_ras = Raster(self.sb_ras_path)
-            sb_ras = Con(IsNull(sb_ras), 1, sb_ras)
+            #sb_ras = Con(IsNull(sb_ras), 1, sb_ras)
             self.logger.info(f"Combining rasters to calculate the overall recession potential...")
             # combine objectives into single metric by taking the product of the bed prep, recession rate, inundation, and scour & burial rasters
             rec_pot_ras = bp_ras * rr_ras * inund_ras * sb_ras
@@ -780,12 +836,12 @@ class RecruitmentPotential:
         self.xlsx_writer = cIO.Write(config.xlsx_recruitment_output)
         rec_pot_ras = Raster(os.path.join(self.sub_dir, f"recruitment_potential_ras.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(rec_pot_ras, 'CELLSIZEX').getOutput(0))
-        opt_rp = Con(rec_pot_ras == 1, 1, 0)
-        fav_rp = Con(rec_pot_ras == 0.5, 1, 0)
-        str_rp = Con(rec_pot_ras == 0.25, 1, 0)
-        tol_rp = Con(rec_pot_ras == 0.125, 1, 0)
-        ll_rp = Con(rec_pot_ras == 0.0625, 1, 0)
-        let_rp = Con(rec_pot_ras == 0, 1, 0)
+        opt_rp = Con(rec_pot_ras == 1, 1)
+        fav_rp = Con(rec_pot_ras == 0.5, 1)
+        str_rp = Con(rec_pot_ras == 0.25, 1)
+        tol_rp = Con(rec_pot_ras == 0.125, 1)
+        ll_rp = Con(rec_pot_ras == 0.0625, 1)
+        let_rp = Con(rec_pot_ras == 0, 1)
         rp_metric_list = [opt_rp, fav_rp, str_rp, tol_rp, ll_rp, let_rp]
         cols = ["B", "C", "D", "E", "F", "G"]
         row_num = 3
@@ -803,9 +859,9 @@ class RecruitmentPotential:
         """
         bp_ras = Raster(os.path.join(self.sub_dir, f"bed_prep_ras.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(bp_ras, 'CELLSIZEX').getOutput(0))
-        ff_bp = Con(bp_ras == 1, 1, 0)
-        pp_bp = Con(bp_ras == 0.5, 1, 0)
-        up_bp = Con(bp_ras == 0, 1, 0)
+        ff_bp = Con(bp_ras == 1, 1)
+        pp_bp = Con(bp_ras == 0.5, 1)
+        up_bp = Con(bp_ras == 0, 1)
         bp_metric_list = [ff_bp, pp_bp, up_bp]
         cols = ["H", "I", "J"]
         row_num = 3
@@ -822,9 +878,9 @@ class RecruitmentPotential:
         """
         mort_coef_ras = Raster(os.path.join(self.sub_dir, f"mortality_coef_ras.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(mort_coef_ras, 'CELLSIZEX').getOutput(0))
-        fr_mort = Con(mort_coef_ras <= 20, 1, 0)
-        sr_mort = Con((mort_coef_ras > 20) & (mort_coef_ras <= 30), 1, 0)
-        lr_mort = Con(mort_coef_ras > 30, 1, 0)
+        fr_mort = Con(mort_coef_ras <= 20, 1)
+        sr_mort = Con((mort_coef_ras > 20) & (mort_coef_ras <= 30), 1)
+        lr_mort = Con(mort_coef_ras > 30, 1)
         mort_metric_list = [fr_mort, sr_mort, lr_mort]
         cols = ["K", "L", "M"]
         row_num = 3
@@ -841,9 +897,9 @@ class RecruitmentPotential:
         """
         ind_surv_ras = Raster(os.path.join(self.sub_dir, f"inundation_survival.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(ind_surv_ras, 'CELLSIZEX').getOutput(0))
-        fi_surv = Con(ind_surv_ras == 1, 1, 0)
-        si_surv = Con(ind_surv_ras == 0.5, 1, 0)
-        li_surv = Con(ind_surv_ras == 0, 1, 0)
+        fi_surv = Con(ind_surv_ras == 1, 1)
+        si_surv = Con(ind_surv_ras == 0.5, 1)
+        li_surv = Con(ind_surv_ras == 0, 1)
         mort_metric_list = [fi_surv, si_surv, li_surv]
         cols = ["N", "O", "P"]
         row_num = 3
@@ -860,9 +916,9 @@ class RecruitmentPotential:
         """
         sb_surv_ras = Raster(os.path.join(self.sub_dir, f"scour_burial_ras.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(sb_surv_ras, 'CELLSIZEX').getOutput(0))
-        up_surv = Con(sb_surv_ras == 1, 1, 0)
-        pp_surv = Con(sb_surv_ras == 0.5, 1, 0)
-        fp_surv = Con(sb_surv_ras == 0, 1, 0)
+        up_surv = Con(sb_surv_ras == 1, 1)
+        pp_surv = Con(sb_surv_ras == 0.5, 1)
+        fp_surv = Con(sb_surv_ras == 0, 1)
         mort_metric_list = [up_surv, pp_surv, fp_surv]
         cols = ["Q", "R", "S"]
         row_num = 3
@@ -885,16 +941,17 @@ class RecruitmentPotential:
             info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Partially Prepared Bed: {self.taux_cr_pp}")
         self.logger.info(f"Saved info file: {info_path}")
 
+    @_set_arcpy_env
     def run_rp(self):
         self.make_yoi_dir()
         self.get_hydraulic_rasters()
+        self.interpolate_wle()
+        self.get_sd_crop_area()
         self.get_grain_ras()
         self.ras_taux()
         self.ras_q_mobile(prep_level="fp")
         self.ras_q_mobile(prep_level="pp")
         self.bed_prep_ras()
-        self.get_dem_ras()
-        self.interpolate_wle()
         self.rec_inund_survival()
         self.scour_burial_ras()
         self.recruitment_potential_ras()
@@ -919,11 +976,15 @@ class RecruitmentPotential:
 
 
 if __name__ == "__main__":
-    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB.xlsx'
-    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline\\ex_veg.tif'
-    grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline\\boundary.tif'
-    for year in range(1988, 2017):
+    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
+    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_01\\LYR17_veg_level0203.tif'
+    grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_01\\LB_grading_extents_lvl0203.tif'
+    #rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1998', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
+    #rp.run_rp()
+
+    for year in range(1924, 2017):
         year = str(year)
         print(f'\n\nRUNNING YEAR {year}\n\n')
-        rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
+        rp = RecruitmentPotential(condition='2017_lb_lvl_03', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
         rp.run_rp()
+        rp.logger = None  # try to suppress duplicate logging messages when looping
