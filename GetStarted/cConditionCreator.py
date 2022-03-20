@@ -308,7 +308,7 @@ class ConditionCreator:
 
                             # set selected raster as environment snap raster and output coordinate system
                             arcpy.env.snapRaster = snap_raster
-                            arcpy.env.outputCoordinateSystem = Raster(snap_raster).spatialReference3
+                            arcpy.env.outputCoordinateSystem = Raster(snap_raster).spatialReference
                             # get cell size
                             cell_size_x = arcpy.GetRasterProperties_management(snap_raster, 'CELLSIZEX')[0]
                             cell_size_y = arcpy.GetRasterProperties_management(snap_raster, 'CELLSIZEY')[0]
