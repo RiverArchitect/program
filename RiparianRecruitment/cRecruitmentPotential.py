@@ -529,7 +529,7 @@ class RecruitmentPotential:
             arcpy.env.snapRaster = self.snap_raster
             arcpy.env.outputCoordinateSystem = Raster(self.snap_raster).spatialReference
             # set extent to max of inputs
-            arcpy.env.extent = "MAXOF"
+            arcpy.env.extent = self.dem_ras
             # get cell size
             self.cell_size_x = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEX')[0]
             self.cell_size_y = arcpy.GetRasterProperties_management(self.snap_raster, 'CELLSIZEY')[0]
@@ -818,7 +818,6 @@ class RecruitmentPotential:
             self.logger.info(f"Retrieving scour & burial survival raster...")
             # retrieve scour & burial survival raster and assign values of 1 (unprepared) to all cells with null value
             sb_ras = Raster(self.sb_ras_path)
-            #sb_ras = Con(IsNull(sb_ras), 1, sb_ras)
             self.logger.info(f"Combining rasters to calculate the overall recession potential...")
             # combine objectives into single metric by taking the product of the bed prep, recession rate, inundation, and scour & burial rasters
             rec_pot_ras = bp_ras * rr_ras * inund_ras * sb_ras
@@ -974,17 +973,3 @@ class RecruitmentPotential:
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
 
-
-if __name__ == "__main__":
-    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
-    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_01\\LYR17_veg_level0203.tif'
-    grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_01\\LB_grading_extents_lvl0203.tif'
-    #rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1998', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
-    #rp.run_rp()
-
-    for year in range(1924, 2017):
-        year = str(year)
-        print(f'\n\nRUNNING YEAR {year}\n\n')
-        rp = RecruitmentPotential(condition='2017_lb_lvl_03', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
-        rp.run_rp()
-        rp.logger = None  # try to suppress duplicate logging messages when looping
