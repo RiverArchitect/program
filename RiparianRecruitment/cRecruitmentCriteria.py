@@ -39,6 +39,8 @@ class RecruitmentCriteria:
         self.elev_lethal = 'Lethal elevation'
         self.inund_stress = 'Stressful inundation'
         self.inund_lethal = 'Lethal inundation'
+        self.band_elev_lower = 'Lower elevation'
+        self.band_elev_upper = 'Upper elevation'
 
         # read recruitment sheet in recruitment criteria excel file to dataframe, first column assigned as index
         try:

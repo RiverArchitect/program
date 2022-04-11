@@ -148,6 +148,10 @@ class RecruitmentPotential:
         self.crop_area_mat = None
         self.crop_area_ras = None
 
+        # populated by self.recruitment_band_area()
+        self.rec_band_mat = None
+        self.rec_band_ras = None
+
         # populated by self.interpolate_wle()
         self.Q_wle_dict = {}
 
@@ -185,8 +189,9 @@ class RecruitmentPotential:
             if self.selected_year:
                 self.sd_start = dt.datetime(self.selected_year, self.sd_start.month, self.sd_start.day, 0, 0)
                 self.sd_end = dt.datetime(self.selected_year, self.sd_end.month, self.sd_end.day, 0, 0)
-            # start of base flow period
-            self.base_flow_start = self.rc_data.loc[self.rc.base_flow_start].VALUE
+                # start of base flow period
+                self.base_flow_start = self.rc_data.loc[self.rc.base_flow_start].VALUE
+                self.base_flow_start = dt.datetime(self.selected_year, self.base_flow_start.month, self.base_flow_start.day, 0, 0)
             # length of bed preparation period
             self.bed_prep_period = self.rc_data.loc[self.rc.bed_prep_period].VALUE
         except:
@@ -226,6 +231,17 @@ class RecruitmentPotential:
             self.inund_lethal = self.rc_data.loc[self.rc.inund_lethal].VALUE
         except:
             self.logger.error("ERROR: could not determine inundation criteria, "
+                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+        try:
+            self.logger.info("Determining recruitment band elevation criteria...")
+            # lower elevation criteria
+            band_elev_lower_cm = self.rc_data.loc[self.rc.band_elev_lower].VALUE
+            self.band_elev_lower = band_elev_lower_cm * self.cm2ft
+            # upper elevation criteria
+            band_elev_upper_cm = self.rc_data.loc[self.rc.band_elev_upper].VALUE
+            self.band_elev_upper = band_elev_upper_cm * self.cm2ft
+        except:
+            self.logger.error("ERROR: Could not determine lower and upper elevation criteria of the recruitment band,"
                               "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
 
     def get_analysis_period(self, year):
@@ -424,8 +440,28 @@ class RecruitmentPotential:
             self.logger.error("Could not retrieve existing vegetation raster, check that it is in selected condition folder.")
             return -1
 
-    def get_sd_crop_area(self):
-        """Gets raster representing area between low and high flow wetted areas during seed dispersal."""
+    def recruitment_band(self):
+        """
+        Creates a integer raster used to create crop raster based
+        on the upper and lower limits of recruitment band (from the base flow WLE).
+        """
+        try:
+            self.logger.info(f"Determining flow on the day that base flow begins: {self.base_flow_start}... ")
+            q_baseflow = self.flow_df['Mean daily'].loc[self.base_flow_start]
+            # create wle mat for q_baseflow
+            baseflow_wle_mat = self.interp_wle_by_q(q_baseflow)
+            rec_band_mat = self.dem_mat - baseflow_wle_mat
+            # create recruitment band with value of 1 where the DEM - q_baseflow WLE is within the elevation upper and lower limits
+            self.rec_band_mat = np.where(np.logical_and(rec_band_mat >= self.band_elev_lower, rec_band_mat <= self.band_elev_upper), 1, np.nan)
+            rec_band_ras_path = os.path.join(self.sub_dir, f"rec_elev_band.tif")
+            self.rec_band_ras = self.convert_array2ras(self.rec_band_mat, rec_band_ras_path)
+        except:
+            self.logger.error("ERROR: Could not create recruitment band raster.")
+
+    def get_sd_rb_crop_area(self):
+        """Gets raster representing area between low and high flow wetted areas during seed dispersal
+        and within the recruitment band (if criteria provided).
+        """
         self.logger.info("Getting wetted area between low/high seed dispersal period flows...")
         try:
             # create seed dispersal flow dataframe with seed dispersal start and end dates
@@ -440,30 +476,37 @@ class RecruitmentPotential:
             q_low_sd_wetted_area = self.get_wetted_area(q_low_sd_wle_mat)
             q_high_sd_wetted_area = self.get_wetted_area(q_high_sd_wle_mat)
             # set area between low/high flow wetted area to 1, else nan
-            self.crop_area_mat = np.where((q_low_sd_wetted_area != 1) & (q_high_sd_wetted_area == 1), 1, np.nan)
-            # save as raster
-            wa_ras_path = os.path.join(self.sub_dir, f"wa_sd_ras.tif")
-            self.convert_array2ras(self.crop_area_mat, wa_ras_path)
+            self.wa_sd_mat = np.where((q_low_sd_wetted_area != 1) & (q_high_sd_wetted_area == 1), 1, np.nan)
+            # create crop raster using wetted areas and recruitment band (arrays) if there are values for recruitment band elevation criteria
+            if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
+                self.logger.info("Cropping the wetted area during seed dispersal to area within recruitment band elevations...")
+                self.recruitment_band()
+                wa_rb_ras_path = os.path.join(self.sub_dir, f"wa_rb_crop_area.tif")
+                self.crop_area_mat = np.where(np.logical_and(self.wa_sd_mat == 1, self.rec_band_mat == 1), 1, np.nan)
+                self.convert_array2ras(self.crop_area_mat, wa_rb_ras_path)
+                self.crop_area_ras = wa_rb_ras_path
+                self.save_info_file(self.sub_dir)
+            else:
+                self.logger.info(f"No value for recruitment band elevation criteria is provided in recruitment_criteria.xlsx.")
+                # save as raster
+                self.crop_area_mat = self.wa_sd_mat
+                self.wa_ras_path = os.path.join(self.sub_dir, f"wa_sd_ras.tif")
+                self.convert_array2ras(self.wa_sd_mat, self.wa_ras_path)
+                self.crop_area_ras = self.wa_ras_path
             # remove existing vegetation that will not be removed by flood flows
             if self.ex_veg_ras is not None:
-                self.wa_minus_veg_path = os.path.join(self.sub_dir, f"wa_sd_minus_veg.tif")
-                wa_ras = Raster(wa_ras_path)
-                crop_ras = self.remove_veg_areas(wa_ras)
-                crop_ras.save(self.wa_minus_veg_path)
+                self.crop_area_minus_veg_path = os.path.join(self.sub_dir, f"crop_area_minus_veg.tif")
+                crop_ras = self.remove_veg_areas(self.crop_area_ras)
+                crop_ras.save(self.crop_area_minus_veg_path)
                 self.logger.info('Saving wetted area raster with vegetation removed...')
+                self.crop_area_ras = self.crop_area_minus_veg_path
+                self.crop_area_mat = arcpy.RasterToNumPyArray(self.crop_area_ras, nodata_to_value=np.nan)
             else:
                 self.logger.info(f'No existing vegetation raster provided, skipping area removal.')
                 pass
-            self.crop_area_ras = self.wa_minus_veg_path
             return
         except:
             self.logger.info("ERROR: Failed to get crop area.")
-
-    def crop_ras_sd_wetted_areas(self, ras):
-        """Crops input raster to area between low flow and high flow wetted areas during seed dispersal period"""
-        crop_area_ras = Raster(self.crop_area_ras)
-        cropped_ras = Con(crop_area_ras == 1, ras)
-        return cropped_ras
 
     def bed_prep_ras(self):
         """
@@ -489,7 +532,7 @@ class RecruitmentPotential:
             bp_ras_fp = Con(self.q_mobile_ras_fp <= self.q_bp_max, 1, 0)
             bp_ras_pp = Con(self.q_mobile_ras_pp <= self.q_bp_max, 0.5, 0)
             # combine fully prepped and partially prepped
-            self.bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
+            bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
             # assign areas in grading extents with grain size smaller than grain size criteria a value of 1
             if self.grading_ext_ras is not None:
                 self.remove_grading_areas(ras=self.bp_ras)
@@ -497,11 +540,13 @@ class RecruitmentPotential:
                 self.logger.info(f'No grading extents raster provided, not assigning "fully prepped" value to area.')
                 pass
             # excluding area outside of wetted area (during seed dispersal) from bed prep raster
-            self.logger.info(f"Excluding area outside of the maximum wetted area/inside minimum wetted area during "
+            self.logger.info(f"Excluding area outside of the crop area during "
                              f"seed dispersal from bed preparation assessment...")
-            self.bp_ras = self.crop_ras_sd_wetted_areas(self.bp_ras)
-            self.bp_ras.save(self.bp_ras_path)
-            self.logger.info(f'Saved bed prep raster: {self.bp_ras_path}')
+            # convert raster to array
+            bp_mat = arcpy.RasterToNumPyArray(bp_ras, nodata_to_value=np.nan)
+            bp_mat_crop = np.where(self.crop_area_mat == 1, bp_mat, np.nan)
+            self.bp_mat = np.where(np.logical_and(self.crop_area_mat == 1, np.isnan(bp_mat)), 0, bp_mat_crop)
+            self.bp_ras = self.convert_array2ras(self.bp_mat, self.bp_ras_path)
             self.save_info_file(self.sub_dir)
         except:
             self.logger.error("ERROR: Could not create bed preparation raster.")
@@ -684,7 +729,7 @@ class RecruitmentPotential:
             slice = self.rr_inund_df.iloc[i: i + 4]
             qm3, qm2, qm1, q = slice['Mean daily'].values
             day = slice.index.values[-1]
-            self.logger.info(f'Getting recession rate for {pd.to_datetime(day).strftime("%Y-%m-%d")}...  ')
+            self.logger.info(f'Beginning to track cell inundation and recession rate...')
             # get "today's" wle array
             q_wle_mat = self.interp_wle_by_q(q)
             # if first iteration in loop:
@@ -734,7 +779,7 @@ class RecruitmentPotential:
             # interpolating wle of maximum flow during seed dispersal period
             q_sd_max_wle_mat = self.interp_wle_by_q(self.q_sd_max)
             # excluding area outside of wetted area array from recession rate days arrays
-            self.logger.info(f"Excluding area outside of the maximum wetted area/inside minimum wetted area during "
+            self.logger.info(f"Excluding area outside of the crop area during "
                              f"seed dispersal from recession rate/inundation assessment...")
             self.rr_fav_d_mat = np.where(self.crop_area_mat == 1, self.rr_fav_d_mat, np.nan)
             self.rr_stress_d_mat = np.where(self.crop_area_mat == 1, self.rr_stress_d_mat, np.nan)
@@ -778,22 +823,27 @@ class RecruitmentPotential:
             scour_burial_df = self.inund_df
             # determine maximum Q from scour & burial survival period dataframe
             self.q_sb_max = int(scour_burial_df.max().values[0])
+            self.logger.info(f'Maximum Q from scour & burial survival period: {self.q_sb_max}')
         except:
             self.logger.error("ERROR: Could not determine Q max from scour & burial survival period.")
         # determine if flow has occurred after seed dispersal that could potentially scour or bury seedlings
         try:
             self.sb_ras_path = os.path.join(self.sub_dir, f"scour_burial_ras.tif")
             # determine if the maximum flow (Q) in scour & burial survival period is greater than or equal to q_mobile_ras values
-            sb_ras_fp = Con(self.q_mobile_ras_fp <= self.q_sb_max, 0, 1)
-            sb_ras_pp = Con(self.q_mobile_ras_pp <= self.q_sb_max, 0.5, 1)
+            sb_ras_fp = Con(self.q_sb_max >= self.q_mobile_ras_fp, 0)
+            sb_ras_pp = Con(self.q_sb_max >= self.q_mobile_ras_pp, 0.5)
             # combine fully prepped and partially prepped to indicate if seedlings have potentially been scoured or buried
-            self.sb_ras = Con(IsNull(sb_ras_fp), sb_ras_pp, sb_ras_fp)
+            sb_ras = Con(IsNull(sb_ras_fp), sb_ras_pp, sb_ras_fp)
+            self.sb_ras = Con(IsNull(sb_ras), 1, sb_ras)
             # excluding area outside of wetted area (during seed dispersal) from scour/burial raster
-            self.logger.info(f"Excluding area outside of the maximum wetted area/inside minimum wetted area during "
+            self.logger.info(f"Excluding area outside of the crop area during "
                              f"seed dispersal from scour/burial assessment...")
-            self.sb_ras = self.crop_ras_sd_wetted_areas(self.sb_ras)
-            self.sb_ras.save(self.sb_ras_path)
-            self.logger.info(f'Saved scour & burial surival raster: {self.sb_ras_path}')
+            # convert raster to array
+            sb_mat = arcpy.RasterToNumPyArray(sb_ras, nodata_to_value=np.nan)
+            sb_mat_crop = np.where(self.crop_area_mat == 1, sb_mat, np.nan)
+            # assign areas within the crop area a value of 1 if the value of the sb_mat is null
+            self.sb_mat = np.where(np.logical_and(self.crop_area_mat == 1, np.isnan(sb_mat)), 1, sb_mat_crop)
+            self.sb_ras = self.convert_array2ras(self.sb_mat, self.sb_ras_path)
             self.save_info_file(self.sub_dir)
         except:
             self.logger.error("ERROR: Could not create the scour & burial survival raster.")
@@ -806,7 +856,6 @@ class RecruitmentPotential:
             self.logger.info(f"Retrieving bed preparation raster...")
             # retrieve bed preparation raster and assign values of 0 (unprepared) to all cells with Null value
             bp_ras = Raster(self.bp_ras_path)
-            #bp_ras = Con(IsNull(bp_ras), 0, bp_ras)
             self.logger.info(f"Retrieving mortality coefficient raster...")
             # retrieve mortality coefficient raster and convert coefficient to metric
             mort_coef_ras = Raster(self.mort_coef_ras_path)
@@ -938,6 +987,11 @@ class RecruitmentPotential:
             info_file.write(f"\nGermination Period End Date: {dt.datetime.strftime(self.sd_end, '%Y-%m-%d')}")
             info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Fully Prepared Bed: {self.taux_cr_fp}")
             info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Partially Prepared Bed: {self.taux_cr_pp}")
+            if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
+                info_file.write(f"\nRecruitment Band Upper Elevation: {self.band_elev_upper}")
+                info_file.write(f"\nRecruitment Band Lower Elevation: {self.band_elev_lower}")
+            else:
+                pass
         self.logger.info(f"Saved info file: {info_path}")
 
     @_set_arcpy_env
@@ -945,7 +999,7 @@ class RecruitmentPotential:
         self.make_yoi_dir()
         self.get_hydraulic_rasters()
         self.interpolate_wle()
-        self.get_sd_crop_area()
+        self.get_sd_rb_crop_area()
         self.get_grain_ras()
         self.ras_taux()
         self.ras_q_mobile(prep_level="fp")
@@ -972,4 +1026,3 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
-
