@@ -535,7 +535,7 @@ class RecruitmentPotential:
             bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
             # assign areas in grading extents with grain size smaller than grain size criteria a value of 1
             if self.grading_ext_ras is not None:
-                self.remove_grading_areas(ras=self.bp_ras)
+                self.remove_grading_areas(ras=bp_ras)
             else:
                 self.logger.info(f'No grading extents raster provided, not assigning "fully prepped" value to area.')
                 pass
@@ -724,12 +724,12 @@ class RecruitmentPotential:
         have_gone_dry = False
         # iterating over groups of 4 consecutive rows (for 3 day moving average of recession rate)
         # starting 3 days before beginning of recession/seed dispersal start date
+        self.logger.info(f'Beginning to track cell inundation and recession rate...')
         for i in range(len(self.rr_inund_df) - 4):
             # take 4 day slice from total flow record
             slice = self.rr_inund_df.iloc[i: i + 4]
             qm3, qm2, qm1, q = slice['Mean daily'].values
             day = slice.index.values[-1]
-            self.logger.info(f'Beginning to track cell inundation and recession rate...')
             # get "today's" wle array
             q_wle_mat = self.interp_wle_by_q(q)
             # if first iteration in loop:
