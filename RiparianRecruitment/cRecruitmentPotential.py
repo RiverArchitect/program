@@ -485,7 +485,6 @@ class RecruitmentPotential:
                 self.crop_area_mat = np.where(np.logical_and(self.wa_sd_mat == 1, self.rec_band_mat == 1), 1, np.nan)
                 self.convert_array2ras(self.crop_area_mat, wa_rb_ras_path)
                 self.crop_area_ras = wa_rb_ras_path
-                self.save_info_file(self.sub_dir)
             else:
                 self.logger.info(f"No value for recruitment band elevation criteria is provided in recruitment_criteria.xlsx.")
                 # save as raster
@@ -1026,3 +1025,17 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
+
+if __name__ == "__main__":
+    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
+    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline\\lb_baseline_veg_clip.tif'
+    #grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_03\\LB_grading_extents_lvl0203.tif'
+    #rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='2006', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
+    #rp.run_rp()
+
+    for year in range(1924, 2017):
+        year = str(year)
+        print(f'\n\nRUNNING YEAR {year}\n\n')
+        rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
+        rp.run_rp()
+        rp.logger = None  # try to suppress duplicate logging messages when looping
