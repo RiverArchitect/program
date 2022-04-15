@@ -190,7 +190,7 @@ class MainGui(cg.RaModuleGui):
     def set_years_list(self):
         # populate combobox for year selection if we have selected flow data
         if self.flow_data != '':
-            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit).years_list
+            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit, self.ex_veg_ras, self.grading_ext_ras).years_list
             self.combo_y['values'] = years_list
             self.combo_y['state'] = 'readonly'
             self.b_s_year['state'] = 'normal'
