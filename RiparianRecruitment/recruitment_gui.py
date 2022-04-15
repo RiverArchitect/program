@@ -249,7 +249,7 @@ class MainGui(cg.RaModuleGui):
             self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
             return
         # passing arguments (users selections) to cRecruitmentPotential
-        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.ex_veg_ras, self.grading_ext_ras, self.unit)
+        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit, self.ex_veg_ras, self.grading_ext_ras)
         rp.run_rp()
 
     def __call__(self):
