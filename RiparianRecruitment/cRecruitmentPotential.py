@@ -87,7 +87,7 @@ class RecruitmentPotential:
         # populated by self.get_date_range()
         self.sd_start = None
         self.sd_end = None
-        self.base_flow_start = None
+        self.baseflow_start = None
         self.bed_prep_period = None
 
         # populated by self.get_bed_prep_period()
@@ -99,7 +99,7 @@ class RecruitmentPotential:
 
         # populated by self.get_recession_period()
         self.rec_start_date = None
-        self.rec_end_date = None
+        self.baseflow_start = None
 
         # populated by self.get_inundation_period()
         self.inund_start_date = None
@@ -179,6 +179,9 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not retrieve flow data.")
 
     def read_rc_xlsx(self):
+        """
+        Reads all criteria required for analysis from the recruitment criteria worksheet.
+        """
         try:
             self.logger.info("Determining range of dates for relevant recruitment period...")
             # seed dispersal start date
@@ -190,8 +193,8 @@ class RecruitmentPotential:
                 self.sd_start = dt.datetime(self.selected_year, self.sd_start.month, self.sd_start.day, 0, 0)
                 self.sd_end = dt.datetime(self.selected_year, self.sd_end.month, self.sd_end.day, 0, 0)
                 # start of base flow period
-                self.base_flow_start = self.rc_data.loc[self.rc.base_flow_start].VALUE
-                self.base_flow_start = dt.datetime(self.selected_year, self.base_flow_start.month, self.base_flow_start.day, 0, 0)
+                self.baseflow_start = self.rc_data.loc[self.rc.baseflow_start].VALUE
+                self.baseflow_start = dt.datetime(self.selected_year, self.baseflow_start.month, self.baseflow_start.day, 0, 0)
             # length of bed preparation period
             self.bed_prep_period = self.rc_data.loc[self.rc.bed_prep_period].VALUE
         except:
@@ -245,6 +248,10 @@ class RecruitmentPotential:
                               "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
 
     def get_analysis_period(self, year):
+        """
+        Checks if all flow data is available for a given year-of-interest and will be used to inform users ability to
+        select that year for analysis.
+        """
         try:
             # make sure we have period from start date to end date in flow data for year to be valid choice for analysis
             # starting self.bed_prep_period years before season start date
@@ -256,6 +263,10 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not determine analysis period.")
 
     def get_bed_prep_period(self):
+        """
+        Bed preparation period begins a specified number of years prior to the beginning of seed dispersal for the
+        selected year-of-interest and ends with the end end of the seed dispersal period for the selected-year of interest.
+        """
         try:
             self.bp_start_date = dt.datetime(self.selected_year - self.bed_prep_period, self.sd_start.month, self.sd_start.day, 0, 0)
             self.bp_end_date = dt.datetime(self.selected_year, self.sd_end.month, self.sd_end.day, 0, 0)
@@ -263,13 +274,21 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not determine bed prep period.")
 
     def get_recession_period(self):
+        """
+        Recession period begins (potentially) with the beginning of seed dispersal and ends with the beginning of
+        base flow.
+        """
         try:
             self.rec_start_date = dt.datetime(self.selected_year, self.sd_start.month, self.sd_start.day, 0, 0)
-            self.rec_end_date = dt.datetime(self.selected_year, self.base_flow_start.month, self.base_flow_start.day, 0, 0)
+            self.baseflow_start = dt.datetime(self.selected_year, self.baseflow_start.month, self.baseflow_start.day, 0, 0)
         except:
             self.logger.error("ERROR: Could not determine recession period.")
 
     def get_inundation_period(self):
+        """
+        Inundation period begins with the seed dispersal start date for the selected year-of-interest and ends with the
+        seed dispersal start date of the subsequent year.
+        """
         try:
             self.inund_start_date = self.sd_start
             self.inund_end_date = dt.datetime(self.selected_year + 1, self.sd_start.month, self.sd_start.day, 0, 0) - dt.timedelta(days=1)
@@ -413,6 +432,10 @@ class RecruitmentPotential:
             return -1
 
     def remove_grading_areas(self, ras):
+        """
+        Assigns a value of "fully prepped" to cells where the mean grain size is less than the grain size criteria, which
+        is defined as a grain size that is characteristic of a suitable site for seeds to establish (i.e. not too large of substrate).
+        """
         try:
             self.logger.info('Retrieving grading limits raster for selected condition...')
             # retrieves grading extents raster
@@ -427,6 +450,10 @@ class RecruitmentPotential:
             return -1
 
     def remove_veg_areas(self, ras):
+        """
+        Removes any cell where there is a presence of existing large vegetation that is assumed to be resistant to
+        uprooting/burial in the absence of an extreme flood event.
+        """
         try:
             self.logger.info("Retrieving existing vegetation raster for selected condition...")
             # retrieves existing vegetation raster
@@ -446,8 +473,8 @@ class RecruitmentPotential:
         on the upper and lower limits of recruitment band (from the base flow WLE).
         """
         try:
-            self.logger.info(f"Determining flow on the day that base flow begins: {self.base_flow_start}... ")
-            q_baseflow = self.flow_df['Mean daily'].loc[self.base_flow_start]
+            self.logger.info(f"Determining flow on the day that base flow begins: {self.baseflow_start}... ")
+            q_baseflow = self.flow_df['Mean daily'].loc[self.baseflow_start]
             # create wle mat for q_baseflow
             baseflow_wle_mat = self.interp_wle_by_q(q_baseflow)
             rec_band_mat = self.dem_mat - baseflow_wle_mat
@@ -585,7 +612,9 @@ class RecruitmentPotential:
         return wrapper
 
     def interpolate_wle(self):
-        # interpolate water level elevation using method (WLE) from cWaterLevel
+        """
+        Extrapolates water level elevation using method (WLE) from cWaterLevel for a given discharge.
+        """
         try:
             # if flow-WSE raster dictionary exists, interpolate using WSE rasters rather than with depth rasters
             q_ras_dict = self.Q_wse_dict if self.Q_wse_dict else self.Q_h_dict
@@ -603,6 +632,9 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not interpolate water level elevation...")
 
     def interp_wle_by_q(self, q):
+        """
+        Interpolates (linear) water level elevation between two modeled discharges for a given discharge.
+        """
         self.logger.info(f"Q = {q}...")
         q_u_index = np.searchsorted(self.discharges, q, side='right')
         q_l_index = q_u_index - 1
@@ -639,6 +671,7 @@ class RecruitmentPotential:
             self.logger.info(f"Unable to retrieve required interpolated WLE rasters...")
 
     def convert_array2ras(self, mat, ras_path):
+        # convert numpy array to a raster with the DEM providing the cell size and being used as a snap raster
         try:
             # set reference point for array to raster conversion
             self.logger.info(f"Converting array to raster...")
@@ -672,6 +705,10 @@ class RecruitmentPotential:
         return q_wle_mat > self.dem_mat
 
     def calc_mortality_coef(self):
+        """
+        Calculates the mortality coefficient (Braatne et al. 2007) using the total stressful and total lethal days
+        and the total days analyzed for recession related stress for each cell.
+        """
         try:
             # calculate mortality coefficient with recession rate stressful and lethal days totals
             self.logger.info('Calculating mortality coefficient array...')
@@ -703,8 +740,8 @@ class RecruitmentPotential:
         try:
             # create recession rate flow dataframe with recession start and end dates
             # include 3 days before start so we can get 3 day moving average on first day of recession period
-            self.rr_df = self.flow_df.loc[self.rec_start_date - dt.timedelta(days=3):self.rec_end_date]
-            rr_end_day = np.datetime64(self.rec_end_date)
+            self.rr_df = self.flow_df.loc[self.rec_start_date - dt.timedelta(days=3):self.baseflow_start]
+            baseflow_start_day = np.datetime64(self.baseflow_start)
             # create inundation flow dataframe with inundation start and end dates
             self.inund_df = self.flow_df.loc[self.inund_start_date:self.inund_end_date]
             inund_start_day = np.datetime64(self.inund_start_date)
@@ -717,10 +754,10 @@ class RecruitmentPotential:
             self.q_sd_max = int(self.sd_df.max().values[0])
         except:
             self.logger.error("ERROR: Could not create recession rate or seed dispersal flow dataframe.")
-        # defining recession rate total days
-        self.rr_total_d = (len(self.rr_df) - 3)
+        # initialize vars for recession/inundation loop
         window = []
-        have_gone_dry = False
+        self.rr_total_d = len(self.rr_df)
+        max_rr_total_d = len(self.rr_df)
         # iterating over groups of 4 consecutive rows (for 3 day moving average of recession rate)
         # starting 3 days before beginning of recession/seed dispersal start date
         self.logger.info(f'Beginning to track cell inundation and recession rate...')
@@ -744,31 +781,40 @@ class RecruitmentPotential:
                 self.consec_inund_days_max = np.zeros_like(q_wle_mat)
                 self.consec_inund_days_now = np.zeros_like(q_wle_mat)
                 self.inund_surv_mat = np.ones_like(q_wle_mat)
+                # tracking where we have gone dry
+                dry_now = ~self.is_inundated(q_wle_mat)
             # update window of wle arrays (add in today's and take out array from 3 days prior)
             window.append(q_wle_mat)
             qm3_wle_mat = window.pop(0)
-            # have gone dry if previously went dry or currently dry
+            # set dry_yesterday to dry_now from previous loop
+            dry_yesterday = dry_now
+            # dry now if not inundated
             dry_now = ~self.is_inundated(q_wle_mat)
-            have_gone_dry = have_gone_dry | dry_now
-            # keep track of area inundated for entire seed dispersal period, this area will be excluded
-            if day == sd_end_day:
-                inundated_during_sd = ~have_gone_dry
+            # if we are still in seed dispersal period
+            if day < sd_end_day:
+                # just went dry if wet yesterday and dry today
+                just_went_dry = (~dry_yesterday) & (dry_now)
+                # if we just went dry, remove days that have already passed from recession rate total days
+                # this ensures recession tracking starts the last time a cell goes dry during seed dispersal period
+                self.rr_total_d = np.where(just_went_dry, max_rr_total_d - i, self.rr_total_d)
+                # if we just went dry (in sd period), reset stressful and lethal day counts in those cells to zero
+                self.rr_stress_d_mat = np.where(just_went_dry, 0, self.rr_stress_d_mat)
+                self.rr_lethal_d_mat = np.where(just_went_dry, 0, self.rr_lethal_d_mat)
+                # if just went dry in seed dispersal period, clear max consecutive inundation days
+                self.consec_inund_days_max = np.where(just_went_dry, 0, self.consec_inund_days_max)
             # if we are in recession rate analysis period
-            if day < rr_end_day:
-                # if we haven't gone dry yet, subtract that time from total recession rate days (denominator for mortality coefficient)
-                self.rr_total_d = self.rr_total_d - np.where(~have_gone_dry, 1, 0)
-                # calculate 3-day avg recession rate
-                rr = (q_wle_mat - qm3_wle_mat) / 3
+            if day < baseflow_start_day:
+                # calculate 3-day avg recession rate (positive recession rate if flow is dropping)
+                rr = (qm3_wle_mat - q_wle_mat) / 3
                 # calculate stressful and lethal recession rate total arrays (only lethal/stressful recession if dry)
                 one_if_dry = np.where(dry_now, 1, 0)
                 self.rr_stress_d_mat = np.where((self.rr_stress < rr) & (rr <= self.rr_lethal), (self.rr_stress_d_mat + one_if_dry), self.rr_stress_d_mat)
                 self.rr_lethal_d_mat = np.where((self.rr_lethal < rr), (self.rr_lethal_d_mat + one_if_dry), self.rr_lethal_d_mat)
-            # if we are in inundation analysis period
-            if day >= inund_start_day:
-                # if dry, reset consecutive inundation days to zero, otherwise if wet add 1
-                self.consec_inund_days_now = np.where(dry_now, 0, self.consec_inund_days_now + 1)
-                # keep track of max consecutive inundation days
-                self.consec_inund_days_max = np.maximum(self.consec_inund_days_now, self.consec_inund_days_max)
+            # always tracking inundation (reset if go dry during seed dispersal)
+            # if dry, reset consecutive inundation days to zero, otherwise if wet add 1
+            self.consec_inund_days_now = np.where(dry_now, 0, self.consec_inund_days_now + 1)
+            # keep track of max consecutive inundation days
+            self.consec_inund_days_max = np.maximum(self.consec_inund_days_now, self.consec_inund_days_max)
         # convert max consecutive inundated days to inundation survival classification (stress & lethal criteria)
         self.inund_surv_mat = np.where((self.consec_inund_days_max > self.inund_stress) & (self.consec_inund_days_max <= self.inund_lethal), 0.5, self.inund_surv_mat)
         self.inund_surv_mat = np.where((self.consec_inund_days_max > self.inund_lethal), 0, self.inund_surv_mat)
@@ -843,13 +889,13 @@ class RecruitmentPotential:
             # assign areas within the crop area a value of 1 if the value of the sb_mat is null
             self.sb_mat = np.where(np.logical_and(self.crop_area_mat == 1, np.isnan(sb_mat)), 1, sb_mat_crop)
             self.sb_ras = self.convert_array2ras(self.sb_mat, self.sb_ras_path)
-            self.save_info_file(self.sub_dir)
         except:
             self.logger.error("ERROR: Could not create the scour & burial survival raster.")
 
     def recruitment_potential_ras(self):
         """
-        Creates raster that combined all objectives of the Recruitment Box Model.
+        Creates raster that combined all objectives of the Recruitment Box Model (multiplication of the four physical
+        processes rasters).
         """
         try:
             self.logger.info(f"Retrieving bed preparation raster...")
@@ -986,9 +1032,17 @@ class RecruitmentPotential:
             info_file.write(f"\nGermination Period End Date: {dt.datetime.strftime(self.sd_end, '%Y-%m-%d')}")
             info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Fully Prepared Bed: {self.taux_cr_fp}")
             info_file.write(f"\nCritical Dimensionless Shear Stress Threshold for Partially Prepared Bed: {self.taux_cr_pp}")
+            info_file.write(f"\nRecession Rate Criteria for Stressful Recession Rate: {self.rr_stress * self.ft2m * 100} cm/day")
+            info_file.write(f"\nRecession Rate Criteria for Lethal Recession Rate: {self.rr_lethal * self.ft2m * 100} cm/day")
+            info_file.write(f"\nProlonged Inundation Criteria for Stressful Inundation: {self.inund_stress} days")
+            info_file.write(f"\nProlonged Inundation Criteria for Lethal Inundation: {self.inund_lethal} days")
             if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
-                info_file.write(f"\nRecruitment Band Upper Elevation: {self.band_elev_upper}")
-                info_file.write(f"\nRecruitment Band Lower Elevation: {self.band_elev_lower}")
+                info_file.write(f"\nRecruitment Band Upper Elevation: {self.band_elev_upper * self.ft2m * 100} cm")
+                info_file.write(f"\nRecruitment Band Lower Elevation: {self.band_elev_lower * self.ft2m * 100} cm")
+            else:
+                pass
+            if ~np.isnan(self.grain_size_crit):
+                info_file.write(f"\nGrain Size Criteria for Graded Areas (Assign Fully Prepared): {self.grain_size_crit * self.ft2m / 1000} mm")
             else:
                 pass
         self.logger.info(f"Saved info file: {info_path}")
@@ -1026,16 +1080,3 @@ class RecruitmentPotential:
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
 
-if __name__ == "__main__":
-    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
-    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline\\lb_baseline_veg_clip.tif'
-    #grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_03\\LB_grading_extents_lvl0203.tif'
-    #rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='2006', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
-    #rp.run_rp()
-
-    for year in range(1924, 2017):
-        year = str(year)
-        print(f'\n\nRUNNING YEAR {year}\n\n')
-        rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
-        rp.run_rp()
-        rp.logger = None  # try to suppress duplicate logging messages when looping

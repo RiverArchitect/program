@@ -28,7 +28,7 @@ class RecruitmentCriteria:
         # parameter names in recruitment criteria workbook
         self.sd_start = 'Season start'
         self.sd_end = 'Season end'
-        self.base_flow_start = 'Base flow period starts'
+        self.baseflow_start = 'Base flow period starts'
         self.bed_prep_period = 'Bed preparation period'
         self.grain_size_crit = 'Grain size'
         self.taux_cr_fp = 'Prepared'
