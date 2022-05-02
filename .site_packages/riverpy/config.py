@@ -22,6 +22,7 @@ dir2ripy = os.path.dirname(__file__) + "\\"
 dir2templates = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\templates\\"
 dir2sh = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\SHArC\\"
 dir2va = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\"
+dir2output = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\Output\\Rasters\\"
 
 ft2ac = float(1 / 43560)
 ft2m = 0.3048

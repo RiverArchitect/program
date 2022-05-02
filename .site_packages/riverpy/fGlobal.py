@@ -353,6 +353,7 @@ def raster2shp(raster_name, out_shp_name=str(), simplify="NO_SIMPLIFY", calculat
     # raster_name = STR of full path to INTEGER Raster
     if out_shp_name.__len__() < 1:
         out_shp_name = raster_name.split(".")[0] + ".shp"
+
     arcpy.CheckOutExtension('Spatial')
     arcpy.RasterToPolygon_conversion(Int(arcpy.Raster(raster_name)), out_shp_name, simplify)
     if calculate_area:

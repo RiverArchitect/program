@@ -26,6 +26,10 @@ try:
 except:
     print("ERROR: Could not import LifespanDesign.")
 try:
+    import LifespanAnalysis
+except:
+    print("ERROR: Could not import LifespanAnalysis.")
+try:
     import MaxLifespan
 except:
     print("ERROR: Could not import MaxLifespan.")
@@ -88,13 +92,13 @@ class RaGui(tk.Frame):
                                 'Morphology',
                                 'Ecohydraulics']
 
-        self.sub_tab_names = [['Lifespan Design', 'Max Lifespan'],
+        self.sub_tab_names = [['Lifespan Design', 'Lifespan Analysis', 'Max Lifespan'],
                               ['Modify Terrain', 'Volume Assessment'],
                               ['Habitat Area (SHArC)', 'Stranding Risk']]
 
         # working directory suffixes for each module
         self.tab_dir_names = ['\\GetStarted\\',
-                              ['\\LifespanDesign\\', '\\MaxLifespan\\'],
+                              ['\\LifespanDesign\\', '\\LifespanAnalysis\\', '\\MaxLifespan\\'],
                               ['\\ModifyTerrain\\', '\\VolumeAssessment\\'],
                               ['\\SHArC\\', '\\StrandingRisk\\'],
                               '\\ProjectMaker\\']
@@ -112,6 +116,7 @@ class RaGui(tk.Frame):
 
         # sub tabs initialized, with parents being associated top-level tabs
         self.sub_tab_list = [[LifespanDesign.lifespan_design_gui.FaGui(self.tabs['Lifespan']),
+                              LifespanAnalysis.Lifespan_Analysis_gui.ActionGui(self.tabs['Lifespan']),
                               MaxLifespan.action_gui.ActionGui(self.tabs['Lifespan'])],
                              [ModifyTerrain.modify_terrain_gui.MainGui(self.tabs['Morphology']),
                               VolumeAssessment.volume_gui.MainGui(self.tabs['Morphology'])],
