@@ -103,7 +103,6 @@ class RaGui(tk.Frame):
                               ['\\SHArC\\', '\\StrandingRisk\\'],
                               '\\ProjectMaker\\']
 
-
         # Frames initialized by module, with parent being tab container
         self.tab_list = [GetStarted.welcome_gui.MainGui(self.tab_container),
                          ttk.Notebook(self.tab_container),
