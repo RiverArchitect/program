@@ -148,12 +148,13 @@ class RunStats:
                 self.areas.append(a)
                 print(a)
             self.areas.sort(reverse=True)
-            for i in range(0, self.poly):
-                if i == 0:
-                    exp = "Area = %f" % self.areas[i]
-                else:
-                    exp = exp + " or Area = %f" % self.areas[i]
-
+            print(len(self.areas))
+            if len(self.areas) > 0:
+                for i in range(0, self.poly):
+                    if i == 0:
+                        exp = "Area = %f" % self.areas[i]
+                    else:
+                        exp = exp + " or Area = %f" % self.areas[i]
             disconnected_layer = os.path.join(self.cache, "disc_area%06d")
             # convert shp to feature layer
             arcpy.MakeFeatureLayer_management(disconnected_areas, disconnected_layer)
