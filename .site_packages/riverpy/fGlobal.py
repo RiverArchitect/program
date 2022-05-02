@@ -50,6 +50,7 @@ def clean_dir(directory):
             os.rmdir(os.path.join(root, name))
 
 
+
 def cool_down(seconds):
     # Pauses script execution for the input argument number of seconds
     # seconds = INT

@@ -99,8 +99,6 @@ class RunStats:
         elif self.flag == 1:
             print("goal:")
             self.ras_new = Con(self.raster_use >= int(self.goal), 1)
-            # isFile = os.path.isfile(self.polygon)
-            # print(isFile)
             arcpy.conversion.RasterToPolygon(Int(self.ras_new), self.polygon, 'NO_SIMPLIFY')
             # arcpy.conversion.RasterToPolygon(Int(self.ras_new), self.polygon, 'NO_SIMPLIFY', 'Value')
             arcpy.AddField_management(self.polygon, "Area", "DOUBLE")

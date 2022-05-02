@@ -60,6 +60,7 @@ class RunGui:
         self.wy = (self.master.winfo_screenheight() - self.wh) / 2
         self.master.geometry("%dx%d+%d+%d" % (self.ww, self.wh, self.wx, self.wy))
 
+
     def gui_raster_maker(self, condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n, ext_type):
         import feature_analysis as fa
         out_dir = fa.raster_maker(condition, reach_ids_applied, feature_list, mapping, habitat, units, wild, n, ext_type)
