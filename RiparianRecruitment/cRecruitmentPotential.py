@@ -69,11 +69,7 @@ class RecruitmentPotential:
 
         # define units
         self.units = units
-        self.area_units = "ft^2" if self.units == 'us' else 'm^2'
-        self.length_units = 'ft' if self.units == 'us' else 'm'
-        self.u_units = self.length_units + '/s'
-        self.ft2ac = config.ft2ac if self.units == 'us' else 1
-        self.ft2m = config.ft2m if self.units == 'us' else 1
+        self.q_units = 'cfs' if self.units == "us" else 'm^3/s'
         # (in/ft) conversion factor for US customary units else dummy conversion in SI
         self.ft2in = 12 if self.units == 'us' else 1
         # relative grain density (ratio of rho_s and rho_w)
@@ -105,10 +101,16 @@ class RecruitmentPotential:
         self.bed_prep_period = None
         self.taux_cr_fp = None
         self.taux_cr_pp = None
+        self.grain_size_crit_mm = None
+        self.grain_size_crit = None
+        self.rr_stress_cm = None
         self.rr_stress = None
+        self.rr_lethal_cm = None
         self.rr_lethal = None
         self.inund_stress = None
         self.inund_lethal = None
+        self.band_elev_lower_cm = None
+        self.band_elev_upper_cm = None
         self.band_elev_lower = None
         self.band_elev_upper = None
 
@@ -145,9 +147,6 @@ class RecruitmentPotential:
         # populated by self.ras_q_mobile()
         self.q_mobile_ras_fp = None
         self.q_mobile_ras_pp = None
-
-        # populated by self.get_grain_size_crit()
-        self.grain_size_crit = None
 
         # populated by self.bed_prep_ras()
         self.bp_flow_df = None
@@ -288,18 +287,27 @@ class RecruitmentPotential:
                               "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
         try:
             self.logger.info(f'Determining grain size criteria (within grading extents)...')
-            grain_size_crit_mm = self.rc_data.loc[self.rc.grain_size_crit].VALUE
-            self.grain_size_crit = grain_size_crit_mm * self.mm2ft
+            self.grain_size_crit_mm = self.rc_data.loc[self.rc.grain_size_crit].VALUE
+            if self.units == "us":
+                self.grain_size_crit = self.grain_size_crit_mm * self.mm2ft
+            elif self.units == "si":
+                self.grain_size_crit = self.grain_size_crit_mm / 1000
         except:
             self.logger.error("ERROR: Could not determine grain size criteria (for within grading extents).")
         try:
             self.logger.info("Determining recession rate criteria...")
             # stressful recession rate criteria
-            rr_stress_cm = self.rc_data.loc[self.rc.rr_stress].VALUE
-            self.rr_stress = rr_stress_cm * self.cm2ft
+            self.rr_stress_cm = self.rc_data.loc[self.rc.rr_stress].VALUE
+            if self.units == "us":
+                self.rr_stress = self.rr_stress_cm * self.cm2ft
+            elif self.units == "si":
+                self.rr_stress = self.rr_stress_cm / 100
             # lethal recession rate criteria
-            rr_lethal_cm = self.rc_data.loc[self.rc.rr_lethal].VALUE
-            self.rr_lethal = rr_lethal_cm * self.cm2ft
+            self.rr_lethal_cm = self.rc_data.loc[self.rc.rr_lethal].VALUE
+            if self.units == "us":
+                self.rr_lethal = self.rr_lethal_cm * self.cm2ft
+            elif self.units == "si":
+                self.rr_lethal = self.rr_lethal_cm / 100
         except:
             self.logger.error("ERROR: Could not determine recession rate criteria,"
                               "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
@@ -315,11 +323,17 @@ class RecruitmentPotential:
         try:
             self.logger.info("Determining recruitment band elevation criteria...")
             # lower elevation criteria
-            band_elev_lower_cm = self.rc_data.loc[self.rc.band_elev_lower].VALUE
-            self.band_elev_lower = band_elev_lower_cm * self.cm2ft
+            self.band_elev_lower_cm = self.rc_data.loc[self.rc.band_elev_lower].VALUE
+            if self.units == "us":
+                self.band_elev_lower = self.band_elev_lower_cm * self.cm2ft
+            elif self.units == "si":
+                self.band_elev_lower = self.band_elev_lower_cm / 100
             # upper elevation criteria
-            band_elev_upper_cm = self.rc_data.loc[self.rc.band_elev_upper].VALUE
-            self.band_elev_upper = band_elev_upper_cm * self.cm2ft
+            self.band_elev_upper_cm = self.rc_data.loc[self.rc.band_elev_upper].VALUE
+            if self.units == "us":
+                self.band_elev_upper = self.band_elev_upper_cm * self.cm2ft
+            elif self.units == "si":
+                self.band_elev_upper = self.band_elev_upper_cm / 100
         except:
             self.logger.error("ERROR: Could not determine lower and upper elevation criteria of the recruitment band,"
                               "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
@@ -1100,25 +1114,25 @@ class RecruitmentPotential:
             info_file.write(
                 f"\nCritical Dimensionless Shear Stress Threshold for Partially Prepared Bed: {self.taux_cr_pp}")
             info_file.write(
-                f"\nRecession Rate Criteria for Stressful Recession Rate: {self.rr_stress * self.ft2m * 100} cm/day")
+                f"\nRecession Rate Criteria for Stressful Recession Rate: {self.rr_stress_cm} cm/day")
             info_file.write(
-                f"\nRecession Rate Criteria for Lethal Recession Rate: {self.rr_lethal * self.ft2m * 100} cm/day")
+                f"\nRecession Rate Criteria for Lethal Recession Rate: {self.rr_lethal_cm} cm/day")
             info_file.write(f"\nProlonged Inundation Criteria for Stressful Inundation: {self.inund_stress} days")
             info_file.write(f"\nProlonged Inundation Criteria for Lethal Inundation: {self.inund_lethal} days")
             if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
-                info_file.write(f"\nRecruitment Band Upper Elevation: {self.band_elev_upper * self.ft2m * 100} cm")
-                info_file.write(f"\nRecruitment Band Lower Elevation: {self.band_elev_lower * self.ft2m * 100} cm")
+                info_file.write(f"\nRecruitment Band Upper Elevation: {self.band_elev_upper_cm} cm")
+                info_file.write(f"\nRecruitment Band Lower Elevation: {self.band_elev_lower_cm} cm")
             else:
                 pass
             if ~np.isnan(self.grain_size_crit):
                 info_file.write(
-                    f"\nGrain Size Criteria for Graded Areas (Assign Fully Prepared): {self.grain_size_crit * self.ft2m / 1000} mm")
+                    f"\nGrain Size Criteria for Graded Areas (Assign Fully Prepared): {self.grain_size_crit_mm} mm")
             else:
                 pass
-            info_file.write(f"\nMaximum Flow During Bed Preparation Period: {self.q_bp_max} cfs")
-            info_file.write(f"\nMaximum Flow During Seed Dispersal Period: {self.q_sd_max} cfs")
-            info_file.write(f"\nMinimum Flow During Seed Dispersal Period: {self.q_sd_min} cfs")
-            info_file.write(f"\nMaximum Flow During Scour/Burial Survival: {self.q_sb_max} cfs")
+            info_file.write(f"\nMaximum Flow During Bed Preparation Period: {self.q_bp_max} {self.q_units}")
+            info_file.write(f"\nMaximum Flow During Seed Dispersal Period: {self.q_sd_max} {self.q_units}")
+            info_file.write(f"\nMinimum Flow During Seed Dispersal Period: {self.q_sd_min} {self.q_units}")
+            info_file.write(f"\nMaximum Flow During Scour/Burial Survival: {self.q_sb_max} {self.q_units}")
         self.logger.info(f"Saved info file: {info_path}")
 
     @_set_arcpy_env
@@ -1154,3 +1168,19 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
+
+
+if __name__ == "__main__":
+    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
+    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline\\lb_baseline_veg_clip.tif'
+    # grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_03\\LB_grading_extents_lvl0203.tif'
+    # rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='2006', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
+    # rp.run_rp()
+
+    for year in range(1926, 1947):
+        year = str(year)
+        print(f'\n\nRUNNING YEAR {year}\n\n')
+        rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood',
+                                  selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
+        rp.run_rp()
+        rp.logger = None  # try to suppress duplicate logging messages when looping

@@ -16,27 +16,24 @@ except:
 def unit_constants(units):
     """
     get constants in unit system ('us' or 'si')
-    rho_w: density of water, kg/m^3 (si) or slug/ft^3 (us)
     g: gravitational acceleration, m/s^2 (si) or ft/s^2 (us)
-    returns rho_w, g
+    returns g
     """
     if units == 'us':
-        rho_w = 1.937
         g = 32.174
     elif units == 'si':
-        rho_w = 1000
         g = 9.81
     else:
         print('ERROR: unknown unit system %s (\'us\' or \'si\')' % units)
         return
-    return rho_w, g
+    return g
 
 
 def calculate_taux(h_ras, u_ras, grain_ras, s, units):
-    '''
+    """
     Dimensionless bed shear stress
-    '''
-    rho_w, g = unit_constants(units)
+    """
+    g = unit_constants(units)
     d84 = 2.2 * grain_ras
     temp_taux_ras = Square(u_ras / (5.75 * Log10(12.2 * h_ras / (2 * d84)))) / (g * (s - 1) * d84)
     taux_ras = Con(h_ras > d84, temp_taux_ras, 0)
