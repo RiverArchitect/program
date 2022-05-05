@@ -284,7 +284,7 @@ class RecruitmentPotential:
             self.taux_cr_pp = self.rc_data.loc[self.rc.taux_cr_pp].VALUE
         except:
             self.logger.error("ERROR: Could not determine bed shear stress criteria, "
-                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
         try:
             self.logger.info(f'Determining grain size criteria (within grading extents)...')
             self.grain_size_crit_mm = self.rc_data.loc[self.rc.grain_size_crit].VALUE
@@ -310,7 +310,7 @@ class RecruitmentPotential:
                 self.rr_lethal = self.rr_lethal_cm / 100
         except:
             self.logger.error("ERROR: Could not determine recession rate criteria,"
-                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
         try:
             self.logger.info("Determining inundation criteria...")
             # stressful inundation criteria
@@ -319,7 +319,7 @@ class RecruitmentPotential:
             self.inund_lethal = self.rc_data.loc[self.rc.inund_lethal].VALUE
         except:
             self.logger.error("ERROR: could not determine inundation criteria, "
-                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
         try:
             self.logger.info("Determining recruitment band elevation criteria...")
             # lower elevation criteria
@@ -336,7 +336,7 @@ class RecruitmentPotential:
                 self.band_elev_upper = self.band_elev_upper_cm / 100
         except:
             self.logger.error("ERROR: Could not determine lower and upper elevation criteria of the recruitment band,"
-                              "check recruitment_criteria.xlxs to ensure that values exist for species of interest.")
+                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
 
     def get_analysis_period(self, year):
         """
