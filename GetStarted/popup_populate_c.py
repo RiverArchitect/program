@@ -15,6 +15,11 @@ try:
     import fGlobal as fGl
 except:
     print("ExceptionERROR: Cannot find riverpy.")
+try:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\LifespanDesign\\")
+    import helper as hlp
+except:
+    print("ExceptionERROR: Cannot find helper module for creating bed shear rasters.")
 
 
 class PopulateCondition(object):
@@ -22,6 +27,7 @@ class PopulateCondition(object):
         top = self.top = tk.Toplevel(master)
         self.condition_list = fGl.get_subdir_names(config.dir2conditions)
         self.dir2condition_act = '.'
+        self.condition_nam = ''
         self.dir2dem = ''
         self.dir2h = ''
         self.dir2u = ''
@@ -62,6 +68,13 @@ class PopulateCondition(object):
         self.l_c_dir = tk.Label(top, fg="firebrick3", text="Select a condition.")
         self.l_c_dir.grid(sticky=tk.W, row=3, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         tk.Label(top, text="").grid(sticky=tk.W, row=4, column=0)  # dummy
+
+        # create bed shear rasters
+        self.l_bsr = tk.Label(top, text="Create Bed Shear Rasters")
+        self.l_bsr.grid(sticky=tk.W, row=4, column=0, columnspan=3, padx=self.xd, pady=self.yd)
+        self.b_bsr = tk.Button(top, width=self.col_0_width * 2, bg="white", text="Create Bed Shear Rasters",
+                               command=lambda: self.bed_shear())
+        self.b_bsr.grid(sticky=tk.EW, row=4, column=1, columnspan=2, padx=self.xd, pady=self.yd)
 
         # 02 Make d2w
         self.l_d2w = tk.Label(top, text="Create Depth to water table Raster (d2w.tif)")
@@ -147,6 +160,9 @@ class PopulateCondition(object):
     def gui_quit(self):
         self.top.destroy()
 
+    def bed_shear(self):
+        hlp.create_bed_shear(self, self.condition_nam)
+
     def open_mu_xlsx(self):
         showinfo("INFO", "Do not forget to save changes ...", parent=self.top)
         try:
@@ -220,6 +236,7 @@ class PopulateCondition(object):
     def set_condition(self):
         items = self.lb_condition.curselection()
         self.dir2condition_act = config.dir2conditions + str([self.condition_list[int(item)] for item in items][0])
+        self.condition_nam = str([self.condition_list[int(item)] for item in items][0])
         self.l_c_dir.config(fg="forest green", text="Selected: " + self.dir2condition_act)
         self.b_sc.config(fg="forest green")
         self.dir2dem = os.path.join(self.dir2condition_act, "dem.tif")
