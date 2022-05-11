@@ -64,7 +64,7 @@ class ActionGui(sg.RaModuleGui):
         self.out_lyt_dir = []
         self.out_ras_dir = []
         self.raster_list = ["All Rasters"]
-        self.goal = ["2", '5', '10', '20','70']
+        self.goal = ["2", '5', '10', '20', '70']
         self.listA = []
         self.__goal__ = ""
         self.__poly__ = ""
