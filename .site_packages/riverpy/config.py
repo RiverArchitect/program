@@ -7,6 +7,7 @@ code_icon = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\
 
 dir2ra = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\"
 dir2co = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\StrandingRisk\\"
+dir2rp = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\"
 dir2conditions = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\01_Conditions\\"
 dir2flows = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\00_Flows\\"
 dir2gs = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\GetStarted\\"
@@ -24,7 +25,6 @@ dir2sh = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\
 dir2va = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\"
 dir2output = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\Output\\Rasters\\"
 
-
 ft2ac = float(1 / 43560)
 ft2m = 0.3048
 
@@ -36,3 +36,5 @@ xlsx_reaches = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')
 xlsx_thresholds = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\.templates\\threshold_values.xlsx"
 xlsx_volumes = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\.templates\\volumes_template.xlsx"
 xlsx_connectivity = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\StrandingRisk\\.templates\\disconnected_area_template.xlsx"
+xlsx_recruitment_criteria = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\.templates\\recruitment_criteria.xlsx"
+xlsx_recruitment_output = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\.templates\\recruitment_area_template.xlsx"
