@@ -538,6 +538,7 @@ class RecruitmentPotential:
             self.logger.info("Retrieving existing vegetation raster for selected condition...")
             # retrieves existing vegetation raster
             veg_ras = Raster(self.ex_veg_ras)
+            self.logger.info(f"Existing vegetation raster retrieved: {self.ex_veg_ras}")
             # remove areas where existing vegetation exists
             self.logger.info(
                 "Removing areas where there is existing vegetation that will not be removed by flood flows...")
@@ -636,8 +637,12 @@ class RecruitmentPotential:
     def get_grain_ras(self):
         self.logger.info("Retrieving grain size raster...")
         try:
-            self.grain_ras = os.path.join(self.dir2condition, 'dmean.tif')
+            if self.units == "us":
+                self.grain_ras = os.path.join(self.dir2condition, 'dmean_ft.tif')
+            elif self.units == "si":
+                self.grain_ras = os.path.join(self.dir2condition, 'dmean.tif')
             assert os.path.exists(self.grain_ras)
+            self.logger.info(f"Dmean raster retrieved: {self.grain_ras}")
         except:
             self.logger.error("ERROR: Could not retrieve grain size raster...")
             self.grain_ras = None
@@ -1168,19 +1173,3 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
-
-
-if __name__ == "__main__":
-    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
-    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline\\lb_baseline_veg_clip.tif'
-    # grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_03\\LB_grading_extents_lvl0203.tif'
-    # rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='2006', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
-    # rp.run_rp()
-
-    for year in range(1926, 1947):
-        year = str(year)
-        print(f'\n\nRUNNING YEAR {year}\n\n')
-        rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood',
-                                  selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
-        rp.run_rp()
-        rp.logger = None  # try to suppress duplicate logging messages when looping
