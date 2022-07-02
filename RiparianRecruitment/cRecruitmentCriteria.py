@@ -28,7 +28,7 @@ class RecruitmentCriteria:
         # parameter names in recruitment criteria workbook
         self.sd_start = 'Season start'
         self.sd_end = 'Season end'
-        self.baseflow_start = 'Base flow period starts'
+        self.baseflow_start = 'Baseflow period starts'
         self.bed_prep_period = 'Bed preparation period'
         self.grain_size_crit = 'Grain size'
         self.taux_cr_fp = 'Prepared'
@@ -39,8 +39,8 @@ class RecruitmentCriteria:
         self.elev_lethal = 'Lethal elevation'
         self.inund_stress = 'Stressful inundation'
         self.inund_lethal = 'Lethal inundation'
-        self.band_elev_lower = 'Lower elevation'
-        self.band_elev_upper = 'Upper elevation'
+        #self.band_elev_lower = 'Lower elevation'
+        #self.band_elev_upper = 'Upper elevation'
 
         # read recruitment sheet in recruitment criteria excel file to dataframe, first column assigned as index
         try:

@@ -1173,3 +1173,21 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Recruitment")
         print(dir(self))
+
+
+if __name__ == "__main__":
+    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
+    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_01\\LYR17_veg_level01.tif'
+    grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_01\\LB_grading_extents_lvl01.tif'
+    rp = RecruitmentPotential(condition='2017_lb_lvl_01', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1992', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
+    rp.run_rp()
+
+'''
+    for year in range(1926, 1947):
+        year = str(year)
+        print(f'\n\nRUNNING YEAR {year}\n\n')
+        rp = RecruitmentPotential(condition='2017_h20dpd_baseline', flow_data=flowdata, species='Fremont Cottonwood',
+                                  selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
+        rp.run_rp()
+        rp.logger = None  # try to suppress duplicate logging messages when looping
+'''
