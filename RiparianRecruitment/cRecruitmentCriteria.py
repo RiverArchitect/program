@@ -26,8 +26,8 @@ class RecruitmentCriteria:
         self.species_dict = {}
 
         # parameter names in recruitment criteria workbook
-        self.sd_start = 'Season start'
-        self.sd_end = 'Season end'
+        self.sd_start = 'Seed dispersal starts'
+        self.sd_end = 'Seed dispersal ends'
         self.baseflow_start = 'Baseflow period starts'
         self.bed_prep_period = 'Bed preparation period'
         self.grain_size_crit = 'Grain size'

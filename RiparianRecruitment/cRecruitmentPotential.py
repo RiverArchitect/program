@@ -603,7 +603,7 @@ class RecruitmentPotential:
             # set area between low/high flow wetted area to 1, else nan
             self.wa_sd_mat = np.where((q_low_sd_wetted_area != 1) & (q_high_sd_wetted_area == 1), 1, np.nan)
             # create crop raster using wetted areas and recruitment band (arrays) if there are values for recruitment band elevation criteria
-            if (self.band_elev_lower is None) and (self.band_elev_upper is None):
+            if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
                 self.logger.info(
                     "Cropping the wetted area during seed dispersal to area within recruitment band elevations...")
                 self.recruitment_band()
