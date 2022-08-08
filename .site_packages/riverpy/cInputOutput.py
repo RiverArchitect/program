@@ -194,7 +194,7 @@ class Read:
 
     def read_ws(self):
         rows = self.ws.rows
-        first_row = [cell.value for cell in next(rows)]
+        first_row = [cell.value for cell in next(rows[1])]
         data = []
         for row in rows:
             record = {}
@@ -290,8 +290,10 @@ class Write(Read):
         self.logger.info("   * writing column data (starting at " + str(column) + str(start_row) + ") ...")
         __row__ = start_row
         for val in data_list:
-            self.ws[str(column) + str(__row__)].value = val
-            __row__ += 1
+            if val is not None:
+                self.ws[str(column) + str(__row__)].value = float(val)
+                __row__ += 1
+
 
     def write_matrix(self, start_col, start_row, data_matrix):
         # start_col = STR, e.g., "A"
