@@ -18,7 +18,7 @@ except:
 
 class MandatoryFrame(tk.Frame):
     def __init__(self, master=None, **options):
-        Frame.__init__(self, master, **options)
+        tk.Frame.__init__(self, master, **options)
         self.config(width=350, height=400)
 
         self.xd = 5
@@ -68,7 +68,7 @@ class MandatoryFrame(tk.Frame):
 
 class OptionalFrame(tk.Frame):
     def __init__(self, master=None, **options):
-        Frame.__init__(self, master, **options)
+        tk.Frame.__init__(self, master, **options)
         self.bg_color = "khaki"
         self.config(width=350, height=400, bg=self.bg_color)
 

@@ -60,7 +60,7 @@ class MainGui(sg.RaModuleGui):
         self.l_img.grid(sticky=tk.E, row=3, column=2, rowspan=7, columnspan=2, padx=self.xd*10, pady=self.yd)
 
         # Add credits
-        self.l_credits = tk.Label(self, fg="gray50", text=fGl.get_credits(), justify=LEFT)
+        self.l_credits = tk.Label(self, fg="gray50", text=fGl.get_credits(), justify=tk.LEFT)
         self.l_credits.grid(sticky=tk.E, row=8, column=0, rowspan=3, columnspan=2, padx=self.xd, pady=self.yd)
 
     def analyze_Q(self):

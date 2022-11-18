@@ -94,7 +94,7 @@ class PopUpUserFunction(object):
 
 class SubFrame(tk.Frame):
     def __init__(self, master=None, **options):
-        Frame.__init__(self, master, **options)
+        tk.Frame.__init__(self, master, **options)
         tk.Label(self, text="       ").grid(row=0, column=3)  # column separator dummy
         self.config(width=880, height=500)
         self.input_file = cRBC.InputFile()
@@ -219,7 +219,7 @@ class SubFrame(tk.Frame):
 
 class GraphicFrame(tk.Frame):
     def __init__(self, master=None, graph_dir=str(), **options):
-        Frame.__init__(self, master, **options)
+        tk.Frame.__init__(self, master, **options)
 
         self.config(width=600, height=261)  # orig: w = 1800, h = 784
         self.grid_propagate(False)

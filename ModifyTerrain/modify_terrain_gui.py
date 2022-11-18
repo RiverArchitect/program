@@ -24,7 +24,7 @@ except:
 
 class ThresholdFrame(tk.Frame):
     def __init__(self, master=None, **options):
-        Frame.__init__(self, master, **options)
+        tk.Frame.__init__(self, master, **options)
         self.config(width=350, height=400)
         self.grid_propagate(False)
         self.px = 5
@@ -70,7 +70,7 @@ class ThresholdFrame(tk.Frame):
 
 class RiverBuilderFrame(tk.Frame):
     def __init__(self, master=None, unit="si", **options):
-        Frame.__init__(self, master, **options)
+        tk.Frame.__init__(self, master, **options)
 
         self.config(width=350, height=400)
         self.grid_propagate(False)

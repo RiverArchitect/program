@@ -57,7 +57,7 @@ except:
 
 class ResizingCanvas(tk.Canvas):
     def __init__(self, parent, **kwargs):
-        Canvas.__init__(self, parent, **kwargs)
+        tk.Canvas.__init__(self, parent, **kwargs)
         self.bind("<Configure>", self.on_resize)
         self.height = self.winfo_reqheight()
         self.width = self.winfo_reqwidth()
@@ -168,4 +168,4 @@ if __name__ == '__main__':
     # root = tk.Tk()
     RiverArchitect = RaGui(tk.Tk())
     flex_window = ResizingCanvas(RiverArchitect.mainloop(), width=700, height=490)
-    flex_window.pack(fill=BOTH, expand=YES)
+    flex_window.pack(fill=tk.BOTH, expand=tk.YES)
