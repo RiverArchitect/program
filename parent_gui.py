@@ -98,7 +98,7 @@ class RaGui(tk.Frame):
 
         self.sub_tab_names = [['Lifespan Design', 'Lifespan Analysis', 'Max Lifespan'],
                               ['Modify Terrain', 'Volume Assessment'],
-                              ['Habitat Area (SHArC)', 'Stranding Risk', 'Riparian Recruitment']]
+                              ['Habitat Area (SHArC)', 'Stranding Risk', 'Riparian Seedling Recruitment']]
 
         # working directory suffixes for each module
         self.tab_dir_names = ['\\GetStarted\\',

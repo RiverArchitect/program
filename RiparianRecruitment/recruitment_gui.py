@@ -137,9 +137,9 @@ class MainGui(cg.RaModuleGui):
         self.b_grading_ext_ras.grid(sticky=tk.W, row=row, column=1, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
-        # Run riparian recruitment submodule
-        self.b_run_rr = tk.Button(self, width=25, fg="RoyalBlue3", bg="white",
-                                  text="Analyze Riparian Recruitment", command=lambda: self.run_recruitment())
+        # Run Riparian SeedlingRecruitment submodule
+        self.b_run_rr = tk.Button(self, width=40, fg="RoyalBlue3", bg="white",
+                                  text="Analyze Riparian Seedling Recruitment", command=lambda: self.run_recruitment())
         self.b_run_rr.grid(sticky=tk.W, row=row, column=0, columnspan=4, padx=self.xd, pady=self.yd)
         self.b_run_rr['state'] = 'disabled'
 
