@@ -921,7 +921,7 @@ class RecruitmentPotential:
             consec_inund_max_path = os.path.join(self.sub_dir, f"max_inund_days_ras.tif")
             self.convert_array2ras(self.consec_inund_days_max, consec_inund_max_path)
             self.logger.info('Converting inundation survival array (fav, stress, lethal) to raster...')
-            self.inund_surv_path = os.path.join(self.sub_dir, f"inundation_survival.tif")
+            self.inund_surv_path = os.path.join(self.sub_dir, f"inundation_surv_ras.tif")
             self.convert_array2ras(self.inund_surv_mat, self.inund_surv_path)
         except:
             self.logger.info(
@@ -1079,7 +1079,7 @@ class RecruitmentPotential:
         """
         Uses inundation survival raster to calculate total area for each metric
         """
-        ind_surv_ras = Raster(os.path.join(self.sub_dir, f"inundation_survival.tif"))
+        ind_surv_ras = Raster(os.path.join(self.sub_dir, f"inundation_surv_ras.tif"))
         cell_size = float(arcpy.GetRasterProperties_management(ind_surv_ras, 'CELLSIZEX').getOutput(0))
         fi_surv = Con(ind_surv_ras == 1, 1)
         si_surv = Con(ind_surv_ras == 0.5, 1)
