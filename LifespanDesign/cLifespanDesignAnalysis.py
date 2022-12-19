@@ -38,6 +38,7 @@ class ArcPyAnalysis:
 
         self.raster_dict_ds = {}
         self.raster_info_lf = "init"
+        self.raster_fail_seq = ""
         self.raster_dict_lf = {}
         self.reach_extents = reach_extents
         self.habitat_matching = habitat_analysis
@@ -130,7 +131,7 @@ class ArcPyAnalysis:
                 d2w.raster = temp_d2w
 
             self.ras_d2w = Con(((d2w.raster >= threshold_low) & (d2w.raster <= threshold_up)), 1.0)
-
+            self.ras_fail = Con((d2w.raster <= threshold_low) | (d2w.raster >= threshold_up), 1.0, 0)
             if self.verify_raster_info():
                 self.logger.info("          * based on raster: " + self.raster_info_lf)
                 temp_ras_base = Con((IsNull(self.raster_dict_lf[self.raster_info_lf]) == 1),
@@ -140,7 +141,9 @@ class ArcPyAnalysis:
                 ras_d2w_new = Con(((temp_ras_d2w == 1.0) & (temp_ras_base > 0)), temp_ras_base)
                 self.ras_d2w = ras_d2w_new
             self.raster_info_lf = "ras_d2w"
+            self.raster_fail_seq = "ras_d2w"
             self.raster_dict_lf.update({"ras_d2w": self.ras_d2w})
+            self.raster_dict_lf.update({"fail": self.ras_fail})
         else:
             self.logger.info("          * Nothing to do (no Rasters provided).")
 
@@ -159,8 +162,12 @@ class ArcPyAnalysis:
                 # routine to override noData pixels if required.
                 temp_det = Con((IsNull(det.raster) == 1), (IsNull(det.raster) * 0), det.raster)
                 det.raster = temp_det
-
+            self.temp_fail_base = self.raster_dict_lf["fail"]
             self.ras_det = Con(((det.raster >= threshold_low) & (det.raster <= threshold_up)), 1)
+            self.ras_fail_det = Con(((det.raster <= threshold_low) & (self.temp_fail_base == 1)), 12)
+            self.ras_fail_det = Con(((det.raster >= threshold_up) & (self.temp_fail_base == 1)), 12)
+            self.ras_fail_det = Con(((det.raster <= threshold_low) & (self.temp_fail_base != 1)), 2)
+            self.ras_fail_det = Con(((det.raster >= threshold_up) & (self.temp_fail_base != 1)), 2)
 
             if self.verify_raster_info():
                 self.logger.info("          * based on raster: " + self.raster_info_lf)
@@ -174,6 +181,7 @@ class ArcPyAnalysis:
                 self.ras_det = ras_det_new
             self.raster_info_lf = "ras_det"
             self.raster_dict_lf.update({self.raster_info_lf: self.ras_det})
+            self.raster_dict_lf.update({"fail": self.ras_fail_det})
         else:
             self.logger.info("          * Nothing to do (no Rasters provided).")
 
@@ -186,6 +194,7 @@ class ArcPyAnalysis:
         self.set_extent()
         self.logger.info("      >>> Analyzing tcd (fill only).")
         dod = DoD(self.condition)
+        self.temp_fail_base = self.raster_info_lf["fail"]
         if str(dod.raster_fill).__len__() > 1:
             if not(self.raster_dict_lf.items().__len__() > 0):
                 # routine to override noData pixels if required.
@@ -194,8 +203,25 @@ class ArcPyAnalysis:
 
             if not self.inverse_tcd:
                 self.ras_tcd = Con((dod.raster_fill >= threshold_fill), 1.0, 0)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 1)), 14)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base != 1) & (self.temp_fail_base != 2) & (self.temp_fail_base != 3)), 4)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 12)), 124)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 123)), 1234)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 23)), 234)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 2)), 24)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 3)), 34)
+                self.ras_fail_fill = Con(((dod.raster_fill >= threshold_fill) & (self.temp_fail_base == 13)), 134)
             else:
                 self.ras_tcd = Con((dod.raster_fill < threshold_fill), 1.0)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 1)), 14)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base != 1) & (
+                            self.temp_fail_base != 2) & (self.temp_fail_base != 3)), 4)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 12)), 124)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 123)), 1234)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 23)), 234)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 2)), 24)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 3)), 34)
+                self.ras_fail_fill = Con(((dod.raster_fill <= threshold_fill) & (self.temp_fail_base == 13)), 134)
 
             if self.verify_raster_info():
                 self.logger.info("          * based on raster: " + self.raster_info_lf)
@@ -219,6 +245,7 @@ class ArcPyAnalysis:
 
             self.raster_info_lf = "ras_tcd"
             self.raster_dict_lf.update({self.raster_info_lf: self.ras_tcd})
+            self.raster_dict_lf.update({"fail": self.ras_fail_fill})
         else:
             self.logger.info("      >>> No DoD fill raster provided. Omitting analysis.")
 
@@ -316,8 +343,14 @@ class ArcPyAnalysis:
                     self.ras_Fr = ras_Fr_new
 
                 # update lf dictionary
+                self.temp_fail_base = self.raster_dict_lf["fail"]
+                self.ras_fail_fr = Con(((self.ras_Fr < max_lf) & (self.temp_fail_base == 1)), 13)
+                self.ras_fail_fr = Con(((self.ras_Fr < max_lf) & (self.temp_fail_base == 12)), 123)
+                self.ras_fail_fr = Con(((self.ras_Fr < max_lf) & (self.temp_fail_base != 1) & (self.temp_fail_base != 2)), 3)
+                self.ras_fail_fr = Con(((self.ras_Fr < max_lf) & (self.temp_fail_base == 2)), 23)
                 self.raster_info_lf = "ras_Fr"
                 self.raster_dict_lf.update({self.raster_info_lf: self.ras_Fr})
+                self.raster_dict_lf.update({"fail": self.ras_fail_fr})
             except:
                 pass
         else:
@@ -344,8 +377,21 @@ class ArcPyAnalysis:
                     max_lf = 50.0
                 ras_h_new = Con((IsNull(self.ras_dth) == 1), (IsNull(self.ras_dth) * max_lf), Float(self.ras_dth))
                 self.ras_dth = ras_h_new
+                self.temp_fail_base = self.raster_dict_lf["fail"]
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 1)), 15)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 12)), 125)
+                self.ras_fail_h = Con(
+                    ((self.ras_dth < max_lf) & (self.temp_fail_base != 1) & (self.temp_fail_base != 2) & (self.temp_fail_base != 3) & (self.temp_fail_base != 4)), 5)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 2)), 25)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 3)), 35)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 4)), 45)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 123)), 1235)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 1234)), 12345)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 134)), 1345)
+                self.ras_fail_h = Con(((self.ras_dth < max_lf) & (self.temp_fail_base == 234)), 2345)
                 self.raster_info_lf = "ras_dth"
                 self.raster_dict_lf.update({self.raster_info_lf: self.ras_dth})
+                self.raster_dict_lf.update({"fail": self.ras_Fr})
             except:
                 pass
         else:
@@ -472,11 +518,23 @@ class ArcPyAnalysis:
                 # routine to override noData pixels if required.
                 temp_scour = Con((IsNull(dod.raster_scour) == 1), (IsNull(dod.raster_scour) * 0), dod.raster_scour)
                 dod.raster_scour = temp_scour
-
+            self.temp_fail_base = self.raster_dict_lf["fail"]
             if not self.inverse_tcd:
                 self.ras_tcd = Con((dod.raster_scour >= threshold_scour), 1.0, 0)
+                self.ras_fail_scour = Con(((dod.raster_scour >= threshold_scour) & (self.temp_fail_base == 1)), 16)
+                self.ras_fail_scour = Con(((dod.raster_scour >= threshold_scour) & (self.temp_fail_base == 12)), 126)
+                self.ras_fail_scour = Con(
+                    ((dod.raster_scour >= threshold_scour) & (self.temp_fail_base != 1) & (self.temp_fail_base != 2) & (self.temp_fail_base != 3) & (self.temp_fail_base != 4) & (self.temp_fail_base != 5)), 6)
+                self.ras_fail_scour = Con(((dod.raster_scour >= threshold_scour) & (self.temp_fail_base == 2)), 26)
             else:
                 self.ras_tcd = Con((dod.raster_scour < threshold_scour), 1.0)
+                self.ras_tcd = Con((dod.raster_scour < threshold_scour), 1.0, 0)
+                self.ras_fail_scour = Con(((dod.raster_scour < threshold_scour) & (self.temp_fail_base == 1)), 16)
+                self.ras_fail_scour = Con(((dod.raster_scour < threshold_scour) & (self.temp_fail_base == 12)), 126)
+                self.ras_fail_scour = Con(
+                    ((dod.raster_scour < threshold_scour) & (self.temp_fail_base != 1) & (self.temp_fail_base != 2) & (self.temp_fail_base != 3) & (self.temp_fail_base != 4) & (self.temp_fail_base != 5)),
+                    6)
+                self.ras_fail_scour = Con(((dod.raster_scour < threshold_scour) & (self.temp_fail_base == 2)), 26)
 
             if self.verify_raster_info():
                 self.logger.info("          * based on raster: " + self.raster_info_lf)
@@ -501,6 +559,7 @@ class ArcPyAnalysis:
 
             self.raster_info_lf = "ras_tcd"
             self.raster_dict_lf.update({self.raster_info_lf: self.ras_tcd})
+            self.raster_dict_lf.update({"fail": self.ras_fail_scour})
         else:
             self.logger.info("      >>> No DoD scour raster provided. Omitting analysis.")
 
@@ -552,8 +611,24 @@ class ArcPyAnalysis:
                                            self.ras_taux, Float(self.raster_dict_lf[self.raster_info_lf]))
                         self.ras_taux = ras_taux_new
 
+                    self.temp_fail_base = self.raster_dict_lf["fail"]
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 1)), 17)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 14)), 147)
+                    self.ras_fail_taux = Con(
+                        ((self.ras_taux < max_lf) & (self.temp_fail_base != 1) & (self.temp_fail_base != 2) & (
+                                    self.temp_fail_base != 3) & (self.temp_fail_base != 4)& (self.temp_fail_base != 5) & (self.temp_fail_base != 6)), 7)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 4)), 47)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 5)), 57)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 6)), 67)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 145)), 1457)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 15)), 157)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 16)), 167)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 1456)), 14567)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 146)), 1467)
+                    self.ras_fail_taux = Con(((self.ras_taux < max_lf) & (self.temp_fail_base == 156)), 1567)
                     self.raster_info_lf = "ras_taux"
                     self.raster_dict_lf.update({"ras_taux": self.ras_taux})
+                    self.raster_dict_lf.update({"fail": self.ras_fail_taux})
                 except:
                     pass
             else:
@@ -856,6 +931,17 @@ class ArcPyAnalysis:
                 self.raster_dict_ds.update({self.raster_info_lf: self.raster_dict_lf[self.raster_info_lf]})
             self.save_design(name)
 
+    def save_fail(self, name):
+        name1 = name+"_failing.tif"
+        try:
+            self.raster_dict_lf["fail"].save(self.cache + name + '_failing.tif')
+        except:
+            self.logger.info("WARNING: failing hierarchy raster not created")
+        try:
+            arcpy.CopyRaster_management(self.cache + name, self.output + name1)
+        except:
+            self.logger.info("WARNING: failing hierarchy raster not copied to output folder")
+
     def save_design(self, name):
         # Copy design RasterDataset from .cache to Output/Rasters/condition as Esri Grid file
         # dir = path (str)
@@ -929,7 +1015,6 @@ class ArcPyAnalysis:
     def save_lifespan(self, name):
         # Copy last lf Raster Dataset from .cache to Output/Rasters folder as Esri Grid file
         # name = feature ID (str, max. 10 char.)
-
         if name.__len__() > 13:
             # shorten name if required
             name = name[:10].split(".")[0] + '.tif'
@@ -944,14 +1029,21 @@ class ArcPyAnalysis:
         try:
             h = FlowDepth(self.condition)
             save_ras = Con(Float(h.rasters[-1]) > 0.000, Float(self.raster_dict_lf[self.raster_info_lf]))
+            save_fail = self.raster_dict_lf["fail"]
             self.logger.info("      * cropping to wetted area of the highest discharge ... ")
         except:
             save_ras = self.raster_dict_lf[self.raster_info_lf]
+            save_fail = self.raster_dict_lf["fail"]
             self.logger.info("WARNING: Could not crop lifespan Raster extents to wetted area.")
         try:
             save_ras.save(self.cache + self.raster_info_lf)
         except:
             self.logger.info("WARNING: Empty lifespan raster (lf_" + name + ")")
+        fail_name = "fail_" + name
+        try:
+            save_fail.save(self.cache + fail_name)
+        except:
+            self.logger.info("WARNING: Failing raster not created" + save_fail)
 
         __full_name__ = "lf_" + name
         if __full_name__.__len__() > 17:
@@ -966,6 +1058,7 @@ class ArcPyAnalysis:
                 self.logger.info(
                     "ERROR: Existing files are locked. Consider deleting manually or revise file structure.")
         arcpy.CopyRaster_management(self.cache + self.raster_info_lf, self.output + __full_name__)
+        arcpy.CopyRaster_management(self.cache + fail_name, self.output + fail_name)
         try:
             self.logger.info("   >> Clearing cache (arcpy.Delete_management - temp.lifespans - please wait) ...")
             for ras in self.raster_dict_lf:

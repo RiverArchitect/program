@@ -1,5 +1,5 @@
 try:
-    import sys, os, logging, datetime
+    import sys, os, logging, datetime, openpyxl
     import numpy as np
 except:
     print("ExceptionERROR: Missing fundamental packages (required: os, sys, datetime, logging, numpy).")
@@ -127,6 +127,8 @@ class SeasonalFlowProcessor:
         self.fish = cFi.Fish()
         self.fish_seasons = {}
         self.date_column = []
+        self.cfs_column = []
+        self.area_column = []
         self.flow_column = []
         self.flow_matrix = []  # rows=n-days, cols=m-years
         self.season_flow_lists = {}
@@ -402,6 +404,399 @@ class SeasonalFlowProcessor:
             return export_xlsx_name
         except:
             return -1
+
+    def write_flow2d_duration2xlsx(self, xlsx_name, export_list):
+        # export_list = NESTED LIST with [Q_data, exceedance prob.]
+        self.logger.info("   * writing 2D flows duration curve to " + xlsx_name)
+        try:
+            xlsx_write = cIO.Write(xlsx_name, worksheet_no=1)
+        except:
+            self.logger.info("ERROR: Could not open workbook (%s)." % xlsx_name)
+            return -1
+        # xlsx_write.open_wb(export_xlsx_name, 0)
+        self.logger.info("   * writing data ...")
+        try:
+            xlsx_write.write_matrix("B", 3, export_list)
+        except:
+            self.logger.info("")
+
+        try:
+            self.logger.info("   * saving workbook ... ")
+            xlsx_write.save_close_wb(xlsx_name)
+        except:
+            self.logger.info("ERROR: Failed to save %s" % xlsx_name)
+
+    def __call__(self, *args, **kwargs):
+        print("Class Info: <type> = SeasonalFlowProcessor (%s)" % os.path.dirname(__file__))
+        print(dir(self))
+
+
+class AmbianceProcessor:
+    def __init__(self, input1_xlsx, *args, **kwargs):
+        # input_xlsx = STR full path of an input xlsx file
+        # functionality:
+        # 1) instantiate object
+        # 2) assign fish species with self.get_fish_seasons and run self.make_flow_duration() for each species/lifestage
+        self.export_dict = {}
+        self.fish = cFi.Fish()
+        self.fish_seasons = {}
+        self.date_column = []
+        self.flow_column = []
+        self.cfs_column = []
+        self.area_column = []
+        self.exceedence = []
+        self.flow_matrix = []  # rows=n-days, cols=m-years
+        self.season_flow_lists = {}
+        self.logger = logging.getLogger("logfile")
+        self.min_year = 9999
+        self.max_year = 1
+        self.season_years = int()
+        self.xlsx_template = config.dir2ra + "SHArC\\.templates\\CONDITION_QvsA_template_us.xlsx"
+        self.disc_xlsx_template = config.dir2ra + "00_Flows\\templates\\disc_freq_template.xlsx"
+        self.read_flow_series(input1_xlsx)
+
+    def add_years(self, curr_date, number_of_years):
+        try:
+            return curr_date.replace(year=curr_date.year + number_of_years)
+        except ValueError:
+            return curr_date + (datetime.date(curr_date.year + number_of_years, 3, 1) - datetime.date(curr_date.year, 3, 1))
+
+    def assign_years(self):
+        for e in self.date_column:
+            try:
+                if int(e.year) < int(self.min_year):
+                    self.min_year = int(e.year)
+                if int(e.year) > int(self.max_year):
+                    self.max_year = int(e.year)
+            except:
+                self.logger.info("ERROR: The source discharge file contains non-detectable formats (dates in col. A).")
+                return -1
+
+    def build_flow_duration_data(self):
+        self.season_years = self.max_year - self.min_year + 1
+        for fish in self.fish_seasons.keys():
+            # identify relevant dates
+            self.logger.info("   * building flow duration data for %s." % str(fish))
+            try:
+                start_date = datetime.datetime(self.fish_seasons[fish]["start"]["year"],
+                                               self.fish_seasons[fish]["start"]["month"],
+                                               self.fish_seasons[fish]["start"]["day"])
+                end_date = datetime.datetime(self.fish_seasons[fish]["end"]["year"],
+                                             self.fish_seasons[fish]["end"]["month"],
+                                             self.fish_seasons[fish]["end"]["day"])
+            except:
+                self.logger.info("ERROR: Invalid date assignment (Fish.xlsx).")
+                continue
+            try:
+                data4export = self.make_flow_season_data(fish, start_date, end_date)
+                self.export_dict.update({fish: data4export})
+            except:
+                self.logger.info("ERROR: Could not process flow series.")
+
+    def date2id(self, curr_date):
+        # curr_date = datetime.datetime object
+        try:
+            return int(str(curr_date.month) + str("%02i" % curr_date.day))
+        except:
+            return -1
+
+    def get_fish_seasons(self, fish_species, fish_lifestage):
+        # fish_species = STR as used in cFish.Fish()
+        # fish_lifestage = STR as used in cFish.Fish()
+        self.logger.info("   * reading season dates for {0} - {1}.".format(fish_species, fish_lifestage))
+        fish_sn = str(fish_species).lower()[0:2] + str(fish_lifestage).lower()[0:2]
+        try:
+            self.fish_seasons.update({fish_sn: self.fish.get_season_dates(fish_species, fish_lifestage)})
+        except:
+            self.logger.info("ERROR: Could not read parameter type (for {0} - {1}) from Fish.xlsx.".format(fish_species, fish_lifestage))
+
+    def make_ambiance_duration(self, condition):
+        self.logger.info("   * generating flow duration curve (%s)." % condition)
+        # try:
+        #
+        # #self.build_flow_duration_data()
+        # except:
+        #     self.logger.info("ERROR: Flow series analysis failed.")
+        #     return -1
+        try:
+            return self.write_flow_duration2xlsx(condition)
+        except:
+            self.logger.info("ERROR: Could not write flow duration curve data (flow series).")
+            return -1
+
+    def make_condition_flow2d_duration(self, condition):
+        # condition = STR of CONDITION
+        for fish in self.export_dict.keys():
+            xlsx_name = config.dir2ra + "00_Flows\\" + condition + "\\flow_duration_" + str(fish) + ".xlsx"
+            flows = FlowAssessment()
+            Q = []
+            pr = []
+            for l in self.export_dict[fish]:
+                Q.append(l[0])
+                pr.append(l[1])
+            flows.get_flow_duration_data_from_list([Q, pr])
+            flows.get_flow_model_data(condition)
+            result = []
+            for q in flows.flows_2d:
+                result.append([q, flows.interpolate_flow_exceedance(q)])
+            try:
+                self.write_flow2d_duration2xlsx(xlsx_name, result)
+            except:
+                self.logger.info("ERROR: Could not write flow duration curve data (2D flows).")
+                continue
+
+    def make_flow_season_data(self, fish, start_date, end_date, **kwargs):
+        # fish = 4 character string for species/lifestage
+        # start_date = datetime.datetime(YEAR, MONTH, DAY) of season start
+        # end_date = datetime.datetime(YEAR, MONTH, DAY) of season end
+        # **kwargs: mean_daily = False (default) - applies daily averages rather than all flows
+        mean_daily = False
+        # parse optional keyword arguments
+        try:
+            for k in kwargs.items():
+                if "mean_daily" in k[0]:
+                    mean_daily = k[1]
+        except:
+            pass
+
+        date_integers = []  # convert dates to id type DDMM
+
+        if not self.date2id(end_date) > self.date2id(start_date):
+            end_date = self.add_years(end_date, 1)
+
+        for dy in range(int((end_date - start_date).days) + 1):
+            date_id = self.date2id(start_date + datetime.timedelta(days=dy))
+            if not date_id == 229:
+                # exclude leap year day
+                date_integers.append(date_id)
+        n_dates = date_integers.__len__()
+        season_flows = np.ones((n_dates, self.season_years + 1)) * np.nan
+
+        __row_source__ = 0
+        __col_tar__ = 0
+        for dy in self.date_column:
+            date_id = self.date2id(dy)
+            if date_id in date_integers:
+                positions = []
+                try:
+                    [positions.append(i) for i, x in enumerate(date_integers) if x == date_id]
+                    season_flows[positions[-1], __col_tar__] = self.flow_column[__row_source__]
+                except:
+                    self.logger.info("ERROR: Invalid date and / or flow ranges in discharge series.")
+                try:
+                    if positions[-1] == n_dates - 1:
+                        __col_tar__ += 1
+                except:
+                    pass
+            __row_source__ += 1
+
+        season_flow_list = []
+        if mean_daily:
+            mean_flows = []
+            __row_tar__ = 0
+            for id in date_integers:
+                try:
+                    mean_flows.append(np.nanmean(season_flows[__row_tar__, :]))
+                except:
+                    pass
+                __row_tar__ += 1
+            season_flow_list = mean_flows
+        else:
+            for season in season_flows:
+                for flow in season:
+                    try:
+                        if float(flow) > 0.0:
+                            season_flow_list.append(float(flow))
+                    except:
+                        self.logger.info("WARNING: %s is not a number." % str(flow))
+        season_flow_list.sort(reverse=True)
+
+        self.season_flow_lists[fish] = season_flows
+
+        data4export = []
+        __row_tar__ = 1
+        n_flows = season_flow_list.__len__()
+        for flow in season_flow_list:
+            try:
+                data4export.append([flow, float(__row_tar__ / n_flows * 100)])
+            except:
+                pass
+            __row_tar__ += 1
+        return data4export
+
+    def make_disc_freq(self, condition):
+        """
+        Computes frequency that each model discharge is exceeded then dropped within season
+        """
+        self.logger.info("Computing disconnection frequencies...")
+        disc_freqs = {}
+        flow_data = cMT.MakeFlowTable(condition, "*")
+        flows_2d = flow_data.discharges
+        for fish in self.fish_seasons.keys():
+            disc_freqs[fish] = []
+            season_flows = self.season_flow_lists[fish]
+            for q in flows_2d:
+                count = 0
+                for season in season_flows:
+                    for q1, q2 in list(zip(season, season[1:])):
+                        if q2 <= q < q1:
+                            count += 1
+                disc_freqs[fish].append([q, count/len(season_flows)])
+
+        # output to xlsx
+        self.logger.info("Writing disconnection frequencies to workbook...")
+        self.write_disc_freq2xlsx(condition, disc_freqs)
+
+    def write_disc_freq2xlsx(self, condition, disc_freqs):
+        fG.chk_dir(config.dir2ra + "00_Flows\\" + condition + "\\")
+        for fish in self.fish_seasons.keys():
+            export_xlsx_name = config.dir2ra + "00_Flows\\" + condition + "\\disc_freq_" + str(fish) + ".xlsx"
+            self.logger.info("   * writing to " + export_xlsx_name)
+            try:
+                xlsx_write = cIO.Write(self.disc_xlsx_template)
+            except:
+                self.logger.info("ERROR: Could not open workbook (%s)." % self.xlsx_template)
+                continue
+            # xlsx_write.open_wb(export_xlsx_name, 0)
+            self.logger.info("   * writing data ...")
+            try:
+                xlsx_write.write_cell("E", 4, fish)
+                xlsx_write.write_cell("E", 5, " Month:" + str(self.fish_seasons[fish]["start"]["month"]) + " Day:" + str(self.fish_seasons[fish]["start"]["day"]))
+                xlsx_write.write_cell("E", 6, " Month:" + str(self.fish_seasons[fish]["end"]["month"]) + " Day:" + str(self.fish_seasons[fish]["end"]["day"]))
+                xlsx_write.write_cell("E", 7, self.min_year)
+                xlsx_write.write_cell("E", 8, self.max_year)
+                xlsx_write.write_matrix("A", 3, disc_freqs[fish])
+            except:
+                self.logger.info("")
+
+            try:
+                self.logger.info("   * saving workbook ... ")
+                xlsx_write.save_close_wb(export_xlsx_name)
+            except:
+                self.logger.info("ERROR: Failed to save %s" % export_xlsx_name)
+        try:
+            return export_xlsx_name
+        except:
+            return -1
+
+    def read_flow_series(self, input_xlsx):
+        try:
+            # input_xlsx_f = cIO.Read(input_xlsx)
+            self.wb = openpyxl.load_workbook(input_xlsx)
+            self.sheet = self.wb.active
+            self.first_column = self.sheet['B']
+            self.second_column = self.sheet['F']
+            for x in range(3, len(self.first_column)):
+                self.cfs_column.append(self.first_column[x].value)
+
+            for a in range(3, len(self.second_column)):
+                self.area_column.append(float(self.second_column[a].value))
+        except:
+            self.logger.info("ERROR: The source discharge file contains non-detectable formats.")
+
+    def write_flow_duration2xlsx(self, condition):
+        fG.chk_dir(config.dir2ra + "SHArC\\SHArea\\Rasters_" + condition + "\\")
+        # for fish in self.export_dict.keys():
+        export_xlsx_name = config.dir2ra + "SHArC\\SHArea\\" + condition + "_QvsA_" + ".xlsx"
+        self.logger.info("   * writing to " + export_xlsx_name)
+
+        for q in range(len(self.cfs_column)):
+            if self.cfs_column[q] is not None:
+                self.val = self.interpolate_ambiance_exceedance(self.cfs_column[q])
+                self.exceedence.append(self.val)
+
+        try:
+            xlsx_write = cIO.Write(self.xlsx_template)
+        except:
+            self.logger.info("ERROR: Could not open workbook (%s)." % self.xlsx_template)
+            # xlsx_write.open_wb(export_xlsx_name, 0)
+        self.logger.info("   * writing data ...")
+        try:
+            xlsx_write.write_column("A", 3, self.cfs_column)
+            xlsx_write.write_column("B", 3, self.area_column)
+            xlsx_write.write_column("C", 3, self.exceedence)
+        except:
+            self.logger.info("")
+
+        try:
+            self.logger.info("   * saving workbook ... ")
+            xlsx_write.save_close_wb(export_xlsx_name)
+        except:
+            self.logger.info("ERROR: Failed to save %s" % export_xlsx_name)
+        try:
+            return export_xlsx_name
+        except:
+            return -1
+
+    def interpolate_ambiance_exceedance(self, Q_value):
+        # Q_value is a FLOAT discharge in cfs or m3s
+        self.exceedance_abs = []  # absolute exceedance duration in days
+        self.exceedance_rel = []
+        self.Q_lower = min(x for x in self.cfs_column if x is not None)
+        self.ex_lower = 0.0
+        self.Q_higher = max(x for x in self.cfs_column if x is not None)
+        self.ex_higher = 100.0
+        self.logger.info("   * Interpolating exceedance probability for Q = " + str(Q_value))
+        try:
+            self.Q_value = float(Q_value)
+        except:
+            self.logger.info("ERROR: Invalid interpolation data type (type(Q) == " + type(Q_value) + ").")
+
+        try:
+            self.pr_exceedance = self.ex_lower + ((self.Q_value - self.Q_lower) / (self.Q_higher - self.Q_lower)) * (self.ex_higher - self.ex_lower)
+            self.logger.info(" -->> Expected exceedance duration (per year): " + str(self.pr_exceedance) + "%")
+            return self.pr_exceedance
+        except:
+            self.logger.info("ERROR: Could not interpolate exceedance probability of Q = " + str(Q_value) + ".")
+            return 0.0
+
+    def interpolate_flow_exceedance(self, Q_value):
+        # Q_value is a FLOAT discharge in cfs or m3s
+        self.exceedance_abs = []  # absolute exceedance duration in days
+        self.exceedance_rel = []
+        self.logger.info("   * Interpolating exceedance probability for Q = " + str(Q_value))
+        try:
+            Q_value = float(Q_value)
+        except:
+            self.logger.info("ERROR: Invalid interpolation data type (type(Q) == " + type(Q_value) + ").")
+
+        if Q_value <= float(max(self.cfs_column)):
+            if not(Q_value <= float(min(self.cfs_column))):
+                # find closest smaller and higher discharge
+                iq = 0
+                for qq in sorted(self.cfs_column, reverse=True):
+                    # iterate Q_flowdur list (start from lowest)
+                    if iq == 0:
+                        Q_lower = float(self.cfs_column[iq])
+                        ex_lower = 100.0
+                    else:
+                        Q_lower = float(self.cfs_column[iq - 1])
+                        ex_lower = float(self.exceedance_rel[iq - 1])
+                    Q_higher = self.cfs_column[iq]
+                    ex_higher = self.exceedance_rel[iq]
+                    if Q_value > qq:
+                        # self.logger.info(" -->> qq: " + str(qq))
+                        # self.logger.info(" -->> Q_value: " + str(Q_value))
+                        continue
+                    iq += 1
+            else:
+                Q_lower = Q_value
+                ex_lower = 100.0
+                Q_higher = min(self.cfs_column)
+                ex_higher = 100.0
+        else:
+            self.logger.info("   * HIGH DISCHARGE. Annual exceedance probability close to zero.")
+            Q_lower = min(self.cfs_column)
+            ex_lower = 0.0
+            Q_higher = Q_value
+            ex_higher = 0.0
+        try:
+            pr_exceedance = ex_lower + ((Q_value - Q_lower) / (Q_higher - Q_lower)) * (ex_higher - ex_lower)
+            self.logger.info(" -->> Expected exceedance duration (per year): " + str(pr_exceedance) + "%")
+            return pr_exceedance
+        except:
+            self.logger.info("ERROR: Could not interpolate exceedance probability of Q = " + str(Q_value) + ".")
+            return 0.0
 
     def write_flow2d_duration2xlsx(self, xlsx_name, export_list):
         # export_list = NESTED LIST with [Q_data, exceedance prob.]

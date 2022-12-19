@@ -210,6 +210,13 @@ class MainGui(sg.RaModuleGui):
         label_text = "> Substrate - Boulder - Cobble - Streamwood - Vegetation HSIs"
         self.hsimenu.add_command(label=label_text, foreground="gold4", command=lambda: self.start_app("mhsi_gui"))
 
+        # MAKE Ambiance Duration Curve DROP DOWN
+        self.hsimenu = tk.Menu(self.mbar, tearoff=0)  # create new menu
+        self.mbar.add_cascade(label="Make Ambiance Duration Curve",
+                              menu=self.hsimenu)  # attach it to the menubar
+        self.hsimenu.add_command(label="Ambiance Duration Curve", foreground="cyan4",
+                                 command=lambda: self.start_app("ADC"))
+
     def activate_shape_selection(self, button):
         if self.apply_boundary.get():
             button["state"] = "normal"
@@ -511,6 +518,20 @@ class MainGui(sg.RaModuleGui):
                 self.list_habitat_conditions()
             except:
                 msg = "ERROR: Failed importing HHSI GUI."
+
+        if app_name == "ADC":
+            try:
+                import ADC_gui as adc
+                if not self.apply_boundary.get():
+                    sub_gui = adc.ADCgui(self.master, self.unit, self.fish_applied)
+                else:
+                    sub_gui = adc.ADCgui(self.master, self.unit, self.fish_applied, self.bound_shp)
+                self.b_c_select_hy["state"] = "disabled"
+                self.master.wait_window(sub_gui.top)
+                self.b_c_select_hy["state"] = "normal"
+                self.list_habitat_conditions()
+            except:
+                msg = "ERROR: Failed importing ADC GUI."
 
         if app_name == "mhsi_gui":
             try:
