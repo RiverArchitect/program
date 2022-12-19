@@ -35,7 +35,7 @@ def calculate_taux(h_ras, u_ras, grain_ras, s, units):
     """
     g = unit_constants(units)
     d84 = 2.2 * grain_ras
-    temp_taux_ras = Square(u_ras / (5.75 * Log10(12.2 * h_ras / (2 * d84)))) / (g * (s - 1) * d84)
+    temp_taux_ras = Square(u_ras / (5.75 * Log10(12.2 * h_ras / (2 * d84)))) / (g * (s - 1) * grain_ras)
     taux_ras = Con(h_ras > d84, temp_taux_ras, 0)
     return taux_ras
 

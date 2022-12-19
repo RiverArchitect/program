@@ -585,7 +585,7 @@ class RecruitmentPotential:
 
     def get_sd_rb_crop_area(self):
         """Gets raster representing area between low and high flow wetted areas during seed dispersal
-        and within the recruitment band (if criteria provided).
+        or within the recruitment band (if criteria provided).
         """
         try:
             self.logger.info("Getting wetted area between low/high seed dispersal period flows...")
