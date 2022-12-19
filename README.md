@@ -5,10 +5,10 @@
 
  * Terraforming concepts with the [ModifyTerrain](https://riverarchitect.github.io/RA_wiki/ModifyTerrain) module using threshold value-based DEM modifications or the sophisticated [River Builder](https://riverarchitect.github.io/RA_wiki/RiverBuilder).
 
- * Evaluate ecohydraulic and morphological site and river assets within the Eco-Morphology modules for [calculating Seasonal Habitat Area](https://riverarchitect.github.io/RA_wiki/SHArC) and assessing [fish stranding risk(habitat connectivity)](https://riverarchitect.github.io/RA_wiki/Connectivity).
+ * Evaluate ecohydraulic and morphological site and river assets within the Eco-Morphology modules for [calculating Seasonal Habitat Area](https://riverarchitect.github.io/RA_wiki/SHArC), assessing [fish stranding risk(habitat connectivity)](https://riverarchitect.github.io/RA_wiki/StrandingRisk), and evaluating [riparian seedling recruitment](https://riverarchitect.github.io/RA_wiki/RSR).
 
  * Generate construction plans, cost estimates, and variant efficiency metrics with the [ProjectMaker](https://riverarchitect.github.io/RA_wiki/ProjectMaker) module.
- 
+
  * Produce high-quality maps with *River Architect*'s built-in [Mapping routines](https://riverarchitect.github.io/RA_wiki/Mapping).
 
 
@@ -40,7 +40,8 @@ The robust version:
      + [Volume Assessment (earthworks)](https://riverarchitect.github.io/RA_wiki/VolumeAssessment)
    * Eco-Morphology
      + [SHArC (Seasonal Habitat Area Calculator)](https://riverarchitect.github.io/RA_wiki/SHArC)
-     + [Connectivity Analyses](https://riverarchitect.github.io/RA_wiki/Connectivity)
+     + [Stranding Risk](https://riverarchitect.github.io/RA_wiki/StrandingRisk)
+     + [Riparian Seedling Recruitment](https://riverarchitect.github.io/RA_wiki/RSR)
    * [ProjectMaker](https://riverarchitect.github.io/RA_wiki/ProjectMaker)
 
 
