@@ -159,9 +159,9 @@ class RecruitmentPotential:
         self.dem_mat = []
 
         # populated by self.recruitment_band()
-        self.rec_band_mat = []
+        self.rec_band_ras_path = None
 
-        # populated by self.get_sd_rb_crop_area()
+        # populated by self.get_crop_area()
         self.crop_area_mat = []
         self.crop_area_ras = None
         self.q_sd_min = None
@@ -562,10 +562,10 @@ class RecruitmentPotential:
             baseflow_wle_mat = self.interp_wle_by_q(q_baseflow)
             rec_band_mat = self.dem_mat - baseflow_wle_mat
             # create recruitment band with value of 1 where the DEM - q_baseflow WLE is within the elevation upper and lower limits
-            self.rec_band_mat = np.where(
+            self.crop_area_mat = np.where(
                 np.logical_and(rec_band_mat >= self.band_elev_lower, rec_band_mat <= self.band_elev_upper), 1, np.nan)
             self.rec_band_ras_path = os.path.join(self.sub_dir, f"rec_elev_band.tif")
-            self.convert_array2ras(self.rec_band_mat, self.rec_band_ras_path)
+            self.convert_array2ras(self.crop_area_mat, self.rec_band_ras_path)
         except:
             self.logger.error("ERROR: Could not create recruitment band raster.")
 
@@ -583,7 +583,7 @@ class RecruitmentPotential:
         except:
             logging.info(f"Failed to convert depth array to integer array...")
 
-    def get_sd_rb_crop_area(self):
+    def get_crop_area(self):
         """Gets raster representing area between low and high flow wetted areas during seed dispersal
         or within the recruitment band (if criteria provided).
         """
@@ -1149,7 +1149,7 @@ class RecruitmentPotential:
         self.make_yoi_dir()
         self.get_hydraulic_rasters()
         self.interpolate_wle()
-        self.get_sd_rb_crop_area()
+        self.get_crop_area()
         self.get_grain_ras()
         self.ras_taux()
         self.ras_q_mobile(prep_level="fp")
@@ -1177,3 +1177,16 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Seedling Recruitment")
         print(dir(self))
+
+if __name__ == "__main__":
+    flowdata = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\00_Flows\\InputFlowSeries\\flow_series_LYR_accord_LB_mod.xlsx'
+    ex_veg_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_baseline_test\\lb_baseline_veg_clip.tif'
+    grading_ext_ras = None
+
+
+    for year in range(1924, 1925):
+        year = str(year)
+        print(f'\n\nRUNNING YEAR {year}\n\n')
+        rp = RecruitmentPotential(condition='2017_lb_baseline_test', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=grading_ext_ras)
+        rp.run_rp()
+        rp.logger = None  # try to suppress duplicate logging messages when looping
