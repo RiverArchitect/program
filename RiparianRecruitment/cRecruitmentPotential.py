@@ -588,13 +588,13 @@ class RecruitmentPotential:
         or within the recruitment band (if criteria provided).
         """
         try:
-            self.logger.info("Getting wetted area between low/high seed dispersal period flows...")
             if (np.isnan(self.band_elev_lower)) and (np.isnan(self.band_elev_upper)):
                 self.logger.info(
                     f"No value for recruitment band elevation criteria is provided in recruitment_criteria.xlsx.")
                 # create seed dispersal flow dataframe with seed dispersal start and end dates
                 self.sd_df = self.flow_df.loc[self.sd_start:self.sd_end]
                 # get lowest and highest flows during seed dispersal
+                self.logger.info("Getting wetted area between low/high seed dispersal period flows...")
                 self.q_sd_min = self.sd_df['Mean daily'].min()
                 self.q_sd_max = self.sd_df['Mean daily'].max()
                 # get corresponding WLEs (arrays)
@@ -615,14 +615,11 @@ class RecruitmentPotential:
                     if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
                         # creating crop raster with wetted area during seed dispersal period and recruitment band elevation
                         self.logger.info(
-                            "Cropping the wetted area during seed dispersal to area within recruitment band elevations...")
+                            "Creating crop area raster to define the area of  analysis with the recruitment band elevations...")
                         self.recruitment_band()
-                        wa_rb_ras_path = os.path.join(self.sub_dir, f"wa_rb_crop_area.tif")
-                        self.crop_area_mat = np.where(np.logical_and(self.wa_sd_mat == 1, self.rec_band_mat == 1), 1, np.nan)
-                        self.convert_array2ras(self.crop_area_mat, wa_rb_ras_path)
-                        self.crop_area_ras = wa_rb_ras_path
+                        self.crop_area_ras = self.rec_band_ras_path
                 except:
-                    self.logger.info("ERROR: Failed to make wetted area crop raster with seed dispersal wetted area and recruitment band elevations.")
+                    self.logger.info("ERROR: Failed to make crop area raster recruitment band elevations.")
             # if one of upper/lower band values is nan but the other is not
             else:
                 self.logger.info("ERROR: Failed to make wetted area crop raster with seed dispersal wetted area and recruitment band elevations. "
@@ -632,7 +629,7 @@ class RecruitmentPotential:
                 crop_area_minus_veg_path = os.path.join(self.sub_dir, f"crop_area_minus_veg.tif")
                 crop_ras = self.remove_veg_areas(self.crop_area_ras)
                 crop_ras.save(crop_area_minus_veg_path)
-                self.logger.info('Saving wetted area raster with vegetation removed...')
+                self.logger.info('Saving crop area raster with vegetation removed...')
                 self.crop_area_ras = crop_area_minus_veg_path
                 self.crop_area_mat = arcpy.RasterToNumPyArray(self.crop_area_ras, nodata_to_value=np.nan)
             else:
