@@ -116,6 +116,14 @@ class WLE:
             try:
                 self.logger.info("Converting WSE raster to points ...")
                 pts_wse = arcpy.RasterToPoint_conversion(ras_wse, os.path.join(self.cache, "pts_wse.shp"))
+                # add extra sample call because raster to point conversion does not preserve full float precision!!
+                sample_pts = arcpy.sa.Sample(ras_wse,
+                                             os.path.join(self.cache, "pts_wse.shp"),
+                                             os.path.join(self.cache, "pts_wse_sample.shp"),
+                                             resampling_type='NEAREST',
+                                             generate_feature_class=True)
+                pts_wse = os.path.join(self.cache, "pts_wse_sample.shp")
+                z_field = ras_wse.name[:10] if len(ras_wse.name) > 10 else ras_wse.name
                 self.logger.info("OK")
             except arcpy.ExecuteError:
                 self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
@@ -129,7 +137,7 @@ class WLE:
                 try:
                     self.logger.info("Ordinary Kriging interpolation ...")
                     # Spherical semivariogram using 12 nearest points to interpolate
-                    ras_wle_dem = Kriging(in_point_features=pts_wse, z_field="grid_code",
+                    ras_wle_dem = Kriging(in_point_features=pts_wse, z_field=z_field,
                                           kriging_model=KrigingModelOrdinary("Spherical",
                                                                              lagSize=cell_size),
                                           cell_size=cell_size,
@@ -147,7 +155,7 @@ class WLE:
                         itr = 2
                         while empty_bins:
                             try:
-                                ras_wle_dem = Kriging(in_point_features=pts_wse, z_field="grid_code",
+                                ras_wle_dem = Kriging(in_point_features=pts_wse, z_field=z_field,
                                                       kriging_model=KrigingModelOrdinary("Spherical",
                                                                                          lagSize=cell_size * itr),
                                                       cell_size=cell_size,
@@ -179,7 +187,7 @@ class WLE:
                 try:
                     self.logger.info("IDW interpolation...")
                     # using IDW power of 2 with 12 nearest neighbors
-                    arcpy.Idw_3d(in_point_features=pts_wse, z_field="grid_code",
+                    arcpy.Idw_3d(in_point_features=pts_wse, z_field=z_field,
                                  out_raster=os.path.join(self.cache, "ras_wle_dem"),
                                  cell_size=cell_size,
                                  search_radius="Variable 12")
@@ -197,10 +205,10 @@ class WLE:
                 try:
                     self.logger.info("Nearest Neighbor interpolation...")
                     # using IDW with 1 nearest neighbor
-                    arcpy.Idw_3d(in_point_features=pts_wse, z_field="grid_code",
+                    arcpy.Idw_3d(in_point_features=pts_wse, z_field=z_field,
                                  out_raster=os.path.join(self.cache, "ras_wle_dem"),
                                  cell_size=cell_size,
-                                 search_radius="Variable 1")
+                                 search_radius="VARIABLE 1")
                     ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
                     self.logger.info("OK")
                 except arcpy.ExecuteError:
@@ -216,7 +224,7 @@ class WLE:
                     self.logger.info("Empirical Bayesian Kriging interpolation...")
                     search_nbrhood = arcpy.SearchNeighborhoodStandardCircular(nbrMin=12, nbrMax=12)
                     arcpy.EmpiricalBayesianKriging_ga(in_features=pts_wse,
-                                                      z_field="grid_code",
+                                                      z_field=z_field,
                                                       out_raster=os.path.join(self.cache, "ras_wle_dem"),
                                                       cell_size=cell_size,
                                                       transformation_type="EMPIRICAL",
