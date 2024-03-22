@@ -194,6 +194,7 @@ class RecruitmentPotential:
         self.mort_coef_ras_path = None
 
         # populated by self.scour_survival()
+        self.scour_df = None
         self.q_scour_max = None
         self.scour_surv_ras_path = None
         self.scour_surv_mat = []
@@ -457,7 +458,7 @@ class RecruitmentPotential:
         try:
             # if flow-WSE raster dictionary exists, interpolate using WSE rasters rather than with depth rasters
             q_ras_dict = self.Q_wse_dict if self.Q_wse_dict else self.Q_h_dict
-            input_wse = True if self.Q_wse_dict else self.Q_h_dict
+            input_wse = True if self.Q_wse_dict else False
             for q, ras in q_ras_dict.items():
                 self.logger.info(f"Q = {q}...")
                 wle_path = os.path.join(self.dir2condition, f'wle{fGl.write_Q_str(q)}.tif')
@@ -741,8 +742,8 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not determine Q max from bed prep period.")
         # determine if flow has occurred during relevant time period to prepare the bed
         try:
+            q_bp_max = float(self.q_bp_max)
             self.bp_ras_path = os.path.join(self.sub_dir, f"bed_prep_ras.tif")
-            q_bp_max = int(self.q_bp_max)
             # determine if the maximum flow (Q) in bed prep period is greater than or equal to q_mobile_ras values
             bp_ras_fp = Con(self.q_mobile_ras_fp <= q_bp_max, 1, 0)
             bp_ras_pp = Con(self.q_mobile_ras_pp <= q_bp_max, 0.5, 0)
@@ -756,7 +757,7 @@ class RecruitmentPotential:
                 pass
             # excluding area outside of wetted area (during seed dispersal) from bed prep raster
             self.logger.info(f"Excluding area outside of the crop area during "
-                             f"seed dispersal from bed preparation assessment...")
+                             f"from bed preparation assessment...")
             # convert raster to array
             bp_mat = arcpy.RasterToNumPyArray(self.bp_ras, nodata_to_value=np.nan)
             bp_mat_crop = np.where(self.crop_area_mat == 1, bp_mat, np.nan)
@@ -825,7 +826,10 @@ class RecruitmentPotential:
             qm3, qm2, qm1, q = slice['Mean daily'].values
             day = slice.index.values[-1]
             # get "today's" wle array
-            q_wle_mat = self.interp_wle_by_q(q)
+            if q in self.Q_wle_mat_dict.keys():
+                q_wle_mat = self.Q_wle_mat_dict[q]
+            else:
+                q_wle_mat = self.interp_wle_by_q(q)
             # track_cell_wle_1 = q_wle_mat[2157, 4160]
             # date = slice.index[-1]
             # self.rr_track_df.loc[i] = [date, track_cell_wle_1]
@@ -951,16 +955,16 @@ class RecruitmentPotential:
         Creates raster of recruitment areas that experience bed preparing flows.
         """
         try:
-            # create scour survival period dataframe (same as inundation survival period dataframe)
-            scour_df = self.inund_df
+            # create scour survival period dataframe
+            self.scour_df = self.flow_df.loc[self.sd_end_day+1:self.inund_end_date]
             # determine maximum Q from scour survival period dataframe
-            self.q_scour_max = scour_df.max().values[0]
+            self.q_scour_max = self.scour_df.max().values[0]
             self.logger.info(f'Maximum Q from scour survival period: {self.q_scour_max}')
         except:
             self.logger.error("ERROR: Could not determine Q max from scour survival period.")
         # determine if flow has occurred after seed dispersal that could potentially scour and uproot seedlings
         try:
-            q_scour_max = int(self.q_scour_max)
+            q_scour_max = float(self.q_scour_max)
             self.scour_surv_ras_path = os.path.join(self.sub_dir, f"scour_surv_ras.tif")
             # determine if the maximum flow (Q) in scour survival period is greater than or equal to q_mobile_ras values
             scour_ras_fp = Con(q_scour_max >= self.q_mobile_ras_fp, 0)
@@ -1177,4 +1181,4 @@ class RecruitmentPotential:
     def __call__(self, *args, **kwargs):
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Seedling Recruitment")
         print(dir(self))
-    
+
