@@ -194,7 +194,7 @@ class Read:
 
     def read_ws(self):
         rows = self.ws.rows
-        first_row = [cell.value for cell in next(rows[1])]
+        first_row = [cell.value for cell in next(rows)]
         data = []
         for row in rows:
             record = {}
