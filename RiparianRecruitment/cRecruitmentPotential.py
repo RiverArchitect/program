@@ -548,7 +548,7 @@ class RecruitmentPotential:
             return ras_minus_veg
         except:
             self.logger.error(
-                "Could not retrieve existing vegetation raster, check that it is in selected condition folder.")
+                "ERROR: Could not retrieve existing vegetation raster, check that it is in selected condition folder.")
             return -1
 
     def recruitment_band(self):
