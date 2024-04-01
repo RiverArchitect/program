@@ -527,7 +527,7 @@ class RecruitmentPotential:
             self.bp_ras = Con(~IsNull(grading_ext_ras), Con(self.grain_size_crit >= grain_ras, 1, ras), ras)
         except:
             self.logger.error(
-                f'Could not retrieve grading limits raster, check that it is in selected condition folder.')
+                f'ERROR: Could not retrieve grading limits raster, check that it is in selected condition folder.')
             return -1
 
     def remove_veg_areas(self, ras):
@@ -548,9 +548,8 @@ class RecruitmentPotential:
             return ras_minus_veg
         except:
             self.logger.error(
-                "ERROR: Could not retrieve existing vegetation raster, check that it is in selected condition folder.\n"
-                "Proceeding without removing existing vegetation area.")
-            return ras
+                "Could not retrieve existing vegetation raster, check that it is in selected condition folder.")
+            return -1
 
     def recruitment_band(self):
         """
@@ -746,10 +745,7 @@ class RecruitmentPotential:
             q_bp_max = float(self.q_bp_max)
             self.bp_ras_path = os.path.join(self.sub_dir, f"bed_prep_ras.tif")
             # determine if the maximum flow (Q) in bed prep period is greater than or equal to q_mobile_ras values
-            bp_ras_fp = Con(self.q_mobile_ras_fp <= q_bp_max, 1, 0)
-            bp_ras_pp = Con(self.q_mobile_ras_pp <= q_bp_max, 0.5, 0)
-            # combine fully prepped and partially prepped
-            self.bp_ras = Con(IsNull(bp_ras_fp), bp_ras_pp, bp_ras_fp)
+            self.bp_ras = Con((self.q_mobile_ras_fp <= q_bp_max), 1, Con((self.q_mobile_ras_pp <= q_bp_max), 0.5, 0))
             # assign areas in grading extents with grain size smaller than grain size criteria a value of 1
             if self.grading_ext_ras is not None:
                 self.remove_grading_areas(ras=self.bp_ras)
@@ -857,7 +853,7 @@ class RecruitmentPotential:
             # dry now if not inundated
             dry_now = ~self.is_inundated(q_wle_mat)
             # if we are still in seed dispersal period
-            if day < self.sd_end_day:
+            if day <= self.sd_end_day:
                 # just went dry if wet yesterday and dry today
                 just_went_dry = (~dry_yesterday) & (dry_now)
                 # if we just went dry, remove days that have already passed from recession rate total days
@@ -869,7 +865,7 @@ class RecruitmentPotential:
                 # if just went dry in seed dispersal period, clear max consecutive inundation days
                 self.consec_inund_days_max = np.where(just_went_dry, 0, self.consec_inund_days_max)
             # if we are in recession rate analysis period
-            if day < self.baseflow_start_day:
+            if day <= self.baseflow_start_day:
                 # calculate 3-day avg recession rate (positive recession rate if flow is dropping)
                 rr = (qm3_wle_mat - q_wle_mat) / 3
                 # calculate stressful and lethal recession rate total arrays (only lethal/stressful recession if dry)
@@ -959,7 +955,7 @@ class RecruitmentPotential:
             # create scour survival period dataframe
             self.scour_df = self.flow_df.loc[self.sd_end_day+1:self.inund_end_date]
             # determine maximum Q from scour survival period dataframe
-            self.q_scour_max = self.scour_df.max().values[0]
+            self.q_scour_max = self.scour_df['Mean daily'].max()
             self.logger.info(f'Maximum Q from scour survival period: {self.q_scour_max}')
         except:
             self.logger.error("ERROR: Could not determine Q max from scour survival period.")
@@ -1123,6 +1119,7 @@ class RecruitmentPotential:
             info_file.write(f"\nBed Prep Period End Date: {dt.datetime.strftime(self.bp_end_date, '%Y-%m-%d')}")
             info_file.write(f"\nGermination Period Start Date: {dt.datetime.strftime(self.sd_start, '%Y-%m-%d')}")
             info_file.write(f"\nGermination Period End Date: {dt.datetime.strftime(self.sd_end, '%Y-%m-%d')}")
+            info_file.write(f"\nBaseflow Period Start Date: {dt.datetime.strftime(self.baseflow_start, '%Y-%m-%d')}")
             info_file.write(
                 f"\nCritical Dimensionless Shear Stress Threshold for Fully Prepared Bed: {self.taux_cr_fp}")
             info_file.write(
