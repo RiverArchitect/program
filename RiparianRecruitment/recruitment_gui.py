@@ -45,6 +45,8 @@ class MainGui(cg.RaModuleGui):
         self.flow_data = ""
         # Populated by self.select_year()
         self.selected_year = ""
+        # Populated by self.interp_method()
+        self.interp_method = ""
         # Populated by self.select_ex_veg_ras()
         self.ex_veg_ras = ""
         # Populated by self.select_grading_ext_ras()
@@ -111,6 +113,17 @@ class MainGui(cg.RaModuleGui):
         self.b_s_year = tk.Button(self, fg="red", text="Select", command=lambda: self.select_year())
         self.b_s_year['state'] = 'disabled'
         self.b_s_year.grid(sticky=tk.W, row=row, column=2, columnspan=3, padx=self.xd, pady=self.yd)
+        row += 1
+
+        # Select interpolation method label and button (dropdown)
+        self.l_interp = tk.Label(self, text="Select WSE interpolation method:")
+        self.l_interp.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
+        self.c_interp = ttk.Combobox(self)
+        self.c_interp.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
+        self.c_interp['state'] = 'readonly'
+        self.c_interp['values'] = ["IDW", "EBK", "Kriging", "Nearest Neighbor"]
+        self.b_s_interp = tk.Button(self, fg="red", text="Select", command=lambda: self.select_interp())
+        self.b_s_interp.grid(sticky=tk.W, row=row, column=2, columnspan=3, padx=self.xd, pady=self.yd)
         row += 1
 
         self.l_prompt = tk.Label(self, text="Upload Vegetation Raster and Grading Limits Raster")
@@ -190,7 +203,7 @@ class MainGui(cg.RaModuleGui):
     def set_years_list(self):
         # populate combobox for year selection if we have selected flow data
         if self.flow_data != '':
-            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit, self.ex_veg_ras, self.grading_ext_ras).years_list
+            years_list = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.interp_method, self.unit, self.ex_veg_ras, self.grading_ext_ras).years_list
             self.combo_y['values'] = years_list
             self.combo_y['state'] = 'readonly'
             self.b_s_year['state'] = 'normal'
@@ -199,6 +212,11 @@ class MainGui(cg.RaModuleGui):
         self.selected_year = self.combo_y.get()
         if self.combo_y.get() != '':
             self.b_s_year.config(fg="forest green", text='Selected: ' + self.selected_year)
+
+    def select_interp(self):
+        self.interp_method = self.c_interp.get()
+        if self.c_interp.get() != '':
+            self.b_s_interp.config(fg="forest green", text='Selected: ' + self.interp_method)
             self.b_run_rr["state"] = "normal"
 
     def select_ex_veg_ras(self):
@@ -249,7 +267,7 @@ class MainGui(cg.RaModuleGui):
             self.logger.info("ERROR: Select flow data file (.csv, .txt, .xls, .xlsx).")
             return
         # passing arguments (users selections) to cRecruitmentPotential
-        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.unit, self.ex_veg_ras, self.grading_ext_ras)
+        rp = cRP.RecruitmentPotential(self.condition, self.flow_data, self.species, self.selected_year, self.interp_method, self.unit, self.ex_veg_ras, self.grading_ext_ras)
         rp.run_rp()
 
     def __call__(self):
