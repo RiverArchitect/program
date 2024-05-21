@@ -14,13 +14,13 @@ try:
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\")
     import cRecruitmentPotential as cRP
-    import cRecruitmentCriteria as cRC
+    import cRecruitmentParameters as cRC
     # import child gui
     import child_gui as cg
     # load routines from riverpy
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
     # ALSO: add the new module path to the \.site_packages\riverpy\config.py
-    # All 'vital' packages and functions are loaded and stored, respectivel from \.site_packages\riverpy\fGlobal.py
+    # All 'vital' packages and functions are loaded and stored, respectively from \.site_packages\riverpy\fGlobal.py
     import config
     import cFlows as cFl
     import fGlobal as fGl
@@ -76,7 +76,7 @@ class MainGui(cg.RaModuleGui):
         self.l_species.grid(sticky=tk.W, row=row, column=0, padx=self.xd, pady=self.yd)
         self.combo_s = ttk.Combobox(self)
         self.combo_s.grid(sticky=tk.W, row=row, column=1, padx=self.xd, pady=self.yd)
-        self.combo_s['values'] = cRC.RecruitmentCriteria().common_name_list
+        self.combo_s['values'] = cRC.RecruitmentParameters().common_name_list
         self.combo_s['state'] = 'readonly'
         self.b_s_species = tk.Button(self, fg="red", text="Select", command=lambda: self.select_species())
         self.b_s_species.grid(sticky=tk.W, row=row, column=2, columnspan=2, padx=self.xd, pady=self.yd)

@@ -1,7 +1,7 @@
 try:
     import sys, os, logging
 except:
-    print("ExceptionERROR: cRecruitmentCriteria is missing fundamental packages (required: os, sys, logging, webbrowser).")
+    print("ExceptionERROR: cRecruitmentParameters is missing fundamental packages (required: os, sys, logging, webbrowser).")
 
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) + "\\.site_packages\\riverpy\\")
@@ -75,10 +75,10 @@ class RecruitmentParameters:
         self.species_dict = dict(zip(self.common_name_list, self.species_list))
 
     def __call__(self, *args, **kwargs):
-        print("Class Info: <type> = RecruitmentCriteria (%s)" % os.path.dirname(__file__))
+        print("Class Info: <type> = RecruitmentParameters (%s)" % os.path.dirname(__file__))
         print(dir(self))
 
 
 if __name__ == "__main__":
-    rc = RecruitmentCriteria()
+    rc = RecruitmentParameters()
     print(rc)

@@ -36,5 +36,5 @@ xlsx_reaches = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')
 xlsx_thresholds = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\LifespanDesign\\.templates\\threshold_values.xlsx"
 xlsx_volumes = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\VolumeAssessment\\.templates\\volumes_template.xlsx"
 xlsx_connectivity = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\StrandingRisk\\.templates\\disconnected_area_template.xlsx"
-xlsx_recruitment_criteria = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\.templates\\recruitment_criteria.xlsx"
+xlsx_recruitment_parameters = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\.templates\\recruitment_parameters.xlsx"
 xlsx_recruitment_output = os.path.abspath(os.path.join(os.path.dirname(__file__), '..\\..')) + "\\RiparianRecruitment\\.templates\\recruitment_area_template.xlsx"
