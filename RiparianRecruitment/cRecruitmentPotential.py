@@ -1185,17 +1185,3 @@ class RecruitmentPotential:
         print("Class Info: <type> = RecruitmentPotential (Module: Riparian Seedling Recruitment")
         print(dir(self))
 
-
-if __name__ == "__main__":
-    flowdata = 'D:\\ch1_testchannels\\04_rsrm\\RiverArchitect\\00_Flows\\InputFlowSeries\\scour_hydrograph_rev.xlsx'
-    ex_veg_ras = 'D:\\ch1_testchannels\\04_rsrm\\RiverArchitect\\01_Conditions\\arch_010_scour_NN\\ex_veg.tif'
-    #grading_ext_ras = 'D:\\LYR\\LYR_Restore\\RiverArchitect\\01_Conditions\\2017_lb_lvl_03\\LB_grading_extents_lvl0203.tif'
-    #rp = RecruitmentPotential(condition='2017_lb_baseline', flow_data=flowdata, species='Fremont Cottonwood', selected_year='1970', units='us', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
-    #rp.run_rp()
-
-    year = str(2020)
-    print(f'\n\nRUNNING YEAR {year}\n\n')
-    rp = RecruitmentPotential(condition='arch_010_scour_NN', flow_data=flowdata, species='Fremont Cottonwood', selected_year=year, units='si', ex_veg_ras=ex_veg_ras, grading_ext_ras=None)
-    rp.run_rp()
-    rp.logger = None  # try to suppress duplicate logging messages when looping
-
