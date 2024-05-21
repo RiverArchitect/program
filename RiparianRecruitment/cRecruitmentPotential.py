@@ -19,7 +19,7 @@ try:
     import config
     import fGlobal as fGl
     import fRasterCalcs as fRC
-    import cRecruitmentCriteria as cRC
+    import cRecruitmentParameters as cRC
     import cMakeTable as cMkT
     import cInputOutput as cIO
     from cLogger import Logger
@@ -62,9 +62,9 @@ class RecruitmentPotential:
         self.ex_veg_ras = ex_veg_ras
         # define grading extents raster
         self.grading_ext_ras = grading_ext_ras
-        # define instance of cRecruitmentCriteria
-        self.rc = cRC.RecruitmentCriteria()
-        # get relevant recruitment criteria data for species of interest
+        # define instance of cRecruitmentParameters
+        self.rc = cRC.RecruitmentParameters()
+        # get relevant recruitment parameter data for species of interest
         self.rc_data = self.rc.species_dict[self.species]
 
         # define units
@@ -192,6 +192,7 @@ class RecruitmentPotential:
 
         # populated by self.calculate_mort_coef()
         self.mort_coef_ras_path = None
+        self.ds_ras_path = None
 
         # populated by self.scour_survival()
         self.scour_df = None
@@ -255,7 +256,7 @@ class RecruitmentPotential:
 
     def read_rc_xlsx(self):
         """
-        Reads all criteria required for analysis from the recruitment criteria worksheet.
+        Reads all parameter required for analysis from the recruitment parameter worksheet.
         """
         try:
             self.logger.info("Determining range of dates for relevant recruitment period...")
@@ -276,68 +277,68 @@ class RecruitmentPotential:
         except:
             self.logger.error(
                 "ERROR: Could not determine season start date, base flow start date and/or bed prep period,"
-                "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
+                "check recruitment_parameter.xlsx to ensure that values exist for species of interest.")
         try:
-            self.logger.info("Determining bed shear stress criteria...")
+            self.logger.info("Determining bed shear stress parameter...")
             # critical dimensionless bed shear stress threshold for fully prepared bed
             self.taux_cr_fp = self.rc_data.loc[self.rc.taux_cr_fp].VALUE
             # critical dimensionless bed shear stress threshold for partially prepared bed
             self.taux_cr_pp = self.rc_data.loc[self.rc.taux_cr_pp].VALUE
         except:
-            self.logger.error("ERROR: Could not determine bed shear stress criteria, "
-                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
+            self.logger.error("ERROR: Could not determine bed shear stress parameter, "
+                              "check recruitment_parameter.xlsx to ensure that values exist for species of interest.")
         try:
-            self.logger.info(f'Determining grain size criteria (within grading extents)...')
+            self.logger.info(f'Determining grain size parameter (within grading extents)...')
             self.grain_size_crit_mm = self.rc_data.loc[self.rc.grain_size_crit].VALUE
             if self.units == "us":
                 self.grain_size_crit = self.grain_size_crit_mm * self.mm2ft
             elif self.units == "si":
                 self.grain_size_crit = self.grain_size_crit_mm / 1000
         except:
-            self.logger.error("ERROR: Could not determine grain size criteria (for within grading extents).")
+            self.logger.error("ERROR: Could not determine grain size parameter (for within grading extents).")
         try:
-            self.logger.info("Determining recession rate criteria...")
-            # stressful recession rate criteria
+            self.logger.info("Determining recession rate parameter...")
+            # stressful recession rate parameter
             self.rr_stress_cm = self.rc_data.loc[self.rc.rr_stress].VALUE
             if self.units == "us":
                 self.rr_stress = self.rr_stress_cm * self.cm2ft
             elif self.units == "si":
                 self.rr_stress = self.rr_stress_cm / 100
-            # lethal recession rate criteria
+            # lethal recession rate parameter
             self.rr_lethal_cm = self.rc_data.loc[self.rc.rr_lethal].VALUE
             if self.units == "us":
                 self.rr_lethal = self.rr_lethal_cm * self.cm2ft
             elif self.units == "si":
                 self.rr_lethal = self.rr_lethal_cm / 100
         except:
-            self.logger.error("ERROR: Could not determine recession rate criteria,"
-                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
+            self.logger.error("ERROR: Could not determine recession rate parameter,"
+                              "check recruitment_parameter.xlsx to ensure that values exist for species of interest.")
         try:
-            self.logger.info("Determining inundation criteria...")
-            # stressful inundation criteria
+            self.logger.info("Determining inundation parameter...")
+            # stressful inundation parameter
             self.inund_stress = self.rc_data.loc[self.rc.inund_stress].VALUE
-            # lethal inundation criteria
+            # lethal inundation parameter
             self.inund_lethal = self.rc_data.loc[self.rc.inund_lethal].VALUE
         except:
-            self.logger.error("ERROR: could not determine inundation criteria, "
-                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
+            self.logger.error("ERROR: could not determine inundation parameter, "
+                              "check recruitment_parameter.xlsx to ensure that values exist for species of interest.")
         try:
-            self.logger.info("Determining recruitment band elevation criteria...")
-            # lower elevation criteria
+            self.logger.info("Determining recruitment band elevation parameter...")
+            # lower elevation parameter
             self.band_elev_lower_cm = self.rc_data.loc[self.rc.band_elev_lower].VALUE
             if self.units == "us":
                 self.band_elev_lower = self.band_elev_lower_cm * self.cm2ft
             elif self.units == "si":
                 self.band_elev_lower = self.band_elev_lower_cm / 100
-            # upper elevation criteria
+            # upper elevation parameter
             self.band_elev_upper_cm = self.rc_data.loc[self.rc.band_elev_upper].VALUE
             if self.units == "us":
                 self.band_elev_upper = self.band_elev_upper_cm * self.cm2ft
             elif self.units == "si":
                 self.band_elev_upper = self.band_elev_upper_cm / 100
         except:
-            self.logger.error("WARNING: Could not determine lower and upper elevation criteria of the recruitment band,"
-                              "check recruitment_criteria.xlsx to ensure that values exist for species of interest.")
+            self.logger.error("WARNING: Could not determine lower and upper elevation parameter of the recruitment band,"
+                              "check recruitment_parameter.xlsx to ensure that values exist for species of interest.")
 
     def get_analysis_period(self, year):
         """
@@ -463,7 +464,7 @@ class RecruitmentPotential:
                 self.logger.info(f"Q = {q}...")
                 wle_path = os.path.join(self.dir2condition, f'wle{fGl.write_Q_str(q)}.tif')
                 self.Q_wle_dict[q] = wle_path
-                wle = cWL.WLE(ras, self.dem_ras, self.dir2condition, unique_id=True, input_wse=input_wse, method='IDW')
+                wle = cWL.WLE(ras, self.dem_ras, self.dir2condition, unique_id=True, input_wse=input_wse, method='Nearest Neighbor')
                 if not wle.check_interp_ras(wle_path):
                     wle.interpolate_wle()
                 else:
@@ -480,7 +481,6 @@ class RecruitmentPotential:
         q_l_index = q_u_index - 1
         q_l = self.discharges[q_l_index]
         q_u = self.discharges[q_u_index]
-        self.logger.info(f"Closest modeled flows for interpolation: {q_l} - {q_u}")
         try:
             q_l_wle_ras = self.Q_wle_dict[q_l]
             q_u_wle_ras = self.Q_wle_dict[q_u]
@@ -501,6 +501,7 @@ class RecruitmentPotential:
                     q_u_wle_mat = arcpy.RasterToNumPyArray(q_u_wle_ras, nodata_to_value=np.nan)
                     self.Q_wle_mat_dict[q_u] = q_u_wle_mat
                 try:
+                    self.logger.info(f"Closest modeled flows for interpolation: {q_l} - {q_u}")
                     q_wle_mat = q_l_wle_mat + ((q_u_wle_mat - q_l_wle_mat) * (q - q_l) / (q_u - q_l))
                     return q_wle_mat
                 except:
@@ -512,7 +513,7 @@ class RecruitmentPotential:
 
     def remove_grading_areas(self, ras):
         """
-        Assigns a value of "fully prepped" to cells where the mean grain size is less than the grain size criteria, which
+        Assigns a value of "fully prepped" to cells where the mean grain size is less than the grain size parameter, which
         is defined as a grain size that is characteristic of a suitable site for seeds to establish (i.e. not too large of substrate).
         """
         try:
@@ -521,9 +522,9 @@ class RecruitmentPotential:
             grading_ext_ras = Raster(self.grading_ext_ras)
             # retrieves dmean raster
             grain_ras = Raster(self.grain_ras)
-            # check for dmean greater than grain size set in recruitment criteria worksheet to remove from prepared bed area
+            # check for dmean greater than grain size set in recruitment parameter worksheet to remove from prepared bed area
             self.logger.info(
-                f'Assigning value of "fully prepped" to cells where dmean is less than grain size criteria...')
+                f'Assigning value of "fully prepped" to cells where dmean is less than grain size parameter...')
             self.bp_ras = Con(~IsNull(grading_ext_ras), Con(self.grain_size_crit >= grain_ras, 1, ras), ras)
         except:
             self.logger.error(
@@ -586,12 +587,12 @@ class RecruitmentPotential:
 
     def get_crop_area(self):
         """Gets raster representing area between low and high flow wetted areas during seed dispersal
-        or within the recruitment band (if criteria provided).
+        or within the recruitment band (if parameter provided).
         """
         try:
             if (np.isnan(self.band_elev_lower)) and (np.isnan(self.band_elev_upper)):
                 self.logger.info(
-                    f"No value for recruitment band elevation criteria is provided in recruitment_criteria.xlsx.")
+                    f"No value for recruitment band elevation parameter is provided in recruitment_parameters.xlsx.")
                 # create seed dispersal flow dataframe with seed dispersal start and end dates
                 self.sd_df = self.flow_df.loc[self.sd_start:self.sd_end]
                 # get lowest and highest flows during seed dispersal
@@ -616,7 +617,7 @@ class RecruitmentPotential:
                     if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
                         # creating crop raster with wetted area during seed dispersal period and recruitment band elevation
                         self.logger.info(
-                            "Creating crop area raster to define the area of  analysis with the recruitment band elevations...")
+                            "Creating crop area raster to define the area of analysis with the recruitment band elevations...")
                         self.recruitment_band()
                         self.crop_area_ras = self.rec_band_ras_path
                 except:
@@ -624,7 +625,7 @@ class RecruitmentPotential:
             # if one of upper/lower band values is nan but the other is not
             else:
                 self.logger.info("ERROR: Failed to make wetted area crop raster with seed dispersal wetted area and recruitment band elevations. "
-                                 "Check that upper and lower recruitment band elevations are provided in the recruitment_criteria.xlsx worksheet. .")
+                                 "Check that upper and lower recruitment band elevations are provided in the recruitment_parameters.xlsx worksheet. .")
             # remove existing vegetation that will not be removed by flood flows
             if self.ex_veg_ras is not None:
                 crop_area_minus_veg_path = os.path.join(self.sub_dir, f"crop_area_minus_veg.tif")
@@ -637,7 +638,7 @@ class RecruitmentPotential:
                 self.logger.info(f'No existing vegetation raster provided, skipping area removal.')
         except:
             self.logger.info(f'ERROR: Failed to create a crop area raster, check that seed dispersal dates (required) and recruitment band '
-                             f'elevations (optional) are provided in the recruitment_criteria.xlsx worksheet.')
+                             f'elevations (optional) are provided in the recruitment_parameters.xlsx worksheet.')
 
     def get_grain_ras(self):
         self.logger.info("Retrieving grain size raster...")
@@ -746,7 +747,7 @@ class RecruitmentPotential:
             self.bp_ras_path = os.path.join(self.sub_dir, f"bed_prep_ras.tif")
             # determine if the maximum flow (Q) in bed prep period is greater than or equal to q_mobile_ras values
             self.bp_ras = Con((self.q_mobile_ras_fp <= q_bp_max), 1, Con((self.q_mobile_ras_pp <= q_bp_max), 0.5, 0))
-            # assign areas in grading extents with grain size smaller than grain size criteria a value of 1
+            # assign areas in grading extents with grain size smaller than grain size parameter a value of 1
             if self.grading_ext_ras is not None:
                 self.remove_grading_areas(ras=self.bp_ras)
             else:
@@ -811,8 +812,10 @@ class RecruitmentPotential:
             self.logger.error("ERROR: Could not create recession rate or seed dispersal flow dataframe.")
         # initialize vars for recession/inundation loop
         window = []
-        self.rr_total_d = len(self.rr_df)
-        max_rr_total_d = len(self.rr_df)
+        # this value is updated as an array to track total days for each cell
+        self.rr_total_d = len(self.rr_df) - 3
+        # this value stays fixed to use as reference for when to start tracking recession
+        max_rr_total_d = len(self.rr_df) - 3
         # iterating over groups of 4 consecutive rows (for 3 day moving average of recession rate)
         # starting 3 days before beginning of recession/seed dispersal start date
         self.logger.info(f'Beginning to track cell inundation and recession rate...')
@@ -827,9 +830,6 @@ class RecruitmentPotential:
                 q_wle_mat = self.Q_wle_mat_dict[q]
             else:
                 q_wle_mat = self.interp_wle_by_q(q)
-            # track_cell_wle_1 = q_wle_mat[2157, 4160]
-            # date = slice.index[-1]
-            # self.rr_track_df.loc[i] = [date, track_cell_wle_1]
             # if first iteration in loop:
             if i == 0:
                 # get wle arrays for first 3 days
@@ -870,18 +870,18 @@ class RecruitmentPotential:
                 rr = (qm3_wle_mat - q_wle_mat) / 3
                 # calculate stressful and lethal recession rate total arrays (only lethal/stressful recession if dry)
                 one_if_dry = np.where(dry_now, 1, 0)
-                self.rr_stress_d_mat = np.where((self.rr_stress < rr) & (rr <= self.rr_lethal),
+                self.rr_stress_d_mat = np.where((self.rr_stress <= rr) & (rr < self.rr_lethal),
                                                 (self.rr_stress_d_mat + one_if_dry), self.rr_stress_d_mat)
-                self.rr_lethal_d_mat = np.where((self.rr_lethal < rr), (self.rr_lethal_d_mat + one_if_dry),
+                self.rr_lethal_d_mat = np.where((self.rr_lethal <= rr), (self.rr_lethal_d_mat + one_if_dry),
                                                 self.rr_lethal_d_mat)
             # always tracking inundation (reset if go dry during seed dispersal)
             # if dry, reset consecutive inundation days to zero, otherwise if wet add 1
             self.consec_inund_days_now = np.where(dry_now, 0, self.consec_inund_days_now + 1)
             # keep track of max consecutive inundation days
             self.consec_inund_days_max = np.maximum(self.consec_inund_days_now, self.consec_inund_days_max)
-        # convert max consecutive inundated days to inundation survival classification (stress & lethal criteria)
+        # convert max consecutive inundated days to inundation survival classification (stress & lethal parameter)
         self.inund_surv_mat = np.where(
-            (self.consec_inund_days_max > self.inund_stress) & (self.consec_inund_days_max <= self.inund_lethal), 0.5,
+            (self.consec_inund_days_max >= self.inund_stress) & (self.consec_inund_days_max <= self.inund_lethal), 0.5,
             self.inund_surv_mat)
         self.inund_surv_mat = np.where((self.consec_inund_days_max > self.inund_lethal), 0, self.inund_surv_mat)
         # calculate favorable recession rate days (total) array
@@ -943,6 +943,13 @@ class RecruitmentPotential:
             self.logger.info('Converting mortality coefficient to raster...')
             self.mort_coef_ras_path = os.path.join(self.sub_dir, f"mortality_coef_ras.tif")
             self.convert_array2ras(mort_coef_mat, self.mort_coef_ras_path)
+            #convert mortality coefficient raster to recession rate metric
+            self.logger.info('Converting mortality coefficient to desiccation survival metric...')
+            mort_coef_ras = Raster(self.mort_coef_ras_path)
+            ds_ras = Con(mort_coef_ras > 30, 0, 1)
+            ds_ras = Con((mort_coef_ras <= 30) & (mort_coef_ras >= 20), 0.5, ds_ras)
+            self.ds_ras_path = os.path.join(self.sub_dir, f"desiccation_surv_ras.tif")
+            ds_ras.save(self.ds_ras_path)
         except:
             self.logger.info(f"Unable to calculate mortality coefficient array...")
 
@@ -990,11 +997,9 @@ class RecruitmentPotential:
             self.logger.info(f"Retrieving bed preparation raster...")
             # retrieve bed preparation raster and assign values of 0 (unprepared) to all cells with Null value
             bp_ras = Raster(self.bp_ras_path)
-            self.logger.info(f"Retrieving mortality coefficient raster...")
+            self.logger.info(f"Retrieving desiccation survival raster...")
             # retrieve mortality coefficient raster and convert coefficient to metric
-            mort_coef_ras = Raster(self.mort_coef_ras_path)
-            rr_ras = Con(mort_coef_ras > 30, 0, 1)
-            rr_ras = Con((mort_coef_ras <= 30) & (mort_coef_ras > 20), 0.5, rr_ras)
+            ds_ras = Raster(self.ds_ras_path)
             self.logger.info(f"Retrieving inundation survival raster...")
             # retrieve inundation survival raster
             inund_ras = Raster(self.inund_surv_path)
@@ -1003,7 +1008,7 @@ class RecruitmentPotential:
             scour_surv_ras = Raster(self.scour_surv_ras_path)
             self.logger.info(f"Combining rasters to calculate the overall recession potential...")
             # combine objectives into single metric by taking the product of the bed prep, recession rate, inundation, and scour rasters
-            rec_pot_ras = bp_ras * rr_ras * inund_ras * scour_surv_ras
+            rec_pot_ras = bp_ras * ds_ras * inund_ras * scour_surv_ras
             rec_pot_ras_path = os.path.join(self.sub_dir, f"recruitment_potential_ras.tif")
             self.logger.info(f"Saving the recruitment potential raster: {rec_pot_ras_path}")
             rec_pot_ras.save(rec_pot_ras_path)
@@ -1125,11 +1130,11 @@ class RecruitmentPotential:
             info_file.write(
                 f"\nCritical Dimensionless Shear Stress Threshold for Partially Prepared Bed: {self.taux_cr_pp}")
             info_file.write(
-                f"\nRecession Rate Criteria for Stressful Recession Rate: {self.rr_stress_cm} cm/day")
+                f"\nRecession Rate Parameter for Stressful Recession Rate: {self.rr_stress_cm} cm/day")
             info_file.write(
-                f"\nRecession Rate Criteria for Lethal Recession Rate: {self.rr_lethal_cm} cm/day")
-            info_file.write(f"\nProlonged Inundation Criteria for Stressful Inundation: {self.inund_stress} days")
-            info_file.write(f"\nProlonged Inundation Criteria for Lethal Inundation: {self.inund_lethal} days")
+                f"\nRecession Rate Parameter for Lethal Recession Rate: {self.rr_lethal_cm} cm/day")
+            info_file.write(f"\nProlonged Inundation Parameter for Stressful Inundation: {self.inund_stress} days")
+            info_file.write(f"\nProlonged Inundation Parameter for Lethal Inundation: {self.inund_lethal} days")
             if (~np.isnan(self.band_elev_lower)) and (~np.isnan(self.band_elev_upper)):
                 info_file.write(f"\nRecruitment Band Upper Elevation: {self.band_elev_upper_cm} cm")
                 info_file.write(f"\nRecruitment Band Lower Elevation: {self.band_elev_lower_cm} cm")
@@ -1137,7 +1142,7 @@ class RecruitmentPotential:
                 pass
             if ~np.isnan(self.grain_size_crit):
                 info_file.write(
-                    f"\nGrain Size Criteria for Graded Areas (Assign Fully Prepared): {self.grain_size_crit_mm} mm")
+                    f"\nGrain Size Parameter for Graded Areas (Assign Fully Prepared): {self.grain_size_crit_mm} mm")
             else:
                 pass
             info_file.write(f"\nMaximum Flow During Bed Preparation Period: {self.q_bp_max} {self.q_units}")

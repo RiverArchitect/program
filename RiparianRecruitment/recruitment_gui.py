@@ -228,7 +228,7 @@ class MainGui(cg.RaModuleGui):
         _f = None
         try:
             if "recruitment_criteria" in filename:
-                _f = config.xlsx_recruitment_criteria
+                _f = config.xlsx_recruitment_parameters
         except:
             pass
         if os.path.isfile(_f):
