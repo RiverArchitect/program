@@ -95,7 +95,11 @@ class WLE:
                 ras_h = arcpy.Raster(self.path2h_ras)
                 ras_dem = arcpy.Raster(self.path2dem_ras)
                 arcpy.env.extent = ras_dem.extent
-                cell_size = arcpy.GetRasterProperties_management(ras_dem, 'CELLSIZEX').getOutput(0)
+                # getOutput(0) returns a STRING and honours the system locale (a comma decimal
+                # separator on non-English systems). Coerce to float so that arithmetic on the
+                # cell size (e.g. lagSize=cell_size * itr) works instead of repeating the string.
+                cell_size = float(str(arcpy.GetRasterProperties_management(
+                    ras_dem, 'CELLSIZEX').getOutput(0)).replace(",", "."))
                 self.logger.info("OK")
             except:
                 self.logger.info("ERROR: Could not find / access input rasters.")
@@ -149,35 +153,43 @@ class WLE:
                     self.logger.info("OK")
 
                 except arcpy.ExecuteError:
-                    if "010079" in str(arcpy.GetMessages(2)):
-                        self.logger.info("Could not fit semivariogram, increasing lag size and retrying...")
-                        empty_bins = True
-                        itr = 2
-                        while empty_bins:
-                            try:
-                                ras_wle_dem = Kriging(in_point_features=pts_wse, z_field=z_field,
-                                                      kriging_model=KrigingModelOrdinary("Spherical",
-                                                                                         lagSize=cell_size * itr),
-                                                      cell_size=cell_size,
-                                                      search_radius="Variable 12")
-                                try:
-                                    ras_wle_dem.save(os.path.join(self.cache, "ras_wle_dem"))
-                                    # out_variance_prediction_raster=os.path.join(self.cache, "ras_wle_var") ***
-                                    ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
-                                    # ras_wle_var = arcpy.Raster(os.path.join(self.cache, "ras_wle_var")) ***
-                                    self.logger.info("OK")
-                                    empty_bins = False
-                                except:
-                                    self.logger.info("ERROR: Failed to produce interpolated raster.")
-                                    return True
-                            except:
-                                self.logger.info("Still could not fit semivariogram, increasing lag and retrying...")
-                                itr *= 2
-                                if itr > 16:
-                                    break
+                    # 010079 = "could not fit semivariogram" (empty lag bins). Any other
+                    # ExecuteError is not recoverable by enlarging the lag size.
+                    if "010079" not in str(arcpy.GetMessages(2)):
+                        self.logger.info(arcpy.GetMessages(2))
+                        arcpy.AddError(arcpy.GetMessages(2))
+                        return True
 
-                    self.logger.info(arcpy.AddError(arcpy.GetMessages(2)))
-                    return True
+                    self.logger.info("Could not fit semivariogram, increasing lag size and retrying...")
+                    itr = 2
+                    while True:
+                        try:
+                            ras_wle_dem = Kriging(in_point_features=pts_wse, z_field=z_field,
+                                                  kriging_model=KrigingModelOrdinary("Spherical",
+                                                                                     lagSize=cell_size * itr),
+                                                  cell_size=cell_size,
+                                                  search_radius="Variable 12")
+                        except:
+                            itr *= 2
+                            if itr > 16:
+                                self.logger.info("ERROR: Could not fit semivariogram (lag size up to %s)."
+                                                 % str(cell_size * 16))
+                                return True
+                            self.logger.info("Still could not fit semivariogram, increasing lag and retrying...")
+                            continue
+
+                        try:
+                            ras_wle_dem.save(os.path.join(self.cache, "ras_wle_dem"))
+                            # out_variance_prediction_raster=os.path.join(self.cache, "ras_wle_var") ***
+                            ras_wle_dem = arcpy.Raster(os.path.join(self.cache, "ras_wle_dem"))
+                            # ras_wle_var = arcpy.Raster(os.path.join(self.cache, "ras_wle_var")) ***
+                        except:
+                            self.logger.info("ERROR: Failed to produce interpolated raster.")
+                            return True
+
+                        # Retry succeeded - fall through to the shared save block below.
+                        self.logger.info("OK")
+                        break
                 except Exception as e:
                     self.logger.info(arcpy.GetMessages(2))
                     self.logger.info(e.args[0])

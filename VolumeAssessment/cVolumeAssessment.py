@@ -8,8 +8,14 @@ try:
     import cReachManager as cRM
     import cDefinitions as cDef
     import fGlobal as fGl
+    import fVolume as fVol
 except:
     print("ExceptionERROR: Missing fundamental packages (required: arcpy, os, sys, logging, random).")
+
+try:
+    import numpy as np
+except:
+    print("ExceptionERROR: Missing fundamental package (required: numpy).")
 
 
 class VolumeAssessment:
@@ -153,38 +159,55 @@ class VolumeAssessment:
             except:
                 self.logger.info("ERROR: Raster could not be saved.")
 
+    def raster2array(self, raster):
+        """ Reads a raster into a float array with NoData as np.nan, plus its cell size.
+        Returns (np.ndarray, dx, dy). Raises if the raster cannot be read.
+        """
+        ras = raster if isinstance(raster, arcpy.Raster) else arcpy.Raster(str(raster))
+        # meanCellWidth/Height are floats and locale-independent, unlike
+        # GetRasterProperties_management(...).getOutput(0), which returns a localised string.
+        dx = float(ras.meanCellWidth)
+        dy = float(ras.meanCellHeight)
+        arr = arcpy.RasterToNumPyArray(ras, nodata_to_value=np.nan).astype("float64")
+        return arr, dx, dy
+
+    def surface_volume(self, raster, reference="ABOVE", plane=0.0):
+        """ Volume between a raster surface and a horizontal plane, integrated under the
+        triangulated (TIN) surface through the cell centres.
+
+        Replaces arcpy.SurfaceVolume_3d, which required a 3D Analyst license and wrote its
+        result into a geoprocessing message that then had to be string-parsed. The
+        triangulated method is authoritative for River Architect's reported earthworks
+        quantities: a plain cell-prism sum (sum(z) * cell_area) carries a boundary error
+        proportional to the perimeter of the surface, which does not vanish under grid
+        refinement for surfaces that are truncated at their edge.
+        """
+        arr, dx, dy = self.raster2array(raster)
+        result = fVol.surface_volume(arr, dx, dy, plane=plane, reference=reference)
+        self.logger.info("     * TIN surface area: %0.2f (planimetric %0.2f)"
+                         % (result["area_3d"], result["area_2d"]))
+        return result["volume"]
+
     def volume_computation(self):
         self.logger.info(" * calculating volume differences ...")
-        # requires 3D extension
-        arcpy.CheckOutExtension("3D")
         arcpy.env.extent = "MAXOF"
 
         for rn in self.reach_ids_applied:
             try:
                 self.logger.info("   * calculating fill volume from " + str(self.rasters_for_pos_vol[rn]))
-                self.logger.info("     *** takes time ***")
-                feat_vol = arcpy.SurfaceVolume_3d(self.rasters_for_pos_vol[rn], "", "ABOVE", 0.0, 1.0)
-                voltxt = feat_vol.getMessage(1).split("Volume=")[1]
-                self.logger.info("     RESULT: " + str(float(voltxt)*self.convert_volume_to_cy) + self.unit_info + ".")
-                self.volume_pos_dict[rn] = float(voltxt) * self.convert_volume_to_cy
+                volume = self.surface_volume(self.rasters_for_pos_vol[rn], "ABOVE", 0.0)
+                self.logger.info("     RESULT: " + str(volume * self.convert_volume_to_cy) + self.unit_info + ".")
+                self.volume_pos_dict[rn] = volume * self.convert_volume_to_cy
             except:
                 self.logger.info("ERROR: Calculation of volume from " + str(self.rasters_for_pos_vol[rn]) + " failed.")
 
             try:
                 self.logger.info("   * calculating excavation volume from " + str(self.rasters_for_neg_vol[rn]))
-                self.logger.info("     *** takes time ***")
-                feat_vol = arcpy.SurfaceVolume_3d(self.rasters_for_neg_vol[rn], "", "ABOVE", 0.0, 1.0)
-                voltxt = feat_vol.getMessage(1).split("Volume=")[1]
-                self.logger.info("     RESULT: " + str(float(voltxt)*self.convert_volume_to_cy) + self.unit_info + ".")
-                self.volume_neg_dict[rn] = float(voltxt) * self.convert_volume_to_cy
+                volume = self.surface_volume(self.rasters_for_neg_vol[rn], "ABOVE", 0.0)
+                self.logger.info("     RESULT: " + str(volume * self.convert_volume_to_cy) + self.unit_info + ".")
+                self.volume_neg_dict[rn] = volume * self.convert_volume_to_cy
             except:
                 self.logger.info("ERROR: Calculation of volume from " + str(self.rasters_for_neg_vol[rn]) + " failed.")
-
-        # ALTERNATIVE OPTION IF arcpy.SurfaceVolume_3d FAILS
-        # import numpy
-        # myArray = arcpy.RasterToNumPyArray(outVol)
-        # totVolume = numpy.sum(myArray)
-        arcpy.CheckInExtension("3D")
 
     def get_volumes(self):
         self.make_volume_diff_rasters()

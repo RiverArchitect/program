@@ -1,4 +1,10 @@
 # River Architect ![logo](https://github.com/sschwindt/RiverArchitect/raw/master/images/logo_small.ico)
+
+
+
+**IMPORTANT: River Architect v1, along with its `arcpy` dependencies, has been replaced by River Architect v2, which depends on GAL. Please use the latest releases, which are hosted at [https://github.com/RiverArchitect/riverarchitect](https://github.com/RiverArchitect/riverarchitect) and documented at [riverarchitect.readthedocs.io](https://riverarchitect.readthedocs.io/).**
+
+
 [River Architect](https://github.com/sschwindt/RiverArchitect/raw/master/docs/RiverArchitect.pdf) is an [<font color="blue">open-access, peer-reviewed (Journal SoftwareX)</font>](https://doi.org/10.1016/j.softx.2020.100438), and Python3-based open-source software that supports river engineers and ecologists with a set of GUI modules (the last stable Python2 version can be downloaded [here][8] with sample data). The current core functionalities are:
 
  * Lifespan mapping of stream design features according to [Schwindt et al. (2019)][1] with the [LifespanDesign](https://riverarchitect.github.io/RA_wiki/LifespanDesign) and [MaxLifespan](https://riverarchitect.github.io/RA_wiki/MaxLifespan) modules.   

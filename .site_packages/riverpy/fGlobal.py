@@ -1,7 +1,10 @@
 try:
     import os, logging, sys, glob, webbrowser, time
     import numpy as np
-    from collections import Iterable  # used in the flatten function
+    # collections.Iterable was removed in Python 3.10; it has lived in collections.abc
+    # since 3.3. Importing the old location raised ImportError, which the bare except
+    # below swallowed - taking numpy and every other name in this block down with it.
+    from collections.abc import Iterable  # used in the flatten function
     from bisect import bisect_left
 except:
     print(
@@ -350,19 +353,32 @@ def print_dict(dictionary):
     return out_str
 
 
-def raster2shp(raster_name, out_shp_name=str(), simplify="NO_SIMPLIFY", calculate_area=True):
+def raster2shp(raster_name, out_shp_name=str(), simplify="NO_SIMPLIFY", calculate_area=True, unit="us"):
     # raster_name = STR of full path to INTEGER Raster
+    # unit = STR "us" (U.S. customary) or "si" (metric) - drives the F_AREA unit
     if out_shp_name.__len__() < 1:
         out_shp_name = raster_name.split(".")[0] + ".shp"
+
+    area_unit = area_unit_str(unit)
 
     arcpy.CheckOutExtension('Spatial')
     arcpy.RasterToPolygon_conversion(Int(arcpy.Raster(raster_name)), out_shp_name, simplify)
     if calculate_area:
         arcpy.AddField_management(out_shp_name, "F_AREA", "FLOAT", 9)
         arcpy.CalculateGeometryAttributes_management(out_shp_name, geometry_property=[["F_AREA", "AREA"]],
-                                                     area_unit=out_shp_name)
+                                                     area_unit=area_unit)
     arcpy.CheckInExtension('Spatial')
     return out_shp_name
+
+
+def area_unit_str(unit):
+    """ Maps the project unit system onto the arcpy area_unit keyword.
+    Args:
+        unit (str): "us" (U.S. customary) or "si" (metric)
+    Returns:
+        str: "SQUARE_FEET_US" or "SQUARE_METERS"
+    """
+    return "SQUARE_FEET_US" if str(unit).lower() == "us" else "SQUARE_METERS"
 
 
 def read_txt(file_name):
